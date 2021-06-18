@@ -29,7 +29,7 @@
 #include <stdbool.h>
 
 zend_object_handlers spl_handler_ImmutableKeyValueSequence;
-PHPAPI zend_class_entry *spl_ce_ImmutableKeyValueSequence;
+zend_class_entry *spl_ce_ImmutableKeyValueSequence;
 
 /** TODO: Does C guarantee that this has the same memory layout as an array of zvals? */
 typedef struct _zval_pair {

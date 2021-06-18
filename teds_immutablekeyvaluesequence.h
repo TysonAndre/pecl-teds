@@ -10,7 +10,7 @@
 #ifndef TEDS_IMMUTABLEKEYVALUESEQUENCE_H
 #define TEDS_IMMUTABLEKEYVALUESEQUENCE_H
 
-extern PHPAPI zend_class_entry *spl_ce_ImmutableKeyValueSequence;
+extern zend_class_entry *spl_ce_ImmutableKeyValueSequence;
 
 PHP_MINIT_FUNCTION(teds_immutablekeyvaluesequence);
 

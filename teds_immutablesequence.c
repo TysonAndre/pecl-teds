@@ -29,7 +29,7 @@
 #include <stdbool.h>
 
 zend_object_handlers spl_handler_ImmutableSequence;
-PHPAPI zend_class_entry *spl_ce_ImmutableSequence;
+zend_class_entry *spl_ce_ImmutableSequence;
 
 /* This is a placeholder value to distinguish between empty and uninitialized ImmutableSequence instances.
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */

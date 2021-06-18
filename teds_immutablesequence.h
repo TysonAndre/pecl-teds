@@ -10,7 +10,7 @@
 #ifndef TEDS_IMMUTABLESEQUENCE_H
 #define TEDS_IMMUTABLESEQUENCE_H
 
-extern PHPAPI zend_class_entry *spl_ce_ImmutableSequence;
+extern zend_class_entry *spl_ce_ImmutableSequence;
 
 PHP_MINIT_FUNCTION(teds_immutablesequence);
 
