@@ -3,7 +3,7 @@
  <name>teds</name>
  <channel>pecl.php.net</channel>
  <summary>teds extension</summary>
- <description>teds is a compact alternative to var_export that properly escapes control characters</description>
+ <description>teds (Tentative Extra Data Structures) is a collection of data structures and iterable functionality</description>
  <lead>
   <name>Tyson Andre</name>
   <user>tandre</user>
