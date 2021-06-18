@@ -41,6 +41,17 @@ Objects within this data structure or references in arrays in this data structur
 Similar to SplFixedArray or Ds\Sequence, but immutable.
 This stores a sequence of values with the keys 0, 1, 2....
 
+### Teds\Vector
+
+[`Teds\Vector` API](./teds_vector.stub.php)
+
+Similar to SplFixedArray or Ds\Vector.
+This stores a mutable sequence of values with the keys 0, 1, 2...
+It can be appended to with append()/pop()
+
+This is implemented based on SplFixedArray/ImmutableSequence.
+There are plans to add more methods.
+
 ### iterable functions
 
 This PECL contains a library of native implementations of various functions acting on iterables.
