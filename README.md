@@ -32,6 +32,15 @@ Currently, PHP does not provide a built-in way to store the state of an arbitrar
 
 Having this implemented as a native class would also allow it to be much more efficient than a userland solution (in terms of time to create, time to iterate over the result, and total memory usage).
 
+Objects within this data structure or references in arrays in this data structure can still be mutated.
+
+### Teds\ImmutableSequence
+
+[`Teds\ImmutableKeyValueSequence` API](./teds_immutablekeyvaluesequence.stub.php)
+
+Similar to SplFixedArray or Ds\Sequence, but immutable.
+This stores a sequence of values with the keys 0, 1, 2....
+
 ### iterable functions
 
 This PECL contains a library of native implementations of various functions acting on iterables.

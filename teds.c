@@ -25,6 +25,7 @@
 #include "ext/standard/php_string.h"
 #include "ext/standard/info.h"
 #include "teds_immutablekeyvaluesequence.h"
+#include "teds_immutablesequence.h"
 #include "teds_arginfo.h"
 #include "php_teds.h"
 
@@ -454,6 +455,7 @@ PHP_FUNCTION(find)
 PHP_MINIT_FUNCTION(teds)
 {
 	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	return SUCCESS;
 }
 /* }}} */

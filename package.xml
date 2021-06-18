@@ -33,6 +33,9 @@
    <file name="teds_immutablekeyvaluesequence_arginfo.h" role="src" />
    <file name="teds_immutablekeyvaluesequence.c" role="src" />
    <file name="teds_immutablekeyvaluesequence.h" role="src" />
+   <file name="teds_immutablesequence_arginfo.h" role="src" />
+   <file name="teds_immutablesequence.c" role="src" />
+   <file name="teds_immutablesequence.h" role="src" />
    <file name="php_teds.h" role="src" />
    <file name="README.md" role="doc" />
    <file name="COPYING" role="doc" />
