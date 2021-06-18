@@ -26,9 +26,7 @@ jobs:
       matrix:
        include:
          # NOTE: If this is not quoted, the yaml parser will convert 8.0 to the number 8,
-         # and the docker image `php:7` is the latest minor version of php 7.x (7.4).
-         - PHP_VERSION: '7.4'
-           PHP_VERSION_FULL: 7.4.20
+         # and the docker image `php:8` is the latest minor version of php 8.x
          - PHP_VERSION: '8.0'
            PHP_VERSION_FULL: 8.0.7
 
