@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 97219c43a216db474d86ef097be487d36c136be6 */
+ * Stub hash: a79f5cd221be8663fc96465b25a1820d2d58a608 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -20,6 +20,10 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableSequence___set_state, 0, 1, Teds\\ImmutableSequence, 0)
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_valueAt, 0, 1, IS_MIXED, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_ImmutableSequence_toArray arginfo_class_Teds_ImmutableSequence___serialize
@@ -46,6 +50,7 @@ ZEND_METHOD(Teds_ImmutableSequence, count);
 ZEND_METHOD(Teds_ImmutableSequence, __serialize);
 ZEND_METHOD(Teds_ImmutableSequence, __unserialize);
 ZEND_METHOD(Teds_ImmutableSequence, __set_state);
+ZEND_METHOD(Teds_ImmutableSequence, valueAt);
 ZEND_METHOD(Teds_ImmutableSequence, toArray);
 ZEND_METHOD(Teds_ImmutableSequence, offsetGet);
 ZEND_METHOD(Teds_ImmutableSequence, offsetExists);
@@ -61,6 +66,7 @@ static const zend_function_entry class_Teds_ImmutableSequence_methods[] = {
 	ZEND_ME(Teds_ImmutableSequence, __serialize, arginfo_class_Teds_ImmutableSequence___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, __unserialize, arginfo_class_Teds_ImmutableSequence___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, __set_state, arginfo_class_Teds_ImmutableSequence___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Teds_ImmutableSequence, valueAt, arginfo_class_Teds_ImmutableSequence_valueAt, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, toArray, arginfo_class_Teds_ImmutableSequence_toArray, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, offsetGet, arginfo_class_Teds_ImmutableSequence_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, offsetExists, arginfo_class_Teds_ImmutableSequence_offsetExists, ZEND_ACC_PUBLIC)

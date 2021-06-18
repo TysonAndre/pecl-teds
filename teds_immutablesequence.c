@@ -610,6 +610,22 @@ PHP_METHOD(Teds_ImmutableSequence, toArray)
 	RETURN_ARR(values);
 }
 
+PHP_METHOD(Teds_ImmutableSequence, valueAt)
+{
+	zend_long offset;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_LONG(offset)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
+	size_t len = intern->array.size;
+	if (UNEXPECTED((zend_ulong) offset >= len)) {
+		zend_throw_exception(spl_ce_RuntimeException, "Index out of range", 0);
+		RETURN_THROWS();
+	}
+	RETURN_COPY(&intern->array.entries[offset]);
+}
+
 PHP_METHOD(Teds_ImmutableSequence, offsetGet)
 {
 	zval *offset_zv;
@@ -697,13 +713,6 @@ static void teds_immutablesequence_return_list(zval *return_value, teds_immutabl
 PHP_METHOD(Teds_ImmutableSequence, jsonSerialize)
 {
 	/* json_encoder.c will always encode objects as {"0":..., "1":...}, and detects recursion if an object returns its internal property array, so we have to return a new array */
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
-	teds_immutablesequence_return_list(return_value, intern);
-}
-
-PHP_METHOD(Teds_ImmutableSequence, toPairs)
-{
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
 	teds_immutablesequence_return_list(return_value, intern);

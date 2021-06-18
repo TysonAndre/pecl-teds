@@ -15,6 +15,8 @@ final class ImmutableSequence implements IteratorAggregate, Countable, JsonSeria
     public static function __set_state(array $array): ImmutableSequence {}
 
     public function toArray(): array {}
+    // Strictly typed, unlike offsetGet
+    public function valueAt(int $offset): mixed {}
     // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
     public function offsetExists(mixed $offset): mixed {}
