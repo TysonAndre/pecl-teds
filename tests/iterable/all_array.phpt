@@ -48,13 +48,13 @@ dump_all([], 'is_int_ex');
 
 echo "\nDone";
 ?>
---EXPECT--
+--EXPECTF--
 *** Testing not enough or wrong arguments ***
 Caught ArgumentCountError: Teds\all() expects at least 1 argument, 0 given
 Caught TypeError: Teds\all(): Argument #1 ($iterable) must be of type iterable, bool given
 bool(true)
 Caught TypeError: Teds\all(): Argument #1 ($iterable) must be of type iterable, bool given
-Caught TypeError: Teds\all(): Argument #2 ($callback) must be a valid callback, no array or string given
+Caught TypeError: Teds\all(): Argument #2 ($callback) must be a valid callback%S, no array or string given
 
 *** Testing basic functionality ***
 bool(true)

@@ -57,13 +57,13 @@ dump_any(['key' => 'x'], null);
 
 echo "\nDone";
 ?>
---EXPECT--
+--EXPECTF--
 *** Testing not enough or wrong arguments ***
 Caught ArgumentCountError: Teds\any() expects at least 1 argument, 0 given
 Caught TypeError: Teds\any(): Argument #1 ($iterable) must be of type iterable, bool given
 bool(false)
 Caught TypeError: Teds\any(): Argument #1 ($iterable) must be of type iterable, bool given
-Caught TypeError: Teds\any(): Argument #2 ($callback) must be a valid callback, no array or string given
+Caught TypeError: Teds\any(): Argument #2 ($callback) must be a valid callback%S, no array or string given
 
 *** Testing basic functionality ***
 bool(false)

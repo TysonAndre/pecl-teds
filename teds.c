@@ -44,16 +44,95 @@
 	ZEND_PARSE_PARAMETERS_END()
 #endif
 
-static inline void php_array_until(zval *return_value, HashTable *htbl, zend_fcall_info fci, zend_fcall_info_cache fci_cache, int stop_value) /* {{{ */
+/* Copied from array_reduce implementation in https://github.com/php/php-src/blob/master/ext/standard/array.c */
+static zend_always_inline void php_array_reduce(HashTable *htbl, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value) /* {{{ */
+{
+	zval args[2];
+	zval *operand;
+	zval retval;
+
+	if (zend_hash_num_elements(htbl) == 0) {
+		return;
+	}
+
+	fci.retval = &retval;
+	fci.param_count = 2;
+
+	ZEND_HASH_FOREACH_VAL(htbl, operand) {
+		ZVAL_COPY_VALUE(&args[0], return_value);
+		ZVAL_COPY(&args[1], operand);
+		fci.params = args;
+
+		if (zend_call_function(&fci, &fci_cache) == SUCCESS && Z_TYPE(retval) != IS_UNDEF) {
+			zval_ptr_dtor(&args[1]);
+			zval_ptr_dtor(&args[0]);
+			ZVAL_COPY_VALUE(return_value, &retval);
+			if (UNEXPECTED(Z_ISREF_P(return_value))) {
+				zend_unwrap_reference(return_value);
+			}
+		} else {
+			zval_ptr_dtor(&args[1]);
+			zval_ptr_dtor(&args[0]);
+			RETURN_NULL();
+		}
+	} ZEND_HASH_FOREACH_END();
+}
+/* }}} */
+
+typedef struct {
+	zend_fcall_info fci;
+	zend_fcall_info_cache fcc;
+	zval args[2];
+} traversable_reduce_data;
+
+static int php_traversable_reduce_elem(zend_object_iterator *iter, void *puser) /* {{{ */
+{
+	traversable_reduce_data *reduce_data = puser;
+	zend_fcall_info *fci = &reduce_data->fci;
+	ZEND_ASSERT(ZEND_FCI_INITIALIZED(*fci));
+
+	zval *operand = iter->funcs->get_current_data(iter);
+	if (UNEXPECTED(!operand || EG(exception))) {
+		return ZEND_HASH_APPLY_STOP;
+	}
+	ZVAL_DEREF(operand);
+	ZVAL_COPY_VALUE(&reduce_data->args[0], fci->retval);
+	ZVAL_COPY(&reduce_data->args[1], operand);
+	ZVAL_NULL(fci->retval);
+	int result = zend_call_function(&reduce_data->fci, &reduce_data->fcc);
+	zval_ptr_dtor(operand);
+	zval_ptr_dtor(&reduce_data->args[0]);
+	if (UNEXPECTED(result == FAILURE || EG(exception))) {
+		return ZEND_HASH_APPLY_STOP;
+	}
+	return ZEND_HASH_APPLY_KEEP;
+}
+/* }}} */
+
+static zend_always_inline void php_traversable_reduce(zval *obj, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value) /* {{{ */
+{
+	traversable_reduce_data reduce_data;
+	reduce_data.fci = fci;
+	reduce_data.fci.retval = return_value;
+	reduce_data.fci.param_count = 2;
+	reduce_data.fci.params = reduce_data.args;
+	reduce_data.fcc = fci_cache;
+
+	spl_iterator_apply(obj, php_traversable_reduce_elem, (void*)&reduce_data);
+}
+/* }}} */
+
+
+static inline void php_array_until(zval *return_value, HashTable *htbl, zend_fcall_info fci, zend_fcall_info_cache fci_cache, int stop_value, int negate) /* {{{ */
 {
 	zval args[1];
-	zend_bool have_callback = 0;
+	bool have_callback = 0;
 	zval *operand;
 	zval retval;
 	int result;
 
 	if (zend_hash_num_elements(htbl) == 0) {
-		RETURN_BOOL(!stop_value);
+		RETURN_BOOL(!stop_value ^ negate);
 	}
 
 	if (ZEND_FCI_INITIALIZED(fci)) {
@@ -65,7 +144,7 @@ static inline void php_array_until(zval *return_value, HashTable *htbl, zend_fca
 
 	ZEND_HASH_FOREACH_VAL(htbl, operand) {
 		if (have_callback) {
-			zend_bool retval_true;
+			bool retval_true;
 			ZVAL_COPY(&args[0], operand);
 
 			/* Treat the operand like an array of size 1  */
@@ -78,16 +157,16 @@ static inline void php_array_until(zval *return_value, HashTable *htbl, zend_fca
 			zval_ptr_dtor(&retval);
 			/* The user-provided callback rarely returns refcounted values. */
 			if (retval_true == stop_value) {
-				RETURN_BOOL(stop_value);
+				RETURN_BOOL(stop_value ^ negate);
 			}
 		} else {
 			if (zend_is_true(operand) == stop_value) {
-				RETURN_BOOL(stop_value);
+				RETURN_BOOL(stop_value ^ negate);
 			}
 		}
 	} ZEND_HASH_FOREACH_END();
 
-	RETURN_BOOL(!stop_value);
+	RETURN_BOOL(!stop_value ^ negate);
 }
 /* }}} */
 
@@ -107,11 +186,16 @@ static int php_traversable_func_until(zend_object_iterator *iter, void *puser) /
 	zval retval;
 	php_iterator_until_info *until_info = (php_iterator_until_info*) puser;
 	int result;
-	zend_bool stop;
+	bool stop;
 
 	fci = until_info->fci;
 	if (ZEND_FCI_INITIALIZED(fci)) {
 		zval *operand = iter->funcs->get_current_data(iter);
+		if (UNEXPECTED(!operand || EG(exception))) {
+			until_info->result = FAILURE;
+			return ZEND_HASH_APPLY_STOP;
+		}
+		ZVAL_DEREF(operand);
 		fci.retval = &retval;
 		fci.param_count = 1;
 		/* Use the operand like an array of size 1 */
@@ -128,7 +212,13 @@ static int php_traversable_func_until(zend_object_iterator *iter, void *puser) /
 		stop = zend_is_true(&retval) == until_info->stop_value;
 		zval_ptr_dtor(&retval);
 	} else {
-		stop = zend_is_true(iter->funcs->get_current_data(iter)) == until_info->stop_value;
+		zval *operand = iter->funcs->get_current_data(iter);
+		if (UNEXPECTED(!operand || EG(exception))) {
+			return ZEND_HASH_APPLY_STOP;
+		}
+		ZVAL_DEREF(operand);
+		stop = zend_is_true(operand) == until_info->stop_value;
+		zval_ptr_dtor(operand);
 	}
 	if (stop) {
 		until_info->found = 1;
@@ -138,60 +228,225 @@ static int php_traversable_func_until(zend_object_iterator *iter, void *puser) /
 }
 /* }}} */
 
-static inline void php_iterable_until(INTERNAL_FUNCTION_PARAMETERS, int stop_value) /* {{{ */
+static inline void php_iterable_until(INTERNAL_FUNCTION_PARAMETERS, int stop_value, int negate) /* {{{ */
 {
 	zval *input;
 	zend_fcall_info fci = empty_fcall_info;
 	zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
 
 	ZEND_PARSE_PARAMETERS_START(1, 2)
-		Z_PARAM_ZVAL(input)
+		Z_PARAM_ITERABLE(input)
 		Z_PARAM_OPTIONAL
 		Z_PARAM_FUNC_OR_NULL(fci, fci_cache)
 	ZEND_PARSE_PARAMETERS_END();
 
 	switch (Z_TYPE_P(input)) {
 		case IS_ARRAY:
-			php_array_until(return_value, Z_ARRVAL_P(input), fci, fci_cache, stop_value);
+			php_array_until(return_value, Z_ARRVAL_P(input), fci, fci_cache, stop_value, negate);
 			return;
-		case IS_OBJECT:
-			if (instanceof_function(Z_OBJCE_P(input), zend_ce_traversable)) {
-				php_iterator_until_info until_info;
+		case IS_OBJECT: {
+			ZEND_ASSERT(instanceof_function(Z_OBJCE_P(input), zend_ce_traversable));
+			php_iterator_until_info until_info;
 
-				until_info.obj = input;
-				until_info.fci = fci;
-				until_info.fcc = fci_cache;
+			until_info.obj = input;
+			until_info.fci = fci;
+			until_info.fcc = fci_cache;
 
-				until_info.stop_value = stop_value;
-				until_info.result = SUCCESS;
-				until_info.found = 0;
+			until_info.stop_value = stop_value;
+			until_info.result = SUCCESS;
+			until_info.found = 0;
 
-				if (spl_iterator_apply(until_info.obj, php_traversable_func_until, (void*)&until_info) == SUCCESS && until_info.result == SUCCESS) {
-					RETURN_BOOL(!(until_info.found ^ stop_value));
-				}
-				return;
+			if (spl_iterator_apply(until_info.obj, php_traversable_func_until, (void*)&until_info) == SUCCESS && until_info.result == SUCCESS) {
+				RETURN_BOOL(!(until_info.found ^ stop_value ^ negate));
 			}
-			/* fallthrough */
-		default:
-			zend_argument_type_error(1, "must be of type iterable, %s given", zend_zval_type_name(input));
-			RETURN_THROWS();
-			break;
+			return;
+		}
+		EMPTY_SWITCH_DEFAULT_CASE();
 	}
 }
 
-/* {{{ proto bool all(array input, ?callable predicate = null)
-   Determines whether the predicate holds for all elements in the array */
+/* Determines whether the predicate holds for all elements in the array */
 PHP_FUNCTION(all)
 {
-	php_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0);
+	php_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, 0);
 }
 /* }}} */
 
-/* {{{ proto bool any(array input, ?callable predicate = null)
-   Determines whether the predicate holds for at least one element in the array */
+/* {{{ Determines whether the predicate holds for at least one element in the array */
 PHP_FUNCTION(any)
 {
-	php_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1);
+	php_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1, 0);
+}
+/* }}} */
+
+/* {{{ Determines whether the predicate holds for no elements of the array */
+PHP_FUNCTION(none)
+{
+	php_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1, 1);
+}
+/* }}} */
+
+/* {{{ Reduces values */
+PHP_FUNCTION(reduce)
+{
+	zval *input;
+	zend_fcall_info fci;
+	zend_fcall_info_cache fci_cache;
+	zval *initial = NULL;
+
+	ZEND_PARSE_PARAMETERS_START(2, 3)
+		Z_PARAM_ITERABLE(input)
+		Z_PARAM_FUNC(fci, fci_cache)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_ZVAL(initial)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (ZEND_NUM_ARGS() > 2) {
+		ZVAL_COPY(return_value, initial);
+	} else {
+		ZVAL_NULL(return_value);
+	}
+
+	switch (Z_TYPE_P(input)) {
+		case IS_ARRAY:
+			php_array_reduce(Z_ARRVAL_P(input), fci, fci_cache, return_value);
+			return;
+		case IS_OBJECT: {
+			ZEND_ASSERT(instanceof_function(Z_OBJCE_P(input), zend_ce_traversable));
+			php_traversable_reduce(input, fci, fci_cache, return_value);
+			return;
+		}
+		EMPTY_SWITCH_DEFAULT_CASE();
+	}
+}
+/* }}} */
+
+static zend_always_inline void php_array_find(HashTable *htbl, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value, zval *default_value) /* {{{ */
+{
+	zval retval;
+	zval *operand;
+
+	if (zend_hash_num_elements(htbl) > 0) {
+		fci.retval = &retval;
+		fci.param_count = 1;
+
+		ZEND_HASH_FOREACH_VAL(htbl, operand) {
+			fci.params = operand;
+			Z_TRY_ADDREF_P(operand);
+
+			if (zend_call_function(&fci, &fci_cache) == SUCCESS) {
+				bool found = zend_is_true(&retval);
+				if (found) {
+					ZVAL_COPY_VALUE(return_value, operand);
+					return;
+				} else {
+					zval_ptr_dtor(operand);
+				}
+			} else {
+				zval_ptr_dtor(operand);
+				return;
+			}
+		} ZEND_HASH_FOREACH_END();
+	}
+
+	if (default_value) {
+		ZVAL_COPY(return_value, default_value);
+	} else {
+		ZVAL_NULL(return_value);
+	}
+}
+/* }}} */
+
+typedef struct {
+	zend_fcall_info fci;
+	zend_fcall_info_cache fcc;
+	zval *return_value;
+	bool found;
+} traversable_find_data;
+
+static int php_traversable_find_elem(zend_object_iterator *iter, void *puser) /* {{{ */
+{
+	zval retval;
+	traversable_find_data *find_data = puser;
+	zend_fcall_info *fci = &find_data->fci;
+	ZEND_ASSERT(ZEND_FCI_INITIALIZED(*fci));
+
+	zval *operand = iter->funcs->get_current_data(iter);
+	if (UNEXPECTED(!operand || EG(exception))) {
+		return ZEND_HASH_APPLY_STOP;
+	}
+	ZVAL_DEREF(operand);
+    // Treat this as a 1-element array.
+	fci->params = operand;
+	fci->retval = &retval;
+	Z_TRY_ADDREF_P(operand);
+	int result = zend_call_function(&find_data->fci, &find_data->fcc);
+	if (UNEXPECTED(result == FAILURE || EG(exception))) {
+		return ZEND_HASH_APPLY_STOP;
+	}
+	fci->retval = &retval;
+	bool found = zend_is_true(&retval);
+	zval_ptr_dtor(&retval);
+	if (UNEXPECTED(EG(exception))) {
+		return ZEND_HASH_APPLY_STOP;
+	}
+	if (found) {
+		ZVAL_COPY_VALUE(find_data->return_value, operand);
+		find_data->found = 1;
+		return ZEND_HASH_APPLY_STOP;
+	}
+	zval_ptr_dtor(operand);
+	return ZEND_HASH_APPLY_KEEP;
+}
+
+static zend_always_inline void php_traversable_find(zval *obj, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value, zval *default_value) /* {{{ */
+{
+	traversable_find_data find_data;
+	find_data.fci = fci;
+	find_data.fci.param_count = 1;
+	find_data.fcc = fci_cache;
+	find_data.return_value = return_value;
+	find_data.found = 0;
+
+	if (spl_iterator_apply(obj, php_traversable_find_elem, (void*)&find_data) != SUCCESS || EG(exception)) {
+		return;
+	}
+	if (find_data.found) {
+		return;
+	}
+	if (default_value) {
+		ZVAL_COPY(return_value, default_value);
+	} else {
+		ZVAL_NULL(return_value);
+	}
+}
+/* }}} */
+
+/* {{{ Finds the first value or returns the default */
+PHP_FUNCTION(find)
+{
+	zval *input;
+	zend_fcall_info fci;
+	zend_fcall_info_cache fci_cache;
+	zval *default_value = NULL;
+
+	ZEND_PARSE_PARAMETERS_START(2, 3)
+		Z_PARAM_ITERABLE(input)
+		Z_PARAM_FUNC(fci, fci_cache)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_ZVAL(default_value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	switch (Z_TYPE_P(input)) {
+		case IS_ARRAY:
+			php_array_find(Z_ARRVAL_P(input), fci, fci_cache, return_value, default_value);
+			return;
+		case IS_OBJECT: {
+			php_traversable_find(input, fci, fci_cache, return_value, default_value);
+			return;
+		}
+		EMPTY_SWITCH_DEFAULT_CASE();
+	}
 }
 /* }}} */
 

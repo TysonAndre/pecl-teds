@@ -46,10 +46,10 @@ dump_all(new ArrayIterator(), 'is_int_ex');
 
 echo "\nDone";
 ?>
---EXPECT--
+--EXPECTF--
 *** Testing not enough or wrong arguments ***
 bool(true)
-Caught TypeError: Teds\all(): Argument #2 ($callback) must be a valid callback, no array or string given
+Caught TypeError: Teds\all(): Argument #2 ($callback) must be a valid callback%S, no array or string given
 
 *** Testing basic functionality ***
 bool(true)
