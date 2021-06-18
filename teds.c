@@ -290,26 +290,21 @@ PHP_FUNCTION(none)
 }
 /* }}} */
 
-/* {{{ Reduces values */
-PHP_FUNCTION(reduce)
+/* {{{ folds values */
+PHP_FUNCTION(fold)
 {
 	zval *input;
 	zend_fcall_info fci;
 	zend_fcall_info_cache fci_cache;
 	zval *initial = NULL;
 
-	ZEND_PARSE_PARAMETERS_START(2, 3)
+	ZEND_PARSE_PARAMETERS_START(3, 3)
 		Z_PARAM_ITERABLE(input)
 		Z_PARAM_FUNC(fci, fci_cache)
-		Z_PARAM_OPTIONAL
 		Z_PARAM_ZVAL(initial)
 	ZEND_PARSE_PARAMETERS_END();
 
-	if (ZEND_NUM_ARGS() > 2) {
-		ZVAL_COPY(return_value, initial);
-	} else {
-		ZVAL_NULL(return_value);
-	}
+	ZVAL_COPY(return_value, initial);
 
 	switch (Z_TYPE_P(input)) {
 		case IS_ARRAY:

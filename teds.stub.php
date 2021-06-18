@@ -42,8 +42,13 @@ function all(iterable $iterable, ?callable $callback = null): bool {}
  */
 function none(iterable $iterable, ?callable $callback = null): bool {}
 
-// Analogous to array_reduce
-function reduce(iterable $iterable, callable $callback, mixed $initial = null): mixed {}
+/**
+ * Returns the result of repeatedly applying $initial = $callback($initial, $value) for each value in $iterable
+ * @param iterable $iterable
+ * (at)param callable(mixed $initial, mixed $value):mixed $callback
+ * @param mixed $initial
+ */
+function fold(iterable $iterable, callable $callback, mixed $initial): mixed {}
 
 /**
  * Returns the first value for which $callback($value) is truthy.

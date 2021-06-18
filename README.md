@@ -114,8 +114,8 @@ function none(iterable $iterable, ?callable $callback = null): bool {
 	return !any($iterable, $callback);
 }
 
-// Analogous to array_reduce
-function reduce(iterable $iterable, callable $callback, mixed $default = null): bool {
+// Analogous to array_reduce but with mandatory default
+function fold(iterable $iterable, callable $callback, mixed $default): bool {
 	foreach ($iterable as $value) {
 		$default = $callback($default, $value);
 	}
