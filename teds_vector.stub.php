@@ -29,6 +29,9 @@ final class Vector implements IteratorAggregate, Countable, JsonSerializable, Ar
     // Throws
     public function offsetUnset(mixed $offset): mixed {}
 
+    public function indexOf(mixed $value): int|false {}
+    public function contains(mixed $value): bool {}
+
     public function jsonSerialize(): array {}
 }
 

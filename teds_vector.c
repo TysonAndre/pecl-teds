@@ -101,8 +101,8 @@ static bool teds_vector_entries_uninitialized(teds_vector_entries *array)
 static void teds_vector_entries_init_elems(teds_vector_entries *array, zend_long from, zend_long to)
 {
 	ZEND_ASSERT(from <= to);
-	zval *begin = &array->entries[from].key;
-	zval *end = &array->entries[to].key;
+	zval *begin = &array->entries[from];
+	zval *end = &array->entries[to];
 
 	while (begin != end) {
 		ZVAL_NULL(begin++);
@@ -674,8 +674,44 @@ PHP_METHOD(Teds_Vector, offsetExists)
 
 	const zend_long offset = teds_get_offset(offset_zv);
 	const teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
-	size_t len = intern->array.size;
+	const size_t len = intern->array.size;
 	RETURN_BOOL((zend_ulong) offset < len);
+}
+
+PHP_METHOD(Teds_Vector, indexOf)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(value, &entries[i])) {
+			RETURN_LONG(i);
+		}
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_Vector, contains)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(value, &entries[i])) {
+			RETURN_TRUE;
+		}
+	}
+	RETURN_FALSE;
 }
 
 static zend_always_inline void teds_vector_set_value_at_offset(zval *return_value, zval *object, zend_long offset, zval *value) {

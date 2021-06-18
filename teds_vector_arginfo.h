@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 94c08034aef03100dd9555ba78672dac46fde7a4 */
+ * Stub hash: 017c3dcd9882afb6a5ca6b0fc6e25ee0f0deb35e */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -53,6 +53,14 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Vector_offsetUnset arginfo_class_Teds_Vector_offsetGet
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_class_Teds_Vector_indexOf, 0, 1, MAY_BE_LONG|MAY_BE_FALSE)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_contains, 0, 1, _IS_BOOL, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_Teds_Vector_jsonSerialize arginfo_class_Teds_Vector___serialize
 
 
@@ -71,6 +79,8 @@ ZEND_METHOD(Teds_Vector, offsetGet);
 ZEND_METHOD(Teds_Vector, offsetExists);
 ZEND_METHOD(Teds_Vector, offsetSet);
 ZEND_METHOD(Teds_Vector, offsetUnset);
+ZEND_METHOD(Teds_Vector, indexOf);
+ZEND_METHOD(Teds_Vector, contains);
 ZEND_METHOD(Teds_Vector, jsonSerialize);
 
 
@@ -90,6 +100,8 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, offsetExists, arginfo_class_Teds_Vector_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetSet, arginfo_class_Teds_Vector_offsetSet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetUnset, arginfo_class_Teds_Vector_offsetUnset, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, indexOf, arginfo_class_Teds_Vector_indexOf, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, contains, arginfo_class_Teds_Vector_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, jsonSerialize, arginfo_class_Teds_Vector_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
