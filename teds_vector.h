@@ -7,21 +7,11 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef PHP_TEDS_H
-# define PHP_TEDS_H
+#ifndef TEDS_VECTOR_H
+#define TEDS_VECTOR_H
 
-/** Module entry of teds. */
-extern zend_module_entry teds_module_entry;
-#define phpext_teds_ptr &teds_module_entry
+extern zend_class_entry *spl_ce_Vector;
 
-PHP_MINIT_FUNCTION(teds);
+PHP_MINIT_FUNCTION(teds_vector);
 
-# define PHP_TEDS_VERSION "0.1.0dev"
-
-# if defined(ZTS) && defined(COMPILE_DL_TEDS)
-ZEND_TSRMLS_CACHE_EXTERN()
-# endif
-
-void php_teds_ex(zval *struc, int level, smart_str *buf);
-
-#endif	/* PHP_TEDS_H */
+#endif	/* TEDS_VECTOR_H */

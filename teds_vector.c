@@ -7,7 +7,7 @@
   +----------------------------------------------------------------------+
 */
 
-/* This is based on spl_fixedarray.c but uses less memory and is immutable */
+/* This is based on spl_fixedarray.c but has lower overhead (when size is known) and is more efficient to append and remove elements from the end of the list */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -18,9 +18,9 @@
 #include "zend_exceptions.h"
 
 #include "php_teds.h"
-#include "teds_immutablesequence_arginfo.h"
-#include "teds_immutablesequence.h"
 #include "teds.h"
+#include "teds_vector_arginfo.h"
+#include "teds_vector.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
@@ -28,42 +28,43 @@
 
 #include <stdbool.h>
 
-zend_object_handlers spl_handler_ImmutableSequence;
-zend_class_entry *spl_ce_ImmutableSequence;
+zend_object_handlers spl_handler_Vector;
+zend_class_entry *spl_ce_Vector;
 
-/* This is a placeholder value to distinguish between empty and uninitialized ImmutableSequence instances.
+/* This is a placeholder value to distinguish between empty and uninitialized Vector instances.
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
 static const zval empty_entry_list[1];
 
-typedef struct _teds_cached_entries {
+typedef struct _teds_vector_entries {
 	size_t size;
+	size_t capacity;
 	zval *entries;
-} teds_cached_entries;
+} teds_vector_entries;
 
-typedef struct _teds_immutablesequence_object {
-	teds_cached_entries		array;
+typedef struct _teds_vector_object {
+	teds_vector_entries		array;
 	zend_object				std;
-} teds_immutablesequence_object;
+} teds_vector_object;
 
-/* Used by InternalIterator returned by ImmutableSequence->getIterator() */
-typedef struct _teds_immutablesequence_it {
+/* Used by InternalIterator returned by Vector->getIterator() */
+typedef struct _teds_vector_it {
 	zend_object_iterator intern;
 	zend_long            current;
-} teds_immutablesequence_it;
+} teds_vector_it;
 
-static teds_immutablesequence_object *cached_iterable_from_obj(zend_object *obj)
+static teds_vector_object *cached_iterable_from_obj(zend_object *obj)
 {
-	return (teds_immutablesequence_object*)((char*)(obj) - XtOffsetOf(teds_immutablesequence_object, std));
+	return (teds_vector_object*)((char*)(obj) - XtOffsetOf(teds_vector_object, std));
 }
 
-#define Z_IMMUTABLESEQUENCE_P(zv)  cached_iterable_from_obj(Z_OBJ_P((zv)))
+#define Z_VECTOR_P(zv)  cached_iterable_from_obj(Z_OBJ_P((zv)))
 
 /* Helps enforce the invariants in debug mode:
  *   - if size == 0, then entries == NULL
  *   - if size > 0, then entries != NULL
  *   - size is not less than 0
  */
-static bool teds_cached_entries_empty(teds_cached_entries *array)
+static bool teds_vector_entries_empty(teds_vector_entries *array)
 {
 	if (array->size > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -73,7 +74,7 @@ static bool teds_cached_entries_empty(teds_cached_entries *array)
 	return true;
 }
 
-static bool teds_cached_entries_uninitialized(teds_cached_entries *array)
+static bool teds_vector_entries_uninitialized(teds_vector_entries *array)
 {
 	if (array->entries == NULL) {
 		ZEND_ASSERT(array->size == 0);
@@ -85,7 +86,7 @@ static bool teds_cached_entries_uninitialized(teds_cached_entries *array)
 
 /* Initializes the range [from, to) to null. Does not dtor existing entries. */
 /* TODO: Delete if this isn't used in the final version
-static void teds_cached_entries_init_elems(teds_cached_entries *array, zend_long from, zend_long to)
+static void teds_vector_entries_init_elems(teds_vector_entries *array, zend_long from, zend_long to)
 {
 	ZEND_ASSERT(from <= to);
 	zval *begin = &array->entries[from].key;
@@ -97,7 +98,7 @@ static void teds_cached_entries_init_elems(teds_cached_entries *array, zend_long
 }
 */
 
-static void teds_cached_entries_init_from_array(teds_cached_entries *array, zend_array *values)
+static void teds_vector_entries_init_from_array(teds_vector_entries *array, zend_array *values)
 {
 	zend_long size = zend_hash_num_elements(values);
 	if (size > 0) {
@@ -121,7 +122,7 @@ static void teds_cached_entries_init_from_array(teds_cached_entries *array, zend
 	}
 }
 
-static void teds_cached_entries_init_from_traversable(teds_cached_entries *array, zend_object *obj)
+static void teds_vector_entries_init_from_traversable(teds_vector_entries *array, zend_object *obj)
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
@@ -151,6 +152,9 @@ static void teds_cached_entries_init_from_traversable(teds_cached_entries *array
 			break;
 		}
 		zval *value = funcs->get_current_data(iter);
+		if (UNEXPECTED(EG(exception))) {
+			break;
+		}
 		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
@@ -186,10 +190,10 @@ static void teds_cached_entries_init_from_traversable(teds_cached_entries *array
 	}
 }
 
-/* Copies the range [begin, end) into the immutablesequence, beginning at `offset`.
+/* Copies the range [begin, end) into the vector, beginning at `offset`.
  * Does not dtor the existing elements.
  */
-static void teds_immutablesequence_copy_range(teds_cached_entries *array, size_t offset, zval *begin, zval *end)
+static void teds_vector_copy_range(teds_vector_entries *array, size_t offset, zval *begin, zval *end)
 {
 	ZEND_ASSERT(array->size - offset >= end - begin);
 
@@ -201,7 +205,7 @@ static void teds_immutablesequence_copy_range(teds_cached_entries *array, size_t
 	}
 }
 
-static void teds_cached_entries_copy_ctor(teds_cached_entries *to, teds_cached_entries *from)
+static void teds_vector_entries_copy_ctor(teds_vector_entries *to, teds_vector_entries *from)
 {
 	zend_long size = from->size;
 	if (!size) {
@@ -215,13 +219,13 @@ static void teds_cached_entries_copy_ctor(teds_cached_entries *to, teds_cached_e
 	to->size = size;
 
 	zval *begin = from->entries, *end = from->entries + size;
-	teds_immutablesequence_copy_range(to, 0, begin, end);
+	teds_vector_copy_range(to, 0, begin, end);
 }
 
 /* Destructs the entries in the range [from, to).
  * Caller is expected to bounds check.
  */
-static void teds_cached_entries_dtor_range(teds_cached_entries *array, size_t from, size_t to)
+static void teds_vector_entries_dtor_range(teds_vector_entries *array, size_t from, size_t to)
 {
 	zval *begin = array->entries + from, *end = array->entries + to;
 	while (begin != end) {
@@ -233,17 +237,17 @@ static void teds_cached_entries_dtor_range(teds_cached_entries *array, size_t fr
 /* Destructs and frees contents but not the array itself.
  * If you want to re-use the array then you need to re-initialize it.
  */
-static void teds_cached_entries_dtor(teds_cached_entries *array)
+static void teds_vector_entries_dtor(teds_vector_entries *array)
 {
-	if (!teds_cached_entries_empty(array)) {
-		teds_cached_entries_dtor_range(array, 0, array->size);
+	if (!teds_vector_entries_empty(array)) {
+		teds_vector_entries_dtor_range(array, 0, array->size);
 		efree(array->entries);
 	}
 }
 
-static HashTable* teds_immutablesequence_object_get_gc(zend_object *obj, zval **table, int *n)
+static HashTable* teds_vector_object_get_gc(zend_object *obj, zval **table, int *n)
 {
-	teds_immutablesequence_object *intern = cached_iterable_from_obj(obj);
+	teds_vector_object *intern = cached_iterable_from_obj(obj);
 
 	*table = intern->array.entries;
 	*n = (int)intern->array.size;
@@ -253,9 +257,9 @@ static HashTable* teds_immutablesequence_object_get_gc(zend_object *obj, zval **
 	return NULL;
 }
 
-static HashTable* teds_immutablesequence_object_get_properties(zend_object *obj)
+static HashTable* teds_vector_object_get_properties(zend_object *obj)
 {
-	teds_immutablesequence_object *intern = cached_iterable_from_obj(obj);
+	teds_vector_object *intern = cached_iterable_from_obj(obj);
 	size_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
 	if (!len) {
@@ -277,28 +281,28 @@ static HashTable* teds_immutablesequence_object_get_properties(zend_object *obj)
 	return ht;
 }
 
-static void teds_immutablesequence_object_free_storage(zend_object *object)
+static void teds_vector_object_free_storage(zend_object *object)
 {
-	teds_immutablesequence_object *intern = cached_iterable_from_obj(object);
-	teds_cached_entries_dtor(&intern->array);
+	teds_vector_object *intern = cached_iterable_from_obj(object);
+	teds_vector_entries_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
 
-static zend_object *teds_immutablesequence_object_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
+static zend_object *teds_vector_object_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
 {
-	teds_immutablesequence_object *intern;
+	teds_vector_object *intern;
 
-	intern = zend_object_alloc(sizeof(teds_immutablesequence_object), class_type);
+	intern = zend_object_alloc(sizeof(teds_vector_object), class_type);
 	/* This is a final class */
-	ZEND_ASSERT(class_type == spl_ce_ImmutableSequence);
+	ZEND_ASSERT(class_type == spl_ce_Vector);
 
 	zend_object_std_init(&intern->std, class_type);
 	object_properties_init(&intern->std, class_type);
-	intern->std.handlers = &spl_handler_ImmutableSequence;
+	intern->std.handlers = &spl_handler_Vector;
 
 	if (orig && clone_orig) {
-		teds_immutablesequence_object *other = cached_iterable_from_obj(orig);
-		teds_cached_entries_copy_ctor(&intern->array, &other->array);
+		teds_vector_object *other = cached_iterable_from_obj(orig);
+		teds_vector_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.entries = NULL;
 	}
@@ -306,24 +310,24 @@ static zend_object *teds_immutablesequence_object_new_ex(zend_class_entry *class
 	return &intern->std;
 }
 
-static zend_object *teds_immutablesequence_new(zend_class_entry *class_type)
+static zend_object *teds_vector_new(zend_class_entry *class_type)
 {
-	return teds_immutablesequence_object_new_ex(class_type, NULL, 0);
+	return teds_vector_object_new_ex(class_type, NULL, 0);
 }
 
 
-static zend_object *teds_immutablesequence_object_clone(zend_object *old_object)
+static zend_object *teds_vector_object_clone(zend_object *old_object)
 {
-	zend_object *new_object = teds_immutablesequence_object_new_ex(old_object->ce, old_object, 1);
+	zend_object *new_object = teds_vector_object_new_ex(old_object->ce, old_object, 1);
 
 	zend_objects_clone_members(new_object, old_object);
 
 	return new_object;
 }
 
-static int teds_immutablesequence_object_count_elements(zend_object *object, zend_long *count)
+static int teds_vector_object_count_elements(zend_object *object, zend_long *count)
 {
-	teds_immutablesequence_object *intern;
+	teds_vector_object *intern;
 
 	intern = cached_iterable_from_obj(object);
 	*count = intern->array.size;
@@ -331,18 +335,18 @@ static int teds_immutablesequence_object_count_elements(zend_object *object, zen
 }
 
 /* Get number of entries in this iterable */
-PHP_METHOD(Teds_ImmutableSequence, count)
+PHP_METHOD(Teds_Vector, count)
 {
 	zval *object = ZEND_THIS;
 
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(object);
+	teds_vector_object *intern = Z_VECTOR_P(object);
 	RETURN_LONG(intern->array.size);
 }
 
 /* Create this from an iterable */
-PHP_METHOD(Teds_ImmutableSequence, __construct)
+PHP_METHOD(Teds_Vector, __construct)
 {
 	zval *object = ZEND_THIS;
 	zval* iterable;
@@ -351,46 +355,46 @@ PHP_METHOD(Teds_ImmutableSequence, __construct)
 		Z_PARAM_ITERABLE(iterable)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(object);
+	teds_vector_object *intern = Z_VECTOR_P(object);
 
-	if (UNEXPECTED(!teds_cached_entries_uninitialized(&intern->array))) {
-		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\ImmutableSequence::__construct twice", 0);
+	if (UNEXPECTED(!teds_vector_entries_uninitialized(&intern->array))) {
+		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\Vector::__construct twice", 0);
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
 	}
 
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_cached_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
+			teds_vector_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
 			return;
 		case IS_OBJECT:
-			teds_cached_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
+			teds_vector_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
 }
 
-PHP_METHOD(Teds_ImmutableSequence, getIterator)
+PHP_METHOD(Teds_Vector, getIterator)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	zend_create_internal_iterator_zval(return_value, ZEND_THIS);
 }
 
-static void teds_immutablesequence_it_dtor(zend_object_iterator *iter)
+static void teds_vector_it_dtor(zend_object_iterator *iter)
 {
 	zval_ptr_dtor(&iter->data);
 }
 
-static void teds_immutablesequence_it_rewind(zend_object_iterator *iter)
+static void teds_vector_it_rewind(zend_object_iterator *iter)
 {
-	((teds_immutablesequence_it*)iter)->current = 0;
+	((teds_vector_it*)iter)->current = 0;
 }
 
-static int teds_immutablesequence_it_valid(zend_object_iterator *iter)
+static int teds_vector_it_valid(zend_object_iterator *iter)
 {
-	teds_immutablesequence_it     *iterator = (teds_immutablesequence_it*)iter;
-	teds_immutablesequence_object *object   = Z_IMMUTABLESEQUENCE_P(&iter->data);
+	teds_vector_it     *iterator = (teds_vector_it*)iter;
+	teds_vector_object *object   = Z_VECTOR_P(&iter->data);
 
 	if (iterator->current >= 0 && iterator->current < object->array.size) {
 		return SUCCESS;
@@ -399,7 +403,7 @@ static int teds_immutablesequence_it_valid(zend_object_iterator *iter)
 	return FAILURE;
 }
 
-static zval *teds_immutablesequence_object_read_offset_helper(teds_immutablesequence_object *intern, size_t offset)
+static zval *teds_vector_object_read_offset_helper(teds_vector_object *intern, size_t offset)
 {
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
@@ -411,12 +415,12 @@ static zval *teds_immutablesequence_object_read_offset_helper(teds_immutablesequ
 	}
 }
 
-static zval *teds_immutablesequence_it_get_current_data(zend_object_iterator *iter)
+static zval *teds_vector_it_get_current_data(zend_object_iterator *iter)
 {
-	teds_immutablesequence_it     *iterator = (teds_immutablesequence_it*)iter;
-	teds_immutablesequence_object *object   = Z_IMMUTABLESEQUENCE_P(&iter->data);
+	teds_vector_it     *iterator = (teds_vector_it*)iter;
+	teds_vector_object *object   = Z_VECTOR_P(&iter->data);
 
-	zval *data = teds_immutablesequence_object_read_offset_helper(object, iterator->current);
+	zval *data = teds_vector_object_read_offset_helper(object, iterator->current);
 
 	if (UNEXPECTED(data == NULL)) {
 		return &EG(uninitialized_zval);
@@ -425,10 +429,10 @@ static zval *teds_immutablesequence_it_get_current_data(zend_object_iterator *it
 	}
 }
 
-static void teds_immutablesequence_it_get_current_key(zend_object_iterator *iter, zval *key)
+static void teds_vector_it_get_current_key(zend_object_iterator *iter, zval *key)
 {
-	teds_immutablesequence_it     *iterator = (teds_immutablesequence_it*)iter;
-	teds_immutablesequence_object *object   = Z_IMMUTABLESEQUENCE_P(&iter->data);
+	teds_vector_it     *iterator = (teds_vector_it*)iter;
+	teds_vector_object *object   = Z_VECTOR_P(&iter->data);
 
 	size_t offset = iterator->current;
 	if (offset >= object->array.size) {
@@ -438,44 +442,44 @@ static void teds_immutablesequence_it_get_current_key(zend_object_iterator *iter
 	}
 }
 
-static void teds_immutablesequence_it_move_forward(zend_object_iterator *iter)
+static void teds_vector_it_move_forward(zend_object_iterator *iter)
 {
-	((teds_immutablesequence_it*)iter)->current++;
+	((teds_vector_it*)iter)->current++;
 }
 
 /* iterator handler table */
-static const zend_object_iterator_funcs teds_immutablesequence_it_funcs = {
-	teds_immutablesequence_it_dtor,
-	teds_immutablesequence_it_valid,
-	teds_immutablesequence_it_get_current_data,
-	teds_immutablesequence_it_get_current_key,
-	teds_immutablesequence_it_move_forward,
-	teds_immutablesequence_it_rewind,
+static const zend_object_iterator_funcs teds_vector_it_funcs = {
+	teds_vector_it_dtor,
+	teds_vector_it_valid,
+	teds_vector_it_get_current_data,
+	teds_vector_it_get_current_key,
+	teds_vector_it_move_forward,
+	teds_vector_it_rewind,
 	NULL,
 	NULL, /* get_gc */
 };
 
 
-zend_object_iterator *teds_immutablesequence_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
+zend_object_iterator *teds_vector_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
-	teds_immutablesequence_it *iterator;
+	teds_vector_it *iterator;
 
 	if (UNEXPECTED(by_ref)) {
 		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
 		return NULL;
 	}
 
-	iterator = emalloc(sizeof(teds_immutablesequence_it));
+	iterator = emalloc(sizeof(teds_vector_it));
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
 	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
-	iterator->intern.funcs = &teds_immutablesequence_it_funcs;
+	iterator->intern.funcs = &teds_vector_it_funcs;
 
 	return &iterator->intern;
 }
 
-PHP_METHOD(Teds_ImmutableSequence, __unserialize)
+PHP_METHOD(Teds_Vector, __unserialize)
 {
 	HashTable *raw_data;
 	zval *val;
@@ -485,8 +489,8 @@ PHP_METHOD(Teds_ImmutableSequence, __unserialize)
 	}
 
 	const size_t num_entries = zend_hash_num_elements(raw_data);
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
-	if (UNEXPECTED(!teds_cached_entries_uninitialized(&intern->array))) {
+	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	if (UNEXPECTED(!teds_vector_entries_uninitialized(&intern->array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
 	}
@@ -504,7 +508,7 @@ PHP_METHOD(Teds_ImmutableSequence, __unserialize)
 				zval_ptr_dtor_nogc(deleteIt);
 			}
 			efree(entries);
-			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\ImmutableSequence::__unserialize saw unexpected string key, expected sequence of values", 0);
+			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\Vector::__unserialize saw unexpected string key, expected sequence of values", 0);
 			RETURN_THROWS();
 		}
 		ZVAL_COPY_DEREF(it++, val);
@@ -515,7 +519,7 @@ PHP_METHOD(Teds_ImmutableSequence, __unserialize)
 	intern->array.entries = entries;
 }
 
-static void teds_cached_entries_init_from_array_values(teds_cached_entries *array, zend_array *raw_data)
+static void teds_vector_entries_init_from_array_values(teds_vector_entries *array, zend_array *raw_data)
 {
 	size_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
@@ -541,27 +545,27 @@ static void teds_cached_entries_init_from_array_values(teds_cached_entries *arra
 	array->size = actual_size;
 }
 
-PHP_METHOD(Teds_ImmutableSequence, __set_state)
+PHP_METHOD(Teds_Vector, __set_state)
 {
 	zend_array *array_ht;
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
-	zend_object *object = teds_immutablesequence_new(spl_ce_ImmutableSequence);
-	teds_immutablesequence_object *intern = cached_iterable_from_obj(object);
-	teds_cached_entries_init_from_array_values(&intern->array, array_ht);
+	zend_object *object = teds_vector_new(spl_ce_Vector);
+	teds_vector_object *intern = cached_iterable_from_obj(object);
+	teds_vector_entries_init_from_array_values(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, __serialize)
+PHP_METHOD(Teds_Vector, __serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
+	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
 
-	if (teds_cached_entries_empty(&intern->array)) {
+	if (teds_vector_entries_empty(&intern->array)) {
 		RETURN_EMPTY_ARRAY();
 	}
 	zval *entries = intern->array.entries;
@@ -583,10 +587,10 @@ PHP_METHOD(Teds_ImmutableSequence, __serialize)
 	RETURN_ARR(flat_entries_array);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, toArray)
+PHP_METHOD(Teds_Vector, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
+	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
 	size_t len = intern->array.size;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
@@ -607,9 +611,9 @@ PHP_METHOD(Teds_ImmutableSequence, toArray)
 	RETURN_ARR(values);
 }
 
-static zend_always_inline void teds_immutablesequence_get_value_at_offset(zval *return_value, const zval *object, zend_long offset)
+static zend_always_inline void teds_vector_get_value_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
 {
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(object);
+	teds_vector_object *intern = Z_VECTOR_P(zval_this);
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
 		zend_throw_exception(spl_ce_RuntimeException, "Index out of range", 0);
@@ -618,103 +622,123 @@ static zend_always_inline void teds_immutablesequence_get_value_at_offset(zval *
 	RETURN_COPY(&intern->array.entries[offset]);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, valueAt)
+PHP_METHOD(Teds_Vector, valueAt)
 {
 	zend_long offset;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_LONG(offset)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_immutablesequence_get_value_at_offset(return_value, ZEND_THIS, offset);
+	teds_vector_get_value_at_offset(return_value, ZEND_THIS, offset);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, offsetGet)
+PHP_METHOD(Teds_Vector, offsetGet)
 {
 	zval *offset_zv;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ZVAL(offset_zv)
 	ZEND_PARSE_PARAMETERS_END();
 
-	zend_long offset;
-	if (Z_TYPE_P(offset_zv) != IS_LONG) {
-		offset = spl_offset_convert_to_long(offset_zv);
-	} else {
-		offset = Z_LVAL_P(offset_zv);
-	}
-
-	teds_immutablesequence_get_value_at_offset(return_value, ZEND_THIS, offset);
+	const zend_long offset = teds_get_offset(offset_zv);
+	teds_vector_get_value_at_offset(return_value, ZEND_THIS, offset);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, offsetExists)
+PHP_METHOD(Teds_Vector, offsetExists)
 {
 	zval *offset_zv;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ZVAL(offset_zv)
 	ZEND_PARSE_PARAMETERS_END();
 
-	zend_long offset;
-	if (Z_TYPE_P(offset_zv) != IS_LONG) {
-		offset = spl_offset_convert_to_long(offset_zv);
-	} else {
-		offset = Z_LVAL_P(offset_zv);
-	}
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
+	const zend_long offset = teds_get_offset(offset_zv);
+	const teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
 	size_t len = intern->array.size;
 	RETURN_BOOL((zend_ulong) offset < len);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, offsetSet)
-{
-	zval                  *zindex, *value;
+static zend_always_inline void teds_vector_set_value_at_offset(zval *return_value, zval *object, zend_long offset, zval *value) {
+	ZEND_ASSERT(Z_TYPE_P(object) == IS_OBJECT);
+	const teds_vector_object *intern = Z_VECTOR_P(object);
+	zval *const ptr = &intern->array.entries[offset];
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "zz", &zindex, &value) == FAILURE) {
+	size_t len = intern->array.size;
+	if (UNEXPECTED((zend_ulong) offset >= len)) {
+		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "ImmutableSequence does not support offsetSet - it is immutable", 0);
+	zval tmp;
+	ZVAL_COPY_VALUE(&tmp, ptr);
+	ZVAL_COPY(ptr, value);
+	zval_ptr_dtor(&tmp);
+}
+
+PHP_METHOD(Teds_Vector, setValueAt)
+{
+	zend_long offset;
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_LONG(offset)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_vector_set_value_at_offset(return_value, ZEND_THIS, offset, value);
+}
+
+PHP_METHOD(Teds_Vector, offsetSet)
+{
+	zval                  *offset_zv, *value;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ZVAL(offset_zv)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const zend_long offset = teds_get_offset(offset_zv);
+
+	teds_vector_set_value_at_offset(return_value, ZEND_THIS, offset, value);
+}
+
+PHP_METHOD(Teds_Vector, offsetUnset)
+{
+	zval                  *offset_zv;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
+		RETURN_THROWS();
+	}
+	zend_throw_exception(spl_ce_RuntimeException, "Vector does not support offsetUnset - elements must be removed by resizing", 0);
 	RETURN_THROWS();
 }
 
-PHP_METHOD(Teds_ImmutableSequence, offsetUnset)
-{
-	zval                  *zindex;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &zindex) == FAILURE) {
-		RETURN_THROWS();
-	}
-	zend_throw_exception(spl_ce_RuntimeException, "ImmutableSequence does not support offsetUnset - it is immutable", 0);
-	RETURN_THROWS();
-}
-
-static void teds_immutablesequence_return_list(zval *return_value, teds_immutablesequence_object *intern)
+static void teds_vector_return_list(zval *return_value, teds_vector_object *intern)
 {
 	teds_convert_zval_list_to_php_array_list(return_value, intern->array.entries, intern->array.size);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, jsonSerialize)
+PHP_METHOD(Teds_Vector, jsonSerialize)
 {
 	/* json_encoder.c will always encode objects as {"0":..., "1":...}, and detects recursion if an object returns its internal property array, so we have to return a new array */
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
-	teds_immutablesequence_return_list(return_value, intern);
+	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector_return_list(return_value, intern);
 }
 
-PHP_MINIT_FUNCTION(teds_immutablesequence)
+PHP_MINIT_FUNCTION(teds_vector)
 {
-	spl_ce_ImmutableSequence = register_class_Teds_ImmutableSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
-	spl_ce_ImmutableSequence->create_object = teds_immutablesequence_new;
+	spl_ce_Vector = register_class_Teds_Vector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	spl_ce_Vector->create_object = teds_vector_new;
 
-	memcpy(&spl_handler_ImmutableSequence, &std_object_handlers, sizeof(zend_object_handlers));
+	memcpy(&spl_handler_Vector, &std_object_handlers, sizeof(zend_object_handlers));
 
-	spl_handler_ImmutableSequence.offset          = XtOffsetOf(teds_immutablesequence_object, std);
-	spl_handler_ImmutableSequence.clone_obj       = teds_immutablesequence_object_clone;
-	spl_handler_ImmutableSequence.count_elements  = teds_immutablesequence_object_count_elements;
-	spl_handler_ImmutableSequence.get_properties  = teds_immutablesequence_object_get_properties;
-	spl_handler_ImmutableSequence.get_gc          = teds_immutablesequence_object_get_gc;
-	spl_handler_ImmutableSequence.dtor_obj        = zend_objects_destroy_object;
-	spl_handler_ImmutableSequence.free_obj        = teds_immutablesequence_object_free_storage;
+	spl_handler_Vector.offset          = XtOffsetOf(teds_vector_object, std);
+	spl_handler_Vector.clone_obj       = teds_vector_object_clone;
+	spl_handler_Vector.count_elements  = teds_vector_object_count_elements;
+	spl_handler_Vector.get_properties  = teds_vector_object_get_properties;
+	spl_handler_Vector.get_gc          = teds_vector_object_get_gc;
+	spl_handler_Vector.dtor_obj        = zend_objects_destroy_object;
+	spl_handler_Vector.free_obj        = teds_vector_object_free_storage;
 
-	spl_ce_ImmutableSequence->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-	spl_ce_ImmutableSequence->get_iterator = teds_immutablesequence_get_iterator;
+	spl_ce_Vector->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	spl_ce_Vector->get_iterator = teds_vector_get_iterator;
 
 	return SUCCESS;
 }

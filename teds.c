@@ -24,8 +24,11 @@
 #include "ext/spl/spl_iterators.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/info.h"
+
 #include "teds_immutablekeyvaluesequence.h"
 #include "teds_immutablesequence.h"
+#include "teds_vector.h"
+
 #include "teds_arginfo.h"
 #include "php_teds.h"
 
@@ -456,6 +459,7 @@ PHP_MINIT_FUNCTION(teds)
 {
 	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_vector)(INIT_FUNC_ARGS_PASSTHRU);
 	return SUCCESS;
 }
 /* }}} */

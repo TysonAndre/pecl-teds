@@ -4,7 +4,7 @@
 
 namespace Teds {
 
-final class ImmutableSequence implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
+final class Vector implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
 {
     public function __construct(iterable $iterator) {}
     public function getIterator(): \InternalIterator {}
@@ -12,18 +12,19 @@ final class ImmutableSequence implements IteratorAggregate, Countable, JsonSeria
 
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
-    public static function __set_state(array $array): ImmutableSequence {}
+    public static function __set_state(array $array): Vector {}
 
     public function toArray(): array {}
-    // Strictly typed, unlike offsetGet
+    // Strictly typed, unlike offsetGet/offsetSet
     public function valueAt(int $offset): mixed {}
+    public function setValueAt(int $offset, mixed $value): void {}
+    // TODO public function setValueAt(int $offset, mixed $value): mixed {}
     // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
-    public function offsetExists(mixed $offset): bool {}
+    public function offsetExists(mixed $offset): mixed {}
+    public function offsetSet(mixed $offset, mixed $value): mixed {}
     // Throws
-    public function offsetSet(mixed $offset, mixed $value): void {}
-    // Throws
-    public function offsetUnset(mixed $offset): void {}
+    public function offsetUnset(mixed $offset): mixed {}
 
     public function jsonSerialize(): array {}
 }

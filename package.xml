@@ -29,6 +29,7 @@
    <file name="config.m4" role="src" />
    <file name="config.w32" role="src" />
    <file name="teds.c" role="src" />
+   <file name="teds.h" role="src" />
    <file name="teds_arginfo.h" role="src" />
    <file name="teds_immutablekeyvaluesequence_arginfo.h" role="src" />
    <file name="teds_immutablekeyvaluesequence.c" role="src" />

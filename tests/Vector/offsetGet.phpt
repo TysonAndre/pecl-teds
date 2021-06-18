@@ -1,5 +1,5 @@
 --TEST--
-Teds\ImmutableSequence offsetGet/valueAt
+Teds\Vector offsetGet/valueAt
 --FILE--
 <?php
 
@@ -11,11 +11,11 @@ function expect_throws(Closure $cb): void {
         printf("Caught %s: %s\n", $e::class, $e->getMessage());
     }
 }
-expect_throws(fn() => (new ReflectionClass(Teds\ImmutableSequence::class))->newInstanceWithoutConstructor());
-$it = new Teds\ImmutableSequence(['first' => new stdClass()]);
+expect_throws(fn() => (new ReflectionClass(Teds\Vector::class))->newInstanceWithoutConstructor());
+$it = new Teds\Vector(['first' => new stdClass()]);
 var_dump($it->offsetGet(0));
 var_dump($it->valueAt(0));
-expect_throws(fn() => $it->offsetSet(0,'x'));
+expect_throws(fn() => $it->offsetSet(1,'x'));
 expect_throws(fn() => $it->offsetUnset(0));
 var_dump($it->offsetGet('0'));
 echo "offsetExists checks\n";
@@ -43,14 +43,14 @@ expect_throws(fn() => $it->offsetSet(PHP_INT_MAX,'x'));
 expect_throws(function () use ($it) { unset($it[0]); });
 var_dump($it->getIterator());
 ?>
---EXPECT--
-Caught ReflectionException: Class Teds\ImmutableSequence is an internal class marked as final that cannot be instantiated without invoking its constructor
+--EXPECTF--
+Caught ReflectionException: Class Teds\Vector is an internal class marked as final that cannot be instantiated without invoking its constructor
 object(stdClass)#1 (0) {
 }
 object(stdClass)#1 (0) {
 }
-Caught RuntimeException: ImmutableSequence does not support offsetSet - it is immutable
-Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable
+Caught RuntimeException: Index invalid or out of range
+Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
 object(stdClass)#1 (0) {
 }
 offsetExists checks
@@ -71,10 +71,10 @@ Caught RuntimeException: Index out of range
 Caught RuntimeException: Index out of range
 Caught RuntimeException: Index out of range
 Caught RuntimeException: Index out of range
-Caught TypeError: Teds\ImmutableSequence::valueAt(): Argument #1 ($offset) must be of type int, string given
+Caught TypeError: Teds\Vector::valueAt(): Argument #1 ($offset) must be of type int, string given
 Caught RuntimeException: Index out of range
-Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable
-Caught RuntimeException: ImmutableSequence does not support offsetSet - it is immutable
-Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable
+Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
+Caught RuntimeException: Index invalid or out of range
+Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
 object(InternalIterator)#2 (0) {
 }
