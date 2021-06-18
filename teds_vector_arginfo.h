@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 5a316a2f5df3524b4bc9157c69f7cfef79990ec2 */
+ * Stub hash: 94c08034aef03100dd9555ba78672dac46fde7a4 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -20,6 +20,13 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_Vector___set_state, 0, 1, Teds\\Vector, 0)
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_append, 0, 1, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_pop, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Vector_toArray arginfo_class_Teds_Vector___serialize
@@ -55,6 +62,8 @@ ZEND_METHOD(Teds_Vector, count);
 ZEND_METHOD(Teds_Vector, __serialize);
 ZEND_METHOD(Teds_Vector, __unserialize);
 ZEND_METHOD(Teds_Vector, __set_state);
+ZEND_METHOD(Teds_Vector, append);
+ZEND_METHOD(Teds_Vector, pop);
 ZEND_METHOD(Teds_Vector, toArray);
 ZEND_METHOD(Teds_Vector, valueAt);
 ZEND_METHOD(Teds_Vector, setValueAt);
@@ -72,6 +81,8 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, __serialize, arginfo_class_Teds_Vector___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, __unserialize, arginfo_class_Teds_Vector___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, __set_state, arginfo_class_Teds_Vector___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Teds_Vector, append, arginfo_class_Teds_Vector_append, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, pop, arginfo_class_Teds_Vector_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, toArray, arginfo_class_Teds_Vector_toArray, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, valueAt, arginfo_class_Teds_Vector_valueAt, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, setValueAt, arginfo_class_Teds_Vector_setValueAt, ZEND_ACC_PUBLIC)
