@@ -645,6 +645,42 @@ PHP_METHOD(Teds_ImmutableSequence, offsetGet)
 	teds_immutablesequence_get_value_at_offset(return_value, ZEND_THIS, offset);
 }
 
+PHP_METHOD(Teds_ImmutableSequence, indexOf)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(value, &entries[i])) {
+			RETURN_LONG(i);
+		}
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_ImmutableSequence, contains)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(value, &entries[i])) {
+			RETURN_TRUE;
+		}
+	}
+	RETURN_FALSE;
+}
+
 PHP_METHOD(Teds_ImmutableSequence, offsetExists)
 {
 	zval *offset_zv;

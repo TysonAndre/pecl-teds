@@ -25,6 +25,9 @@ final class ImmutableSequence implements IteratorAggregate, Countable, JsonSeria
     // Throws
     public function offsetUnset(mixed $offset): void {}
 
+    public function indexOf(mixed $value): int|false {}
+    public function contains(mixed $value): bool {}
+
     public function jsonSerialize(): array {}
 }
 
