@@ -33,9 +33,11 @@
    <file name="teds_immutablekeyvaluesequence_arginfo.h" role="src" />
    <file name="teds_immutablekeyvaluesequence.c" role="src" />
    <file name="teds_immutablekeyvaluesequence.h" role="src" />
+   <file name="teds_immutablekeyvaluesequence.stub.php" role="src" />
    <file name="teds_immutablesequence_arginfo.h" role="src" />
    <file name="teds_immutablesequence.c" role="src" />
    <file name="teds_immutablesequence.h" role="src" />
+   <file name="teds_immutablesequence.stub.php" role="src" />
    <file name="php_teds.h" role="src" />
    <file name="README.md" role="doc" />
    <file name="COPYING" role="doc" />
@@ -66,7 +68,7 @@
     <min>8.0.0</min>
    </php>
    <pearinstaller>
-    <min>1.4.0b1</min>
+    <min>1.10</min>
    </pearinstaller>
   </required>
  </dependencies>

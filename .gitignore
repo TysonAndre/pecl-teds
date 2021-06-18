@@ -2,6 +2,7 @@ tags
 *~
 *.tgz
 *.mem
+*.dep
 
 *.lo
 *.la
