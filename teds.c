@@ -1,6 +1,6 @@
 /*
   +----------------------------------------------------------------------+
-  | teds extension for PHP                                 |
+  | teds extension for PHP                                               |
   | See COPYING file for further copyright information                   |
   +----------------------------------------------------------------------+
   | Author: Tyson Andre <tandre@php.net>                                 |

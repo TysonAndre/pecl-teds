@@ -110,5 +110,5 @@ if test "$PHP_TEDS" != "no"; then
   dnl In case of no dependencies
   AC_DEFINE(HAVE_TEDS, 1, [ Have teds support ])
 
-  PHP_NEW_EXTENSION(teds, teds.c teds_immutablekeyvaluesequence.c, $ext_shared)
+  PHP_NEW_EXTENSION(teds, teds.c teds_immutablesequence.c teds_immutablekeyvaluesequence.c, $ext_shared)
 fi

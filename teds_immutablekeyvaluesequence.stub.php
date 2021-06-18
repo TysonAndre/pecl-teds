@@ -4,8 +4,6 @@
 
 namespace Teds {
 
-/** @generate-class-entries */
-
 final class ImmutableKeyValueSequence implements IteratorAggregate, Countable, JsonSerializable
 {
     public function __construct(iterable $iterator) {}
@@ -25,4 +23,5 @@ final class ImmutableKeyValueSequence implements IteratorAggregate, Countable, J
 
     public function jsonSerialize(): array {}
 }
+
 }
