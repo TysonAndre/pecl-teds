@@ -5,8 +5,8 @@
 [![Build Status](https://github.com/TysonAndre/pecl-teds/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/TysonAndre/pecl-teds/actions/workflows/main.yml?query=branch%3Amain)
 [![Build Status (Windows)](https://ci.appveyor.com/api/projects/status/j5s46tetcg4101g8?svg=true)](https://ci.appveyor.com/project/TysonAndre/pecl-teds)
 
-Teds is a another collection of data structures, maintained by Tyson.
-(\[Tyson's|Tentative\] Extra Data Structures)
+Teds is a another collection of data structures.
+(Tentative Extra Data Structures)
 
 ## Installation
 
@@ -148,7 +148,17 @@ function find(iterable $iterable, callable $callback, mixed $default = null): bo
 
 ```
 
-## Related
+## Motivation
+
+This contains functionality and data structures that may be proposed for inclusion into PHP itself (under a different namespace) at a future date, reimplemented using [SPL's source code](https://github.com/php/php-src/tree/master/ext/spl) as a starting point.
+
+Providing this as a PECL first would make this functionality easier to validate for correctness, and make it more practical to change APIs before proposing including them in PHP if needed.
+
+## License
+
+See [COPYING](./COPYING)
+
+## Related Projects
 
 - https://www.php.net/spl is built into php
 - https://www.php.net/manual/en/book.ds.php
