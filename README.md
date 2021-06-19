@@ -2,7 +2,7 @@
 
 ## Introduction
 
-[![Build Status](https://github.com/TysonAndre/pecl-teds/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/TysonAndre/pecl-teds/actions/workflows/main.yml?query=branch%3Amain)
+[![Build Status](https://github.com/TysonAndre/pecl-teds/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/TysonAndre/pecl-teds/actions/workflows/main.yml?query=branch%3Amain)
 [![Build Status (Windows)](https://ci.appveyor.com/api/projects/status/j5s46tetcg4101g8?svg=true)](https://ci.appveyor.com/project/TysonAndre/pecl-teds)
 
 Teds is a another collection of data structures, maintained by Tyson.

@@ -691,7 +691,7 @@ static zend_always_inline void teds_deque_get_value_at_offset(zval *return_value
 		zend_throw_exception(spl_ce_RuntimeException, "Index out of range", 0);
 		RETURN_THROWS();
 	}
-	RETURN_COPY(&intern->array.entries[offset]);
+	RETURN_COPY(teds_deque_get_entry_at_offset(&intern->array, offset));
 }
 
 PHP_METHOD(Teds_Deque, valueAt)
@@ -910,13 +910,12 @@ PHP_METHOD(Teds_Deque, popFront)
 	}
 
 	intern->array.size--;
+	const size_t old_offset = intern->array.offset;
 	intern->array.offset++;
 	if (intern->array.offset >= intern->array.capacity) {
 		intern->array.offset = 0;
 	}
-	RETURN_COPY_VALUE(&intern->array.entries[intern->array.size]);
-	zend_throw_exception(spl_ce_RuntimeException, "popFront not implemented", 0);
-	RETURN_THROWS();
+	RETURN_COPY_VALUE(&intern->array.entries[old_offset]);
 }
 
 PHP_METHOD(Teds_Deque, offsetUnset)
