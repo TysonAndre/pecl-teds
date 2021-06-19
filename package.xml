@@ -74,7 +74,7 @@
     <file name="ImmutableSequence/unserialize.phpt" role="test" />
     <file name="Vector/Vector.phpt" role="test" />
     <file name="Vector/aggregate.phpt" role="test" />
-    <file name="Vector/append_pop.phpt" role="test" />
+    <file name="Vector/push_pop.phpt" role="test" />
     <file name="Vector/clone.phpt" role="test" />
     <file name="Vector/contains.phpt" role="test" />
     <file name="Vector/exceptionhandler.phpt" role="test" />

@@ -50,7 +50,7 @@ This stores a sequence of values with the keys 0, 1, 2....
 
 Similar to SplFixedArray or Ds\Vector.
 This stores a mutable sequence of values with the keys 0, 1, 2...
-It can be appended to with append()/pop()
+It can be appended to with `push()`, and elements can be removed from the end with `pop()`
 
 This is implemented based on SplFixedArray/ImmutableSequence.
 There are plans to add more methods.

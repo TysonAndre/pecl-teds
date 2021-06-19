@@ -14,7 +14,7 @@ final class Vector implements IteratorAggregate, Countable, JsonSerializable, Ar
     public function __unserialize(array $data): void {}
     public static function __set_state(array $array): Vector {}
 
-    public function append(mixed $value): void {}
+    public function push(mixed $value): void {}
     public function pop(): mixed {}
 
     public function toArray(): array {}

@@ -7,7 +7,7 @@
   +----------------------------------------------------------------------+
 */
 
-/* This is based on spl_fixedarray.c but has lower overhead (when size is known) and is more efficient to append and remove elements from the end of the list */
+/* This is based on spl_fixedarray.c but has lower overhead (when size is known) and is more efficient to push and remove elements from the end of the list */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -767,7 +767,7 @@ static void teds_vector_raise_capacity(teds_vector_object *intern, const zend_lo
 	ZEND_ASSERT(intern->array.entries != NULL);
 }
 
-PHP_METHOD(Teds_Vector, append)
+PHP_METHOD(Teds_Vector, push)
 {
 	zval *value;
 

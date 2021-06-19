@@ -1,5 +1,5 @@
 --TEST--
-Teds\Vector append/pop
+Teds\Vector push/pop
 --FILE--
 <?php
 
@@ -16,9 +16,9 @@ echo "Test empty vector\n";
 $it = new Teds\Vector([]);
 expect_throws(fn() => $it->pop());
 expect_throws(fn() => $it->pop());
-$it->append(strtoupper('test'));
-$it->append(['literal']);
-$it->append(new stdClass());
+$it->push(strtoupper('test'));
+$it->push(['literal']);
+$it->push(new stdClass());
 echo json_encode($it), "\n";
 printf("count=%d\n", count($it));
 var_dump($it->pop());
