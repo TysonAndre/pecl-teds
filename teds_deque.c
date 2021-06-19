@@ -38,8 +38,24 @@ static const zval empty_entry_list[1];
 typedef struct _teds_deque_entries {
 	size_t size;
 	size_t capacity;
+	size_t offset;
 	zval *entries;
 } teds_deque_entries;
+
+#if ZEND_DEBUG
+static void DEBUG_ASSERT_CONSISTENT_DEQUE(const teds_deque_entries *array) {
+	ZEND_ASSERT(array->size + array->offset <= array->capacity);
+	ZEND_ASSERT(array->capacity == 0 || (array->entries != NULL && array->entries != empty_entry_list));
+	ZEND_ASSERT(array->entries != NULL || (array->size == 0 && array->offset == 0 || array->capacity == 0));
+}
+#else
+#define DEBUG_ASSERT_CONSISTENT_DEQUE(array) do {} while(0)
+#endif
+
+static zend_always_inline zval* teds_deque_get_offset_entries(teds_deque_entries *array) {
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+	return &array->entries[array->offset];
+}
 
 typedef struct _teds_deque_object {
 	teds_deque_entries		array;
@@ -64,55 +80,30 @@ static teds_deque_object *cached_iterable_from_obj(zend_object *obj)
  *   - if size > 0, then entries != NULL
  *   - size is not less than 0
  */
-static bool teds_deque_entries_empty_size(teds_deque_entries *array)
+static bool teds_deque_entries_empty_size(const teds_deque_entries *array)
 {
-	if (array->size > 0) {
-		ZEND_ASSERT(array->entries != empty_entry_list);
-		ZEND_ASSERT(array->capacity >= array->size);
-		return false;
-	}
-	// This deque may have reserved capacity.
-	return true;
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+	return array->size == 0;
 }
 
-static bool teds_deque_entries_empty_capacity(teds_deque_entries *array)
+static bool teds_deque_entries_empty_capacity(const teds_deque_entries *array)
 {
-	if (array->capacity > 0) {
-		ZEND_ASSERT(array->entries != empty_entry_list);
-		return false;
-	}
-	// This deque may have reserved capacity.
-	return true;
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+	return array->capacity == 0;
 }
 
 static bool teds_deque_entries_uninitialized(teds_deque_entries *array)
 {
-	if (array->entries == NULL) {
-		ZEND_ASSERT(array->size == 0);
-		ZEND_ASSERT(array->capacity == 0);
-		return true;
-	}
-	ZEND_ASSERT((array->entries == empty_entry_list && array->capacity == 0) || array->capacity > 0);
-	return false;
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+	return array->entries == NULL;
 }
-
-/* Initializes the range [from, to) to null. Does not dtor existing entries. */
-/* TODO: Delete if this isn't used in the final version
-static void teds_deque_entries_init_elems(teds_deque_entries *array, zend_long from, zend_long to)
-{
-	ZEND_ASSERT(from <= to);
-	zval *begin = &array->entries[from];
-	zval *end = &array->entries[to];
-
-	while (begin != end) {
-		ZVAL_NULL(begin++);
-	}
-}
-*/
 
 static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_array *values)
 {
 	zend_long size = zend_hash_num_elements(values);
+	array->offset = 0;
+	array->size = 0; /* reset size in case ecalloc() fails */
+	array->capacity = 0; /* reset size in case ecalloc() fails */
 	if (size > 0) {
 		zend_long nkey;
 		zend_string *skey;
@@ -120,7 +111,6 @@ static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_a
 		zval *entries;
 		int i = 0;
 
-		array->size = 0; /* reset size in case ecalloc() fails */
 		array->entries = entries = safe_emalloc(size, sizeof(zval), 0);
 		array->size = size;
 		array->capacity = size;
@@ -130,8 +120,6 @@ static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_a
 			i++;
 		} ZEND_HASH_FOREACH_END();
 	} else {
-		array->size = 0;
-		array->capacity = 0;
 		array->entries = (zval *)empty_entry_list;
 	}
 }
@@ -142,6 +130,7 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 	zend_object_iterator *iter;
 	zend_long size = 0, capacity = 0;
 	array->size = 0;
+	array->offset = 0;
 	array->entries = NULL;
 	zval *entries = NULL;
 	zval tmp_obj;
@@ -211,6 +200,7 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 static void teds_deque_copy_range(teds_deque_entries *array, size_t offset, zval *begin, zval *end)
 {
 	ZEND_ASSERT(array->size - offset >= end - begin);
+	ZEND_ASSERT(array->offset == 0);
 
 	zval *to = &array->entries[offset];
 	while (begin != end) {
@@ -236,17 +226,22 @@ static void teds_deque_entries_copy_ctor(teds_deque_entries *to, teds_deque_entr
 	to->size = size;
 	to->capacity = size;
 
-	zval *begin = from->entries, *end = from->entries + size;
+	zval *begin = teds_deque_get_offset_entries(from);
+	zval *end = begin + size;
 	teds_deque_copy_range(to, 0, begin, end);
 }
 
-/* Destructs the entries in the range [from, to).
+/* Destructs the entries in the range [from, to) within the value entries of the deque.
  * Caller is expected to bounds check.
  */
 static void teds_deque_entries_dtor_range(teds_deque_entries *array, size_t from, size_t to)
 {
-	zval *begin = array->entries + from, *end = array->entries + to;
-	while (begin != end) {
+	zval *entries = teds_deque_get_offset_entries(array);
+	ZEND_ASSERT(from <= to);
+	ZEND_ASSERT(to <= array->size);
+	// TODO: Allocate a temporary copy in case __destruct() implementation changes the size of the containing deque/vector?
+	zval *begin = entries + from, *end = entries + to;
+	while (begin < end) {
 		zval_ptr_dtor(begin);
 		begin++;
 	}
@@ -267,7 +262,7 @@ static HashTable* teds_deque_object_get_gc(zend_object *obj, zval **table, int *
 {
 	teds_deque_object *intern = cached_iterable_from_obj(obj);
 
-	*table = intern->array.entries;
+	*table = teds_deque_get_offset_entries(&intern->array);
 	*n = (int)intern->array.size;
 
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
@@ -289,7 +284,7 @@ static HashTable* teds_deque_object_get_properties(zend_object *obj)
 		return ht;
 	}
 
-	zval *entries = intern->array.entries;
+	zval *entries = teds_deque_get_offset_entries(&intern->array);
 	/* Initialize properties array */
 	for (size_t i = 0; i < len; i++) {
 		Z_TRY_ADDREF_P(&entries[i]);
@@ -352,7 +347,7 @@ static int teds_deque_object_count_elements(zend_object *object, zend_long *coun
 	return SUCCESS;
 }
 
-/* Get number of entries in this iterable */
+/* Get number of entries in this deque */
 PHP_METHOD(Teds_Deque, count)
 {
 	zval *object = ZEND_THIS;
@@ -429,7 +424,7 @@ static zval *teds_deque_object_read_offset_helper(teds_deque_object *intern, siz
 		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
 		return NULL;
 	} else {
-		return &intern->array.entries[offset];
+		return &teds_deque_get_offset_entries(&intern->array)[offset];
 	}
 }
 
