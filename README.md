@@ -55,6 +55,15 @@ It can be appended to with `push()`, and elements can be removed from the end wi
 This is implemented based on SplFixedArray/ImmutableSequence.
 There are plans to add more methods.
 
+### Teds\Deque
+
+[`Teds\Deque` API](./teds_deque.stub.php) (**not fully implemented**, only supports pushBack/popBack)
+
+Similar to SplDoublyLinkedList but backed by an array instead of a linked list.
+Much more efficient in memory usage and random access than SplDoublyLinkedList.
+
+(Also similar to `Ds\Queue`)
+
 ### iterable functions
 
 This PECL contains a library of native implementations of various functions acting on iterables.
