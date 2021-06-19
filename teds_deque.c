@@ -39,12 +39,14 @@ typedef struct _teds_deque_entries {
 	size_t size;
 	size_t capacity;
 	size_t offset;
+	/** This is a circular buffer with an offset, size, and capacity */
 	zval *entries;
 } teds_deque_entries;
 
 #if ZEND_DEBUG
 static void DEBUG_ASSERT_CONSISTENT_DEQUE(const teds_deque_entries *array) {
-	ZEND_ASSERT(array->size + array->offset <= array->capacity);
+	ZEND_ASSERT(array->size <= array->capacity);
+	ZEND_ASSERT(array->offset < array->capacity || array->capacity == 0);
 	ZEND_ASSERT(array->capacity == 0 || (array->entries != NULL && array->entries != empty_entry_list));
 	ZEND_ASSERT(array->entries != NULL || (array->size == 0 && array->offset == 0 || array->capacity == 0));
 }
@@ -55,6 +57,12 @@ static void DEBUG_ASSERT_CONSISTENT_DEQUE(const teds_deque_entries *array) {
 static zend_always_inline zval* teds_deque_get_offset_entries(teds_deque_entries *array) {
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 	return &array->entries[array->offset];
+}
+
+static zend_always_inline zval* teds_deque_get_entry_at_offset(teds_deque_entries *array, size_t offset) {
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+	ZEND_ASSERT(offset < array->size);
+	return &array->entries[(array->offset + offset) % array->capacity];
 }
 
 typedef struct _teds_deque_object {
@@ -202,49 +210,38 @@ static void teds_deque_copy_range(teds_deque_entries *array, size_t offset, zval
 	ZEND_ASSERT(array->size - offset >= end - begin);
 	ZEND_ASSERT(array->offset == 0);
 
-	zval *to = &array->entries[offset];
-	while (begin != end) {
-		ZVAL_COPY(to, begin);
-		begin++;
-		to++;
-	}
 }
 
-static void teds_deque_entries_copy_ctor(teds_deque_entries *to, teds_deque_entries *from)
+static void teds_deque_entries_copy_ctor(teds_deque_entries *to, const teds_deque_entries *from)
 {
 	zend_long size = from->size;
+	to->size = 0; /* reset size in case emalloc() fails */
+	to->capacity = 0;
+	to->offset = 0;
 	if (!size) {
-		to->size = 0;
-		to->capacity = 0;
 		to->entries = (zval *)empty_entry_list;
 		return;
 	}
 
-	to->size = 0; /* reset size in case emalloc() fails */
-	to->capacity = 0;
 	to->entries = safe_emalloc(size, sizeof(zval), 0);
 	to->size = size;
 	to->capacity = size;
 
-	zval *begin = teds_deque_get_offset_entries(from);
-	zval *end = begin + size;
-	teds_deque_copy_range(to, 0, begin, end);
-}
+	// account for offsets
+	zval *const from_entries = from->entries;
+	zval *from_begin = &from_entries[from->offset];
+	zval *const from_end = &from_entries[from->capacity];
 
-/* Destructs the entries in the range [from, to) within the value entries of the deque.
- * Caller is expected to bounds check.
- */
-static void teds_deque_entries_dtor_range(teds_deque_entries *array, size_t from, size_t to)
-{
-	zval *entries = teds_deque_get_offset_entries(array);
-	ZEND_ASSERT(from <= to);
-	ZEND_ASSERT(to <= array->size);
-	// TODO: Allocate a temporary copy in case __destruct() implementation changes the size of the containing deque/vector?
-	zval *begin = entries + from, *end = entries + to;
-	while (begin < end) {
-		zval_ptr_dtor(begin);
-		begin++;
-	}
+	zval *p_dest = to->entries;
+	zval *p_end = p_dest + size;
+	do {
+		if (from_begin == from_end) {
+			from_begin = from_entries;
+		}
+		ZVAL_COPY(p_dest, from_begin);
+		from_begin++;
+		p_dest++;
+	} while (p_dest < p_end);
 }
 
 /* Destructs and frees contents but not the array itself.
@@ -252,19 +249,57 @@ static void teds_deque_entries_dtor_range(teds_deque_entries *array, size_t from
  */
 static void teds_deque_entries_dtor(teds_deque_entries *array)
 {
-	if (!teds_deque_entries_empty_capacity(array)) {
-		teds_deque_entries_dtor_range(array, 0, array->size);
-		efree(array->entries);
+	if (teds_deque_entries_empty_capacity(array)) {
+		return;
 	}
+	size_t remaining = array->size;
+	zval *const entries = array->entries;
+	if (remaining > 0) {
+		zval *const end = entries + array->capacity;
+		zval *p = entries + array->offset;
+		ZEND_ASSERT(p < end);
+		array->entries = NULL;
+		array->offset = 0;
+		array->size = 0;
+		array->capacity = 0;
+		do {
+			if (p == end) {
+				p = entries;
+			}
+			zval_ptr_dtor(p);
+			p++;
+			remaining--;
+		} while (remaining > 0);
+	}
+	efree(entries);
 }
 
 static HashTable* teds_deque_object_get_gc(zend_object *obj, zval **table, int *n)
 {
 	teds_deque_object *intern = teds_deque_object_from_obj(obj);
 
-	*table = teds_deque_get_offset_entries(&intern->array);
-	*n = (int)intern->array.size;
+	// TODO: Check for overflow
+	const size_t size = intern->array.size;
+	const size_t capacity = intern->array.capacity;
+	const size_t offset = intern->array.offset;
+	zval * const entries = intern->array.entries;
+	if (capacity - offset >= size) {
+		*table = &entries[offset];
+		*n = (int)size;
+		return NULL;
+	}
 
+	// Based on spl_dllist.c
+	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
+	for (size_t i = offset; i < capacity; i++) {
+		zend_get_gc_buffer_add_zval(gc_buffer, &entries[i]);
+	}
+
+	for (size_t i = 0, len = offset + size - capacity; i < len; i++) {
+		zend_get_gc_buffer_add_zval(gc_buffer, &entries[len]);
+	}
+
+	zend_get_gc_buffer_use(gc_buffer, table, n);
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.
 	return NULL;
@@ -273,7 +308,7 @@ static HashTable* teds_deque_object_get_gc(zend_object *obj, zval **table, int *
 static HashTable* teds_deque_object_get_properties(zend_object *obj)
 {
 	teds_deque_object *intern = teds_deque_object_from_obj(obj);
-	size_t len = intern->array.size;
+	const size_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
 	if (!len) {
 		/* Nothing to add. */
@@ -284,12 +319,23 @@ static HashTable* teds_deque_object_get_properties(zend_object *obj)
 		return ht;
 	}
 
-	zval *entries = teds_deque_get_offset_entries(&intern->array);
 	/* Initialize properties array */
-	for (size_t i = 0; i < len; i++) {
-		Z_TRY_ADDREF_P(&entries[i]);
-		zend_hash_index_update(ht, i, &entries[i]);
-	}
+	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
+	zval *const entries = intern->array.entries;
+	zval *p = entries + intern->array.offset;
+	zval *const end = entries + intern->array.capacity;
+	size_t i = 0;
+
+	do {
+		ZEND_ASSERT(p <= end);
+		if (p == end) {
+			p = entries;
+		}
+		Z_TRY_ADDREF_P(p);
+		zend_hash_index_update(ht, i, p);
+		i++;
+		p++;
+	} while (i < len);
 
 	return ht;
 }
@@ -433,7 +479,7 @@ static zval *teds_deque_object_read_offset_helper(teds_deque_object *intern, siz
 		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
 		return NULL;
 	} else {
-		return &teds_deque_get_offset_entries(&intern->array)[offset];
+		return teds_deque_get_entry_at_offset(&intern->array, offset);
 	}
 }
 
@@ -761,14 +807,25 @@ PHP_METHOD(Teds_Deque, offsetSet)
 }
 
 static void teds_deque_raise_capacity(teds_deque_object *intern, const zend_long new_capacity) {
-	ZEND_ASSERT(new_capacity > intern->array.capacity);
-	if (teds_deque_entries_uninitialized(&intern->array)) {
+	const size_t old_capacity = intern->array.capacity;
+	ZEND_ASSERT(new_capacity > old_capacity);
+	if (teds_deque_entries_empty_capacity(&intern->array)) {
+		intern->array.entries = safe_emalloc(new_capacity, sizeof(zval), 0);
+	} else if (intern->array.offset + intern->array.size <= old_capacity) {
 		intern->array.entries = safe_erealloc(intern->array.entries, new_capacity, sizeof(zval), 0);
 	} else {
-		intern->array.entries = safe_emalloc(new_capacity, sizeof(zval), 0);
+		zval *const entries = intern->array.entries;
+		const size_t size = intern->array.size;
+		const size_t first_len = intern->array.capacity - intern->array.offset;
+		zval *new_entries = safe_emalloc(new_capacity, sizeof(zval), 0);
+		ZEND_ASSERT(first_len < size);
+		memcpy(new_entries, entries + intern->array.offset, first_len * sizeof(zval));
+		memcpy(new_entries + first_len, entries, (size - first_len) * sizeof(zval));
+		efree(entries);
+		intern->array.entries = new_entries;
+		intern->array.offset = 0;
 	}
 	intern->array.capacity = new_capacity;
-	ZEND_ASSERT(intern->array.entries != NULL);
 }
 
 PHP_METHOD(Teds_Deque, pushBack)
@@ -787,8 +844,9 @@ PHP_METHOD(Teds_Deque, pushBack)
 		ZEND_ASSERT(old_size == old_capacity);
 		teds_deque_raise_capacity(intern, old_size ? old_size * 2 : 4);
 	}
-	ZVAL_COPY(&intern->array.entries[old_size], value);
 	intern->array.size++;
+	zval *dest = teds_deque_get_entry_at_offset(&intern->array, old_size);
+	ZVAL_COPY(dest, value);
 }
 
 PHP_METHOD(Teds_Deque, pushFront)
@@ -799,8 +857,24 @@ PHP_METHOD(Teds_Deque, pushFront)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	zend_throw_exception(spl_ce_RuntimeException, "pushFront not implemented", 0);
-	RETURN_THROWS();
+	teds_deque_object *intern = Z_DEQUE_P(ZEND_THIS);
+	const size_t old_size = intern->array.size;
+	const size_t old_capacity = intern->array.capacity;
+
+	if (old_size >= old_capacity) {
+		ZEND_ASSERT(old_size == old_capacity);
+		const size_t new_capacity = old_size ? old_size * 2 : 4;
+		teds_deque_raise_capacity(intern, new_capacity);
+	}
+	if (intern->array.offset == 0) {
+		intern->array.offset = intern->array.capacity - 1;
+	} else {
+		intern->array.offset--;
+	}
+	intern->array.size++;
+	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
+	zval *dest = &intern->array.entries[intern->array.offset];
+	ZVAL_COPY(dest, value);
 }
 
 PHP_METHOD(Teds_Deque, popBack)
@@ -816,9 +890,9 @@ PHP_METHOD(Teds_Deque, popBack)
 		RETURN_THROWS();
 	}
 
-
+	zval *val = teds_deque_get_entry_at_offset(&intern->array, old_size - 1);
 	intern->array.size--;
-	RETURN_COPY_VALUE(&intern->array.entries[intern->array.size]);
+	RETURN_COPY_VALUE(val);
 }
 
 PHP_METHOD(Teds_Deque, popFront)
@@ -828,12 +902,19 @@ PHP_METHOD(Teds_Deque, popFront)
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	teds_deque_object *intern = Z_DEQUE_P(ZEND_THIS);
+	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
 	const size_t old_size = intern->array.size;
 	if (old_size == 0) {
 		zend_throw_exception(spl_ce_RuntimeException, "Cannot popFront from empty deque", 0);
 		RETURN_THROWS();
 	}
 
+	intern->array.size--;
+	intern->array.offset++;
+	if (intern->array.offset >= intern->array.capacity) {
+		intern->array.offset = 0;
+	}
+	RETURN_COPY_VALUE(&intern->array.entries[intern->array.size]);
 	zend_throw_exception(spl_ce_RuntimeException, "popFront not implemented", 0);
 	RETURN_THROWS();
 }
@@ -851,7 +932,32 @@ PHP_METHOD(Teds_Deque, offsetUnset)
 
 static void teds_deque_return_list(zval *return_value, teds_deque_object *intern)
 {
-	teds_convert_zval_list_to_php_array_list(return_value, intern->array.entries, intern->array.size);
+	// Can't use teds_convert_zval_list_to_php_array_list(return_value, intern->array.entries, intern->array.size) for deque.
+	const size_t len = intern->array.size;
+	if (!len) {
+		RETURN_EMPTY_ARRAY();
+	}
+
+	zend_array *values = zend_new_array(len);
+	/* Initialize return array */
+	zend_hash_real_init_packed(values);
+
+	zval *const from_entries = intern->array.entries;
+	zval *from_begin = &from_entries[intern->array.offset];
+	zval *const from_end = &from_entries[intern->array.capacity];
+	ZEND_ASSERT(from_begin <= from_end);
+	/* Go through values and add values to the return array */
+	ZEND_HASH_FILL_PACKED(values) {
+		for (size_t i = 0; i < len; i++) {
+			if (from_begin == from_end) {
+				from_begin = from_entries;
+			}
+			Z_TRY_ADDREF_P(from_begin);
+			ZEND_HASH_FILL_ADD(from_begin);
+			from_begin++;
+		}
+	} ZEND_HASH_FILL_END();
+	RETURN_ARR(values);
 }
 
 PHP_METHOD(Teds_Deque, jsonSerialize)

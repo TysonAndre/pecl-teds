@@ -14,27 +14,29 @@ function expect_throws(Closure $cb): void {
 
 echo "Test empty vector\n";
 $it = new Teds\Vector([]);
+printf("count=%d capacity=%d\n", $it->count(), $it->capacity());
 expect_throws(fn() => $it->pop());
 expect_throws(fn() => $it->pop());
 $it->push(strtoupper('test'));
 $it->push(['literal']);
 $it->push(new stdClass());
 echo json_encode($it), "\n";
-printf("count=%d\n", count($it));
+printf("count=%d capacity=%d\n", count($it), $it->capacity());
 var_dump($it->pop());
 var_dump($it->pop());
 echo "After popping 2 elements: ", json_encode($it->toArray()), "\n";
 var_dump($it->pop());
 echo json_encode($it), "\n";
-printf("count=%d\n", count($it));
+printf("count=%d capacity=%d\n", count($it), $it->capacity());
 
 ?>
 --EXPECT--
 Test empty vector
+count=0 capacity=0
 Caught RuntimeException: Cannot pop from empty vector
 Caught RuntimeException: Cannot pop from empty vector
 ["TEST",["literal"],{}]
-count=3
+count=3 capacity=4
 object(stdClass)#2 (0) {
 }
 array(1) {
@@ -44,4 +46,4 @@ array(1) {
 After popping 2 elements: ["TEST"]
 string(4) "TEST"
 []
-count=0
+count=0 capacity=4

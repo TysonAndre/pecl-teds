@@ -369,7 +369,7 @@ PHP_METHOD(Teds_Vector, capacity)
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	const teds_vector_object *intern = Z_VECTOR_P(object);
-	RETURN_LONG(intern->array.size);
+	RETURN_LONG(intern->array.capacity);
 }
 
 /* Create this from an iterable */

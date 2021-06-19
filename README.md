@@ -57,12 +57,12 @@ There are plans to add more methods.
 
 ### Teds\Deque
 
-[`Teds\Deque` API](./teds_deque.stub.php) (**not fully implemented**, only supports pushBack/popBack)
+[`Teds\Deque` API](./teds_deque.stub.php)
 
 Similar to SplDoublyLinkedList but backed by an array instead of a linked list.
 Much more efficient in memory usage and random access than SplDoublyLinkedList.
 
-(Also similar to `Ds\Queue`)
+(Also similar to `Ds\Deque`)
 
 ### iterable functions
 
