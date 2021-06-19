@@ -3,5 +3,5 @@ ARG_ENABLE('teds', 'teds support', 'no');
 if (PHP_TEDS != 'no') {
 	AC_DEFINE('HAVE_TEDS', 1, 'teds support enabled');
 
-	EXTENSION('teds', 'teds.c teds_immutablekeyvaluesequence.c teds_immutablesequence.c teds_vector.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+	EXTENSION('teds', 'teds.c teds_immutablekeyvaluesequence.c teds_immutablesequence.c teds_vector.c teds_deque.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
 }
