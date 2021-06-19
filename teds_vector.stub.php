@@ -1,14 +1,16 @@
 <?php
 
 /** @generate-class-entries */
+// Stub generation requires build/gen_stubs.php from php 8.1 or newer.
 
-namespace Teds {
+namespace Teds;
 
 final class Vector implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
 {
     public function __construct(iterable $iterator) {}
     public function getIterator(): \InternalIterator {}
     public function count(): int {}
+    public function capacity(): int {}
 
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
@@ -33,6 +35,4 @@ final class Vector implements IteratorAggregate, Countable, JsonSerializable, Ar
     public function contains(mixed $value): bool {}
 
     public function jsonSerialize(): array {}
-}
-
 }

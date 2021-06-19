@@ -52,12 +52,12 @@ typedef struct _teds_vector_it {
 	zend_long            current;
 } teds_vector_it;
 
-static teds_vector_object *cached_iterable_from_obj(zend_object *obj)
+static teds_vector_object *teds_vector_object_from_obj(zend_object *obj)
 {
 	return (teds_vector_object*)((char*)(obj) - XtOffsetOf(teds_vector_object, std));
 }
 
-#define Z_VECTOR_P(zv)  cached_iterable_from_obj(Z_OBJ_P((zv)))
+#define Z_VECTOR_P(zv)  teds_vector_object_from_obj(Z_OBJ_P((zv)))
 
 /* Helps enforce the invariants in debug mode:
  *   - if size == 0, then entries == NULL
@@ -220,7 +220,7 @@ static void teds_vector_copy_range(teds_vector_entries *array, size_t offset, zv
 	}
 }
 
-static void teds_vector_entries_copy_ctor(teds_vector_entries *to, teds_vector_entries *from)
+static void teds_vector_entries_copy_ctor(teds_vector_entries *to, const teds_vector_entries *from)
 {
 	zend_long size = from->size;
 	if (!size) {
@@ -265,7 +265,7 @@ static void teds_vector_entries_dtor(teds_vector_entries *array)
 
 static HashTable* teds_vector_object_get_gc(zend_object *obj, zval **table, int *n)
 {
-	teds_vector_object *intern = cached_iterable_from_obj(obj);
+	teds_vector_object *intern = teds_vector_object_from_obj(obj);
 
 	*table = intern->array.entries;
 	*n = (int)intern->array.size;
@@ -277,7 +277,7 @@ static HashTable* teds_vector_object_get_gc(zend_object *obj, zval **table, int 
 
 static HashTable* teds_vector_object_get_properties(zend_object *obj)
 {
-	teds_vector_object *intern = cached_iterable_from_obj(obj);
+	teds_vector_object *intern = teds_vector_object_from_obj(obj);
 	size_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
 	if (!len) {
@@ -301,7 +301,7 @@ static HashTable* teds_vector_object_get_properties(zend_object *obj)
 
 static void teds_vector_object_free_storage(zend_object *object)
 {
-	teds_vector_object *intern = cached_iterable_from_obj(object);
+	teds_vector_object *intern = teds_vector_object_from_obj(object);
 	teds_vector_entries_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
@@ -319,7 +319,7 @@ static zend_object *teds_vector_object_new_ex(zend_class_entry *class_type, zend
 	intern->std.handlers = &spl_handler_Vector;
 
 	if (orig && clone_orig) {
-		teds_vector_object *other = cached_iterable_from_obj(orig);
+		teds_vector_object *other = teds_vector_object_from_obj(orig);
 		teds_vector_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.entries = NULL;
@@ -345,21 +345,30 @@ static zend_object *teds_vector_object_clone(zend_object *old_object)
 
 static int teds_vector_object_count_elements(zend_object *object, zend_long *count)
 {
-	teds_vector_object *intern;
-
-	intern = cached_iterable_from_obj(object);
+	const teds_vector_object *intern = teds_vector_object_from_obj(object);
 	*count = intern->array.size;
 	return SUCCESS;
 }
 
-/* Get number of entries in this iterable */
+/* Get number of entries in this vector */
 PHP_METHOD(Teds_Vector, count)
 {
 	zval *object = ZEND_THIS;
 
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_vector_object *intern = Z_VECTOR_P(object);
+	const teds_vector_object *intern = Z_VECTOR_P(object);
+	RETURN_LONG(intern->array.size);
+}
+
+/* Get capacity of this vector */
+PHP_METHOD(Teds_Vector, capacity)
+{
+	zval *object = ZEND_THIS;
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_vector_object *intern = Z_VECTOR_P(object);
 	RETURN_LONG(intern->array.size);
 }
 
@@ -575,7 +584,7 @@ PHP_METHOD(Teds_Vector, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_vector_new(spl_ce_Vector);
-	teds_vector_object *intern = cached_iterable_from_obj(object);
+	teds_vector_object *intern = teds_vector_object_from_obj(object);
 	teds_vector_entries_init_from_array_values(&intern->array, array_ht);
 
 	RETURN_OBJ(object);

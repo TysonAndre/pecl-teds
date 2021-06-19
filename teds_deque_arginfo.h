@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 2275b84b1273262ee54c2e335fdcb3c88ef121a9 */
+ * Stub hash: 8499da43936be1d5d790098f22803899288ee648 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -10,6 +10,8 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_count, 0, 0, IS_LONG, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_Deque_capacity arginfo_class_Teds_Deque_count
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque___serialize, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
@@ -71,6 +73,7 @@ ZEND_END_ARG_INFO()
 ZEND_METHOD(Teds_Deque, __construct);
 ZEND_METHOD(Teds_Deque, getIterator);
 ZEND_METHOD(Teds_Deque, count);
+ZEND_METHOD(Teds_Deque, capacity);
 ZEND_METHOD(Teds_Deque, __serialize);
 ZEND_METHOD(Teds_Deque, __unserialize);
 ZEND_METHOD(Teds_Deque, __set_state);
@@ -94,6 +97,7 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_ME(Teds_Deque, __construct, arginfo_class_Teds_Deque___construct, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, getIterator, arginfo_class_Teds_Deque_getIterator, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, count, arginfo_class_Teds_Deque_count, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Deque, capacity, arginfo_class_Teds_Deque_capacity, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __serialize, arginfo_class_Teds_Deque___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __unserialize, arginfo_class_Teds_Deque___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __set_state, arginfo_class_Teds_Deque___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)

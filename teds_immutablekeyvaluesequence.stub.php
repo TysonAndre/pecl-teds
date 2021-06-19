@@ -1,9 +1,13 @@
 <?php
 
 /** @generate-class-entries */
+// Stub generation requires build/gen_stubs.php from php 8.1 or newer.
 
-namespace Teds {
+namespace Teds;
 
+/**
+ * An immutable sequence of keys and values, where keys are repeatable and can be any type.
+ */
 final class ImmutableKeyValueSequence implements IteratorAggregate, Countable, JsonSerializable
 {
     public function __construct(iterable $iterator) {}
@@ -22,6 +26,4 @@ final class ImmutableKeyValueSequence implements IteratorAggregate, Countable, J
     public function valueAt(int $offset): mixed {}
 
     public function jsonSerialize(): array {}
-}
-
 }

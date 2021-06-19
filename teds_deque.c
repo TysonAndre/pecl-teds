@@ -68,12 +68,12 @@ typedef struct _teds_deque_it {
 	zend_long            current;
 } teds_deque_it;
 
-static teds_deque_object *cached_iterable_from_obj(zend_object *obj)
+static teds_deque_object *teds_deque_object_from_obj(zend_object *obj)
 {
 	return (teds_deque_object*)((char*)(obj) - XtOffsetOf(teds_deque_object, std));
 }
 
-#define Z_DEQUE_P(zv)  cached_iterable_from_obj(Z_OBJ_P((zv)))
+#define Z_DEQUE_P(zv)  teds_deque_object_from_obj(Z_OBJ_P((zv)))
 
 /* Helps enforce the invariants in debug mode:
  *   - if size == 0, then entries == NULL
@@ -260,7 +260,7 @@ static void teds_deque_entries_dtor(teds_deque_entries *array)
 
 static HashTable* teds_deque_object_get_gc(zend_object *obj, zval **table, int *n)
 {
-	teds_deque_object *intern = cached_iterable_from_obj(obj);
+	teds_deque_object *intern = teds_deque_object_from_obj(obj);
 
 	*table = teds_deque_get_offset_entries(&intern->array);
 	*n = (int)intern->array.size;
@@ -272,7 +272,7 @@ static HashTable* teds_deque_object_get_gc(zend_object *obj, zval **table, int *
 
 static HashTable* teds_deque_object_get_properties(zend_object *obj)
 {
-	teds_deque_object *intern = cached_iterable_from_obj(obj);
+	teds_deque_object *intern = teds_deque_object_from_obj(obj);
 	size_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
 	if (!len) {
@@ -296,7 +296,7 @@ static HashTable* teds_deque_object_get_properties(zend_object *obj)
 
 static void teds_deque_object_free_storage(zend_object *object)
 {
-	teds_deque_object *intern = cached_iterable_from_obj(object);
+	teds_deque_object *intern = teds_deque_object_from_obj(object);
 	teds_deque_entries_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
@@ -314,7 +314,7 @@ static zend_object *teds_deque_object_new_ex(zend_class_entry *class_type, zend_
 	intern->std.handlers = &spl_handler_Deque;
 
 	if (orig && clone_orig) {
-		teds_deque_object *other = cached_iterable_from_obj(orig);
+		teds_deque_object *other = teds_deque_object_from_obj(orig);
 		teds_deque_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.entries = NULL;
@@ -340,22 +340,31 @@ static zend_object *teds_deque_object_clone(zend_object *old_object)
 
 static int teds_deque_object_count_elements(zend_object *object, zend_long *count)
 {
-	teds_deque_object *intern;
-
-	intern = cached_iterable_from_obj(object);
+	const teds_deque_object *intern = teds_deque_object_from_obj(object);
 	*count = intern->array.size;
 	return SUCCESS;
 }
 
-/* Get number of entries in this deque */
+/* Get the number of entries in this deque */
 PHP_METHOD(Teds_Deque, count)
 {
 	zval *object = ZEND_THIS;
 
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_deque_object *intern = Z_DEQUE_P(object);
+	const teds_deque_object *intern = Z_DEQUE_P(object);
 	RETURN_LONG(intern->array.size);
+}
+
+/* Get the capacity of this deque */
+PHP_METHOD(Teds_Deque, capacity)
+{
+	zval *object = ZEND_THIS;
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_deque_object *intern = Z_DEQUE_P(object);
+	RETURN_LONG(intern->array.capacity);
 }
 
 /* Create this from an iterable */
@@ -570,7 +579,7 @@ PHP_METHOD(Teds_Deque, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_deque_new(spl_ce_Deque);
-	teds_deque_object *intern = cached_iterable_from_obj(object);
+	teds_deque_object *intern = teds_deque_object_from_obj(object);
 	teds_deque_entries_init_from_array_values(&intern->array, array_ht);
 
 	RETURN_OBJ(object);

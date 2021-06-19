@@ -1,9 +1,11 @@
 <?php
 /** @generate-class-entries */
+// Stub generation requires build/gen_stubs.php from php 8.1 or newer.
 
 // NOTE: Due to a limitation of gen_stubs.php (at)param is used instead
 
-namespace Teds {
+namespace Teds;
+
 /**
  * Determines whether any element of the iterable satisfies the predicate.
  *
@@ -54,5 +56,3 @@ function fold(iterable $iterable, callable $callback, mixed $initial): mixed {}
  * Returns the first value for which $callback($value) is truthy.
  */
 function find(iterable $iterable, callable $callback, mixed $default = null): mixed {}
-
-}

@@ -51,12 +51,12 @@ typedef struct _teds_immutablesequence_it {
 	zend_long            current;
 } teds_immutablesequence_it;
 
-static teds_immutablesequence_object *cached_iterable_from_obj(zend_object *obj)
+static teds_immutablesequence_object *teds_sequence_from_obj(zend_object *obj)
 {
 	return (teds_immutablesequence_object*)((char*)(obj) - XtOffsetOf(teds_immutablesequence_object, std));
 }
 
-#define Z_IMMUTABLESEQUENCE_P(zv)  cached_iterable_from_obj(Z_OBJ_P((zv)))
+#define Z_IMMUTABLESEQUENCE_P(zv)  teds_sequence_from_obj(Z_OBJ_P((zv)))
 
 /* Helps enforce the invariants in debug mode:
  *   - if size == 0, then entries == NULL
@@ -243,7 +243,7 @@ static void teds_cached_entries_dtor(teds_cached_entries *array)
 
 static HashTable* teds_immutablesequence_object_get_gc(zend_object *obj, zval **table, int *n)
 {
-	teds_immutablesequence_object *intern = cached_iterable_from_obj(obj);
+	teds_immutablesequence_object *intern = teds_sequence_from_obj(obj);
 
 	*table = intern->array.entries;
 	*n = (int)intern->array.size;
@@ -255,7 +255,7 @@ static HashTable* teds_immutablesequence_object_get_gc(zend_object *obj, zval **
 
 static HashTable* teds_immutablesequence_object_get_properties(zend_object *obj)
 {
-	teds_immutablesequence_object *intern = cached_iterable_from_obj(obj);
+	teds_immutablesequence_object *intern = teds_sequence_from_obj(obj);
 	size_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
 	if (!len) {
@@ -279,7 +279,7 @@ static HashTable* teds_immutablesequence_object_get_properties(zend_object *obj)
 
 static void teds_immutablesequence_object_free_storage(zend_object *object)
 {
-	teds_immutablesequence_object *intern = cached_iterable_from_obj(object);
+	teds_immutablesequence_object *intern = teds_sequence_from_obj(object);
 	teds_cached_entries_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
@@ -297,7 +297,7 @@ static zend_object *teds_immutablesequence_object_new_ex(zend_class_entry *class
 	intern->std.handlers = &spl_handler_ImmutableSequence;
 
 	if (orig && clone_orig) {
-		teds_immutablesequence_object *other = cached_iterable_from_obj(orig);
+		teds_immutablesequence_object *other = teds_sequence_from_obj(orig);
 		teds_cached_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.entries = NULL;
@@ -325,7 +325,7 @@ static int teds_immutablesequence_object_count_elements(zend_object *object, zen
 {
 	teds_immutablesequence_object *intern;
 
-	intern = cached_iterable_from_obj(object);
+	intern = teds_sequence_from_obj(object);
 	*count = intern->array.size;
 	return SUCCESS;
 }
@@ -549,7 +549,7 @@ PHP_METHOD(Teds_ImmutableSequence, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_immutablesequence_new(spl_ce_ImmutableSequence);
-	teds_immutablesequence_object *intern = cached_iterable_from_obj(object);
+	teds_immutablesequence_object *intern = teds_sequence_from_obj(object);
 	teds_cached_entries_init_from_array_values(&intern->array, array_ht);
 
 	RETURN_OBJ(object);

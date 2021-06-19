@@ -1,8 +1,9 @@
 <?php
 
 /** @generate-class-entries */
+// Stub generation requires build/gen_stubs.php from php 8.1 or newer.
 
-namespace Teds {
+namespace Teds;
 
 final class ImmutableSequence implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
 {
@@ -29,6 +30,4 @@ final class ImmutableSequence implements IteratorAggregate, Countable, JsonSeria
     public function contains(mixed $value): bool {}
 
     public function jsonSerialize(): array {}
-}
-
 }
