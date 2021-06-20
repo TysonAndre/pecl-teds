@@ -28,8 +28,8 @@
 
 #include <stdbool.h>
 
-zend_object_handlers spl_handler_ImmutableSequence;
-zend_class_entry *spl_ce_ImmutableSequence;
+zend_object_handlers teds_handler_ImmutableSequence;
+zend_class_entry *teds_ce_ImmutableSequence;
 
 /* This is a placeholder value to distinguish between empty and uninitialized ImmutableSequence instances.
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
@@ -288,11 +288,11 @@ static zend_object *teds_immutablesequence_object_new_ex(zend_class_entry *class
 
 	intern = zend_object_alloc(sizeof(teds_immutablesequence_object), class_type);
 	/* This is a final class */
-	ZEND_ASSERT(class_type == spl_ce_ImmutableSequence);
+	ZEND_ASSERT(class_type == teds_ce_ImmutableSequence);
 
 	zend_object_std_init(&intern->std, class_type);
 	object_properties_init(&intern->std, class_type);
-	intern->std.handlers = &spl_handler_ImmutableSequence;
+	intern->std.handlers = &teds_handler_ImmutableSequence;
 
 	if (orig && clone_orig) {
 		teds_immutablesequence_object *other = teds_sequence_from_obj(orig);
@@ -546,7 +546,7 @@ PHP_METHOD(Teds_ImmutableSequence, __set_state)
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
-	zend_object *object = teds_immutablesequence_new(spl_ce_ImmutableSequence);
+	zend_object *object = teds_immutablesequence_new(teds_ce_ImmutableSequence);
 	teds_immutablesequence_object *intern = teds_sequence_from_obj(object);
 	teds_cached_entries_init_from_array_values(&intern->array, array_ht);
 
@@ -734,21 +734,21 @@ PHP_METHOD(Teds_ImmutableSequence, jsonSerialize)
 
 PHP_MINIT_FUNCTION(teds_immutablesequence)
 {
-	spl_ce_ImmutableSequence = register_class_Teds_ImmutableSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
-	spl_ce_ImmutableSequence->create_object = teds_immutablesequence_new;
+	teds_ce_ImmutableSequence = register_class_Teds_ImmutableSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_ImmutableSequence->create_object = teds_immutablesequence_new;
 
-	memcpy(&spl_handler_ImmutableSequence, &std_object_handlers, sizeof(zend_object_handlers));
+	memcpy(&teds_handler_ImmutableSequence, &std_object_handlers, sizeof(zend_object_handlers));
 
-	spl_handler_ImmutableSequence.offset          = XtOffsetOf(teds_immutablesequence_object, std);
-	spl_handler_ImmutableSequence.clone_obj       = teds_immutablesequence_object_clone;
-	spl_handler_ImmutableSequence.count_elements  = teds_immutablesequence_object_count_elements;
-	spl_handler_ImmutableSequence.get_properties  = teds_immutablesequence_object_get_properties;
-	spl_handler_ImmutableSequence.get_gc          = teds_immutablesequence_object_get_gc;
-	spl_handler_ImmutableSequence.dtor_obj        = zend_objects_destroy_object;
-	spl_handler_ImmutableSequence.free_obj        = teds_immutablesequence_object_free_storage;
+	teds_handler_ImmutableSequence.offset          = XtOffsetOf(teds_immutablesequence_object, std);
+	teds_handler_ImmutableSequence.clone_obj       = teds_immutablesequence_object_clone;
+	teds_handler_ImmutableSequence.count_elements  = teds_immutablesequence_object_count_elements;
+	teds_handler_ImmutableSequence.get_properties  = teds_immutablesequence_object_get_properties;
+	teds_handler_ImmutableSequence.get_gc          = teds_immutablesequence_object_get_gc;
+	teds_handler_ImmutableSequence.dtor_obj        = zend_objects_destroy_object;
+	teds_handler_ImmutableSequence.free_obj        = teds_immutablesequence_object_free_storage;
 
-	spl_ce_ImmutableSequence->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-	spl_ce_ImmutableSequence->get_iterator = teds_immutablesequence_get_iterator;
+	teds_ce_ImmutableSequence->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_ImmutableSequence->get_iterator = teds_immutablesequence_get_iterator;
 
 	return SUCCESS;
 }

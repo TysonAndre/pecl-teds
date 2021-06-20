@@ -28,8 +28,8 @@
 
 #include <stdbool.h>
 
-zend_object_handlers spl_handler_ImmutableKeyValueSequence;
-zend_class_entry *spl_ce_ImmutableKeyValueSequence;
+zend_object_handlers teds_handler_ImmutableKeyValueSequence;
+zend_class_entry *teds_ce_ImmutableKeyValueSequence;
 
 /** TODO: Does C guarantee that this has the same memory layout as an array of zvals? */
 typedef struct _zval_pair {
@@ -318,11 +318,11 @@ static zend_object *teds_immutablekeyvaluesequence_object_new_ex(zend_class_entr
 
 	intern = zend_object_alloc(sizeof(teds_immutablekeyvaluesequence_object), class_type);
 	/* This is a final class */
-	ZEND_ASSERT(class_type == spl_ce_ImmutableKeyValueSequence);
+	ZEND_ASSERT(class_type == teds_ce_ImmutableKeyValueSequence);
 
 	zend_object_std_init(&intern->std, class_type);
 	object_properties_init(&intern->std, class_type);
-	intern->std.handlers = &spl_handler_ImmutableKeyValueSequence;
+	intern->std.handlers = &teds_handler_ImmutableKeyValueSequence;
 
 	if (orig && clone_orig) {
 		teds_immutablekeyvaluesequence_object *other = teds_immutablekeyvaluesequence_from_obj(orig);
@@ -668,7 +668,7 @@ static void teds_cached_entries_init_from_traversable_pairs(teds_cached_entries 
 }
 
 static zend_object* create_from_pairs(zval *iterable) {
-	zend_object *object = teds_immutablekeyvaluesequence_new(spl_ce_ImmutableKeyValueSequence);
+	zend_object *object = teds_immutablekeyvaluesequence_new(teds_ce_ImmutableKeyValueSequence);
 	teds_immutablekeyvaluesequence_object *intern = teds_immutablekeyvaluesequence_from_obj(object);
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
@@ -700,7 +700,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, __set_state)
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
-	zend_object *object = teds_immutablekeyvaluesequence_new(spl_ce_ImmutableKeyValueSequence);
+	zend_object *object = teds_immutablekeyvaluesequence_new(teds_ce_ImmutableKeyValueSequence);
 	teds_immutablekeyvaluesequence_object *intern = teds_immutablekeyvaluesequence_from_obj(object);
 	teds_cached_entries_init_from_array_pairs(&intern->array, array_ht);
 
@@ -860,21 +860,21 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, toPairs)
 
 PHP_MINIT_FUNCTION(teds_immutablekeyvaluesequence)
 {
-	spl_ce_ImmutableKeyValueSequence = register_class_Teds_ImmutableKeyValueSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
-	spl_ce_ImmutableKeyValueSequence->create_object = teds_immutablekeyvaluesequence_new;
+	teds_ce_ImmutableKeyValueSequence = register_class_Teds_ImmutableKeyValueSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
+	teds_ce_ImmutableKeyValueSequence->create_object = teds_immutablekeyvaluesequence_new;
 
-	memcpy(&spl_handler_ImmutableKeyValueSequence, &std_object_handlers, sizeof(zend_object_handlers));
+	memcpy(&teds_handler_ImmutableKeyValueSequence, &std_object_handlers, sizeof(zend_object_handlers));
 
-	spl_handler_ImmutableKeyValueSequence.offset          = XtOffsetOf(teds_immutablekeyvaluesequence_object, std);
-	spl_handler_ImmutableKeyValueSequence.clone_obj       = teds_immutablekeyvaluesequence_object_clone;
-	spl_handler_ImmutableKeyValueSequence.count_elements  = teds_immutablekeyvaluesequence_object_count_elements;
-	spl_handler_ImmutableKeyValueSequence.get_properties  = teds_immutablekeyvaluesequence_object_get_properties;
-	spl_handler_ImmutableKeyValueSequence.get_gc          = teds_immutablekeyvaluesequence_object_get_gc;
-	spl_handler_ImmutableKeyValueSequence.dtor_obj        = zend_objects_destroy_object;
-	spl_handler_ImmutableKeyValueSequence.free_obj        = teds_immutablekeyvaluesequence_object_free_storage;
+	teds_handler_ImmutableKeyValueSequence.offset          = XtOffsetOf(teds_immutablekeyvaluesequence_object, std);
+	teds_handler_ImmutableKeyValueSequence.clone_obj       = teds_immutablekeyvaluesequence_object_clone;
+	teds_handler_ImmutableKeyValueSequence.count_elements  = teds_immutablekeyvaluesequence_object_count_elements;
+	teds_handler_ImmutableKeyValueSequence.get_properties  = teds_immutablekeyvaluesequence_object_get_properties;
+	teds_handler_ImmutableKeyValueSequence.get_gc          = teds_immutablekeyvaluesequence_object_get_gc;
+	teds_handler_ImmutableKeyValueSequence.dtor_obj        = zend_objects_destroy_object;
+	teds_handler_ImmutableKeyValueSequence.free_obj        = teds_immutablekeyvaluesequence_object_free_storage;
 
-	spl_ce_ImmutableKeyValueSequence->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-	spl_ce_ImmutableKeyValueSequence->get_iterator = teds_immutablekeyvaluesequence_get_iterator;
+	teds_ce_ImmutableKeyValueSequence->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_ImmutableKeyValueSequence->get_iterator = teds_immutablekeyvaluesequence_get_iterator;
 
 	return SUCCESS;
 }

@@ -28,8 +28,8 @@
 
 #include <stdbool.h>
 
-zend_object_handlers spl_handler_Vector;
-zend_class_entry *spl_ce_Vector;
+zend_object_handlers teds_handler_Vector;
+zend_class_entry *teds_ce_Vector;
 
 /* This is a placeholder value to distinguish between empty and uninitialized Vector instances.
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
@@ -310,11 +310,11 @@ static zend_object *teds_vector_object_new_ex(zend_class_entry *class_type, zend
 
 	intern = zend_object_alloc(sizeof(teds_vector_object), class_type);
 	/* This is a final class */
-	ZEND_ASSERT(class_type == spl_ce_Vector);
+	ZEND_ASSERT(class_type == teds_ce_Vector);
 
 	zend_object_std_init(&intern->std, class_type);
 	object_properties_init(&intern->std, class_type);
-	intern->std.handlers = &spl_handler_Vector;
+	intern->std.handlers = &teds_handler_Vector;
 
 	if (orig && clone_orig) {
 		teds_vector_object *other = teds_vector_object_from_obj(orig);
@@ -581,7 +581,7 @@ PHP_METHOD(Teds_Vector, __set_state)
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
-	zend_object *object = teds_vector_new(spl_ce_Vector);
+	zend_object *object = teds_vector_new(teds_ce_Vector);
 	teds_vector_object *intern = teds_vector_object_from_obj(object);
 	teds_vector_entries_init_from_array_values(&intern->array, array_ht);
 
@@ -835,21 +835,21 @@ PHP_METHOD(Teds_Vector, jsonSerialize)
 
 PHP_MINIT_FUNCTION(teds_vector)
 {
-	spl_ce_Vector = register_class_Teds_Vector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
-	spl_ce_Vector->create_object = teds_vector_new;
+	teds_ce_Vector = register_class_Teds_Vector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_Vector->create_object = teds_vector_new;
 
-	memcpy(&spl_handler_Vector, &std_object_handlers, sizeof(zend_object_handlers));
+	memcpy(&teds_handler_Vector, &std_object_handlers, sizeof(zend_object_handlers));
 
-	spl_handler_Vector.offset          = XtOffsetOf(teds_vector_object, std);
-	spl_handler_Vector.clone_obj       = teds_vector_object_clone;
-	spl_handler_Vector.count_elements  = teds_vector_object_count_elements;
-	spl_handler_Vector.get_properties  = teds_vector_object_get_properties;
-	spl_handler_Vector.get_gc          = teds_vector_object_get_gc;
-	spl_handler_Vector.dtor_obj        = zend_objects_destroy_object;
-	spl_handler_Vector.free_obj        = teds_vector_object_free_storage;
+	teds_handler_Vector.offset          = XtOffsetOf(teds_vector_object, std);
+	teds_handler_Vector.clone_obj       = teds_vector_object_clone;
+	teds_handler_Vector.count_elements  = teds_vector_object_count_elements;
+	teds_handler_Vector.get_properties  = teds_vector_object_get_properties;
+	teds_handler_Vector.get_gc          = teds_vector_object_get_gc;
+	teds_handler_Vector.dtor_obj        = zend_objects_destroy_object;
+	teds_handler_Vector.free_obj        = teds_vector_object_free_storage;
 
-	spl_ce_Vector->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-	spl_ce_Vector->get_iterator = teds_vector_get_iterator;
+	teds_ce_Vector->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_Vector->get_iterator = teds_vector_get_iterator;
 
 	return SUCCESS;
 }

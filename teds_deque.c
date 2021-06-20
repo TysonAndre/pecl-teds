@@ -28,8 +28,8 @@
 
 #include <stdbool.h>
 
-zend_object_handlers spl_handler_Deque;
-zend_class_entry *spl_ce_Deque;
+zend_object_handlers teds_handler_Deque;
+zend_class_entry *teds_ce_Deque;
 
 /* This is a placeholder value to distinguish between empty and uninitialized Deque instances.
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
@@ -352,11 +352,11 @@ static zend_object *teds_deque_new_ex(zend_class_entry *class_type, zend_object 
 
 	intern = zend_object_alloc(sizeof(teds_deque), class_type);
 	/* This is a final class */
-	ZEND_ASSERT(class_type == spl_ce_Deque);
+	ZEND_ASSERT(class_type == teds_ce_Deque);
 
 	zend_object_std_init(&intern->std, class_type);
 	object_properties_init(&intern->std, class_type);
-	intern->std.handlers = &spl_handler_Deque;
+	intern->std.handlers = &teds_handler_Deque;
 
 	if (orig && clone_orig) {
 		teds_deque *other = teds_deque_from_object(orig);
@@ -623,7 +623,7 @@ PHP_METHOD(Teds_Deque, __set_state)
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
-	zend_object *object = teds_deque_new(spl_ce_Deque);
+	zend_object *object = teds_deque_new(teds_ce_Deque);
 	teds_deque *intern = teds_deque_from_object(object);
 	teds_deque_entries_init_from_array_values(&intern->array, array_ht);
 
@@ -1028,26 +1028,26 @@ PHP_METHOD(Teds_Deque, jsonSerialize)
 
 PHP_MINIT_FUNCTION(teds_deque)
 {
-	spl_ce_Deque = register_class_Teds_Deque(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
-	spl_ce_Deque->create_object = teds_deque_new;
+	teds_ce_Deque = register_class_Teds_Deque(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_Deque->create_object = teds_deque_new;
 
-	memcpy(&spl_handler_Deque, &std_object_handlers, sizeof(zend_object_handlers));
+	memcpy(&teds_handler_Deque, &std_object_handlers, sizeof(zend_object_handlers));
 
-	spl_handler_Deque.offset          = XtOffsetOf(teds_deque, std);
-	spl_handler_Deque.clone_obj       = teds_deque_clone;
-	spl_handler_Deque.count_elements  = teds_deque_count_elements;
-	spl_handler_Deque.get_properties  = teds_deque_get_properties;
-	spl_handler_Deque.get_gc          = teds_deque_get_gc;
-	spl_handler_Deque.dtor_obj        = zend_objects_destroy_object;
-	spl_handler_Deque.free_obj        = teds_deque_free_storage;
+	teds_handler_Deque.offset          = XtOffsetOf(teds_deque, std);
+	teds_handler_Deque.clone_obj       = teds_deque_clone;
+	teds_handler_Deque.count_elements  = teds_deque_count_elements;
+	teds_handler_Deque.get_properties  = teds_deque_get_properties;
+	teds_handler_Deque.get_gc          = teds_deque_get_gc;
+	teds_handler_Deque.dtor_obj        = zend_objects_destroy_object;
+	teds_handler_Deque.free_obj        = teds_deque_free_storage;
 
-	spl_handler_Deque.read_dimension  = teds_deque_read_dimension;
-	spl_handler_Deque.write_dimension = teds_deque_write_dimension;
-	//spl_handler_Deque.unset_dimension = teds_deque_unset_dimension;
-	//spl_handler_Deque.has_dimension   = teds_deque_has_dimension;
+	teds_handler_Deque.read_dimension  = teds_deque_read_dimension;
+	teds_handler_Deque.write_dimension = teds_deque_write_dimension;
+	//teds_handler_Deque.unset_dimension = teds_deque_unset_dimension;
+	//teds_handler_Deque.has_dimension   = teds_deque_has_dimension;
 
-	spl_ce_Deque->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-	spl_ce_Deque->get_iterator = teds_deque_get_iterator;
+	teds_ce_Deque->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_Deque->get_iterator = teds_deque_get_iterator;
 
 	return SUCCESS;
 }
