@@ -58,21 +58,21 @@ bool(false)
 bool(false)
 bool(false)
 bool(false)
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 Invalid offsetGet calls
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\ImmutableSequence::valueAt(): Argument #1 ($offset) must be of type int, string given
-Caught RuntimeException: Index out of range
+Caught TypeError: Illegal offset type array
 Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable
 Caught RuntimeException: ImmutableSequence does not support offsetSet - it is immutable
 Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable

@@ -49,7 +49,7 @@ object(stdClass)#1 (0) {
 }
 object(stdClass)#1 (0) {
 }
-Caught RuntimeException: Index invalid or out of range
+Caught OutOfBoundsException: Index out of range
 Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
 object(stdClass)#1 (0) {
 }
@@ -58,23 +58,23 @@ bool(false)
 bool(false)
 bool(false)
 bool(false)
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 Invalid offsetGet calls
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\Vector::valueAt(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
 Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
-Caught RuntimeException: Index invalid or out of range
+Caught OutOfBoundsException: Index out of range
 Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
 object(InternalIterator)#2 (0) {
 }

@@ -55,4 +55,26 @@ static zend_always_inline zend_long teds_get_offset(zval *offset) {
 	return 0;
 }
 
+#define CONVERT_OFFSET_TO_LONG_OR_THROW(index, zv) do { \
+	if (Z_TYPE_P(offset_zv) != IS_LONG) { \
+		index = teds_get_offset(offset_zv); \
+		if (UNEXPECTED(EG(exception))) { \
+			return; \
+		} \
+	} else { \
+		index = Z_LVAL_P(offset_zv); \
+	} \
+} while(0)
+
+#define CONVERT_OFFSET_TO_LONG_OR_THROW_RETURN_NULLPTR(index, zv) do { \
+	if (Z_TYPE_P(offset_zv) != IS_LONG) { \
+		index = teds_get_offset(offset_zv); \
+		if (UNEXPECTED(EG(exception))) { \
+			return NULL; \
+		} \
+	} else { \
+		index = Z_LVAL_P(offset_zv); \
+	} \
+} while(0)
+
 #endif	/* TEDS_H */

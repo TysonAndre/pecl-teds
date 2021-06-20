@@ -54,17 +54,6 @@ static void DEBUG_ASSERT_CONSISTENT_DEQUE(const teds_deque_entries *array) {
 #define DEBUG_ASSERT_CONSISTENT_DEQUE(array) do {} while(0)
 #endif
 
-#define CONVERT_OFFSET_TO_LONG_OR_THROW(index, zv) do { \
-	if (Z_TYPE_P(offset_zv) != IS_LONG) { \
-		index = teds_get_offset(offset_zv); \
-		if (UNEXPECTED(EG(exception))) { \
-			return; \
-		} \
-	} else { \
-		index = Z_LVAL_P(offset_zv); \
-	} \
-} while(0)
-
 static zend_always_inline zval* teds_deque_get_offset_entries(teds_deque_entries *array) {
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 	return &array->entries[array->offset];
@@ -475,7 +464,7 @@ static zval *teds_deque_read_offset_helper(teds_deque *intern, size_t offset)
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		return NULL;
 	} else {
 		return teds_deque_get_entry_at_offset(&intern->array, offset);
@@ -700,7 +689,7 @@ static zend_always_inline void teds_deque_get_value_at_offset(zval *return_value
 	teds_deque *intern = Z_DEQUE_P(zval_this);
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		RETURN_THROWS();
 	}
 	RETURN_COPY(teds_deque_get_entry_at_offset(&intern->array, offset));
@@ -744,31 +733,25 @@ PHP_METHOD(Teds_Deque, offsetExists)
 	RETURN_BOOL((zend_ulong) offset < len);
 }
 
-static zval *teds_deque_read_dimension(zend_object *object, zval *offset, int type, zval *rv)
+static zval *teds_deque_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
-	if (!offset) {
+	if (!offset_zv) {
 		zend_throw_exception(spl_ce_RuntimeException, "[] operator not supported for Teds\\Deque", 0);
 		return NULL;
 	}
 
-	zend_long index;
-	if (Z_TYPE_P(offset) != IS_LONG) {
-		index = spl_offset_convert_to_long(offset);
-		if (EG(exception)) {
-			return NULL;
-		}
-	} else {
-		index = Z_LVAL_P(offset);
-	}
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW_RETURN_NULLPTR(offset, offset_zv);
+
 	const teds_deque *intern = teds_deque_from_object(object);
 
-	if (index < 0 || index >= intern->array.size) {
+	if (offset < 0 || offset >= intern->array.size) {
 		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		}
 		return NULL;
 	} else {
-		return teds_deque_get_entry_at_offset(&intern->array, index);
+		return teds_deque_get_entry_at_offset(&intern->array, offset);
 	}
 }
 
@@ -778,7 +761,7 @@ static zend_always_inline void teds_deque_set_value_at_offset(zend_object *objec
 
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		return;
 	}
 	zval tmp;
@@ -795,15 +778,15 @@ static void teds_deque_write_dimension(zend_object *object, zval *offset_zv, zva
 		return;
 	}
 
-	zend_long index;
-	CONVERT_OFFSET_TO_LONG_OR_THROW(index, offset_zv);
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	const teds_deque *intern = teds_deque_from_object(object);
-	if (index < 0 || index >= intern->array.size) {
+	if (offset < 0 || offset >= intern->array.size) {
 		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
 		return;
 	}
-	teds_deque_set_value_at_offset(object, index, value);
+	teds_deque_set_value_at_offset(object, offset, value);
 }
 
 PHP_METHOD(Teds_Deque, indexOf)
@@ -947,7 +930,7 @@ PHP_METHOD(Teds_Deque, popBack)
 	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
 	const size_t old_size = intern->array.size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_RuntimeException, "Cannot popBack from empty deque", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot popBack from empty deque", 0);
 		RETURN_THROWS();
 	}
 
@@ -964,7 +947,7 @@ PHP_METHOD(Teds_Deque, popFront)
 	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
 	const size_t old_size = intern->array.size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_RuntimeException, "Cannot popFront from empty deque", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot popFront from empty deque", 0);
 		RETURN_THROWS();
 	}
 

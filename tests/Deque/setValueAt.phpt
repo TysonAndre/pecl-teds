@@ -30,10 +30,10 @@ expect_throws(fn() => $it->setValueAt(PHP_INT_MAX, 'end'));
 ?>
 --EXPECT--
 Test empty deque
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 Test short deque
 ["new","short","TEST"]
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range

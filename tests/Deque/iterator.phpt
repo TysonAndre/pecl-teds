@@ -39,10 +39,10 @@ object(stdClass)#2 (0) {
 NULL
 bool(true)
 NULL
-Caught RuntimeException: Index invalid or out of range
+Caught OutOfBoundsException: Index out of range
 bool(false)
 NULL
-Caught RuntimeException: Index invalid or out of range
+Caught OutOfBoundsException: Index out of range
 bool(false)
 object(InternalIterator)#4 (0) {
 }

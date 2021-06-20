@@ -35,8 +35,8 @@ dump_it($it);
 
 ?>
 --EXPECT--
-Caught RuntimeException: Cannot popBack from empty deque
-Caught RuntimeException: Cannot popFront from empty deque
+Caught UnderflowException: Cannot popBack from empty deque
+Caught UnderflowException: Cannot popFront from empty deque
 count=1 capacity=4 ["hello"]
 count=2 capacity=4 ["hello","world"]
 0: "hello"

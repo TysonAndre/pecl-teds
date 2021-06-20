@@ -433,7 +433,7 @@ static zval *teds_vector_object_read_offset_helper(teds_vector_object *intern, s
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];
@@ -645,7 +645,7 @@ static zend_always_inline void teds_vector_get_value_at_offset(zval *return_valu
 	teds_vector_object *intern = Z_VECTOR_P(zval_this);
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		RETURN_THROWS();
 	}
 	RETURN_COPY(&intern->array.entries[offset]);
@@ -668,7 +668,9 @@ PHP_METHOD(Teds_Vector, offsetGet)
 		Z_PARAM_ZVAL(offset_zv)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const zend_long offset = teds_get_offset(offset_zv);
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
 	teds_vector_get_value_at_offset(return_value, ZEND_THIS, offset);
 }
 
@@ -679,7 +681,9 @@ PHP_METHOD(Teds_Vector, offsetExists)
 		Z_PARAM_ZVAL(offset_zv)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const zend_long offset = teds_get_offset(offset_zv);
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
 	const teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t len = intern->array.size;
 	RETURN_BOOL((zend_ulong) offset < len);
@@ -728,7 +732,7 @@ static zend_always_inline void teds_vector_set_value_at_offset(zval *return_valu
 
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		RETURN_THROWS();
 	}
 	zval tmp;
@@ -758,7 +762,8 @@ PHP_METHOD(Teds_Vector, offsetSet)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const zend_long offset = teds_get_offset(offset_zv);
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	teds_vector_set_value_at_offset(return_value, ZEND_THIS, offset, value);
 }
@@ -801,7 +806,7 @@ PHP_METHOD(Teds_Vector, pop)
 	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t old_size = intern->array.size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_RuntimeException, "Cannot pop from empty vector", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty vector", 0);
 		RETURN_THROWS();
 	}
 

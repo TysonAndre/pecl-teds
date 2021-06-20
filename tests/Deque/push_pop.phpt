@@ -31,8 +31,8 @@ printf("count=%d\n", count($it));
 ?>
 --EXPECT--
 Test empty deque
-Caught RuntimeException: Cannot popBack from empty deque
-Caught RuntimeException: Cannot popBack from empty deque
+Caught UnderflowException: Cannot popBack from empty deque
+Caught UnderflowException: Cannot popBack from empty deque
 ["TEST",["literal"],{}]
 count=3
 object(stdClass)#2 (0) {

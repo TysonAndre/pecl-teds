@@ -28,15 +28,15 @@ expect_throws(fn() => $it->valueAt(-1));
 ?>
 --EXPECT--
 Caught ReflectionException: Class Teds\ImmutableKeyValueSequence is an internal class marked as final that cannot be instantiated without invoking its constructor
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 string(5) "first"
 object(stdClass)#1 (0) {
 }
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
-Caught RuntimeException: Index invalid or out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range

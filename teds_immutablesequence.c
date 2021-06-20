@@ -402,7 +402,7 @@ static zval *teds_immutablesequence_object_read_offset_helper(teds_immutablesequ
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index invalid or out of range", 0);
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];
@@ -610,7 +610,7 @@ static zend_always_inline void teds_immutablesequence_get_value_at_offset(zval *
 	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(object);
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		RETURN_THROWS();
 	}
 	RETURN_COPY(&intern->array.entries[offset]);
@@ -634,11 +634,7 @@ PHP_METHOD(Teds_ImmutableSequence, offsetGet)
 	ZEND_PARSE_PARAMETERS_END();
 
 	zend_long offset;
-	if (Z_TYPE_P(offset_zv) != IS_LONG) {
-		offset = spl_offset_convert_to_long(offset_zv);
-	} else {
-		offset = Z_LVAL_P(offset_zv);
-	}
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	teds_immutablesequence_get_value_at_offset(return_value, ZEND_THIS, offset);
 }
@@ -687,11 +683,8 @@ PHP_METHOD(Teds_ImmutableSequence, offsetExists)
 	ZEND_PARSE_PARAMETERS_END();
 
 	zend_long offset;
-	if (Z_TYPE_P(offset_zv) != IS_LONG) {
-		offset = spl_offset_convert_to_long(offset_zv);
-	} else {
-		offset = Z_LVAL_P(offset_zv);
-	}
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
 	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
 	size_t len = intern->array.size;
 	RETURN_BOOL((zend_ulong) offset < len);
