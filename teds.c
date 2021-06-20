@@ -247,8 +247,6 @@ static int teds_traversable_func_search_value(zend_object_iterator *iter, void *
 		search_info->result = FAILURE;
 		return ZEND_HASH_APPLY_STOP;
 	}
-	// TODO is this right?
-	zval *const orig = operand;
 	ZVAL_DEREF(operand);
 	bool stop = fast_is_identical_function(operand, &search_info->target);
 	if (stop) {
