@@ -236,11 +236,11 @@ typedef struct {
 	zval target;
 	int result;
 	bool found;
-} php_zval_search_info;
+} php_traversable_search_info;
 
 static int teds_traversable_func_search_value(zend_object_iterator *iter, void *puser) /* {{{ */
 {
-	php_zval_search_info *search_info = (php_zval_search_info*) puser;
+	php_traversable_search_info *search_info = (php_traversable_search_info*) puser;
 
 	zval *operand = iter->funcs->get_current_data(iter);
 	if (UNEXPECTED(!operand || EG(exception))) {
@@ -251,7 +251,6 @@ static int teds_traversable_func_search_value(zend_object_iterator *iter, void *
 	zval *const orig = operand;
 	ZVAL_DEREF(operand);
 	bool stop = fast_is_identical_function(operand, &search_info->target);
-	zval_ptr_dtor(orig);
 	if (stop) {
 		search_info->found = true;
 		return ZEND_HASH_APPLY_STOP;
@@ -342,10 +341,11 @@ PHP_FUNCTION(includes_value)
 	    }
 		case IS_OBJECT: {
 			ZEND_ASSERT(instanceof_function(Z_OBJCE_P(input), zend_ce_traversable));
-			php_iterator_until_info search_info;
+			php_traversable_search_info search_info;
 
 			search_info.result = SUCCESS;
 			search_info.found = false;
+			ZVAL_COPY_VALUE(&search_info.target, value);
 
 			if (spl_iterator_apply(input, teds_traversable_func_search_value, (void*)&search_info) == SUCCESS && search_info.result == SUCCESS) {
 				RETURN_BOOL(search_info.found);
