@@ -117,6 +117,7 @@
     <file name="iterable/find_traversable.phpt" role="test" />
     <file name="iterable/fold_array.phpt" role="test" />
     <file name="iterable/fold_traversable.phpt" role="test" />
+    <file name="iterable/includes_value.phpt" role="test" />
     <file name="iterable/none_array.phpt" role="test" />
     <file name="iterable/none_traversable.phpt" role="test" />
    </dir>

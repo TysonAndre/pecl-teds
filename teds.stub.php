@@ -45,6 +45,12 @@ function all(iterable $iterable, ?callable $callback = null): bool {}
 function none(iterable $iterable, ?callable $callback = null): bool {}
 
 /**
+ * Returns true if this iterable includes a value identical to $value (===).
+ * Similar to in_array($value, $iterable, true) but also works on Traversables
+ */
+function includes_value(iterable $iterable, mixed $value): bool {}
+
+/**
  * Returns the result of repeatedly applying $initial = $callback($initial, $value) for each value in $iterable
  * @param iterable $iterable
  * (at)param callable(mixed $initial, mixed $value):mixed $callback

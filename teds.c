@@ -90,7 +90,7 @@ typedef struct {
 	zval args[2];
 } traversable_reduce_data;
 
-static int php_traversable_reduce_elem(zend_object_iterator *iter, void *puser) /* {{{ */
+static int teds_traversable_reduce_elem(zend_object_iterator *iter, void *puser) /* {{{ */
 {
 	traversable_reduce_data *reduce_data = puser;
 	zend_fcall_info *fci = &reduce_data->fci;
@@ -114,7 +114,7 @@ static int php_traversable_reduce_elem(zend_object_iterator *iter, void *puser) 
 }
 /* }}} */
 
-static zend_always_inline void php_traversable_reduce(zval *obj, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value) /* {{{ */
+static zend_always_inline void teds_traversable_reduce(zval *obj, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value) /* {{{ */
 {
 	traversable_reduce_data reduce_data;
 	reduce_data.fci = fci;
@@ -123,7 +123,7 @@ static zend_always_inline void php_traversable_reduce(zval *obj, zend_fcall_info
 	reduce_data.fci.params = reduce_data.args;
 	reduce_data.fcc = fci_cache;
 
-	spl_iterator_apply(obj, php_traversable_reduce_elem, (void*)&reduce_data);
+	spl_iterator_apply(obj, teds_traversable_reduce_elem, (void*)&reduce_data);
 }
 /* }}} */
 
@@ -176,16 +176,15 @@ static inline void php_array_until(zval *return_value, HashTable *htbl, zend_fca
 /* }}} */
 
 typedef struct {
-	zval                   *obj;
 	int                    stop_value;
 	int                    result;
-	int                    found;
 	zend_long              has_callback;
 	zend_fcall_info        fci;
 	zend_fcall_info_cache  fcc;
+	bool                   found;
 } php_iterator_until_info;
 
-static int php_traversable_func_until(zend_object_iterator *iter, void *puser) /* {{{ */
+static int teds_traversable_func_until(zend_object_iterator *iter, void *puser) /* {{{ */
 {
 	zend_fcall_info fci;
 	zval retval;
@@ -226,14 +225,42 @@ static int php_traversable_func_until(zend_object_iterator *iter, void *puser) /
 		zval_ptr_dtor(operand);
 	}
 	if (stop) {
-		until_info->found = 1;
+		until_info->found = true;
 		return ZEND_HASH_APPLY_STOP;
 	}
 	return ZEND_HASH_APPLY_KEEP;
 }
 /* }}} */
 
-static inline void php_iterable_until(INTERNAL_FUNCTION_PARAMETERS, int stop_value, int negate) /* {{{ */
+typedef struct {
+	zval target;
+	int result;
+	bool found;
+} php_zval_search_info;
+
+static int teds_traversable_func_search_value(zend_object_iterator *iter, void *puser) /* {{{ */
+{
+	php_zval_search_info *search_info = (php_zval_search_info*) puser;
+
+	zval *operand = iter->funcs->get_current_data(iter);
+	if (UNEXPECTED(!operand || EG(exception))) {
+		search_info->result = FAILURE;
+		return ZEND_HASH_APPLY_STOP;
+	}
+	// TODO is this right?
+	zval *const orig = operand;
+	ZVAL_DEREF(operand);
+	bool stop = fast_is_identical_function(operand, &search_info->target);
+	zval_ptr_dtor(orig);
+	if (stop) {
+		search_info->found = true;
+		return ZEND_HASH_APPLY_STOP;
+	}
+	return ZEND_HASH_APPLY_KEEP;
+}
+/* }}} */
+
+static inline void teds_iterable_until(INTERNAL_FUNCTION_PARAMETERS, int stop_value, int negate) /* {{{ */
 {
 	zval *input;
 	zend_fcall_info fci = empty_fcall_info;
@@ -253,15 +280,14 @@ static inline void php_iterable_until(INTERNAL_FUNCTION_PARAMETERS, int stop_val
 			ZEND_ASSERT(instanceof_function(Z_OBJCE_P(input), zend_ce_traversable));
 			php_iterator_until_info until_info;
 
-			until_info.obj = input;
 			until_info.fci = fci;
 			until_info.fcc = fci_cache;
 
 			until_info.stop_value = stop_value;
 			until_info.result = SUCCESS;
-			until_info.found = 0;
+			until_info.found = false;
 
-			if (spl_iterator_apply(until_info.obj, php_traversable_func_until, (void*)&until_info) == SUCCESS && until_info.result == SUCCESS) {
+			if (spl_iterator_apply(input, teds_traversable_func_until, (void*)&until_info) == SUCCESS && until_info.result == SUCCESS) {
 				RETURN_BOOL(!(until_info.found ^ stop_value ^ negate));
 			}
 			return;
@@ -273,21 +299,61 @@ static inline void php_iterable_until(INTERNAL_FUNCTION_PARAMETERS, int stop_val
 /* Determines whether the predicate holds for all elements in the array */
 PHP_FUNCTION(all)
 {
-	php_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, 0);
+	teds_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, 0);
 }
 /* }}} */
 
 /* {{{ Determines whether the predicate holds for at least one element in the array */
 PHP_FUNCTION(any)
 {
-	php_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1, 0);
+	teds_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1, 0);
 }
 /* }}} */
 
 /* {{{ Determines whether the predicate holds for no elements of the array */
 PHP_FUNCTION(none)
 {
-	php_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1, 1);
+	teds_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1, 1);
+}
+/* }}} */
+
+/* Determines whether the predicate holds for all elements in the array */
+PHP_FUNCTION(includes_value)
+{
+	zval *input;
+	zval *value;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ITERABLE(input)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	switch (Z_TYPE_P(input)) {
+		case IS_ARRAY: {
+			zval *entry;
+			ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(input), entry) {
+				ZVAL_DEREF(entry);
+				if (fast_is_identical_function(value, entry)) {
+					RETURN_TRUE;
+				}
+			} ZEND_HASH_FOREACH_END();
+			RETURN_FALSE;
+			return;
+	    }
+		case IS_OBJECT: {
+			ZEND_ASSERT(instanceof_function(Z_OBJCE_P(input), zend_ce_traversable));
+			php_iterator_until_info search_info;
+
+			search_info.result = SUCCESS;
+			search_info.found = false;
+
+			if (spl_iterator_apply(input, teds_traversable_func_search_value, (void*)&search_info) == SUCCESS && search_info.result == SUCCESS) {
+				RETURN_BOOL(search_info.found);
+			}
+			return;
+		}
+		EMPTY_SWITCH_DEFAULT_CASE();
+	}
 }
 /* }}} */
 
@@ -313,7 +379,7 @@ PHP_FUNCTION(fold)
 			return;
 		case IS_OBJECT: {
 			ZEND_ASSERT(instanceof_function(Z_OBJCE_P(input), zend_ce_traversable));
-			php_traversable_reduce(input, fci, fci_cache, return_value);
+			teds_traversable_reduce(input, fci, fci_cache, return_value);
 			return;
 		}
 		EMPTY_SWITCH_DEFAULT_CASE();
@@ -321,7 +387,8 @@ PHP_FUNCTION(fold)
 }
 /* }}} */
 
-static zend_always_inline void php_array_find(HashTable *htbl, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value, zval *default_value) /* {{{ */
+// Source: php_array_find from php-src/ext/standard/array.c
+static zend_always_inline void teds_array_find(HashTable *htbl, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value, zval *default_value) /* {{{ */
 {
 	zval retval;
 	zval *operand;
@@ -364,7 +431,7 @@ typedef struct {
 	bool found;
 } traversable_find_data;
 
-static int php_traversable_find_elem(zend_object_iterator *iter, void *puser) /* {{{ */
+static int teds_traversable_find_elem(zend_object_iterator *iter, void *puser) /* {{{ */
 {
 	zval retval;
 	traversable_find_data *find_data = puser;
@@ -399,7 +466,7 @@ static int php_traversable_find_elem(zend_object_iterator *iter, void *puser) /*
 	return ZEND_HASH_APPLY_KEEP;
 }
 
-static zend_always_inline void php_traversable_find(zval *obj, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value, zval *default_value) /* {{{ */
+static zend_always_inline void teds_traversable_find(zval *obj, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value, zval *default_value) /* {{{ */
 {
 	traversable_find_data find_data;
 	find_data.fci = fci;
@@ -408,7 +475,7 @@ static zend_always_inline void php_traversable_find(zval *obj, zend_fcall_info f
 	find_data.return_value = return_value;
 	find_data.found = 0;
 
-	if (spl_iterator_apply(obj, php_traversable_find_elem, (void*)&find_data) != SUCCESS || EG(exception)) {
+	if (spl_iterator_apply(obj, teds_traversable_find_elem, (void*)&find_data) != SUCCESS || EG(exception)) {
 		return;
 	}
 	if (find_data.found) {
@@ -439,10 +506,10 @@ PHP_FUNCTION(find)
 
 	switch (Z_TYPE_P(input)) {
 		case IS_ARRAY:
-			php_array_find(Z_ARRVAL_P(input), fci, fci_cache, return_value, default_value);
+			teds_array_find(Z_ARRVAL_P(input), fci, fci_cache, return_value, default_value);
 			return;
 		case IS_OBJECT: {
-			php_traversable_find(input, fci, fci_cache, return_value, default_value);
+			teds_traversable_find(input, fci, fci_cache, return_value, default_value);
 			return;
 		}
 		EMPTY_SWITCH_DEFAULT_CASE();

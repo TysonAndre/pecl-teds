@@ -146,6 +146,18 @@ function find(iterable $iterable, callable $callback, mixed $default = null): bo
 	return $default;
 }
 
+/**
+ * Similar to in_array($value, $array, true) but also works on Traversables.
+ */
+function includes_value(iterable $iterable, mixed $value): bool {
+	foreach ($iterable as $other) {
+		if ($other === $value) {
+			return true;
+		}
+	}
+	return false;
+}
+
 ```
 
 ## Motivation
