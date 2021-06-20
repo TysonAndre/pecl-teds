@@ -296,34 +296,29 @@ static HashTable* teds_deque_get_gc(zend_object *obj, zval **table, int *n)
 static HashTable* teds_deque_get_properties(zend_object *obj)
 {
 	teds_deque *intern = teds_deque_from_object(obj);
-	const size_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
-	if (!len) {
-		/* Nothing to add. */
-		return ht;
-	}
-	if (zend_hash_num_elements(ht)) {
-		/* Already built. */
-		return ht;
-	}
 
-	/* Initialize properties array */
 	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
-	zval *const circular_buffer = intern->array.circular_buffer;
-	zval *p = circular_buffer + intern->array.offset;
-	zval *const end = circular_buffer + intern->array.capacity;
-	size_t i = 0;
 
-	do {
-		ZEND_ASSERT(p <= end);
-		if (p == end) {
-			p = circular_buffer;
+	/* Re-initialize properties array */
+	if (!intern->array.size && !zend_hash_num_elements(ht)) {
+		/* Nothing to add, update, or remove. */
+		return ht;
+	}
+
+	// Note that destructors may mutate the original array,
+	// so we fetch the size and circular buffer each time.
+	size_t i = 0;
+	for (i = 0; i < intern->array.size; i++) {
+		zval *elem = teds_deque_get_entry_at_offset(&intern->array, i);
+		Z_TRY_ADDREF_P(elem);
+		zend_hash_index_update(ht, i, elem);
+	}
+	if (UNEXPECTED(i > intern->array.size)) {
+		for (zend_long j = intern->array.size; j < i; j++) {
+			zend_hash_index_del(ht, j);
 		}
-		Z_TRY_ADDREF_P(p);
-		zend_hash_index_update(ht, i, p);
-		i++;
-		p++;
-	} while (i < len);
+	}
 
 	return ht;
 }
@@ -612,7 +607,7 @@ static zend_array* teds_deque_to_new_array(const teds_deque_entries *array) {
 	zval *const circular_buffer = array->circular_buffer;
 	zval *p = circular_buffer + array->offset;
 	zval *const end = circular_buffer + array->capacity;
-	const size_t len = array->size;
+	size_t len = array->size;
 	zend_array *values = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);
@@ -625,6 +620,7 @@ static zend_array* teds_deque_to_new_array(const teds_deque_entries *array) {
 			if (p == end) {
 				p = circular_buffer;
 			}
+			len--;
 		} while (len > 0);
 	} ZEND_HASH_FILL_END();
 	return values;
