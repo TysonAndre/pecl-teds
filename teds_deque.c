@@ -307,16 +307,16 @@ static HashTable* teds_deque_get_properties(zend_object *obj)
 	}
 
 	// Note that destructors may mutate the original array,
-	// so we fetch the size and circular buffer each time.
-	size_t i = 0;
-	for (i = 0; i < intern->array.size; i++) {
+	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
+	for (size_t i = 0; i < intern->array.size; i++) {
 		zval *elem = teds_deque_get_entry_at_offset(&intern->array, i);
 		Z_TRY_ADDREF_P(elem);
 		zend_hash_index_update(ht, i, elem);
 	}
-	if (UNEXPECTED(i > intern->array.size)) {
-		for (zend_long j = intern->array.size; j < i; j++) {
-			zend_hash_index_del(ht, j);
+	const size_t properties_size = zend_hash_num_elements(ht);
+	if (UNEXPECTED(properties_size > intern->array.size)) {
+		for (size_t i = intern->array.size; i < properties_size; i++) {
+			zend_hash_index_del(ht, i);
 		}
 	}
 

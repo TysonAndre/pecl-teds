@@ -41,10 +41,10 @@ typedef struct _teds_vector_entries {
 	zval *entries;
 } teds_vector_entries;
 
-typedef struct _teds_vector_object {
+typedef struct _teds_vector {
 	teds_vector_entries		array;
 	zend_object				std;
-} teds_vector_object;
+} teds_vector;
 
 /* Used by InternalIterator returned by Vector->getIterator() */
 typedef struct _teds_vector_it {
@@ -52,12 +52,12 @@ typedef struct _teds_vector_it {
 	zend_long            current;
 } teds_vector_it;
 
-static teds_vector_object *teds_vector_object_from_obj(zend_object *obj)
+static teds_vector *teds_vector_from_object(zend_object *obj)
 {
-	return (teds_vector_object*)((char*)(obj) - XtOffsetOf(teds_vector_object, std));
+	return (teds_vector*)((char*)(obj) - XtOffsetOf(teds_vector, std));
 }
 
-#define Z_VECTOR_P(zv)  teds_vector_object_from_obj(Z_OBJ_P((zv)))
+#define Z_VECTOR_P(zv)  teds_vector_from_object(Z_OBJ_P((zv)))
 
 /* Helps enforce the invariants in debug mode:
  *   - if size == 0, then entries == NULL
@@ -261,9 +261,9 @@ static void teds_vector_entries_dtor(teds_vector_entries *array)
 	}
 }
 
-static HashTable* teds_vector_object_get_gc(zend_object *obj, zval **table, int *n)
+static HashTable* teds_vector_get_gc(zend_object *obj, zval **table, int *n)
 {
-	teds_vector_object *intern = teds_vector_object_from_obj(obj);
+	teds_vector *intern = teds_vector_from_object(obj);
 
 	*table = intern->array.entries;
 	*n = (int)intern->array.size;
@@ -273,42 +273,46 @@ static HashTable* teds_vector_object_get_gc(zend_object *obj, zval **table, int 
 	return NULL;
 }
 
-static HashTable* teds_vector_object_get_properties(zend_object *obj)
+static HashTable* teds_vector_get_properties(zend_object *obj)
 {
-	teds_vector_object *intern = teds_vector_object_from_obj(obj);
-	size_t len = intern->array.size;
+	teds_vector *intern = teds_vector_from_object(obj);
 	HashTable *ht = zend_std_get_properties(obj);
-	if (!len) {
-		/* Nothing to add. */
-		return ht;
-	}
-	if (zend_hash_num_elements(ht)) {
-		/* Already built. */
+
+	/* Re-initialize properties array */
+	if (!intern->array.size && !zend_hash_num_elements(ht)) {
+		/* Nothing to add, update, or remove. */
 		return ht;
 	}
 
-	zval *entries = intern->array.entries;
-	/* Initialize properties array */
-	for (size_t i = 0; i < len; i++) {
-		Z_TRY_ADDREF_P(&entries[i]);
-		zend_hash_index_update(ht, i, &entries[i]);
+	// Note that destructors may mutate the original array,
+	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
+	for (size_t i = 0; i < intern->array.size; i++) {
+		zval *elem = &intern->array.entries[i];
+		Z_TRY_ADDREF_P(elem);
+		zend_hash_index_update(ht, i, elem);
+	}
+	const size_t properties_size = zend_hash_num_elements(ht);
+	if (UNEXPECTED(properties_size > intern->array.size)) {
+		for (size_t i = intern->array.size; i < properties_size; i++) {
+			zend_hash_index_del(ht, i);
+		}
 	}
 
 	return ht;
 }
 
-static void teds_vector_object_free_storage(zend_object *object)
+static void teds_vector_free_storage(zend_object *object)
 {
-	teds_vector_object *intern = teds_vector_object_from_obj(object);
+	teds_vector *intern = teds_vector_from_object(object);
 	teds_vector_entries_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
 
-static zend_object *teds_vector_object_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
+static zend_object *teds_vector_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
 {
-	teds_vector_object *intern;
+	teds_vector *intern;
 
-	intern = zend_object_alloc(sizeof(teds_vector_object), class_type);
+	intern = zend_object_alloc(sizeof(teds_vector), class_type);
 	/* This is a final class */
 	ZEND_ASSERT(class_type == teds_ce_Vector);
 
@@ -317,7 +321,7 @@ static zend_object *teds_vector_object_new_ex(zend_class_entry *class_type, zend
 	intern->std.handlers = &teds_handler_Vector;
 
 	if (orig && clone_orig) {
-		teds_vector_object *other = teds_vector_object_from_obj(orig);
+		teds_vector *other = teds_vector_from_object(orig);
 		teds_vector_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.entries = NULL;
@@ -328,22 +332,22 @@ static zend_object *teds_vector_object_new_ex(zend_class_entry *class_type, zend
 
 static zend_object *teds_vector_new(zend_class_entry *class_type)
 {
-	return teds_vector_object_new_ex(class_type, NULL, 0);
+	return teds_vector_new_ex(class_type, NULL, 0);
 }
 
 
-static zend_object *teds_vector_object_clone(zend_object *old_object)
+static zend_object *teds_vector_clone(zend_object *old_object)
 {
-	zend_object *new_object = teds_vector_object_new_ex(old_object->ce, old_object, 1);
+	zend_object *new_object = teds_vector_new_ex(old_object->ce, old_object, 1);
 
 	zend_objects_clone_members(new_object, old_object);
 
 	return new_object;
 }
 
-static int teds_vector_object_count_elements(zend_object *object, zend_long *count)
+static int teds_vector_count_elements(zend_object *object, zend_long *count)
 {
-	const teds_vector_object *intern = teds_vector_object_from_obj(object);
+	const teds_vector *intern = teds_vector_from_object(object);
 	*count = intern->array.size;
 	return SUCCESS;
 }
@@ -355,7 +359,7 @@ PHP_METHOD(Teds_Vector, count)
 
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	const teds_vector_object *intern = Z_VECTOR_P(object);
+	const teds_vector *intern = Z_VECTOR_P(object);
 	RETURN_LONG(intern->array.size);
 }
 
@@ -366,7 +370,7 @@ PHP_METHOD(Teds_Vector, capacity)
 
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	const teds_vector_object *intern = Z_VECTOR_P(object);
+	const teds_vector *intern = Z_VECTOR_P(object);
 	RETURN_LONG(intern->array.capacity);
 }
 
@@ -380,7 +384,7 @@ PHP_METHOD(Teds_Vector, __construct)
 		Z_PARAM_ITERABLE(iterable)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_vector_object *intern = Z_VECTOR_P(object);
+	teds_vector *intern = Z_VECTOR_P(object);
 
 	if (UNEXPECTED(!teds_vector_entries_uninitialized(&intern->array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\Vector::__construct twice", 0);
@@ -419,7 +423,7 @@ static void teds_vector_it_rewind(zend_object_iterator *iter)
 static int teds_vector_it_valid(zend_object_iterator *iter)
 {
 	teds_vector_it     *iterator = (teds_vector_it*)iter;
-	teds_vector_object *object   = Z_VECTOR_P(&iter->data);
+	teds_vector *object   = Z_VECTOR_P(&iter->data);
 
 	if (iterator->current >= 0 && iterator->current < object->array.size) {
 		return SUCCESS;
@@ -428,7 +432,7 @@ static int teds_vector_it_valid(zend_object_iterator *iter)
 	return FAILURE;
 }
 
-static zval *teds_vector_object_read_offset_helper(teds_vector_object *intern, size_t offset)
+static zval *teds_vector_read_offset_helper(teds_vector *intern, size_t offset)
 {
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
@@ -443,9 +447,9 @@ static zval *teds_vector_object_read_offset_helper(teds_vector_object *intern, s
 static zval *teds_vector_it_get_current_data(zend_object_iterator *iter)
 {
 	teds_vector_it     *iterator = (teds_vector_it*)iter;
-	teds_vector_object *object   = Z_VECTOR_P(&iter->data);
+	teds_vector *object   = Z_VECTOR_P(&iter->data);
 
-	zval *data = teds_vector_object_read_offset_helper(object, iterator->current);
+	zval *data = teds_vector_read_offset_helper(object, iterator->current);
 
 	if (UNEXPECTED(data == NULL)) {
 		return &EG(uninitialized_zval);
@@ -457,7 +461,7 @@ static zval *teds_vector_it_get_current_data(zend_object_iterator *iter)
 static void teds_vector_it_get_current_key(zend_object_iterator *iter, zval *key)
 {
 	teds_vector_it     *iterator = (teds_vector_it*)iter;
-	teds_vector_object *object   = Z_VECTOR_P(&iter->data);
+	teds_vector *object   = Z_VECTOR_P(&iter->data);
 
 	size_t offset = iterator->current;
 	if (offset >= object->array.size) {
@@ -514,7 +518,7 @@ PHP_METHOD(Teds_Vector, __unserialize)
 	}
 
 	const size_t num_entries = zend_hash_num_elements(raw_data);
-	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	if (UNEXPECTED(!teds_vector_entries_uninitialized(&intern->array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
@@ -582,7 +586,7 @@ PHP_METHOD(Teds_Vector, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_vector_new(teds_ce_Vector);
-	teds_vector_object *intern = teds_vector_object_from_obj(object);
+	teds_vector *intern = teds_vector_from_object(object);
 	teds_vector_entries_init_from_array_values(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
@@ -592,7 +596,7 @@ PHP_METHOD(Teds_Vector, __serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 
 	if (teds_vector_entries_empty_size(&intern->array)) {
 		RETURN_EMPTY_ARRAY();
@@ -619,7 +623,7 @@ PHP_METHOD(Teds_Vector, __serialize)
 PHP_METHOD(Teds_Vector, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	size_t len = intern->array.size;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
@@ -642,7 +646,7 @@ PHP_METHOD(Teds_Vector, toArray)
 
 static zend_always_inline void teds_vector_get_value_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
 {
-	teds_vector_object *intern = Z_VECTOR_P(zval_this);
+	teds_vector *intern = Z_VECTOR_P(zval_this);
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
@@ -684,7 +688,7 @@ PHP_METHOD(Teds_Vector, offsetExists)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	const teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	const teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t len = intern->array.size;
 	RETURN_BOOL((zend_ulong) offset < len);
 }
@@ -696,7 +700,7 @@ PHP_METHOD(Teds_Vector, indexOf)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	const teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t len = intern->array.size;
 	zval *entries = intern->array.entries;
 	for (size_t i = 0; i < len; i++) {
@@ -714,7 +718,7 @@ PHP_METHOD(Teds_Vector, contains)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	const teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t len = intern->array.size;
 	zval *entries = intern->array.entries;
 	for (size_t i = 0; i < len; i++) {
@@ -727,7 +731,7 @@ PHP_METHOD(Teds_Vector, contains)
 
 static zend_always_inline void teds_vector_set_value_at_offset(zval *return_value, zval *object, zend_long offset, zval *value) {
 	ZEND_ASSERT(Z_TYPE_P(object) == IS_OBJECT);
-	const teds_vector_object *intern = Z_VECTOR_P(object);
+	const teds_vector *intern = Z_VECTOR_P(object);
 	zval *const ptr = &intern->array.entries[offset];
 
 	size_t len = intern->array.size;
@@ -768,7 +772,7 @@ PHP_METHOD(Teds_Vector, offsetSet)
 	teds_vector_set_value_at_offset(return_value, ZEND_THIS, offset, value);
 }
 
-static void teds_vector_raise_capacity(teds_vector_object *intern, const zend_long new_capacity) {
+static void teds_vector_raise_capacity(teds_vector *intern, const zend_long new_capacity) {
 	ZEND_ASSERT(new_capacity > intern->array.capacity);
 	if (teds_vector_entries_uninitialized(&intern->array)) {
 		intern->array.entries = safe_erealloc(intern->array.entries, new_capacity, sizeof(zval), 0);
@@ -787,7 +791,7 @@ PHP_METHOD(Teds_Vector, push)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t old_size = intern->array.size;
 	const size_t old_capacity = intern->array.capacity;
 
@@ -803,7 +807,7 @@ PHP_METHOD(Teds_Vector, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t old_size = intern->array.size;
 	if (old_size == 0) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty vector", 0);
@@ -825,7 +829,7 @@ PHP_METHOD(Teds_Vector, offsetUnset)
 	RETURN_THROWS();
 }
 
-static void teds_vector_return_list(zval *return_value, teds_vector_object *intern)
+static void teds_vector_return_list(zval *return_value, teds_vector *intern)
 {
 	teds_convert_zval_list_to_php_array_list(return_value, intern->array.entries, intern->array.size);
 }
@@ -834,7 +838,7 @@ PHP_METHOD(Teds_Vector, jsonSerialize)
 {
 	/* json_encoder.c will always encode objects as {"0":..., "1":...}, and detects recursion if an object returns its internal property array, so we have to return a new array */
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	teds_vector_return_list(return_value, intern);
 }
 
@@ -845,13 +849,13 @@ PHP_MINIT_FUNCTION(teds_vector)
 
 	memcpy(&teds_handler_Vector, &std_object_handlers, sizeof(zend_object_handlers));
 
-	teds_handler_Vector.offset          = XtOffsetOf(teds_vector_object, std);
-	teds_handler_Vector.clone_obj       = teds_vector_object_clone;
-	teds_handler_Vector.count_elements  = teds_vector_object_count_elements;
-	teds_handler_Vector.get_properties  = teds_vector_object_get_properties;
-	teds_handler_Vector.get_gc          = teds_vector_object_get_gc;
+	teds_handler_Vector.offset          = XtOffsetOf(teds_vector, std);
+	teds_handler_Vector.clone_obj       = teds_vector_clone;
+	teds_handler_Vector.count_elements  = teds_vector_count_elements;
+	teds_handler_Vector.get_properties  = teds_vector_get_properties;
+	teds_handler_Vector.get_gc          = teds_vector_get_gc;
 	teds_handler_Vector.dtor_obj        = zend_objects_destroy_object;
-	teds_handler_Vector.free_obj        = teds_vector_object_free_storage;
+	teds_handler_Vector.free_obj        = teds_vector_free_storage;
 
 	teds_ce_Vector->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 	teds_ce_Vector->get_iterator = teds_vector_get_iterator;
