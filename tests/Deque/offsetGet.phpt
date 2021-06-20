@@ -70,9 +70,9 @@ Caught RuntimeException: Index out of range
 Caught RuntimeException: Index out of range
 Caught RuntimeException: Index out of range
 Caught RuntimeException: Index out of range
-Caught RuntimeException: Index out of range
+Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\Deque::valueAt(): Argument #1 ($offset) must be of type int, string given
-Caught RuntimeException: Index out of range
+Caught RuntimeException: Index invalid or out of range
 Caught RuntimeException: Deque does not support offsetUnset - elements must be removed by resizing
 Caught RuntimeException: Index invalid or out of range
 Caught RuntimeException: Deque does not support offsetUnset - elements must be removed by resizing

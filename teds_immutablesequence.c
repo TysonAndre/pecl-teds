@@ -101,8 +101,6 @@ static void teds_cached_entries_init_from_array(teds_cached_entries *array, zend
 {
 	zend_long size = zend_hash_num_elements(values);
 	if (size > 0) {
-		zend_long nkey;
-		zend_string *skey;
 		zval *val;
 		zval *entries;
 		int i = 0;

@@ -114,8 +114,6 @@ static void teds_vector_entries_init_from_array(teds_vector_entries *array, zend
 {
 	zend_long size = zend_hash_num_elements(values);
 	if (size > 0) {
-		zend_long nkey;
-		zend_string *skey;
 		zval *val;
 		zval *entries;
 		int i = 0;
@@ -798,8 +796,6 @@ PHP_METHOD(Teds_Vector, push)
 
 PHP_METHOD(Teds_Vector, pop)
 {
-	zval *value;
-
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	teds_vector_object *intern = Z_VECTOR_P(ZEND_THIS);
@@ -808,7 +804,6 @@ PHP_METHOD(Teds_Vector, pop)
 		zend_throw_exception(spl_ce_RuntimeException, "Cannot pop from empty vector", 0);
 		RETURN_THROWS();
 	}
-
 
 	intern->array.size--;
 	RETURN_COPY_VALUE(&intern->array.entries[intern->array.size]);
