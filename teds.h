@@ -36,7 +36,11 @@ static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 			break;
 		}
 		case IS_DOUBLE:
+#if PHP_VERSION_ID >= 80100
 			return zend_dval_to_lval_safe(Z_DVAL_P(offset));
+#else
+			return zend_dval_to_lval(Z_DVAL_P(offset));
+#endif
 		case IS_LONG:
 			return Z_LVAL_P(offset);
 		case IS_FALSE:
