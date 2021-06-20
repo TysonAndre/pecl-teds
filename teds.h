@@ -21,10 +21,11 @@ static zend_always_inline void teds_convert_zval_list_to_php_array_list(zval *re
 			ZEND_HASH_FILL_ADD(&entries[i]);
 		}
 	} ZEND_HASH_FILL_END();
+
 	RETURN_ARR(values);
 }
 
-static zend_always_inline zend_long teds_get_offset(zval *offset) {
+static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 	try_again:
 	switch (Z_TYPE_P(offset)) {
 		case IS_STRING: {
