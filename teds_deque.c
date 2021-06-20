@@ -697,7 +697,10 @@ PHP_METHOD(Teds_Deque, offsetExists)
 
 	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
 	const size_t len = intern->array.size;
-	RETURN_BOOL((zend_ulong) offset < len);
+	if ((zend_ulong) offset >= len) {
+		RETURN_FALSE;
+	}
+	RETURN_BOOL(Z_TYPE_P(teds_deque_get_entry_at_offset(&intern->array, offset)) != IS_NULL);
 }
 
 static zval *teds_deque_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
@@ -736,7 +739,6 @@ static zend_always_inline void teds_deque_set_value_at_offset(zend_object *objec
 	ZVAL_COPY(ptr, value);
 	zval_ptr_dtor(&tmp);
 }
-
 
 static void teds_deque_write_dimension(zend_object *object, zval *offset_zv, zval *value)
 {
@@ -934,7 +936,8 @@ PHP_METHOD(Teds_Deque, offsetUnset)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "Deque does not support offsetUnset - elements must be removed by resizing", 0);
+	// Diverge from SplFixedArray - null isn't the same thing as undefined.
+	zend_throw_exception(spl_ce_RuntimeException, "Teds\\Deque does not support offsetUnset - elements must be set to null or removed by resizing", 0);
 	RETURN_THROWS();
 }
 

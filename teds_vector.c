@@ -491,6 +491,8 @@ static const zend_object_iterator_funcs teds_vector_it_funcs = {
 
 zend_object_iterator *teds_vector_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
+	// This is final
+	ZEND_ASSERT(ce == teds_ce_Vector);
 	teds_vector_it *iterator;
 
 	if (UNEXPECTED(by_ref)) {
@@ -729,15 +731,14 @@ PHP_METHOD(Teds_Vector, contains)
 	RETURN_FALSE;
 }
 
-static zend_always_inline void teds_vector_set_value_at_offset(zval *return_value, zval *object, zend_long offset, zval *value) {
-	ZEND_ASSERT(Z_TYPE_P(object) == IS_OBJECT);
-	const teds_vector *intern = Z_VECTOR_P(object);
+static zend_always_inline void teds_vector_set_value_at_offset(zend_object *object, zend_long offset, zval *value) {
+	const teds_vector *intern = teds_vector_from_object(object);
 	zval *const ptr = &intern->array.entries[offset];
 
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		RETURN_THROWS();
+		return;
 	}
 	zval tmp;
 	ZVAL_COPY_VALUE(&tmp, ptr);
@@ -754,7 +755,7 @@ PHP_METHOD(Teds_Vector, setValueAt)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_vector_set_value_at_offset(return_value, ZEND_THIS, offset, value);
+	teds_vector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 }
 
 PHP_METHOD(Teds_Vector, offsetSet)
@@ -769,7 +770,7 @@ PHP_METHOD(Teds_Vector, offsetSet)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	teds_vector_set_value_at_offset(return_value, ZEND_THIS, offset, value);
+	teds_vector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 }
 
 static void teds_vector_raise_capacity(teds_vector *intern, const zend_long new_capacity) {
@@ -825,7 +826,7 @@ PHP_METHOD(Teds_Vector, offsetUnset)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "Vector does not support offsetUnset - elements must be removed by resizing", 0);
+	zend_throw_exception(spl_ce_RuntimeException, "Teds\\Vector does not support offsetUnset - elements must be set to null or removed by resizing", 0);
 	RETURN_THROWS();
 }
 
@@ -842,6 +843,46 @@ PHP_METHOD(Teds_Vector, jsonSerialize)
 	teds_vector_return_list(return_value, intern);
 }
 
+static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zval *value)
+{
+	if (!offset_zv) {
+		zend_throw_exception(spl_ce_RuntimeException, "[] operator not supported for Teds\\Vector", 0);
+		return;
+	}
+
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
+	const teds_vector *intern = teds_vector_from_object(object);
+	if (offset < 0 || offset >= intern->array.size) {
+		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
+		return;
+	}
+	teds_vector_set_value_at_offset(object, offset, value);
+}
+
+static zval *teds_vector_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
+{
+	if (!offset_zv) {
+		zend_throw_exception(spl_ce_RuntimeException, "[] operator not supported for Teds\\Vector", 0);
+		return NULL;
+	}
+
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW_RETURN_NULLPTR(offset, offset_zv);
+
+	const teds_vector *intern = teds_vector_from_object(object);
+
+	if (offset < 0 || offset >= intern->array.size) {
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		}
+		return NULL;
+	} else {
+		return &intern->array.entries[offset];
+	}
+}
+
 PHP_MINIT_FUNCTION(teds_vector)
 {
 	teds_ce_Vector = register_class_Teds_Vector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
@@ -856,6 +897,11 @@ PHP_MINIT_FUNCTION(teds_vector)
 	teds_handler_Vector.get_gc          = teds_vector_get_gc;
 	teds_handler_Vector.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_Vector.free_obj        = teds_vector_free_storage;
+
+	teds_handler_Vector.read_dimension  = teds_vector_read_dimension;
+	teds_handler_Vector.write_dimension = teds_vector_write_dimension;
+	//teds_handler_Vector.unset_dimension = teds_vector_unset_dimension;
+	//teds_handler_Vector.has_dimension   = teds_vector_has_dimension;
 
 	teds_ce_Vector->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 	teds_ce_Vector->get_iterator = teds_vector_get_iterator;

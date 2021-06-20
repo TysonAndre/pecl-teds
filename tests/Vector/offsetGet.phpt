@@ -43,14 +43,14 @@ expect_throws(fn() => $it->offsetSet(PHP_INT_MAX,'x'));
 expect_throws(function () use ($it) { unset($it[0]); });
 var_dump($it->getIterator());
 ?>
---EXPECTF--
+--EXPECT--
 Caught ReflectionException: Class Teds\Vector is an internal class marked as final that cannot be instantiated without invoking its constructor
 object(stdClass)#1 (0) {
 }
 object(stdClass)#1 (0) {
 }
 Caught OutOfBoundsException: Index out of range
-Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
+Caught RuntimeException: Teds\Vector does not support offsetUnset - elements must be set to null or removed by resizing
 object(stdClass)#1 (0) {
 }
 offsetExists checks
@@ -73,8 +73,8 @@ Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\Vector::valueAt(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
+Caught RuntimeException: Teds\Vector does not support offsetUnset - elements must be set to null or removed by resizing
 Caught OutOfBoundsException: Index out of range
-Caught RuntimeException: Vector does not support offsetUnset - elements must be removed by resizing
+Caught RuntimeException: Teds\Vector does not support offsetUnset - elements must be set to null or removed by resizing
 object(InternalIterator)#2 (0) {
 }
