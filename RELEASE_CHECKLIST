@@ -1,5 +1,6 @@
 * Update version in php_teds.h to remove dev suffix.
 * Update version, release date in package.xml.
+* Regenerate list of unit test files in package.xml
 * Run `phpize; ./configure; make clean test`.
 * Run `pecl package package.xml`.
 * Run `pecl install teds-XXX.tgz`.
