@@ -34,7 +34,11 @@ fi
 PHP_FOLDER="php-$PHP_CUSTOM_VERSION"
 
 PHP_TAR_FILE="$PHP_FOLDER.tar.bz2"
-PHP_TAR_URL=https://secure.php.net/distributions/$PHP_TAR_FILE
+if [[ $PHP_CUSTOM_NORMAL_VERSION == 8.1.0 ]]; then
+	PHP_TAR_URL=https://downloads.php.net/~patrickallaert/php-8.1.0alpha1.tar.bz2
+else
+	PHP_TAR_URL=https://secure.php.net/distributions/$PHP_TAR_FILE
+fi
 if [ ! -f $PHP_TAR_FILE ]; then
 	curl --location --verbose $PHP_TAR_URL -o $PHP_TAR_FILE
 fi
