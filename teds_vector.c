@@ -64,7 +64,7 @@ static teds_vector *teds_vector_from_object(zend_object *obj)
  *   - if size > 0, then entries != NULL
  *   - size is not less than 0
  */
-static bool teds_vector_entries_empty_size(teds_vector_entries *array)
+static bool teds_vector_entries_empty_size(const teds_vector_entries *array)
 {
 	if (array->size > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -75,7 +75,7 @@ static bool teds_vector_entries_empty_size(teds_vector_entries *array)
 	return true;
 }
 
-static bool teds_vector_entries_empty_capacity(teds_vector_entries *array)
+static bool teds_vector_entries_empty_capacity(const teds_vector_entries *array)
 {
 	if (array->capacity > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -85,7 +85,7 @@ static bool teds_vector_entries_empty_capacity(teds_vector_entries *array)
 	return true;
 }
 
-static bool teds_vector_entries_uninitialized(teds_vector_entries *array)
+static bool teds_vector_entries_uninitialized(const teds_vector_entries *array)
 {
 	if (array->entries == NULL) {
 		ZEND_ASSERT(array->size == 0);
@@ -814,9 +814,41 @@ PHP_METHOD(Teds_Vector, pop)
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty vector", 0);
 		RETURN_THROWS();
 	}
-
+	const size_t old_capacity = intern->array.capacity;
 	intern->array.size--;
-	RETURN_COPY_VALUE(&intern->array.entries[intern->array.size]);
+	RETVAL_COPY_VALUE(&intern->array.entries[intern->array.size]);
+	if (old_size * 4 < old_capacity) {
+		const size_t size = old_size - 1;
+		zval *old_entries = intern->array.entries;
+		const size_t capacity = size > 2 ? size * 2 : 4;
+		zval *new_entries = safe_emalloc(capacity, sizeof(zval), 0);
+		ZEND_ASSERT(new_entries != NULL);
+		memcpy(new_entries, old_entries, size * sizeof(zval));
+
+		intern->array.entries = new_entries;
+		intern->array.capacity = capacity;
+		efree(old_entries);
+	}
+}
+
+PHP_METHOD(Teds_Vector, shrinkToFit)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	const size_t size = intern->array.size;
+	const size_t old_capacity = intern->array.capacity;
+	if (size >= old_capacity) {
+		return;
+	}
+
+	if (size == 0) {
+		efree(intern->array.entries);
+		intern->array.entries = (zval *)empty_entry_list;
+	} else {
+		intern->array.entries = safe_erealloc(intern->array.entries, size, sizeof(zval), 0);
+	}
+	intern->array.capacity = size;
 }
 
 PHP_METHOD(Teds_Vector, offsetUnset)

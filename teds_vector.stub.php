@@ -34,5 +34,7 @@ final class Vector implements IteratorAggregate, Countable, JsonSerializable, Ar
     public function indexOf(mixed $value): int|false {}
     public function contains(mixed $value): bool {}
 
+    public function shrinkToFit(): void {}
+
     public function jsonSerialize(): array {}
 }
