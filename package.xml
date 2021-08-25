@@ -55,6 +55,7 @@
     <file name="Deque/Deque.phpt" role="test" />
     <file name="Deque/aggregate.phpt" role="test" />
     <file name="Deque/arrayCast.phpt" role="test" />
+    <file name="Deque/clear.phpt" role="test" />
     <file name="Deque/clone.phpt" role="test" />
     <file name="Deque/contains.phpt" role="test" />
     <file name="Deque/exceptionhandler.phpt" role="test" />
@@ -97,6 +98,7 @@
     <file name="Vector/Vector.phpt" role="test" />
     <file name="Vector/aggregate.phpt" role="test" />
     <file name="Vector/arrayCast.phpt" role="test" />
+    <file name="Vector/clear.phpt" role="test" />
     <file name="Vector/clone.phpt" role="test" />
     <file name="Vector/contains.phpt" role="test" />
     <file name="Vector/exceptionhandler.phpt" role="test" />
@@ -104,8 +106,10 @@
     <file name="Vector/push_pop.phpt" role="test" />
     <file name="Vector/reinit_forbidden.phpt" role="test" />
     <file name="Vector/serialization.phpt" role="test" />
+    <file name="Vector/setSize.phpt" role="test" />
     <file name="Vector/setValueAt.phpt" role="test" />
     <file name="Vector/set_state.phpt" role="test" />
+    <file name="Vector/shrink_capacity.phpt" role="test" />
     <file name="Vector/toArray.phpt" role="test" />
     <file name="Vector/traversable.phpt" role="test" />
     <file name="Vector/unserialize.phpt" role="test" />

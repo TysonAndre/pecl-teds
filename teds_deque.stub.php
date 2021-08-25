@@ -8,12 +8,13 @@ namespace Teds;
 /**
  * A double-ended queue
  */
-final class Deque implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
+final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {
-    public function __construct(iterable $iterator) {}
+    public function __construct(iterable $iterator = []) {}
     public function getIterator(): \InternalIterator {}
     public function count(): int {}
     public function capacity(): int {}
+    public function clear(): void {}
 
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
@@ -43,10 +44,10 @@ final class Deque implements IteratorAggregate, Countable, JsonSerializable, Arr
     // TODO public function setValueAt(int $offset, mixed $value): mixed {}
     // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
-    public function offsetExists(mixed $offset): mixed {}
-    public function offsetSet(mixed $offset, mixed $value): mixed {}
+    public function offsetExists(mixed $offset): bool {}
+    public function offsetSet(mixed $offset, mixed $value): void {}
     // Throws
-    public function offsetUnset(mixed $offset): mixed {}
+    public function offsetUnset(mixed $offset): void {}
 
     public function indexOf(mixed $value): int|false {}
     public function contains(mixed $value): bool {}

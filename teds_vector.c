@@ -52,6 +52,8 @@ typedef struct _teds_vector_it {
 	zend_long            current;
 } teds_vector_it;
 
+static void teds_vector_raise_capacity(teds_vector *intern, const zend_long new_capacity);
+
 static teds_vector *teds_vector_from_object(zend_object *obj)
 {
 	return (teds_vector*)((char*)(obj) - XtOffsetOf(teds_vector, std));
@@ -374,13 +376,79 @@ PHP_METHOD(Teds_Vector, capacity)
 	RETURN_LONG(intern->array.capacity);
 }
 
+/* Free elements and backing storage of this vector */
+PHP_METHOD(Teds_Vector, clear)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	if (intern->array.capacity == 0) {
+		/* Nothing to clear */
+		return;
+	}
+	/* Immediately make the original storage inaccessible and set count/capacity to 0 in case destructors modify the vector */
+	teds_vector_entries old_array = intern->array;
+	memset(&intern->array, 0, sizeof(intern->array));
+	teds_vector_entries_dtor(&old_array);
+}
+
+/* Set size of this vector */
+PHP_METHOD(Teds_Vector, setSize)
+{
+	zend_long size;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_LONG(size)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (size < 0) {
+		zend_argument_value_error(1, "must be greater than or equal to 0");
+		RETURN_THROWS();
+	}
+
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	const size_t old_size = intern->array.size;
+	if (size > old_size) {
+		/* Raise the capacity as needed and fill the space with nulls */
+		if (size > intern->array.capacity) {
+			teds_vector_raise_capacity(intern, size);
+		}
+		intern->array.size = size;
+		zval * const entries = intern->array.entries;
+		for (size_t i = old_size; i < size; i++) {
+			ZVAL_NULL(&entries[i]);
+		}
+		return;
+	}
+	/* Reduce the size and invalidate memory. If a destructor unexpectedly changes the size then read the new size and keep removing elements. */
+	while (intern->array.size > size) {
+		size_t offset = --intern->array.size;
+		zval_ptr_dtor(&intern->array.entries[offset]);
+	}
+
+	if (size * 4 < intern->array.capacity) {
+		const size_t size = old_size - 1;
+		zval *old_entries = intern->array.entries;
+		const size_t capacity = size > 2 ? size * 2 : 4;
+		if (capacity < intern->array.capacity) {
+			zval *new_entries = safe_emalloc(capacity, sizeof(zval), 0);
+			ZEND_ASSERT(new_entries != NULL);
+			memcpy(new_entries, old_entries, size * sizeof(zval));
+
+			intern->array.entries = new_entries;
+			intern->array.capacity = capacity;
+			efree(old_entries);
+		}
+	}
+}
+
 /* Create this from an iterable */
 PHP_METHOD(Teds_Vector, __construct)
 {
 	zval *object = ZEND_THIS;
-	zval* iterable;
+	zval* iterable = NULL;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
+	ZEND_PARSE_PARAMETERS_START(0, 1)
+		Z_PARAM_OPTIONAL
 		Z_PARAM_ITERABLE(iterable)
 	ZEND_PARSE_PARAMETERS_END();
 
@@ -390,6 +458,12 @@ PHP_METHOD(Teds_Vector, __construct)
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\Vector::__construct twice", 0);
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
+	}
+	if (!iterable) {
+		intern->array.size = 0;
+		intern->array.capacity = 0;
+		intern->array.entries = (zval *)empty_entry_list;
+		return;
 	}
 
 	switch (Z_TYPE_P(iterable)) {
@@ -617,7 +691,6 @@ PHP_METHOD(Teds_Vector, __serialize)
 			ZEND_HASH_FILL_ADD(tmp);
 		}
 	} ZEND_HASH_FILL_END();
-	/* Unlike FixedArray, there's no setSize, so there's no reason to delete indexes */
 
 	RETURN_ARR(flat_entries_array);
 }
@@ -818,16 +891,19 @@ PHP_METHOD(Teds_Vector, pop)
 	intern->array.size--;
 	RETVAL_COPY_VALUE(&intern->array.entries[intern->array.size]);
 	if (old_size * 4 < old_capacity) {
+		/* Shrink the storage if only a quarter of the capacity is used  */
 		const size_t size = old_size - 1;
 		zval *old_entries = intern->array.entries;
 		const size_t capacity = size > 2 ? size * 2 : 4;
-		zval *new_entries = safe_emalloc(capacity, sizeof(zval), 0);
-		ZEND_ASSERT(new_entries != NULL);
-		memcpy(new_entries, old_entries, size * sizeof(zval));
+		if (capacity < old_capacity) {
+			zval *new_entries = safe_emalloc(capacity, sizeof(zval), 0);
+			ZEND_ASSERT(new_entries != NULL);
+			memcpy(new_entries, old_entries, size * sizeof(zval));
 
-		intern->array.entries = new_entries;
-		intern->array.capacity = capacity;
-		efree(old_entries);
+			intern->array.entries = new_entries;
+			intern->array.capacity = capacity;
+			efree(old_entries);
+		}
 	}
 }
 
