@@ -5,7 +5,7 @@
 
 namespace Teds;
 
-final class ImmutableSequence implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
+final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {
     public function __construct(iterable $iterator) {}
     public function getIterator(): \InternalIterator {}

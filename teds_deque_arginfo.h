@@ -1,8 +1,8 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 8499da43936be1d5d790098f22803899288ee648 */
+ * Stub hash: f36e551cc92fb5c4a2dd35125a83bbedc2b96c65 */
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 1)
-	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 0)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_Deque_getIterator, 0, 0, InternalIterator, 0)
@@ -12,6 +12,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_count, 0, 0, IS
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Deque_capacity arginfo_class_Teds_Deque_count
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_clear, 0, 0, IS_VOID, 0)
+ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque___serialize, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
@@ -50,14 +53,18 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_offsetGet, 0, 1
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_Deque_offsetExists arginfo_class_Teds_Deque_offsetGet
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_offsetExists, 0, 1, _IS_BOOL, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_offsetSet, 0, 2, IS_MIXED, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_offsetSet, 0, 2, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_Deque_offsetUnset arginfo_class_Teds_Deque_offsetGet
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_offsetUnset, 0, 1, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_class_Teds_Deque_indexOf, 0, 1, MAY_BE_LONG|MAY_BE_FALSE)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
@@ -74,6 +81,7 @@ ZEND_METHOD(Teds_Deque, __construct);
 ZEND_METHOD(Teds_Deque, getIterator);
 ZEND_METHOD(Teds_Deque, count);
 ZEND_METHOD(Teds_Deque, capacity);
+ZEND_METHOD(Teds_Deque, clear);
 ZEND_METHOD(Teds_Deque, __serialize);
 ZEND_METHOD(Teds_Deque, __unserialize);
 ZEND_METHOD(Teds_Deque, __set_state);
@@ -98,6 +106,7 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_ME(Teds_Deque, getIterator, arginfo_class_Teds_Deque_getIterator, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, count, arginfo_class_Teds_Deque_count, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, capacity, arginfo_class_Teds_Deque_capacity, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Deque, clear, arginfo_class_Teds_Deque_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __serialize, arginfo_class_Teds_Deque___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __unserialize, arginfo_class_Teds_Deque___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __set_state, arginfo_class_Teds_Deque___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
@@ -118,14 +127,14 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_Deque(zend_class_entry *class_entry_Teds_IteratorAggregate, zend_class_entry *class_entry_Teds_Countable, zend_class_entry *class_entry_Teds_JsonSerializable, zend_class_entry *class_entry_Teds_ArrayAccess)
+static zend_class_entry *register_class_Teds_Deque(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Countable, zend_class_entry *class_entry_JsonSerializable, zend_class_entry *class_entry_ArrayAccess)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "Deque", class_Teds_Deque_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 4, class_entry_Teds_IteratorAggregate, class_entry_Teds_Countable, class_entry_Teds_JsonSerializable, class_entry_Teds_ArrayAccess);
+	zend_class_implements(class_entry, 4, class_entry_IteratorAggregate, class_entry_Countable, class_entry_JsonSerializable, class_entry_ArrayAccess);
 
 	return class_entry;
 }

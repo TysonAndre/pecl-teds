@@ -13,7 +13,6 @@ namespace Teds;
  * (e.g. true, non-zero number, non-empty array, truthy object, etc.),
  * this is treated as satisfying the predicate.
  *
- * @param iterable $iterable
  * (at)param null|callable(mixed):mixed $callback
  */
 function any(iterable $iterable, ?callable $callback = null): bool {}
@@ -25,7 +24,6 @@ function any(iterable $iterable, ?callable $callback = null): bool {}
  * (e.g. true, non-zero number, non-empty array, truthy object, etc.),
  * this is treated as satisfying the predicate.
  *
- * @param iterable $iterable
  * (at)param null|callable(mixed):mixed $callback
  */
 function all(iterable $iterable, ?callable $callback = null): bool {}
@@ -39,7 +37,6 @@ function all(iterable $iterable, ?callable $callback = null): bool {}
  *
  * Equivalent to `!any($iterable, $callback)`
  *
- * @param iterable $iterable
  * (at)param null|callable(mixed):mixed $callback
  */
 function none(iterable $iterable, ?callable $callback = null): bool {}
@@ -52,9 +49,7 @@ function includes_value(iterable $iterable, mixed $value): bool {}
 
 /**
  * Returns the result of repeatedly applying $initial = $callback($initial, $value) for each value in $iterable
- * @param iterable $iterable
  * (at)param callable(mixed $initial, mixed $value):mixed $callback
- * @param mixed $initial
  */
 function fold(iterable $iterable, callable $callback, mixed $initial): mixed {}
 

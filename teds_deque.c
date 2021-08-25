@@ -374,7 +374,7 @@ static int teds_deque_count_elements(zend_object *object, zend_long *count)
 	return SUCCESS;
 }
 
-/* Get the number of circular_buffer in this deque */
+/* Get the number of elements in this deque */
 PHP_METHOD(Teds_Deque, count)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -392,13 +392,30 @@ PHP_METHOD(Teds_Deque, capacity)
 	RETURN_LONG(intern->array.capacity);
 }
 
+/* Free elements and backing storage of this deque */
+PHP_METHOD(Teds_Deque, clear)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
+	if (intern->array.capacity == 0) {
+		/* Nothing to clear */
+		return;
+	}
+	/* Immediately make the original storage inaccessible and set count/capacity to 0 in case destructors modify the deque */
+	teds_deque_entries old_array = intern->array;
+	memset(&intern->array, 0, sizeof(intern->array));
+	teds_deque_entries_dtor(&old_array);
+}
+
 /* Create this from an iterable */
 PHP_METHOD(Teds_Deque, __construct)
 {
 	zval *object = ZEND_THIS;
-	zval* iterable;
+	zval* iterable = NULL;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
+	ZEND_PARSE_PARAMETERS_START(0, 1)
+		Z_PARAM_OPTIONAL
 		Z_PARAM_ITERABLE(iterable)
 	ZEND_PARSE_PARAMETERS_END();
 
@@ -408,6 +425,14 @@ PHP_METHOD(Teds_Deque, __construct)
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\Deque::__construct twice", 0);
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
+	}
+
+	if (iterable == NULL) {
+		intern->array.offset = 0;
+		intern->array.size = 0;
+		intern->array.capacity = 0;
+		intern->array.circular_buffer = (zval *)empty_entry_list;
+		return;
 	}
 
 	switch (Z_TYPE_P(iterable)) {
