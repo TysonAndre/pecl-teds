@@ -1,5 +1,5 @@
 --TEST--
-Teds\Deque clear
+Teds\Vector setSize
 --FILE--
 <?php
 function show(Teds\Vector $it) {
@@ -27,6 +27,6 @@ array(2) {
   [1]=>
   NULL
 }
-count=0 capacity=2
+count=0 capacity=0
 array(0) {
 }

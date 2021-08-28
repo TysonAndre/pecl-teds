@@ -1,5 +1,5 @@
 --TEST--
-Teds\Deque clear
+Teds\Vector clear
 --FILE--
 <?php
 

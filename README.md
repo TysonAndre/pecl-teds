@@ -55,6 +55,14 @@ It can be appended to with `push()`, and elements can be removed from the end wi
 This is implemented based on SplFixedArray/ImmutableSequence.
 There are plans to add more methods.
 
+### Teds\KeyValueVector
+
+[`Teds\KeyValueVector` API](./teds_keyvaluevector.stub.php)
+
+Similar to `Teds\Vector` and `Teds\ImmutableKeyValueSequence`.
+This stores a mutable vector of keys and values with the keys 0, 1, 2...
+It can be resized with `setSize()`.
+
 ### Teds\Deque
 
 [`Teds\Deque` API](./teds_deque.stub.php)
