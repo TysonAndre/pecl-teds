@@ -28,6 +28,7 @@
 #include "teds_deque.h"
 #include "teds_immutablekeyvaluesequence.h"
 #include "teds_immutablesequence.h"
+#include "teds_keyvaluevector.h"
 #include "teds_vector.h"
 
 #include "teds_arginfo.h"
@@ -521,6 +522,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_deque)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_keyvaluevector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_vector)(INIT_FUNC_ARGS_PASSTHRU);
 	return SUCCESS;
 }
