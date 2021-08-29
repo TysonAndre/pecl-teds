@@ -106,13 +106,28 @@ static bool teds_keyvaluevector_entries_uninitialized(teds_keyvaluevector_entrie
 
 static void teds_keyvaluevector_raise_capacity(teds_keyvaluevector *intern, const zend_long new_capacity) {
 	ZEND_ASSERT(new_capacity > intern->array.capacity);
-	if (teds_keyvaluevector_entries_uninitialized(&intern->array)) {
-		intern->array.entries = safe_erealloc(intern->array.entries, new_capacity, sizeof(zval_pair), 0);
-	} else {
+	if (intern->array.capacity == 0) {
 		intern->array.entries = safe_emalloc(new_capacity, sizeof(zval_pair), 0);
+	} else {
+		intern->array.entries = safe_erealloc(intern->array.entries, new_capacity, sizeof(zval_pair), 0);
 	}
 	intern->array.capacity = new_capacity;
 	ZEND_ASSERT(intern->array.entries != NULL);
+}
+
+static inline void teds_keyvaluevector_shrink_capacity(teds_keyvaluevector_entries *array, size_t size, size_t capacity, zval_pair *old_entries) {
+	ZEND_ASSERT(size <= capacity);
+	ZEND_ASSERT(size == array->size);
+	ZEND_ASSERT(capacity > 0);
+	ZEND_ASSERT(capacity < array->capacity);
+	ZEND_ASSERT(old_entries == array->entries);
+	zval_pair *new_entries = safe_emalloc(capacity, sizeof(zval_pair), 0);
+	ZEND_ASSERT(new_entries != NULL);
+	memcpy(new_entries, old_entries, size * sizeof(zval_pair));
+
+	array->entries = new_entries;
+	array->capacity = capacity;
+	efree(old_entries);
 }
 
 /* Initializes the range [from, to) to null. Does not dtor existing entries. */
@@ -315,26 +330,28 @@ static HashTable* teds_keyvaluevector_get_gc(zend_object *obj, zval **table, int
 
 static HashTable* teds_keyvaluevector_get_properties(zend_object *obj)
 {
+	/* This is mutable and the size may change. Update or delete elements as needed. */
 	teds_keyvaluevector *intern = teds_keyvaluevector_from_obj(obj);
-	size_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
-	if (!len) {
-		/* Nothing to add or remove - this is . */
-		return ht;
-	}
-	if (zend_hash_num_elements(ht)) {
-		/* Already built. Because this is  there is no need to rebuild it. */
-		return ht;
-	}
 
-	zval_pair *entries = intern->array.entries;
-	/* Initialize properties array */
-	for (size_t i = 0; i < len; i++) {
+	/* Re-initialize properties array */
+
+	// Note that destructors may mutate the original array,
+	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
+	for (size_t i = 0; i < intern->array.size; i++) {
+		zval_pair *entries = intern->array.entries;
 		zval tmp;
 		Z_TRY_ADDREF_P(&entries[i].key);
 		Z_TRY_ADDREF_P(&entries[i].value);
 		ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
 		zend_hash_index_update(ht, i, &tmp);
+	}
+
+	const size_t properties_size = zend_hash_num_elements(ht);
+	if (UNEXPECTED(properties_size > intern->array.size)) {
+		for (size_t i = intern->array.size; i < properties_size; i++) {
+			zend_hash_index_del(ht, i);
+		}
 	}
 
 	return ht;
@@ -479,13 +496,7 @@ PHP_METHOD(Teds_KeyValueVector, setSize)
 			const size_t size = old_size - 1;
 			const size_t capacity = size > 2 ? size * 2 : 4;
 			if (capacity < intern->array.capacity) {
-				zval_pair *new_entries = safe_emalloc(capacity, sizeof(zval_pair), 0);
-				ZEND_ASSERT(new_entries != NULL);
-				memcpy(new_entries, old_entries, size * sizeof(zval_pair));
-
-				intern->array.entries = new_entries;
-				intern->array.capacity = capacity;
-				efree(old_entries);
+				teds_keyvaluevector_shrink_capacity(&intern->array, size, capacity, old_entries);
 			}
 		}
 	}
@@ -996,6 +1007,77 @@ PHP_METHOD(Teds_KeyValueVector, setValueAt)
 	ZVAL_COPY(old_value_ptr, value);
 	zval_ptr_dtor(&old_value);
 }
+
+PHP_METHOD(Teds_KeyValueVector, push)
+{
+	zval *key;
+	zval *value;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ZVAL(key)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(ZEND_THIS);
+	const size_t old_size = intern->array.size;
+	const size_t old_capacity = intern->array.capacity;
+
+	if (old_size >= old_capacity) {
+		ZEND_ASSERT(old_size == old_capacity);
+		teds_keyvaluevector_raise_capacity(intern, old_size ? old_size * 2 : 4);
+	}
+	zval_pair *dest = &intern->array.entries[old_size];
+	ZVAL_COPY(&dest->key, key);
+	ZVAL_COPY(&dest->value, value);
+	intern->array.size++;
+}
+
+PHP_METHOD(Teds_KeyValueVector, pop)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(ZEND_THIS);
+	const size_t old_size = intern->array.size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\KeyValueVector", 0);
+		RETURN_THROWS();
+	}
+	const size_t old_capacity = intern->array.capacity;
+	intern->array.size--;
+	zval_pair *entry = &intern->array.entries[intern->array.size];
+	RETVAL_ARR(zend_new_pair(&entry->key, &entry->value));
+	if (old_size * 4 < old_capacity) {
+		/* Shrink the storage if only a quarter of the capacity is used  */
+		const size_t size = old_size - 1;
+		zval_pair *old_entries = intern->array.entries;
+		const size_t capacity = size > 2 ? size * 2 : 4;
+		if (capacity < old_capacity) {
+			teds_keyvaluevector_shrink_capacity(&intern->array, size, capacity, old_entries);
+		}
+	}
+}
+
+PHP_METHOD(Teds_KeyValueVector, shrinkToFit)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(ZEND_THIS);
+	const size_t size = intern->array.size;
+	const size_t old_capacity = intern->array.capacity;
+	if (size >= old_capacity) {
+		ZEND_ASSERT(size == old_capacity);
+		return;
+	}
+
+	if (size == 0) {
+		efree(intern->array.entries);
+		intern->array.entries = (zval_pair *)empty_entry_list;
+	} else {
+		intern->array.entries = safe_erealloc(intern->array.entries, size, sizeof(zval_pair), 0);
+	}
+	intern->array.capacity = size;
+}
+
 
 static void teds_keyvaluevector_return_pairs(zval *return_value, teds_keyvaluevector *intern)
 {

@@ -23,12 +23,17 @@ final class KeyValueVector implements \IteratorAggregate, \Countable, \JsonSeria
     public function __unserialize(array $data): void {}
     public static function __set_state(array $array): KeyValueVector {}
 
+    public function push(mixed $key, mixed $value): void {}
+    public function pop(): array {}
+
     public function keys(): array {}
     public function values(): array {}
     public function keyAt(int $offset): mixed {}
     public function valueAt(int $offset): mixed {}
     public function setKeyAt(int $offset, mixed $key): void {}
     public function setValueAt(int $offset, mixed $value): void {}
+
+    public function shrinkToFit(): void {}
 
     public function jsonSerialize(): array {}
 }
