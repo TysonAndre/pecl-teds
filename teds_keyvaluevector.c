@@ -964,6 +964,78 @@ PHP_METHOD(Teds_KeyValueVector, valueAt)
 	RETURN_COPY(&intern->array.entries[offset].value);
 }
 
+PHP_METHOD(Teds_KeyValueVector, indexOfKey)
+{
+	zval *key;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(key)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval_pair *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(key, &entries[i].key)) {
+			RETURN_LONG(i);
+		}
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_KeyValueVector, indexOfValue)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval_pair *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(value, &entries[i].value)) {
+			RETURN_LONG(i);
+		}
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_KeyValueVector, containsKey)
+{
+	zval *key;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(key)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval_pair *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(key, &entries[i].key)) {
+			RETURN_TRUE;
+		}
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_KeyValueVector, containsValue)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval_pair *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(value, &entries[i].value)) {
+			RETURN_TRUE;
+		}
+	}
+	RETURN_FALSE;
+}
+
 PHP_METHOD(Teds_KeyValueVector, setKeyAt)
 {
 	zend_long offset;

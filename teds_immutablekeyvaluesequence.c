@@ -41,15 +41,15 @@ typedef struct _zval_pair {
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
 static const zval_pair empty_entry_list[1];
 
-typedef struct _teds_cached_entries {
+typedef struct _teds_immutablekeyvaluesequence_entries {
 	size_t size;
 	zval_pair *entries;
-} teds_cached_entries;
+} teds_immutablekeyvaluesequence_entries;
 
-typedef struct _teds_immutablekeyvaluesequence_object {
-	teds_cached_entries		array;
+typedef struct _teds_immutablekeyvaluesequence {
+	teds_immutablekeyvaluesequence_entries		array;
 	zend_object				std;
-} teds_immutablekeyvaluesequence_object;
+} teds_immutablekeyvaluesequence;
 
 /* Used by InternalIterator returned by ImmutableKeyValueSequence->getIterator() */
 typedef struct _teds_immutablekeyvaluesequence_it {
@@ -57,9 +57,9 @@ typedef struct _teds_immutablekeyvaluesequence_it {
 	zend_long            current;
 } teds_immutablekeyvaluesequence_it;
 
-static teds_immutablekeyvaluesequence_object *teds_immutablekeyvaluesequence_from_obj(zend_object *obj)
+static teds_immutablekeyvaluesequence *teds_immutablekeyvaluesequence_from_obj(zend_object *obj)
 {
-	return (teds_immutablekeyvaluesequence_object*)((char*)(obj) - XtOffsetOf(teds_immutablekeyvaluesequence_object, std));
+	return (teds_immutablekeyvaluesequence*)((char*)(obj) - XtOffsetOf(teds_immutablekeyvaluesequence, std));
 }
 
 #define Z_IMMUTABLEKEYVALUESEQUENCE_P(zv)  teds_immutablekeyvaluesequence_from_obj(Z_OBJ_P((zv)))
@@ -69,7 +69,7 @@ static teds_immutablekeyvaluesequence_object *teds_immutablekeyvaluesequence_fro
  *   - if size > 0, then entries != NULL
  *   - size is not less than 0
  */
-static bool teds_cached_entries_empty(teds_cached_entries *array)
+static bool teds_immutablekeyvaluesequence_entries_empty(teds_immutablekeyvaluesequence_entries *array)
 {
 	if (array->size > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -79,7 +79,7 @@ static bool teds_cached_entries_empty(teds_cached_entries *array)
 	return true;
 }
 
-static bool teds_cached_entries_uninitialized(teds_cached_entries *array)
+static bool teds_immutablekeyvaluesequence_entries_uninitialized(teds_immutablekeyvaluesequence_entries *array)
 {
 	if (array->entries == NULL) {
 		ZEND_ASSERT(array->size == 0);
@@ -91,7 +91,7 @@ static bool teds_cached_entries_uninitialized(teds_cached_entries *array)
 
 /* Initializes the range [from, to) to null. Does not dtor existing entries. */
 /* TODO: Delete if this isn't used in the final version
-static void teds_cached_entries_init_elems(teds_cached_entries *array, zend_long from, zend_long to)
+static void teds_immutablekeyvaluesequence_entries_init_elems(teds_immutablekeyvaluesequence_entries *array, zend_long from, zend_long to)
 {
 	ZEND_ASSERT(from <= to);
 	zval *begin = &array->entries[from].key;
@@ -103,7 +103,7 @@ static void teds_cached_entries_init_elems(teds_cached_entries *array, zend_long
 }
 */
 
-static void teds_cached_entries_init_from_array(teds_cached_entries *array, zend_array *values)
+static void teds_immutablekeyvaluesequence_entries_init_from_array(teds_immutablekeyvaluesequence_entries *array, zend_array *values)
 {
 	zend_long size = zend_hash_num_elements(values);
 	if (size > 0) {
@@ -132,7 +132,7 @@ static void teds_cached_entries_init_from_array(teds_cached_entries *array, zend
 	}
 }
 
-static void teds_cached_entries_init_from_traversable(teds_cached_entries *array, zend_object *obj)
+static void teds_immutablekeyvaluesequence_entries_init_from_traversable(teds_immutablekeyvaluesequence_entries *array, zend_object *obj)
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
@@ -212,7 +212,7 @@ static void teds_cached_entries_init_from_traversable(teds_cached_entries *array
 /* Copies the range [begin, end) into the immutablekeyvaluesequence, beginning at `offset`.
  * Does not dtor the existing elements.
  */
-static void teds_immutablekeyvaluesequence_copy_range(teds_cached_entries *array, size_t offset, zval_pair *begin, zval_pair *end)
+static void teds_immutablekeyvaluesequence_copy_range(teds_immutablekeyvaluesequence_entries *array, size_t offset, zval_pair *begin, zval_pair *end)
 {
 	ZEND_ASSERT(array->size - offset >= end - begin);
 
@@ -225,7 +225,7 @@ static void teds_immutablekeyvaluesequence_copy_range(teds_cached_entries *array
 	}
 }
 
-static void teds_cached_entries_copy_ctor(teds_cached_entries *to, teds_cached_entries *from)
+static void teds_immutablekeyvaluesequence_entries_copy_ctor(teds_immutablekeyvaluesequence_entries *to, teds_immutablekeyvaluesequence_entries *from)
 {
 	zend_long size = from->size;
 	if (!size) {
@@ -245,7 +245,7 @@ static void teds_cached_entries_copy_ctor(teds_cached_entries *to, teds_cached_e
 /* Destructs the entries in the range [from, to).
  * Caller is expected to bounds check.
  */
-static void teds_cached_entries_dtor_range(teds_cached_entries *array, size_t from, size_t to)
+static void teds_immutablekeyvaluesequence_entries_dtor_range(teds_immutablekeyvaluesequence_entries *array, size_t from, size_t to)
 {
 	zval_pair *begin = array->entries + from, *end = array->entries + to;
 	while (begin != end) {
@@ -258,17 +258,17 @@ static void teds_cached_entries_dtor_range(teds_cached_entries *array, size_t fr
 /* Destructs and frees contents but not the array itself.
  * If you want to re-use the array then you need to re-initialize it.
  */
-static void teds_cached_entries_dtor(teds_cached_entries *array)
+static void teds_immutablekeyvaluesequence_entries_dtor(teds_immutablekeyvaluesequence_entries *array)
 {
-	if (!teds_cached_entries_empty(array)) {
-		teds_cached_entries_dtor_range(array, 0, array->size);
+	if (!teds_immutablekeyvaluesequence_entries_empty(array)) {
+		teds_immutablekeyvaluesequence_entries_dtor_range(array, 0, array->size);
 		efree(array->entries);
 	}
 }
 
-static HashTable* teds_immutablekeyvaluesequence_object_get_gc(zend_object *obj, zval **table, int *n)
+static HashTable* teds_immutablekeyvaluesequence_get_gc(zend_object *obj, zval **table, int *n)
 {
-	teds_immutablekeyvaluesequence_object *intern = teds_immutablekeyvaluesequence_from_obj(obj);
+	teds_immutablekeyvaluesequence *intern = teds_immutablekeyvaluesequence_from_obj(obj);
 
 	*table = &intern->array.entries[0].key;
 	*n = (int)intern->array.size * 2;
@@ -278,9 +278,9 @@ static HashTable* teds_immutablekeyvaluesequence_object_get_gc(zend_object *obj,
 	return NULL;
 }
 
-static HashTable* teds_immutablekeyvaluesequence_object_get_properties(zend_object *obj)
+static HashTable* teds_immutablekeyvaluesequence_get_properties(zend_object *obj)
 {
-	teds_immutablekeyvaluesequence_object *intern = teds_immutablekeyvaluesequence_from_obj(obj);
+	teds_immutablekeyvaluesequence *intern = teds_immutablekeyvaluesequence_from_obj(obj);
 	size_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
 	if (!len) {
@@ -305,18 +305,18 @@ static HashTable* teds_immutablekeyvaluesequence_object_get_properties(zend_obje
 	return ht;
 }
 
-static void teds_immutablekeyvaluesequence_object_free_storage(zend_object *object)
+static void teds_immutablekeyvaluesequence_free_storage(zend_object *object)
 {
-	teds_immutablekeyvaluesequence_object *intern = teds_immutablekeyvaluesequence_from_obj(object);
-	teds_cached_entries_dtor(&intern->array);
+	teds_immutablekeyvaluesequence *intern = teds_immutablekeyvaluesequence_from_obj(object);
+	teds_immutablekeyvaluesequence_entries_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
 
-static zend_object *teds_immutablekeyvaluesequence_object_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
+static zend_object *teds_immutablekeyvaluesequence_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
 {
-	teds_immutablekeyvaluesequence_object *intern;
+	teds_immutablekeyvaluesequence *intern;
 
-	intern = zend_object_alloc(sizeof(teds_immutablekeyvaluesequence_object), class_type);
+	intern = zend_object_alloc(sizeof(teds_immutablekeyvaluesequence), class_type);
 	/* This is a final class */
 	ZEND_ASSERT(class_type == teds_ce_ImmutableKeyValueSequence);
 
@@ -325,8 +325,8 @@ static zend_object *teds_immutablekeyvaluesequence_object_new_ex(zend_class_entr
 	intern->std.handlers = &teds_handler_ImmutableKeyValueSequence;
 
 	if (orig && clone_orig) {
-		teds_immutablekeyvaluesequence_object *other = teds_immutablekeyvaluesequence_from_obj(orig);
-		teds_cached_entries_copy_ctor(&intern->array, &other->array);
+		teds_immutablekeyvaluesequence *other = teds_immutablekeyvaluesequence_from_obj(orig);
+		teds_immutablekeyvaluesequence_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.entries = NULL;
 	}
@@ -336,22 +336,22 @@ static zend_object *teds_immutablekeyvaluesequence_object_new_ex(zend_class_entr
 
 static zend_object *teds_immutablekeyvaluesequence_new(zend_class_entry *class_type)
 {
-	return teds_immutablekeyvaluesequence_object_new_ex(class_type, NULL, 0);
+	return teds_immutablekeyvaluesequence_new_ex(class_type, NULL, 0);
 }
 
 
-static zend_object *teds_immutablekeyvaluesequence_object_clone(zend_object *old_object)
+static zend_object *teds_immutablekeyvaluesequence_clone(zend_object *old_object)
 {
-	zend_object *new_object = teds_immutablekeyvaluesequence_object_new_ex(old_object->ce, old_object, 1);
+	zend_object *new_object = teds_immutablekeyvaluesequence_new_ex(old_object->ce, old_object, 1);
 
 	zend_objects_clone_members(new_object, old_object);
 
 	return new_object;
 }
 
-static int teds_immutablekeyvaluesequence_object_count_elements(zend_object *object, zend_long *count)
+static int teds_immutablekeyvaluesequence_count_elements(zend_object *object, zend_long *count)
 {
-	teds_immutablekeyvaluesequence_object *intern;
+	teds_immutablekeyvaluesequence *intern;
 
 	intern = teds_immutablekeyvaluesequence_from_obj(object);
 	*count = intern->array.size;
@@ -365,7 +365,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, count)
 
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(object);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(object);
 	RETURN_LONG(intern->array.size);
 }
 
@@ -379,9 +379,9 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, __construct)
 		Z_PARAM_ITERABLE(iterable)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(object);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(object);
 
-	if (UNEXPECTED(!teds_cached_entries_uninitialized(&intern->array))) {
+	if (UNEXPECTED(!teds_immutablekeyvaluesequence_entries_uninitialized(&intern->array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\ImmutableKeyValueSequence::__construct twice", 0);
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
@@ -389,10 +389,10 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, __construct)
 
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_cached_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
+			teds_immutablekeyvaluesequence_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
 			return;
 		case IS_OBJECT:
-			teds_cached_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
+			teds_immutablekeyvaluesequence_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -418,7 +418,7 @@ static void teds_immutablekeyvaluesequence_it_rewind(zend_object_iterator *iter)
 static int teds_immutablekeyvaluesequence_it_valid(zend_object_iterator *iter)
 {
 	teds_immutablekeyvaluesequence_it     *iterator = (teds_immutablekeyvaluesequence_it*)iter;
-	teds_immutablekeyvaluesequence_object *object   = Z_IMMUTABLEKEYVALUESEQUENCE_P(&iter->data);
+	teds_immutablekeyvaluesequence *object   = Z_IMMUTABLEKEYVALUESEQUENCE_P(&iter->data);
 
 	if (iterator->current >= 0 && iterator->current < object->array.size) {
 		return SUCCESS;
@@ -427,7 +427,7 @@ static int teds_immutablekeyvaluesequence_it_valid(zend_object_iterator *iter)
 	return FAILURE;
 }
 
-static zval_pair *teds_immutablekeyvaluesequence_object_read_offset_helper(teds_immutablekeyvaluesequence_object *intern, size_t offset)
+static zval_pair *teds_immutablekeyvaluesequence_read_offset_helper(teds_immutablekeyvaluesequence *intern, size_t offset)
 {
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
@@ -442,9 +442,9 @@ static zval_pair *teds_immutablekeyvaluesequence_object_read_offset_helper(teds_
 static zval *teds_immutablekeyvaluesequence_it_get_current_data(zend_object_iterator *iter)
 {
 	teds_immutablekeyvaluesequence_it     *iterator = (teds_immutablekeyvaluesequence_it*)iter;
-	teds_immutablekeyvaluesequence_object *object   = Z_IMMUTABLEKEYVALUESEQUENCE_P(&iter->data);
+	teds_immutablekeyvaluesequence *object   = Z_IMMUTABLEKEYVALUESEQUENCE_P(&iter->data);
 
-	zval_pair *data = teds_immutablekeyvaluesequence_object_read_offset_helper(object, iterator->current);
+	zval_pair *data = teds_immutablekeyvaluesequence_read_offset_helper(object, iterator->current);
 
 	if (UNEXPECTED(data == NULL)) {
 		return &EG(uninitialized_zval);
@@ -456,9 +456,9 @@ static zval *teds_immutablekeyvaluesequence_it_get_current_data(zend_object_iter
 static void teds_immutablekeyvaluesequence_it_get_current_key(zend_object_iterator *iter, zval *key)
 {
 	teds_immutablekeyvaluesequence_it     *iterator = (teds_immutablekeyvaluesequence_it*)iter;
-	teds_immutablekeyvaluesequence_object *object   = Z_IMMUTABLEKEYVALUESEQUENCE_P(&iter->data);
+	teds_immutablekeyvaluesequence *object   = Z_IMMUTABLEKEYVALUESEQUENCE_P(&iter->data);
 
-	zval_pair *data = teds_immutablekeyvaluesequence_object_read_offset_helper(object, iterator->current);
+	zval_pair *data = teds_immutablekeyvaluesequence_read_offset_helper(object, iterator->current);
 
 	if (data == NULL) {
 		ZVAL_NULL(key);
@@ -518,8 +518,8 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, __unserialize)
 		zend_throw_exception(spl_ce_UnexpectedValueException, "Odd number of elements", 0);
 		RETURN_THROWS();
 	}
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
-	if (UNEXPECTED(!teds_cached_entries_uninitialized(&intern->array))) {
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	if (UNEXPECTED(!teds_immutablekeyvaluesequence_entries_uninitialized(&intern->array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
 	}
@@ -573,7 +573,7 @@ static bool teds_cached_entry_copy_entry_from_array_pair(zval_pair *pair, zval *
 }
 
 
-static void teds_cached_entries_init_from_array_pairs(teds_cached_entries *array, zend_array *raw_data)
+static void teds_immutablekeyvaluesequence_entries_init_from_array_pairs(teds_immutablekeyvaluesequence_entries *array, zend_array *raw_data)
 {
 	size_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
@@ -601,7 +601,7 @@ static void teds_cached_entries_init_from_array_pairs(teds_cached_entries *array
 	array->size = actual_size;
 }
 
-static void teds_cached_entries_init_from_traversable_pairs(teds_cached_entries *array, zend_object *obj)
+static void teds_immutablekeyvaluesequence_entries_init_from_traversable_pairs(teds_immutablekeyvaluesequence_entries *array, zend_object *obj)
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
@@ -669,13 +669,13 @@ static void teds_cached_entries_init_from_traversable_pairs(teds_cached_entries 
 
 static zend_object* create_from_pairs(zval *iterable) {
 	zend_object *object = teds_immutablekeyvaluesequence_new(teds_ce_ImmutableKeyValueSequence);
-	teds_immutablekeyvaluesequence_object *intern = teds_immutablekeyvaluesequence_from_obj(object);
+	teds_immutablekeyvaluesequence *intern = teds_immutablekeyvaluesequence_from_obj(object);
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_cached_entries_init_from_array_pairs(&intern->array, Z_ARRVAL_P(iterable));
+			teds_immutablekeyvaluesequence_entries_init_from_array_pairs(&intern->array, Z_ARRVAL_P(iterable));
 			break;
 		case IS_OBJECT:
-			teds_cached_entries_init_from_traversable_pairs(&intern->array, Z_OBJ_P(iterable));
+			teds_immutablekeyvaluesequence_entries_init_from_traversable_pairs(&intern->array, Z_OBJ_P(iterable));
 			break;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -701,8 +701,8 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_immutablekeyvaluesequence_new(teds_ce_ImmutableKeyValueSequence);
-	teds_immutablekeyvaluesequence_object *intern = teds_immutablekeyvaluesequence_from_obj(object);
-	teds_cached_entries_init_from_array_pairs(&intern->array, array_ht);
+	teds_immutablekeyvaluesequence *intern = teds_immutablekeyvaluesequence_from_obj(object);
+	teds_immutablekeyvaluesequence_entries_init_from_array_pairs(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
 }
@@ -711,9 +711,9 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, __serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
 
-	if (teds_cached_entries_empty(&intern->array)) {
+	if (teds_immutablekeyvaluesequence_entries_empty(&intern->array)) {
 		RETURN_EMPTY_ARRAY();
 	}
 	zval_pair *entries = intern->array.entries;
@@ -741,7 +741,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, __serialize)
 PHP_METHOD(Teds_ImmutableKeyValueSequence, keys)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
 	size_t len = intern->array.size;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
@@ -765,7 +765,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, keys)
 PHP_METHOD(Teds_ImmutableKeyValueSequence, values)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
 	size_t len = intern->array.size;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
@@ -793,7 +793,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, keyAt)
 		Z_PARAM_LONG(offset)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
@@ -809,7 +809,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, valueAt)
 		Z_PARAM_LONG(offset)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
 	size_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
@@ -818,7 +818,79 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, valueAt)
 	RETURN_COPY(&intern->array.entries[offset].value);
 }
 
-static void teds_immutablekeyvaluesequence_return_pairs(zval *return_value, teds_immutablekeyvaluesequence_object *intern)
+PHP_METHOD(Teds_ImmutableKeyValueSequence, indexOfKey)
+{
+	zval *key;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(key)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval_pair *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(key, &entries[i].key)) {
+			RETURN_LONG(i);
+		}
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_ImmutableKeyValueSequence, indexOfValue)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval_pair *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(value, &entries[i].value)) {
+			RETURN_LONG(i);
+		}
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_ImmutableKeyValueSequence, containsKey)
+{
+	zval *key;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(key)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval_pair *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(key, &entries[i].key)) {
+			RETURN_TRUE;
+		}
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_ImmutableKeyValueSequence, containsValue)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	zval_pair *entries = intern->array.entries;
+	for (size_t i = 0; i < len; i++) {
+		if (zend_is_identical(value, &entries[i].value)) {
+			RETURN_TRUE;
+		}
+	}
+	RETURN_FALSE;
+}
+
+static void teds_immutablekeyvaluesequence_return_pairs(zval *return_value, teds_immutablekeyvaluesequence *intern)
 {
 	size_t len = intern->array.size;
 	if (!len) {
@@ -847,14 +919,14 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, jsonSerialize)
 {
 	/* json_encoder.c will always encode objects as {"0":..., "1":...}, and detects recursion if an object returns its internal property array, so we have to return a new array */
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
 	teds_immutablekeyvaluesequence_return_pairs(return_value, intern);
 }
 
 PHP_METHOD(Teds_ImmutableKeyValueSequence, toPairs)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_immutablekeyvaluesequence_object *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(ZEND_THIS);
 	teds_immutablekeyvaluesequence_return_pairs(return_value, intern);
 }
 
@@ -865,13 +937,13 @@ PHP_MINIT_FUNCTION(teds_immutablekeyvaluesequence)
 
 	memcpy(&teds_handler_ImmutableKeyValueSequence, &std_object_handlers, sizeof(zend_object_handlers));
 
-	teds_handler_ImmutableKeyValueSequence.offset          = XtOffsetOf(teds_immutablekeyvaluesequence_object, std);
-	teds_handler_ImmutableKeyValueSequence.clone_obj       = teds_immutablekeyvaluesequence_object_clone;
-	teds_handler_ImmutableKeyValueSequence.count_elements  = teds_immutablekeyvaluesequence_object_count_elements;
-	teds_handler_ImmutableKeyValueSequence.get_properties  = teds_immutablekeyvaluesequence_object_get_properties;
-	teds_handler_ImmutableKeyValueSequence.get_gc          = teds_immutablekeyvaluesequence_object_get_gc;
+	teds_handler_ImmutableKeyValueSequence.offset          = XtOffsetOf(teds_immutablekeyvaluesequence, std);
+	teds_handler_ImmutableKeyValueSequence.clone_obj       = teds_immutablekeyvaluesequence_clone;
+	teds_handler_ImmutableKeyValueSequence.count_elements  = teds_immutablekeyvaluesequence_count_elements;
+	teds_handler_ImmutableKeyValueSequence.get_properties  = teds_immutablekeyvaluesequence_get_properties;
+	teds_handler_ImmutableKeyValueSequence.get_gc          = teds_immutablekeyvaluesequence_get_gc;
 	teds_handler_ImmutableKeyValueSequence.dtor_obj        = zend_objects_destroy_object;
-	teds_handler_ImmutableKeyValueSequence.free_obj        = teds_immutablekeyvaluesequence_object_free_storage;
+	teds_handler_ImmutableKeyValueSequence.free_obj        = teds_immutablekeyvaluesequence_free_storage;
 
 	teds_ce_ImmutableKeyValueSequence->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 	teds_ce_ImmutableKeyValueSequence->get_iterator = teds_immutablekeyvaluesequence_get_iterator;
