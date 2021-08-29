@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: b5cd8c8b82dcaaeddf356419190986c9d1036605 */
+ * Stub hash: 57932b5044c391619cbc5d3070e30c1e0e0db542 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -38,6 +38,22 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_ImmutableKeyValueSequence_valueAt arginfo_class_Teds_ImmutableKeyValueSequence_keyAt
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_class_Teds_ImmutableKeyValueSequence_indexOfKey, 0, 1, MAY_BE_LONG|MAY_BE_FALSE)
+	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_class_Teds_ImmutableKeyValueSequence_indexOfValue, 0, 1, MAY_BE_LONG|MAY_BE_FALSE)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence_containsKey, 0, 1, _IS_BOOL, 0)
+	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence_containsValue, 0, 1, _IS_BOOL, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_Teds_ImmutableKeyValueSequence_jsonSerialize arginfo_class_Teds_ImmutableKeyValueSequence_toPairs
 
 
@@ -53,6 +69,10 @@ ZEND_METHOD(Teds_ImmutableKeyValueSequence, keys);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, values);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, keyAt);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, valueAt);
+ZEND_METHOD(Teds_ImmutableKeyValueSequence, indexOfKey);
+ZEND_METHOD(Teds_ImmutableKeyValueSequence, indexOfValue);
+ZEND_METHOD(Teds_ImmutableKeyValueSequence, containsKey);
+ZEND_METHOD(Teds_ImmutableKeyValueSequence, containsValue);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, jsonSerialize);
 
 
@@ -69,6 +89,10 @@ static const zend_function_entry class_Teds_ImmutableKeyValueSequence_methods[] 
 	ZEND_ME(Teds_ImmutableKeyValueSequence, values, arginfo_class_Teds_ImmutableKeyValueSequence_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, keyAt, arginfo_class_Teds_ImmutableKeyValueSequence_keyAt, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, valueAt, arginfo_class_Teds_ImmutableKeyValueSequence_valueAt, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableKeyValueSequence, indexOfKey, arginfo_class_Teds_ImmutableKeyValueSequence_indexOfKey, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableKeyValueSequence, indexOfValue, arginfo_class_Teds_ImmutableKeyValueSequence_indexOfValue, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableKeyValueSequence, containsKey, arginfo_class_Teds_ImmutableKeyValueSequence_containsKey, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableKeyValueSequence, containsValue, arginfo_class_Teds_ImmutableKeyValueSequence_containsValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, jsonSerialize, arginfo_class_Teds_ImmutableKeyValueSequence_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };

@@ -80,6 +80,7 @@
     <file name="ImmutableKeyValueSequence/ImmutableKeyValueSequence.phpt" role="test" />
     <file name="ImmutableKeyValueSequence/aggregate.phpt" role="test" />
     <file name="ImmutableKeyValueSequence/clone.phpt" role="test" />
+    <file name="ImmutableKeyValueSequence/contains.phpt" role="test" />
     <file name="ImmutableKeyValueSequence/exceptionhandler.phpt" role="test" />
     <file name="ImmutableKeyValueSequence/from_pairs.phpt" role="test" />
     <file name="ImmutableKeyValueSequence/keyAt_valueAt.phpt" role="test" />
@@ -104,6 +105,7 @@
     <file name="KeyValueVector/KeyValueSequence.phpt" role="test" />
     <file name="KeyValueVector/aggregate.phpt" role="test" />
     <file name="KeyValueVector/clone.phpt" role="test" />
+    <file name="KeyValueVector/contains.phpt" role="test" />
     <file name="KeyValueVector/exceptionhandler.phpt" role="test" />
     <file name="KeyValueVector/from_pairs.phpt" role="test" />
     <file name="KeyValueVector/keyAt_valueAt.phpt" role="test" />
