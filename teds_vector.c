@@ -101,13 +101,28 @@ static bool teds_vector_entries_uninitialized(const teds_vector_entries *array)
 
 static void teds_vector_raise_capacity(teds_vector *intern, const zend_long new_capacity) {
 	ZEND_ASSERT(new_capacity > intern->array.capacity);
-	if (teds_vector_entries_uninitialized(&intern->array)) {
-		intern->array.entries = safe_erealloc(intern->array.entries, new_capacity, sizeof(zval), 0);
-	} else {
+	if (intern->array.capacity == 0) {
 		intern->array.entries = safe_emalloc(new_capacity, sizeof(zval), 0);
+	} else {
+		intern->array.entries = safe_erealloc(intern->array.entries, new_capacity, sizeof(zval), 0);
 	}
 	intern->array.capacity = new_capacity;
 	ZEND_ASSERT(intern->array.entries != NULL);
+}
+
+static inline void teds_vector_shrink_capacity(teds_vector_entries *array, size_t size, size_t capacity, zval *old_entries) {
+	ZEND_ASSERT(size <= capacity);
+	ZEND_ASSERT(size == array->size);
+	ZEND_ASSERT(capacity > 0);
+	ZEND_ASSERT(capacity < array->capacity);
+	ZEND_ASSERT(old_entries == array->entries);
+	zval *new_entries = safe_emalloc(capacity, sizeof(zval), 0);
+	ZEND_ASSERT(new_entries != NULL);
+	memcpy(new_entries, old_entries, size * sizeof(zval));
+
+	array->entries = new_entries;
+	array->capacity = capacity;
+	efree(old_entries);
 }
 
 /* Initializes the range [from, to) to null. Does not dtor existing entries. */
@@ -295,10 +310,6 @@ static HashTable* teds_vector_get_properties(zend_object *obj)
 	HashTable *ht = zend_std_get_properties(obj);
 
 	/* Re-initialize properties array */
-	if (!intern->array.size && !zend_hash_num_elements(ht)) {
-		/* Nothing to add, update, or remove. */
-		return ht;
-	}
 
 	// Note that destructors may mutate the original array,
 	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
@@ -447,23 +458,13 @@ PHP_METHOD(Teds_Vector, setSize)
 		teds_vector_entries_set_empty_list(&intern->array);
 	} else {
 		old_copy = teds_zval_copy_range(&old_entries[size], entries_to_remove);
-		while (intern->array.size > size) {
-			size_t offset = --intern->array.size;
-			zval_ptr_dtor(&intern->array.entries[offset]);
-		}
+		intern->array.size = size;
 
 		if (size * 4 < intern->array.capacity) {
 			const size_t size = old_size - 1;
-			zval *old_entries = intern->array.entries;
 			const size_t capacity = size > 2 ? size * 2 : 4;
 			if (capacity < intern->array.capacity) {
-				zval *new_entries = safe_emalloc(capacity, sizeof(zval), 0);
-				ZEND_ASSERT(new_entries != NULL);
-				memcpy(new_entries, old_entries, size * sizeof(zval));
-
-				intern->array.entries = new_entries;
-				intern->array.capacity = capacity;
-				efree(old_entries);
+				teds_vector_shrink_capacity(&intern->array, size, capacity, old_entries);
 			}
 		}
 	}
@@ -902,7 +903,7 @@ PHP_METHOD(Teds_Vector, pop)
 	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t old_size = intern->array.size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty vector", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\Vector", 0);
 		RETURN_THROWS();
 	}
 	const size_t old_capacity = intern->array.capacity;
@@ -914,13 +915,7 @@ PHP_METHOD(Teds_Vector, pop)
 		zval *old_entries = intern->array.entries;
 		const size_t capacity = size > 2 ? size * 2 : 4;
 		if (capacity < old_capacity) {
-			zval *new_entries = safe_emalloc(capacity, sizeof(zval), 0);
-			ZEND_ASSERT(new_entries != NULL);
-			memcpy(new_entries, old_entries, size * sizeof(zval));
-
-			intern->array.entries = new_entries;
-			intern->array.capacity = capacity;
-			efree(old_entries);
+			teds_vector_shrink_capacity(&intern->array, size, capacity, old_entries);
 		}
 	}
 }
@@ -933,6 +928,7 @@ PHP_METHOD(Teds_Vector, shrinkToFit)
 	const size_t size = intern->array.size;
 	const size_t old_capacity = intern->array.capacity;
 	if (size >= old_capacity) {
+		ZEND_ASSERT(size == old_capacity);
 		return;
 	}
 

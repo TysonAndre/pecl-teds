@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 43de7e6c6e0d73c15e0096ca0dd6e069eab465c6 */
+ * Stub hash: 9474e07329baac21d17dcf79e16a2071e9c32e60 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_KeyValueVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -37,6 +37,13 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_KeyValueVector___set_s
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_KeyValueVector_push, 0, 2, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_KeyValueVector_pop arginfo_class_Teds_KeyValueVector_toPairs
+
 #define arginfo_class_Teds_KeyValueVector_keys arginfo_class_Teds_KeyValueVector_toPairs
 
 #define arginfo_class_Teds_KeyValueVector_values arginfo_class_Teds_KeyValueVector_toPairs
@@ -57,6 +64,8 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_KeyValueVector_setVal
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
+#define arginfo_class_Teds_KeyValueVector_shrinkToFit arginfo_class_Teds_KeyValueVector_clear
+
 #define arginfo_class_Teds_KeyValueVector_jsonSerialize arginfo_class_Teds_KeyValueVector_toPairs
 
 
@@ -71,12 +80,15 @@ ZEND_METHOD(Teds_KeyValueVector, toPairs);
 ZEND_METHOD(Teds_KeyValueVector, __serialize);
 ZEND_METHOD(Teds_KeyValueVector, __unserialize);
 ZEND_METHOD(Teds_KeyValueVector, __set_state);
+ZEND_METHOD(Teds_KeyValueVector, push);
+ZEND_METHOD(Teds_KeyValueVector, pop);
 ZEND_METHOD(Teds_KeyValueVector, keys);
 ZEND_METHOD(Teds_KeyValueVector, values);
 ZEND_METHOD(Teds_KeyValueVector, keyAt);
 ZEND_METHOD(Teds_KeyValueVector, valueAt);
 ZEND_METHOD(Teds_KeyValueVector, setKeyAt);
 ZEND_METHOD(Teds_KeyValueVector, setValueAt);
+ZEND_METHOD(Teds_KeyValueVector, shrinkToFit);
 ZEND_METHOD(Teds_KeyValueVector, jsonSerialize);
 
 
@@ -92,12 +104,15 @@ static const zend_function_entry class_Teds_KeyValueVector_methods[] = {
 	ZEND_ME(Teds_KeyValueVector, __serialize, arginfo_class_Teds_KeyValueVector___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, __unserialize, arginfo_class_Teds_KeyValueVector___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, __set_state, arginfo_class_Teds_KeyValueVector___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Teds_KeyValueVector, push, arginfo_class_Teds_KeyValueVector_push, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_KeyValueVector, pop, arginfo_class_Teds_KeyValueVector_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, keys, arginfo_class_Teds_KeyValueVector_keys, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, values, arginfo_class_Teds_KeyValueVector_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, keyAt, arginfo_class_Teds_KeyValueVector_keyAt, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, valueAt, arginfo_class_Teds_KeyValueVector_valueAt, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, setKeyAt, arginfo_class_Teds_KeyValueVector_setKeyAt, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, setValueAt, arginfo_class_Teds_KeyValueVector_setValueAt, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_KeyValueVector, shrinkToFit, arginfo_class_Teds_KeyValueVector_shrinkToFit, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, jsonSerialize, arginfo_class_Teds_KeyValueVector_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };

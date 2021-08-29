@@ -108,6 +108,7 @@
     <file name="KeyValueVector/from_pairs.phpt" role="test" />
     <file name="KeyValueVector/keyAt_valueAt.phpt" role="test" />
     <file name="KeyValueVector/keys_values.phpt" role="test" />
+    <file name="KeyValueVector/push_pop.phpt" role="test" />
     <file name="KeyValueVector/reinit_forbidden.phpt" role="test" />
     <file name="KeyValueVector/serialization.phpt" role="test" />
     <file name="KeyValueVector/setKeyAt.phpt" role="test" />

@@ -33,8 +33,8 @@ printf("count=%d capacity=%d\n", count($it), $it->capacity());
 --EXPECT--
 Test empty vector
 count=0 capacity=0
-Caught UnderflowException: Cannot pop from empty vector
-Caught UnderflowException: Cannot pop from empty vector
+Caught UnderflowException: Cannot pop from empty Teds\Vector
+Caught UnderflowException: Cannot pop from empty Teds\Vector
 ["TEST",["literal"],{}]
 count=3 capacity=4
 object(stdClass)#2 (0) {
