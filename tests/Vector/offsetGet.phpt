@@ -12,7 +12,7 @@ function expect_throws(Closure $cb): void {
     }
 }
 expect_throws(fn() => (new ReflectionClass(Teds\Vector::class))->newInstanceWithoutConstructor());
-$it = new Teds\Vector(['first' => new stdClass()]);
+$it = new Teds\Vector([new stdClass()]);
 var_dump($it->offsetGet(0));
 var_dump($it->valueAt(0));
 expect_throws(fn() => $it->offsetSet(1,'x'));

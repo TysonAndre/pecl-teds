@@ -145,29 +145,69 @@ static inline void teds_vector_entries_set_empty_list(teds_vector_entries *array
 	array->entries = (zval *)empty_entry_list;
 }
 
-static void teds_vector_entries_init_from_array(teds_vector_entries *array, zend_array *values)
+static void teds_vector_entries_init_from_array(teds_vector_entries *array, zend_array *values, bool preserve_keys)
 {
-	zend_long size = zend_hash_num_elements(values);
-	if (size > 0) {
-		zval *val;
-		zval *entries;
-		int i = 0;
+	const zend_long num_elements = zend_hash_num_elements(values);
+	if (num_elements <= 0) {
+		teds_vector_entries_set_empty_list(array);
+		return;
+	}
 
-		array->size = 0; /* reset size in case emalloc() fails */
+	zval *val;
+	zval *entries;
+
+	array->size = 0; /* reset size in case emalloc() fails */
+	if (preserve_keys) {
+		zend_string *str_index;
+		zend_ulong num_index, max_index = 0;
+
+		ZEND_HASH_FOREACH_KEY(values, num_index, str_index) {
+			if (str_index != NULL || (zend_long)num_index < 0) {
+				zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "array must contain only positive integer keys");
+				return;
+			}
+
+			if (num_index > max_index) {
+				max_index = num_index;
+			}
+		} ZEND_HASH_FOREACH_END();
+
+		const zend_long size = max_index + 1;
+		if (size <= 0) {
+			zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "integer overflow detected");
+			return;
+		}
 		array->entries = entries = safe_emalloc(size, sizeof(zval), 0);
 		array->size = size;
 		array->capacity = size;
-		ZEND_HASH_FOREACH_VAL(values, val)  {
-			ZEND_ASSERT(i < size);
-			ZVAL_COPY_DEREF(&entries[i], val);
-			i++;
+		/* Optimization: Don't need to null remaining elements if all elements from 0..num_elements-1 are set. */
+		ZEND_ASSERT(size >= num_elements);
+		if (size > num_elements) {
+			for (zend_long i = 0; i < size; i++) {
+				ZVAL_NULL(&entries[i]);
+			}
+		}
+
+		ZEND_HASH_FOREACH_KEY_VAL(values, num_index, str_index, val) {
+			ZEND_ASSERT(num_index < size);
+			ZEND_ASSERT(!str_index);
+			ZVAL_COPY_DEREF(&entries[num_index], val);
 		} ZEND_HASH_FOREACH_END();
-	} else {
-		teds_vector_entries_set_empty_list(array);
+		return;
 	}
+
+	int i = 0;
+	array->entries = entries = safe_emalloc(num_elements, sizeof(zval), 0);
+	array->size = num_elements;
+	array->capacity = num_elements;
+	ZEND_HASH_FOREACH_VAL(values, val)  {
+		ZEND_ASSERT(i < num_elements);
+		ZVAL_COPY_DEREF(&entries[i], val);
+		i++;
+	} ZEND_HASH_FOREACH_END();
 }
 
-static void teds_vector_entries_init_from_traversable(teds_vector_entries *array, zend_object *obj)
+static void teds_vector_entries_init_from_traversable(teds_vector_entries *array, zend_object *obj, bool preserve_keys)
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
@@ -192,32 +232,95 @@ static void teds_vector_entries_init_from_traversable(teds_vector_entries *array
 		}
 	}
 
-	while (funcs->valid(iter) == SUCCESS) {
-		if (EG(exception)) {
-			break;
-		}
-		zval *value = funcs->get_current_data(iter);
-		if (UNEXPECTED(EG(exception))) {
-			break;
+	if (preserve_keys) {
+		if (!funcs->get_current_key) {
+			zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "Saw traversable without keys");
+			return;
 		}
 
-		if (size >= capacity) {
-			/* TODO: Could use countable and get_count handler to estimate the size of the array to allocate */
-			if (entries) {
-				capacity *= 2;
-				entries = safe_erealloc(entries, capacity, sizeof(zval), 0);
-			} else {
-				capacity = 4;
-				entries = safe_emalloc(capacity, sizeof(zval), 0);
+		/* size is 0 or max_index + 1 */
+		while (funcs->valid(iter) == SUCCESS) {
+			if (UNEXPECTED(EG(exception))) {
+				break;
+			}
+
+			zval key;
+			funcs->get_current_key(iter, &key);
+			if (UNEXPECTED(EG(exception))) {
+				break;
+			}
+			if (Z_TYPE(key) != IS_LONG || Z_LVAL(key) < 0) {
+				zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "array must contain only positive integer keys");
+				break;
+			}
+			const zend_long num_index = Z_LVAL(key);
+			if (num_index >= capacity) {
+				if (UNEXPECTED((zend_ulong) num_index > ZEND_LONG_MAX / 2 - 1)) {
+					zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "integer overflow detected");
+					break;
+				}
+				const zend_long new_capacity = (num_index + 1) * 2;
+				entries = safe_erealloc(entries, new_capacity, sizeof(zval), 0);
+				for ( ; capacity < new_capacity; capacity++) {
+					ZVAL_NULL(&entries[capacity]);
+				}
+			}
+
+			zval *value = funcs->get_current_data(iter);
+			if (UNEXPECTED(EG(exception))) {
+				break;
+			}
+
+			if (num_index >= size) {
+				size = num_index + 1;
+				ZEND_ASSERT(size <= capacity);
+			}
+
+			/* Allow Traversables such as Generators to repeat keys. Silently overwrite the old key. */
+			zval_ptr_dtor(&entries[num_index]);
+			if (UNEXPECTED(EG(exception))) {
+				break;
+			}
+			ZVAL_COPY_DEREF(&entries[num_index], value);
+
+			iter->index++;
+			funcs->move_forward(iter);
+			if (UNEXPECTED(EG(exception))) {
+				break;
 			}
 		}
-		ZVAL_COPY_DEREF(&entries[size], value);
-		size++;
+	} else {
+		/* Reindex keys from 0. */
+		while (funcs->valid(iter) == SUCCESS) {
+			if (EG(exception)) {
+				break;
+			}
+			zval *value = funcs->get_current_data(iter);
+			if (UNEXPECTED(EG(exception))) {
+				break;
+			}
+			if (UNEXPECTED(EG(exception))) {
+				break;
+			}
 
-		iter->index++;
-		funcs->move_forward(iter);
-		if (EG(exception)) {
-			break;
+			if (size >= capacity) {
+				/* TODO: Could use countable and get_count handler to estimate the size of the array to allocate */
+				if (entries) {
+					capacity *= 2;
+					entries = safe_erealloc(entries, capacity, sizeof(zval), 0);
+				} else {
+					capacity = 4;
+					entries = safe_emalloc(capacity, sizeof(zval), 0);
+				}
+			}
+			ZVAL_COPY_DEREF(&entries[size], value);
+			size++;
+
+			iter->index++;
+			funcs->move_forward(iter);
+			if (UNEXPECTED(EG(exception))) {
+				break;
+			}
 		}
 	}
 	if (capacity > size) {
@@ -470,15 +573,17 @@ PHP_METHOD(Teds_Vector, setSize)
 	efree(old_copy);
 }
 
-/* Create this from an iterable */
+/* Create this from an optional iterable */
 PHP_METHOD(Teds_Vector, __construct)
 {
 	zval *object = ZEND_THIS;
 	zval* iterable = NULL;
+	bool preserve_keys = true;
 
-	ZEND_PARSE_PARAMETERS_START(0, 1)
+	ZEND_PARSE_PARAMETERS_START(0, 2)
 		Z_PARAM_OPTIONAL
 		Z_PARAM_ITERABLE(iterable)
+		Z_PARAM_BOOL(preserve_keys)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_vector *intern = Z_VECTOR_P(object);
@@ -495,10 +600,10 @@ PHP_METHOD(Teds_Vector, __construct)
 
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_vector_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
+			teds_vector_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable), preserve_keys);
 			return;
 		case IS_OBJECT:
-			teds_vector_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
+			teds_vector_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable), preserve_keys);
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -974,7 +1079,7 @@ static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zv
 
 	const teds_vector *intern = teds_vector_from_object(object);
 	if (offset < 0 || offset >= intern->array.size) {
-		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index invalid or out of range", 0);
 		return;
 	}
 	ZVAL_DEREF(value);

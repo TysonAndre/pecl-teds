@@ -6,7 +6,14 @@ namespace Teds;
 
 final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {
-    public function __construct(iterable $iterator = []) {}
+    /**
+     * Construct a Vector from an iterable.
+     *
+     * When $preserveKeys is false, the values will be reindexed without gaps starting from 0
+     * When $preserveKeys is true, any gaps in the keys of the iterable will be filled in with null,
+     * and negative indices or non-integer indices will be rejected and cause an Exception.
+     */
+    public function __construct(iterable $iterator = [], bool $preserveKeys = true) {}
     public function getIterator(): \InternalIterator {}
     public function count(): int {}
     public function capacity(): int {}
@@ -24,10 +31,11 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
     // Strictly typed, unlike offsetGet/offsetSet
     public function valueAt(int $offset): mixed {}
     public function setValueAt(int $offset, mixed $value): void {}
+
     public function offsetGet(mixed $offset): mixed {}
     public function offsetExists(mixed $offset): bool {}
     public function offsetSet(mixed $offset, mixed $value): void {}
-    // Throws
+    // Throws because unset and null are different things, unlike SplFixedArray
     public function offsetUnset(mixed $offset): void {}
 
     public function indexOf(mixed $value): int|false {}
