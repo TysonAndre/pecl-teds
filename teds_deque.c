@@ -110,8 +110,8 @@ static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_a
 {
 	zend_long size = zend_hash_num_elements(values);
 	array->offset = 0;
-	array->size = 0; /* reset size in case ecalloc() fails */
-	array->capacity = 0; /* reset size in case ecalloc() fails */
+	array->size = 0; /* reset size and capacity in case emalloc() fails */
+	array->capacity = 0;
 	if (size > 0) {
 		zval *val;
 		zval *circular_buffer;

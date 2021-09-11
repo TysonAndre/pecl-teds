@@ -113,7 +113,7 @@ static void teds_immutablekeyvaluesequence_entries_init_from_array(teds_immutabl
 		zval_pair *entries;
 		int i = 0;
 
-		array->size = 0; /* reset size in case ecalloc() fails */
+		array->size = 0; /* reset size in case emalloc() fails */
 		array->entries = entries = safe_emalloc(size, sizeof(zval_pair), 0);
 		array->size = size;
 		ZEND_HASH_FOREACH_KEY_VAL(values, nkey, skey, val)  {

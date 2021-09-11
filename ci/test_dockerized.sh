@@ -11,6 +11,6 @@ fi
 set -xeu
 PHP_VERSION=$1
 
-DOCKER_IMAGE=teds-$PHP_VERSION-test-runner
+DOCKER_IMAGE="teds-test-runner:$PHP_VERSION"
 docker build --build-arg="PHP_VERSION=$PHP_VERSION" --tag="$DOCKER_IMAGE" -f ci/Dockerfile .
 docker run --rm $DOCKER_IMAGE ci/test_inner.sh

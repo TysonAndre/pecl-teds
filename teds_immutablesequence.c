@@ -105,7 +105,7 @@ static void teds_cached_entries_init_from_array(teds_cached_entries *array, zend
 		zval *entries;
 		int i = 0;
 
-		array->size = 0; /* reset size in case ecalloc() fails */
+		array->size = 0; /* reset size in case emalloc() fails */
 		array->entries = entries = safe_emalloc(size, sizeof(zval), 0);
 		array->size = size;
 		ZEND_HASH_FOREACH_VAL(values, val)  {

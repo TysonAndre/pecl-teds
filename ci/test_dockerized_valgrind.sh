@@ -23,9 +23,9 @@ set -xeu
 PHP_VERSION=$1
 PHP_VERSION_FULL=$2
 
-# NOTE: php 7.3+ will fail in valgrind without "--with-valgrind" because php-src uses custom assembly for its implementation of zend_string_equals
+# NOTE: php 7.3-8.0 (but not 8.1) will fail in valgrind without "--with-valgrind" because php-src uses custom assembly for its implementation of zend_string_equals
 # In order to fix those false positives, a different set of images would be needed where (1) valgrind was installed before compiling php, and (2) php was compiled with support for valgrind (--with-valgrind) to avoid false positives
 # docker run --rm $DOCKER_IMAGE ci/test_inner_valgrind.sh
-DOCKER_IMAGE_VALGRIND=teds-$PHP_VERSION_FULL-valgrind-test-runner
+DOCKER_IMAGE_VALGRIND=teds-valgrind-test-runner:$PHP_VERSION_FULL
 docker build --build-arg="PHP_VERSION=$PHP_VERSION" --build-arg="PHP_VERSION_FULL=$PHP_VERSION_FULL" --tag="$DOCKER_IMAGE_VALGRIND" -f ci/Dockerfile.valgrind .
 docker run --rm $DOCKER_IMAGE_VALGRIND ci/test_inner_valgrind.sh
