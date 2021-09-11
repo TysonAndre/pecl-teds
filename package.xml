@@ -26,6 +26,7 @@
   and use the original keys of arrays/Traversables by default, throwing for non-integers and invalid integer offsets.
   (Similar to the behavior of SplFixedArray::fromArray)
 * Convert references to non-references when creating values from iterables.
+* Minor performance improvements of `Teds\Vector`
  </notes>
  <contents>
   <dir name="/">

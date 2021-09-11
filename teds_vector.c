@@ -1088,7 +1088,7 @@ static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zv
 
 static zval *teds_vector_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
-	if (!offset_zv) {
+	if (UNEXPECTED(!offset_zv)) {
 		zend_throw_exception(spl_ce_RuntimeException, "[] operator not supported for Teds\\Vector", 0);
 		return NULL;
 	}
@@ -1098,7 +1098,7 @@ static zval *teds_vector_read_dimension(zend_object *object, zval *offset_zv, in
 
 	const teds_vector *intern = teds_vector_from_object(object);
 
-	if (offset < 0 || offset >= intern->array.size) {
+	if (UNEXPECTED(offset < 0 || offset >= intern->array.size)) {
 		if (type != BP_VAR_IS) {
 			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		}
