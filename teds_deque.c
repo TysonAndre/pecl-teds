@@ -122,7 +122,7 @@ static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_a
 		array->capacity = size;
 		ZEND_HASH_FOREACH_VAL(values, val)  {
 			ZEND_ASSERT(i < size);
-			ZVAL_COPY(&circular_buffer[i], val);
+			ZVAL_COPY_DEREF(&circular_buffer[i], val);
 			i++;
 		} ZEND_HASH_FOREACH_END();
 	} else {
@@ -161,9 +161,6 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 			break;
 		}
 		zval *value = funcs->get_current_data(iter);
-		if (UNEXPECTED(EG(exception))) {
-			break;
-		}
 		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
@@ -780,6 +777,7 @@ static void teds_deque_write_dimension(zend_object *object, zval *offset_zv, zva
 		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
 		return;
 	}
+	ZVAL_DEREF(value);
 	teds_deque_set_value_at_offset(object, offset, value);
 }
 

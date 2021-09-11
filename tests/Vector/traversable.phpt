@@ -1,5 +1,5 @@
 --TEST--
-Teds\Vector constructed from array
+Teds\Vector constructed from Traversable
 --FILE--
 <?php
 

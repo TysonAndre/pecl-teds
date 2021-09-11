@@ -4,7 +4,6 @@ Teds\Vector unserialize error handling
 <?php
 
 call_user_func(function () {
-    $it = new Teds\Vector(['first' => 'second']);
     $ser = 'O:11:"Teds\Vector":2:{i:0;s:5:"first";s:5:"unexp";s:6:"second";}';
     try {
         unserialize($ser);

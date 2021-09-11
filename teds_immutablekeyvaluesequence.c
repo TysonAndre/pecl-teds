@@ -123,7 +123,7 @@ static void teds_immutablekeyvaluesequence_entries_init_from_array(teds_immutabl
 			} else {
 				ZVAL_LONG(&entries[i].key, nkey);
 			}
-			ZVAL_COPY(&entries[i].value, val);
+			ZVAL_COPY_DEREF(&entries[i].value, val);
 			i++;
 		} ZEND_HASH_FOREACH_END();
 	} else {

@@ -110,7 +110,7 @@ static void teds_cached_entries_init_from_array(teds_cached_entries *array, zend
 		array->size = size;
 		ZEND_HASH_FOREACH_VAL(values, val)  {
 			ZEND_ASSERT(i < size);
-			ZVAL_COPY(&entries[i], val);
+			ZVAL_COPY_DEREF(&entries[i], val);
 			i++;
 		} ZEND_HASH_FOREACH_END();
 	} else {
