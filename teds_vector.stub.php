@@ -1,7 +1,6 @@
 <?php
 
 /** @generate-class-entries */
-// Stub generation requires build/gen_stubs.php from php 8.1 or newer.
 
 namespace Teds;
 
@@ -25,8 +24,6 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
     // Strictly typed, unlike offsetGet/offsetSet
     public function valueAt(int $offset): mixed {}
     public function setValueAt(int $offset, mixed $value): void {}
-    // TODO public function setValueAt(int $offset, mixed $value): mixed {}
-    // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
     public function offsetExists(mixed $offset): bool {}
     public function offsetSet(mixed $offset, mixed $value): void {}

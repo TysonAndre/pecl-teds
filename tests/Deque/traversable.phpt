@@ -1,5 +1,5 @@
 --TEST--
-Teds\Deque constructed from array
+Teds\Deque constructed from Traversable
 --FILE--
 <?php
 

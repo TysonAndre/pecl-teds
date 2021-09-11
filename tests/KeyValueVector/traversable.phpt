@@ -1,5 +1,5 @@
 --TEST--
-Teds\KeyValueVector constructed from array
+Teds\KeyValueVector constructed from Traversable
 --FILE--
 <?php
 

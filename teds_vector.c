@@ -159,7 +159,7 @@ static void teds_vector_entries_init_from_array(teds_vector_entries *array, zend
 		array->capacity = size;
 		ZEND_HASH_FOREACH_VAL(values, val)  {
 			ZEND_ASSERT(i < size);
-			ZVAL_COPY(&entries[i], val);
+			ZVAL_COPY_DEREF(&entries[i], val);
 			i++;
 		} ZEND_HASH_FOREACH_END();
 	} else {
@@ -197,9 +197,6 @@ static void teds_vector_entries_init_from_traversable(teds_vector_entries *array
 			break;
 		}
 		zval *value = funcs->get_current_data(iter);
-		if (UNEXPECTED(EG(exception))) {
-			break;
-		}
 		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
@@ -980,6 +977,7 @@ static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zv
 		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
 		return;
 	}
+	ZVAL_DEREF(value);
 	teds_vector_set_value_at_offset(object, offset, value);
 }
 

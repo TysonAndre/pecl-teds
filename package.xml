@@ -13,17 +13,16 @@
  <date>2021-09-10</date>
  <time>16:00:00</time>
  <version>
-  <release>0.1.1</release>
-  <api>0.1.1</api>
+  <release>0.1.2dev</release>
+  <api>0.1.2dev</api>
  </version>
  <stability>
-  <release>stable</release>
-  <api>stable</api>
+  <release>alpha</release>
+  <api>alpha</api>
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Add Teds\KeyValueVector
-* Fix edge cases in Teds\Vector setSize
+* Convert references to non-references when creating values from iterables
  </notes>
  <contents>
   <dir name="/">
@@ -163,6 +162,23 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2021-09-10</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.1.1</release>
+    <api>0.1.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Add Teds\KeyValueVector
+* Fix edge cases in Teds\Vector setSize
+   </notes>
+  </release>
   <release>
    <date>2021-08-24</date>
    <time>16:00:00</time>

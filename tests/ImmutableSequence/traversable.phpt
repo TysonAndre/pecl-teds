@@ -1,5 +1,5 @@
 --TEST--
-Teds\ImmutableSequence constructed from array
+Teds\ImmutableSequence constructed from Traversable
 --FILE--
 <?php
 

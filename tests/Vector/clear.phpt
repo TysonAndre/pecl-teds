@@ -3,7 +3,7 @@ Teds\Vector clear
 --FILE--
 <?php
 
-$it = new Teds\Deque([new stdClass()]);
+$it = new Teds\Vector([new stdClass()]);
 var_dump($it->toArray());
 var_dump($it->count());
 var_dump($it->capacity());
