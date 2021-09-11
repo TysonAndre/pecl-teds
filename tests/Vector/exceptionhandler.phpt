@@ -21,7 +21,7 @@ function yields_and_throws() {
     echo "Unreachable\n";
 }
 try {
-    $it = new Teds\Vector(yields_and_throws());
+    $it = new Teds\Vector(yields_and_throws(), preserveKeys: false);
 } catch (RuntimeException $e) {
     echo "Caught " . $e->getMessage() . "\n";
 }

@@ -3,7 +3,7 @@ Teds\Vector constructed from array
 --FILE--
 <?php
 // discards keys
-$it = new Teds\Vector(['first' => 'x', 'second' => new stdClass()]);
+$it = new Teds\Vector(['first' => 'x', 'second' => new stdClass()], preserveKeys: false);
 foreach ($it as $key => $value) {
     printf("Key: %s\nValue: %s\n", var_export($key, true), var_export($value, true));
 }
@@ -17,6 +17,21 @@ foreach ($it as $key => $value) {
     echo "Unreachable\n";
 }
 
+// The default is to preserve keys
+$it = new Teds\Vector([2 => 'third', 0 => 'first']);
+var_dump($it);
+
+try {
+    $it = new Teds\Vector([-1 => new stdClass()]);
+} catch (UnexpectedValueException $e) {
+    echo "Caught: {$e->getMessage()}\n";
+}
+
+try {
+    $it = new Teds\Vector(['0a' => new stdClass()]);
+} catch (UnexpectedValueException $e) {
+    echo "Caught: {$e->getMessage()}\n";
+}
 ?>
 --EXPECT--
 Key: 0
@@ -42,3 +57,13 @@ object(Teds\Vector)#3 (0) {
 }
 array(0) {
 }
+object(Teds\Vector)#1 (3) {
+  [0]=>
+  string(5) "first"
+  [1]=>
+  NULL
+  [2]=>
+  string(5) "third"
+}
+Caught: array must contain only positive integer keys
+Caught: array must contain only positive integer keys

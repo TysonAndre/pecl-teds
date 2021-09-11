@@ -13,8 +13,8 @@
  <date>2021-09-10</date>
  <time>16:00:00</time>
  <version>
-  <release>0.1.2dev</release>
-  <api>0.1.2dev</api>
+  <release>0.2.0dev</release>
+  <api>0.2.0dev</api>
  </version>
  <stability>
   <release>alpha</release>
@@ -22,7 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Convert references to non-references when creating values from iterables
+* Breaking change: Change `Teds\Vector::__construct` to add an additional parameter `bool $preserveKeys = true`,
+  and use the original keys of arrays/Traversables by default, throwing for non-integers and invalid integer offsets.
+  (Similar to the behavior of SplFixedArray::fromArray)
+* Convert references to non-references when creating values from iterables.
  </notes>
  <contents>
   <dir name="/">
@@ -134,6 +137,7 @@
     <file name="Vector/shrink_capacity.phpt" role="test" />
     <file name="Vector/toArray.phpt" role="test" />
     <file name="Vector/traversable.phpt" role="test" />
+    <file name="Vector/traversable_preserve_keys.phpt" role="test" />
     <file name="Vector/unserialize.phpt" role="test" />
     <file name="iterable/all_array.phpt" role="test" />
     <file name="iterable/all_traversable.phpt" role="test" />

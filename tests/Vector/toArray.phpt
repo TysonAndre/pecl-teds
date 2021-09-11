@@ -3,7 +3,7 @@ Teds\Vector toArray()
 --FILE--
 <?php
 
-$it = new Teds\Vector(['first' => new stdClass()]);
+$it = new Teds\Vector(['first' => new stdClass()], false);
 var_dump($it->toArray());
 var_dump($it->toArray());
 $it = new Teds\Vector([]);

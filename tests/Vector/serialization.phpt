@@ -3,7 +3,7 @@ Teds\Vector can be serialized and unserialized
 --FILE--
 <?php
 
-$it = new Teds\Vector(['first' => new stdClass()]);
+$it = new Teds\Vector(['first' => new stdClass()], preserveKeys: false);
 try {
     $it->dynamicProp = 123;
 } catch (Throwable $t) {

@@ -3,7 +3,7 @@ Teds\Vector is an IteratorAggregate
 --FILE--
 <?php
 
-$it = new Teds\Vector(['discarded_first' => 'x', 'discardedsecond' => (object)['key' => 'value']]);
+$it = new Teds\Vector(['x', (object)['key' => 'value']]);
 foreach ($it as $k1 => $v1) {
     foreach ($it as $k2 => $v2) {
         printf("k1=%s k2=%s v1=%s v2=%s\n", json_encode($k1), json_encode($k2), json_encode($v1), json_encode($v2));

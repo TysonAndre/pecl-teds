@@ -15,7 +15,7 @@ function yields_values() {
 }
 
 // Teds\Vector eagerly evaluates the passed in Traversable
-$it = new Teds\Vector(yields_values());
+$it = new Teds\Vector(yields_values(), preserveKeys: false);
 foreach ($it as $key => $value) {
     printf("Key: %s\nValue: %s\n", var_export($key, true), var_export($value, true));
 }
@@ -25,16 +25,18 @@ foreach ($it as $key => $value) {
 }
 unset($it);
 
-$emptyIt = new Teds\Vector(new ArrayObject());
-var_dump($emptyIt);
-foreach ($emptyIt as $key => $value) {
-    echo "Unreachable\n";
+foreach ([false, true] as $preserveKeys) {
+    $emptyIt = new Teds\Vector(new ArrayObject(), $preserveKeys);
+    var_dump($emptyIt);
+    foreach ($emptyIt as $key => $value) {
+        echo "Unreachable\n";
+    }
+    foreach ($emptyIt as $key => $value) {
+        echo "Unreachable\n";
+    }
+    echo "Done\n";
+    unset($emptyIt);
 }
-foreach ($emptyIt as $key => $value) {
-    echo "Unreachable\n";
-}
-echo "Done\n";
-
 
 ?>
 --EXPECT--
@@ -96,6 +98,9 @@ Key: 11
 Value: 1
 Key: 12
 Value: 2
+object(Teds\Vector)#1 (0) {
+}
+Done
 object(Teds\Vector)#1 (0) {
 }
 Done
