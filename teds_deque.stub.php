@@ -6,10 +6,11 @@
 namespace Teds;
 
 /**
- * A double-ended queue
+ * A double-ended queue backed by an array. This has lower memory usage than SplDoublyLinkedList or its subclasses.
  */
 final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {
+    /* Construct the deque from the values of the Traversable/array, ignoring keys */
     public function __construct(iterable $iterator = []) {}
     public function getIterator(): \InternalIterator {}
     public function count(): int {}
