@@ -978,15 +978,8 @@ PHP_METHOD(Teds_Vector, offsetSet)
 	teds_vector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 }
 
-PHP_METHOD(Teds_Vector, push)
+static zend_always_inline void teds_vector_push(teds_vector *intern, zval *value)
 {
-	zval *value;
-
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
-	ZEND_PARSE_PARAMETERS_END();
-
-	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	const size_t old_size = intern->array.size;
 	const size_t old_capacity = intern->array.capacity;
 
@@ -996,6 +989,17 @@ PHP_METHOD(Teds_Vector, push)
 	}
 	ZVAL_COPY(&intern->array.entries[old_size], value);
 	intern->array.size++;
+}
+
+PHP_METHOD(Teds_Vector, push)
+{
+	zval *value;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_vector_push(Z_VECTOR_P(ZEND_THIS), value);
 }
 
 PHP_METHOD(Teds_Vector, pop)
@@ -1069,15 +1073,15 @@ PHP_METHOD(Teds_Vector, jsonSerialize)
 
 static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zval *value)
 {
+	teds_vector *intern = teds_vector_from_object(object);
 	if (!offset_zv) {
-		zend_throw_exception(spl_ce_RuntimeException, "[] operator not supported for Teds\\Vector", 0);
+		teds_vector_push(intern, value);
 		return;
 	}
 
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	const teds_vector *intern = teds_vector_from_object(object);
 	if (offset < 0 || offset >= intern->array.size) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index invalid or out of range", 0);
 		return;

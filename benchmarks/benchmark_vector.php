@@ -37,7 +37,7 @@ function bench_vector(int $n, int $iterations) {
         $startMemory = memory_get_usage();
         $values = new Vector();
         for ($i = 0; $i < $n; $i++) {
-            $values->push($i);
+            $values[] = $i;
         }
 
         $startReadTime = hrtime(true);

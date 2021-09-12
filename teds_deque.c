@@ -76,6 +76,9 @@ typedef struct _teds_deque_it {
 	zend_long            current;
 } teds_deque_it;
 
+static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *value);
+static void teds_deque_raise_capacity(teds_deque *intern, const zend_long new_capacity);
+
 static teds_deque *teds_deque_from_object(zend_object *obj)
 {
 	return (teds_deque*)((char*)(obj) - XtOffsetOf(teds_deque, std));
@@ -762,10 +765,23 @@ static zend_always_inline void teds_deque_set_value_at_offset(zend_object *objec
 	zval_ptr_dtor(&tmp);
 }
 
+static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *value) {
+	const size_t old_size = intern->array.size;
+	const size_t old_capacity = intern->array.capacity;
+
+	if (old_size >= old_capacity) {
+		ZEND_ASSERT(old_size == old_capacity);
+		teds_deque_raise_capacity(intern, old_size ? old_size * 2 : 4);
+	}
+	intern->array.size++;
+	zval *dest = teds_deque_get_entry_at_offset(&intern->array, old_size);
+	ZVAL_COPY(dest, value);
+}
+
 static void teds_deque_write_dimension(zend_object *object, zval *offset_zv, zval *value)
 {
 	if (!offset_zv) {
-		zend_throw_exception(spl_ce_RuntimeException, "[] operator not supported for Teds\\Deque", 0);
+		teds_deque_push_back(teds_deque_from_object(object), value);
 		return;
 	}
 
@@ -874,17 +890,7 @@ PHP_METHOD(Teds_Deque, pushBack)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	const size_t old_size = intern->array.size;
-	const size_t old_capacity = intern->array.capacity;
-
-	if (old_size >= old_capacity) {
-		ZEND_ASSERT(old_size == old_capacity);
-		teds_deque_raise_capacity(intern, old_size ? old_size * 2 : 4);
-	}
-	intern->array.size++;
-	zval *dest = teds_deque_get_entry_at_offset(&intern->array, old_size);
-	ZVAL_COPY(dest, value);
+	teds_deque_push_back(Z_DEQUE_P(ZEND_THIS), value);
 }
 
 PHP_METHOD(Teds_Deque, pushFront)
