@@ -51,7 +51,7 @@ static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 			offset = Z_REFVAL_P(offset);
 			goto try_again;
 		case IS_RESOURCE:
-			zend_error(E_WARNING, "Resource ID#%d used as offset, casting to integer (%d)",
+			zend_error(E_WARNING, "Resource ID#" ZEND_LONG_FMT " used as offset, casting to integer (" ZEND_LONG_FMT ")",
 				Z_RES_HANDLE_P(offset), Z_RES_HANDLE_P(offset));
 			return Z_RES_HANDLE_P(offset);
 	}
