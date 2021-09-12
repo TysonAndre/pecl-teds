@@ -1108,6 +1108,31 @@ static zval *teds_vector_read_dimension(zend_object *object, zval *offset_zv, in
 	}
 }
 
+static int teds_vector_has_dimension(zend_object *object, zval *offset_zv, int check_empty)
+{
+	zend_long offset;
+	if (UNEXPECTED(Z_TYPE_P(offset_zv) != IS_LONG)) {
+		offset = teds_get_offset(offset_zv);
+		if (UNEXPECTED(EG(exception))) {
+			return 0;
+		}
+	} else {
+		offset = Z_LVAL_P(offset_zv);
+	}
+
+	const teds_vector *intern = teds_vector_from_object(object);
+
+	if (UNEXPECTED(offset < 0 || offset >= intern->array.size)) {
+		return 0;
+	}
+
+	zval *val = &intern->array.entries[offset];
+	if (check_empty) {
+		return zend_is_true(val);
+	}
+	return Z_TYPE_P(val) != IS_NULL;
+}
+
 PHP_MINIT_FUNCTION(teds_vector)
 {
 	teds_ce_Vector = register_class_Teds_Vector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
@@ -1126,7 +1151,7 @@ PHP_MINIT_FUNCTION(teds_vector)
 	teds_handler_Vector.read_dimension  = teds_vector_read_dimension;
 	teds_handler_Vector.write_dimension = teds_vector_write_dimension;
 	//teds_handler_Vector.unset_dimension = teds_vector_unset_dimension;
-	//teds_handler_Vector.has_dimension   = teds_vector_has_dimension;
+	teds_handler_Vector.has_dimension   = teds_vector_has_dimension;
 
 	teds_ce_Vector->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 	teds_ce_Vector->get_iterator = teds_vector_get_iterator;
