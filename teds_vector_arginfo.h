@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: e6e00e028a0d61165c44436c27b23c53175f6db8 */
+ * Stub hash: 4450b815163ae7a373d6da59c553fd3f9dd6c294 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -14,8 +14,10 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Vector_capacity arginfo_class_Teds_Vector_count
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_clear, 0, 0, IS_VOID, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_shrinkToFit, 0, 0, IS_VOID, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_Vector_clear arginfo_class_Teds_Vector_shrinkToFit
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_setSize, 0, 1, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, size, IS_LONG, 0)
@@ -75,7 +77,13 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_contains, 0, 1
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_Vector_shrinkToFit arginfo_class_Teds_Vector_clear
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_Vector_map, 0, 1, Teds\\Vector, 0)
+	ZEND_ARG_TYPE_INFO(0, callback, IS_CALLABLE, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_Vector_filter, 0, 0, Teds\\Vector, 0)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, callback, IS_CALLABLE, 1, "null")
+ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Vector_jsonSerialize arginfo_class_Teds_Vector___serialize
 
@@ -84,6 +92,7 @@ ZEND_METHOD(Teds_Vector, __construct);
 ZEND_METHOD(Teds_Vector, getIterator);
 ZEND_METHOD(Teds_Vector, count);
 ZEND_METHOD(Teds_Vector, capacity);
+ZEND_METHOD(Teds_Vector, shrinkToFit);
 ZEND_METHOD(Teds_Vector, clear);
 ZEND_METHOD(Teds_Vector, setSize);
 ZEND_METHOD(Teds_Vector, __serialize);
@@ -100,7 +109,8 @@ ZEND_METHOD(Teds_Vector, offsetSet);
 ZEND_METHOD(Teds_Vector, offsetUnset);
 ZEND_METHOD(Teds_Vector, indexOf);
 ZEND_METHOD(Teds_Vector, contains);
-ZEND_METHOD(Teds_Vector, shrinkToFit);
+ZEND_METHOD(Teds_Vector, map);
+ZEND_METHOD(Teds_Vector, filter);
 ZEND_METHOD(Teds_Vector, jsonSerialize);
 
 
@@ -109,6 +119,7 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, getIterator, arginfo_class_Teds_Vector_getIterator, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, count, arginfo_class_Teds_Vector_count, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, capacity, arginfo_class_Teds_Vector_capacity, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, shrinkToFit, arginfo_class_Teds_Vector_shrinkToFit, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, clear, arginfo_class_Teds_Vector_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, setSize, arginfo_class_Teds_Vector_setSize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, __serialize, arginfo_class_Teds_Vector___serialize, ZEND_ACC_PUBLIC)
@@ -125,7 +136,8 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, offsetUnset, arginfo_class_Teds_Vector_offsetUnset, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, indexOf, arginfo_class_Teds_Vector_indexOf, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, contains, arginfo_class_Teds_Vector_contains, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Vector, shrinkToFit, arginfo_class_Teds_Vector_shrinkToFit, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, map, arginfo_class_Teds_Vector_map, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, filter, arginfo_class_Teds_Vector_filter, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, jsonSerialize, arginfo_class_Teds_Vector_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
