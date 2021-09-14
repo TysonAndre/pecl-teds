@@ -23,6 +23,7 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Support `$vector[] = $value` and `$deque[] = $value` assignments to append to Vector/Deque.
+* Add map() and filter() functions to Vector.
  </notes>
  <contents>
   <dir name="/">
@@ -124,7 +125,9 @@
     <file name="Vector/clone.phpt" role="test" />
     <file name="Vector/contains.phpt" role="test" />
     <file name="Vector/exceptionhandler.phpt" role="test" />
+    <file name="Vector/filter.phpt" role="test" />
     <file name="Vector/isset.phpt" role="test" />
+    <file name="Vector/map.phpt" role="test" />
     <file name="Vector/offsetGet.phpt" role="test" />
     <file name="Vector/push_pop.phpt" role="test" />
     <file name="Vector/reinit_forbidden.phpt" role="test" />
