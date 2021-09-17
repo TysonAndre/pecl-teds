@@ -13,11 +13,11 @@ foreach ([0, 1, strtolower('FIRST')] as $key) {
 }
 ?>
 --EXPECT--
-null: containsValue=false, indexOfValue=false
-"o": containsValue=false, indexOfValue=false
+null: containsValue=false, indexOfValue=null
+"o": containsValue=false, indexOfValue=null
 {}: containsValue=true, indexOfValue=1
-{}: containsValue=false, indexOfValue=false
+{}: containsValue=false, indexOfValue=null
 "first": containsValue=true, indexOfValue=0
 0: containsKey=true, indexOfKey=0
 1: containsKey=true, indexOfKey=1
-"first": containsKey=false, indexOfKey=false
+"first": containsKey=false, indexOfKey=null

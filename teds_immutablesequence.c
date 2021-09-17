@@ -654,7 +654,7 @@ PHP_METHOD(Teds_ImmutableSequence, indexOf)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_ImmutableSequence, contains)

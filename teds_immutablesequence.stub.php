@@ -26,7 +26,7 @@ final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSe
     // Throws
     public function offsetUnset(mixed $offset): void {}
 
-    public function indexOf(mixed $value): int|false {}
+    public function indexOf(mixed $value): ?int {}
     public function contains(mixed $value): bool {}
 
     public function jsonSerialize(): array {}

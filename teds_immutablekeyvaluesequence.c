@@ -833,7 +833,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, indexOfKey)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_ImmutableKeyValueSequence, indexOfValue)
@@ -851,7 +851,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, indexOfValue)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_ImmutableKeyValueSequence, containsKey)

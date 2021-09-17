@@ -812,7 +812,7 @@ PHP_METHOD(Teds_Deque, indexOf)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_Deque, contains)

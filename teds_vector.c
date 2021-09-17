@@ -36,6 +36,10 @@ zend_class_entry *teds_ce_Vector;
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
 static const zval empty_entry_list[1];
 
+/* Though rare, it is possible to have 64-bit zend_longs and a 32-bit size_t. */
+static const size_t MAX_ZVAL_COUNT = (SIZE_MAX / sizeof(zval)) - 1;
+static const size_t MAX_VALID_OFFSET = MAX_ZVAL_COUNT > ZEND_LONG_MAX ? ZEND_LONG_MAX : MAX_ZVAL_COUNT;
+
 typedef struct _teds_vector_entries {
 	size_t size;
 	size_t capacity;
@@ -101,6 +105,7 @@ static bool teds_vector_entries_uninitialized(const teds_vector_entries *array)
 
 static void teds_vector_raise_capacity(teds_vector *intern, const zend_long new_capacity) {
 	ZEND_ASSERT(new_capacity > intern->array.capacity);
+	ZEND_ASSERT(new_capacity <= MAX_VALID_OFFSET + 1);
 	if (intern->array.capacity == 0) {
 		intern->array.entries = safe_emalloc(new_capacity, sizeof(zval), 0);
 	} else {
@@ -162,7 +167,7 @@ static void teds_vector_entries_init_from_array(teds_vector_entries *array, zend
 		zend_ulong num_index, max_index = 0;
 
 		ZEND_HASH_FOREACH_KEY(values, num_index, str_index) {
-			if (str_index != NULL || (zend_long)num_index < 0) {
+			if (UNEXPECTED(str_index != NULL || (zend_long)num_index < 0)) {
 				zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "array must contain only positive integer keys");
 				return;
 			}
@@ -172,11 +177,12 @@ static void teds_vector_entries_init_from_array(teds_vector_entries *array, zend
 			}
 		} ZEND_HASH_FOREACH_END();
 
-		const zend_long size = max_index + 1;
-		if (size <= 0) {
-			zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "integer overflow detected");
+		if (UNEXPECTED(max_index > MAX_VALID_OFFSET)) {
+			zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "exceeded max valid offset");
 			return;
 		}
+		const zend_long size = max_index + 1;
+		ZEND_ASSERT(size > 0);
 		array->entries = entries = safe_emalloc(size, sizeof(zval), 0);
 		array->size = size;
 		array->capacity = size;
@@ -255,8 +261,8 @@ static void teds_vector_entries_init_from_traversable(teds_vector_entries *array
 			}
 			const zend_long num_index = Z_LVAL(key);
 			if (num_index >= capacity) {
-				if (UNEXPECTED((zend_ulong) num_index > ZEND_LONG_MAX / 2 - 1)) {
-					zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "integer overflow detected");
+				if (UNEXPECTED((zend_ulong) num_index > MAX_VALID_OFFSET)) {
+					zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "exceeded max valid offset");
 					break;
 				}
 				const zend_long new_capacity = (num_index + 1) * 2;
@@ -523,12 +529,19 @@ PHP_METHOD(Teds_Vector, clear)
 PHP_METHOD(Teds_Vector, setSize)
 {
 	zend_long size;
-	ZEND_PARSE_PARAMETERS_START(1, 1)
+	zval *default_zval = NULL;
+	ZEND_PARSE_PARAMETERS_START(1, 2)
 		Z_PARAM_LONG(size)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_ZVAL(default_zval)
 	ZEND_PARSE_PARAMETERS_END();
 
-	if (size < 0) {
-		zend_argument_value_error(1, "must be greater than or equal to 0");
+	if (UNEXPECTED((zend_ulong)size > MAX_VALID_OFFSET)) {
+		if (size < 0) {
+			zend_argument_value_error(1, "must be greater than or equal to 0");
+		} else {
+			zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "exceeded max valid offset");
+		}
 		RETURN_THROWS();
 	}
 
@@ -541,8 +554,14 @@ PHP_METHOD(Teds_Vector, setSize)
 		}
 		intern->array.size = size;
 		zval * const entries = intern->array.entries;
-		for (size_t i = old_size; i < size; i++) {
-			ZVAL_NULL(&entries[i]);
+		if (default_zval == NULL || Z_ISNULL_P(default_zval)) {
+			for (size_t i = old_size; i < size; i++) {
+				ZVAL_NULL(&entries[i]);
+			}
+		} else {
+			for (size_t i = old_size; i < size; i++) {
+				ZVAL_COPY(&entries[i], default_zval);
+			}
 		}
 		return;
 	}
@@ -560,7 +579,8 @@ PHP_METHOD(Teds_Vector, setSize)
 		old_copy = teds_zval_copy_range(&old_entries[size], entries_to_remove);
 		intern->array.size = size;
 
-		if (size * 4 < intern->array.capacity) {
+		/* If only a quarter of the reserved space is used, then shrink the capacity but leave some room to grow. */
+		if (size < (intern->array.capacity >> 2)) {
 			const size_t size = old_size - 1;
 			const size_t capacity = size > 2 ? size * 2 : 4;
 			if (capacity < intern->array.capacity) {
@@ -915,7 +935,7 @@ PHP_METHOD(Teds_Vector, indexOf)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_Vector, filter)
@@ -1230,6 +1250,30 @@ PHP_METHOD(Teds_Vector, shrinkToFit)
 		intern->array.entries = safe_erealloc(intern->array.entries, size, sizeof(zval), 0);
 	}
 	intern->array.capacity = size;
+}
+
+PHP_METHOD(Teds_Vector, reserve)
+{
+	zend_long capacity;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_LONG(capacity)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (UNEXPECTED(capacity < 0)) {
+		return;
+	}
+
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	if (intern->array.capacity >= capacity) {
+		return;
+	}
+	if (UNEXPECTED(capacity > MAX_VALID_OFFSET)) {
+		zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "exceeded max valid offset");
+		RETURN_THROWS();
+	}
+	/* Raise the capacity */
+	teds_vector_raise_capacity(intern, capacity);
 }
 
 PHP_METHOD(Teds_Vector, offsetUnset)

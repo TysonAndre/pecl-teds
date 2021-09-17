@@ -10,8 +10,8 @@ foreach ([null, 'o', $o, new stdClass(), strtolower('FIRST')] as $value) {
 }
 ?>
 --EXPECT--
-null: contains=false, indexOf=false
-"o": contains=false, indexOf=false
+null: contains=false, indexOf=null
+"o": contains=false, indexOf=null
 {}: contains=true, indexOf=1
-{}: contains=false, indexOf=false
+{}: contains=false, indexOf=null
 "first": contains=true, indexOf=0

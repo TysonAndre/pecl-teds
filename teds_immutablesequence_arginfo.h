@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: aa3d1da43720da483ea072ed818bb3d74f6ea2d7 */
+ * Stub hash: dac0f2f4aace15310101357a28cf08fa517b4804 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -45,7 +45,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_off
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_class_Teds_ImmutableSequence_indexOf, 0, 1, MAY_BE_LONG|MAY_BE_FALSE)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_indexOf, 0, 1, IS_LONG, 1)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 

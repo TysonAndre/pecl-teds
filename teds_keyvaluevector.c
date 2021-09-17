@@ -979,7 +979,7 @@ PHP_METHOD(Teds_KeyValueVector, indexOfKey)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_KeyValueVector, indexOfValue)
@@ -997,7 +997,7 @@ PHP_METHOD(Teds_KeyValueVector, indexOfValue)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_KeyValueVector, containsKey)

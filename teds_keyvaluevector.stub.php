@@ -33,8 +33,8 @@ final class KeyValueVector implements \IteratorAggregate, \Countable, \JsonSeria
     public function setKeyAt(int $offset, mixed $key): void {}
     public function setValueAt(int $offset, mixed $value): void {}
 
-    public function indexOfKey(mixed $key): int|false {}
-    public function indexOfValue(mixed $value): int|false {}
+    public function indexOfKey(mixed $key): ?int {}
+    public function indexOfValue(mixed $value): ?int {}
     public function containsKey(mixed $key): bool {}
     public function containsValue(mixed $value): bool {}
 

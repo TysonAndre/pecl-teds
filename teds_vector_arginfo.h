@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 4450b815163ae7a373d6da59c553fd3f9dd6c294 */
+ * Stub hash: 3ad8b294d6f44d056665ec3e33ad4440d4b92ea3 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -17,10 +17,15 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_shrinkToFit, 0, 0, IS_VOID, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_reserve, 0, 1, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, capacity, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_Teds_Vector_clear arginfo_class_Teds_Vector_shrinkToFit
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_setSize, 0, 1, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, size, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, value, IS_MIXED, 0, "null")
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector___serialize, 0, 0, IS_ARRAY, 0)
@@ -69,7 +74,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_offsetUnset, 0
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_class_Teds_Vector_indexOf, 0, 1, MAY_BE_LONG|MAY_BE_FALSE)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_indexOf, 0, 1, IS_LONG, 1)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
@@ -93,6 +98,7 @@ ZEND_METHOD(Teds_Vector, getIterator);
 ZEND_METHOD(Teds_Vector, count);
 ZEND_METHOD(Teds_Vector, capacity);
 ZEND_METHOD(Teds_Vector, shrinkToFit);
+ZEND_METHOD(Teds_Vector, reserve);
 ZEND_METHOD(Teds_Vector, clear);
 ZEND_METHOD(Teds_Vector, setSize);
 ZEND_METHOD(Teds_Vector, __serialize);
@@ -120,6 +126,7 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, count, arginfo_class_Teds_Vector_count, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, capacity, arginfo_class_Teds_Vector_capacity, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, shrinkToFit, arginfo_class_Teds_Vector_shrinkToFit, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, reserve, arginfo_class_Teds_Vector_reserve, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, clear, arginfo_class_Teds_Vector_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, setSize, arginfo_class_Teds_Vector_setSize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, __serialize, arginfo_class_Teds_Vector___serialize, ZEND_ACC_PUBLIC)
