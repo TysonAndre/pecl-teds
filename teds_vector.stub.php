@@ -52,8 +52,8 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
 
     public function toArray(): array {}
     // Strictly typed, unlike offsetGet/offsetSet
-    public function valueAt(int $offset): mixed {}
-    public function setValueAt(int $offset, mixed $value): void {}
+    public function get(int $offset): mixed {}
+    public function set(int $offset, mixed $value): void {}
 
     /**
      * Returns the value at (int)$offset.

@@ -17,7 +17,7 @@ final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSe
 
     public function toArray(): array {}
     // Strictly typed, unlike offsetGet
-    public function valueAt(int $offset): mixed {}
+    public function get(int $offset): mixed {}
     // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
     public function offsetExists(mixed $offset): bool {}

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 3ad8b294d6f44d056665ec3e33ad4440d4b92ea3 */
+ * Stub hash: ada5aee0889a7274a912c872ba674bb7053a89b7 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -48,11 +48,11 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Vector_toArray arginfo_class_Teds_Vector___serialize
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_valueAt, 0, 1, IS_MIXED, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_get, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_setValueAt, 0, 2, IS_VOID, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_set, 0, 2, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
@@ -107,8 +107,8 @@ ZEND_METHOD(Teds_Vector, __set_state);
 ZEND_METHOD(Teds_Vector, push);
 ZEND_METHOD(Teds_Vector, pop);
 ZEND_METHOD(Teds_Vector, toArray);
-ZEND_METHOD(Teds_Vector, valueAt);
-ZEND_METHOD(Teds_Vector, setValueAt);
+ZEND_METHOD(Teds_Vector, get);
+ZEND_METHOD(Teds_Vector, set);
 ZEND_METHOD(Teds_Vector, offsetGet);
 ZEND_METHOD(Teds_Vector, offsetExists);
 ZEND_METHOD(Teds_Vector, offsetSet);
@@ -135,8 +135,8 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, push, arginfo_class_Teds_Vector_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, pop, arginfo_class_Teds_Vector_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, toArray, arginfo_class_Teds_Vector_toArray, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Vector, valueAt, arginfo_class_Teds_Vector_valueAt, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Vector, setValueAt, arginfo_class_Teds_Vector_setValueAt, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, get, arginfo_class_Teds_Vector_get, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, set, arginfo_class_Teds_Vector_set, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetGet, arginfo_class_Teds_Vector_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetExists, arginfo_class_Teds_Vector_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetSet, arginfo_class_Teds_Vector_offsetSet, ZEND_ACC_PUBLIC)

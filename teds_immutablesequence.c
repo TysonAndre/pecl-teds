@@ -189,7 +189,9 @@ static void teds_cached_entries_init_from_traversable(teds_cached_entries *array
  */
 static void teds_immutablesequence_copy_range(teds_cached_entries *array, size_t offset, zval *begin, zval *end)
 {
-	ZEND_ASSERT(array->size - offset >= end - begin);
+	ZEND_ASSERT(offset <= array->size);
+	ZEND_ASSERT(begin <= end);
+	ZEND_ASSERT(array->size - offset >= (size_t)(end - begin));
 
 	zval *to = &array->entries[offset];
 	while (begin != end) {
@@ -390,7 +392,7 @@ static int teds_immutablesequence_it_valid(zend_object_iterator *iter)
 	teds_immutablesequence_it     *iterator = (teds_immutablesequence_it*)iter;
 	teds_immutablesequence_object *object   = Z_IMMUTABLESEQUENCE_P(&iter->data);
 
-	if (iterator->current >= 0 && iterator->current < object->array.size) {
+	if (iterator->current >= 0 && ((zend_ulong) iterator->current) < object->array.size) {
 		return SUCCESS;
 	}
 
@@ -616,7 +618,7 @@ static zend_always_inline void teds_immutablesequence_get_value_at_offset(zval *
 	RETURN_COPY(&intern->array.entries[offset]);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, valueAt)
+PHP_METHOD(Teds_ImmutableSequence, get)
 {
 	zend_long offset;
 	ZEND_PARSE_PARAMETERS_START(1, 1)

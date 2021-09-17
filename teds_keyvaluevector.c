@@ -32,6 +32,10 @@
 zend_object_handlers teds_handler_KeyValueVector;
 zend_class_entry *teds_ce_KeyValueVector;
 
+/* Though rare, it is possible to have 64-bit zend_longs and a 32-bit size_t. */
+#define MAX_ZVAL_PAIR_COUNT ((SIZE_MAX / sizeof(zval)) - 1)
+#define MAX_VALID_OFFSET ((size_t)(MAX_ZVAL_PAIR_COUNT > ZEND_LONG_MAX ? ZEND_LONG_MAX : MAX_ZVAL_PAIR_COUNT))
+
 /** TODO: Does C guarantee that this has the same memory layout as an array of zvals? */
 typedef struct _zval_pair {
 	zval key;
@@ -104,8 +108,9 @@ static bool teds_keyvaluevector_entries_uninitialized(teds_keyvaluevector_entrie
 	return false;
 }
 
-static void teds_keyvaluevector_raise_capacity(teds_keyvaluevector *intern, const zend_long new_capacity) {
+static void teds_keyvaluevector_raise_capacity(teds_keyvaluevector *intern, const size_t new_capacity) {
 	ZEND_ASSERT(new_capacity > intern->array.capacity);
+	ZEND_ASSERT(new_capacity <= MAX_VALID_OFFSET + 1);
 	if (intern->array.capacity == 0) {
 		intern->array.entries = safe_emalloc(new_capacity, sizeof(zval_pair), 0);
 	} else {
@@ -205,7 +210,7 @@ static void teds_keyvaluevector_entries_init_from_traversable(teds_keyvaluevecto
 	}
 
 	while (funcs->valid(iter) == SUCCESS) {
-		if (EG(exception)) {
+		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
 		zval *value = funcs->get_current_data(iter);
@@ -262,7 +267,9 @@ static void teds_keyvaluevector_entries_init_from_traversable(teds_keyvaluevecto
  */
 static void teds_keyvaluevector_copy_range(teds_keyvaluevector_entries *array, size_t offset, zval_pair *begin, zval_pair *end)
 {
-	ZEND_ASSERT(array->size - offset >= end - begin);
+	ZEND_ASSERT(offset <= array->size);
+	ZEND_ASSERT(begin <= end);
+	ZEND_ASSERT(array->size - offset >= (size_t)(end - begin));
 
 	zval_pair *to = &array->entries[offset];
 	while (begin != end) {
@@ -456,21 +463,25 @@ PHP_METHOD(Teds_KeyValueVector, setSize)
 		Z_PARAM_LONG(size)
 	ZEND_PARSE_PARAMETERS_END();
 
-	if (size < 0) {
-		zend_argument_value_error(1, "must be greater than or equal to 0");
+	if (UNEXPECTED((zend_ulong)size > MAX_VALID_OFFSET + 1)) {
+		if (size < 0) {
+			zend_argument_value_error(1, "must be greater than or equal to 0");
+		} else {
+			zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "exceeded max valid offset");
+		}
 		RETURN_THROWS();
 	}
 
 	teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(ZEND_THIS);
 	const size_t old_size = intern->array.size;
-	if (size > old_size) {
+	if ((zend_ulong) size > old_size) {
 		/* Raise the capacity as needed and fill the space with nulls */
-		if (size > intern->array.capacity) {
+		if ((zend_ulong) size > intern->array.capacity) {
 			teds_keyvaluevector_raise_capacity(intern, size);
 		}
 		intern->array.size = size;
 		zval_pair * const entries = intern->array.entries;
-		for (size_t i = old_size; i < size; i++) {
+		for (zend_long i = old_size; i < size; i++) {
 			ZVAL_NULL(&entries[i].key);
 			ZVAL_NULL(&entries[i].value);
 		}
@@ -489,10 +500,10 @@ PHP_METHOD(Teds_KeyValueVector, setSize)
 		teds_keyvaluevector_entries_set_empty_list(&intern->array);
 	} else {
 		old_copy = teds_zval_copy_range((const zval *)&old_entries[size], entries_to_remove * 2);
-
 		intern->array.size = size;
 
-		if (size * 4 < intern->array.capacity) {
+		/* If only a quarter of the reserved space is used, then shrink the capacity but leave some room to grow. */
+		if ((zend_ulong) size < (intern->array.capacity >> 2)) {
 			const size_t size = old_size - 1;
 			const size_t capacity = size > 2 ? size * 2 : 4;
 			if (capacity < intern->array.capacity) {
@@ -561,7 +572,7 @@ static int teds_keyvaluevector_it_valid(zend_object_iterator *iter)
 	teds_keyvaluevector_it     *iterator = (teds_keyvaluevector_it*)iter;
 	teds_keyvaluevector *object   = Z_KEYVALUEVECTOR_P(&iter->data);
 
-	if (iterator->current >= 0 && iterator->current < object->array.size) {
+	if (iterator->current >= 0 && ((zend_ulong) iterator->current) < object->array.size) {
 		return SUCCESS;
 	}
 
