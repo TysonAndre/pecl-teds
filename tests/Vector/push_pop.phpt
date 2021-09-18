@@ -36,6 +36,12 @@ echo "After shrinkToFit\n";
 $it->shrinkToFit();
 echo json_encode($it), "\n";
 printf("count=%d capacity=%d\n", count($it), $it->capacity());
+echo "After pushing variadic args\n";
+$it->push(strtoupper('test'), 'other', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+echo json_encode($it), "\n";
+printf("count=%d capacity=%d\n", count($it), $it->capacity());
+$it->push('a', 'b');
+echo json_encode($it), "\n";
 
 ?>
 --EXPECT--
@@ -60,3 +66,7 @@ count=0 capacity=4
 After shrinkToFit
 []
 count=0 capacity=0
+After pushing variadic args
+["TEST","other",1,2,3,4,5,6,7,8,9,10]
+count=12 capacity=18
+["TEST","other",1,2,3,4,5,6,7,8,9,10,"a","b"]

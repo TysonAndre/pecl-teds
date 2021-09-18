@@ -1199,15 +1199,44 @@ static zend_always_inline void teds_vector_push(teds_vector *intern, zval *value
 	intern->array.size++;
 }
 
+/* Based on array_push */
 PHP_METHOD(Teds_Vector, push)
 {
-	zval *value;
+	const zval *args;
+	uint32_t argc;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_START(0, -1)
+		Z_PARAM_VARIADIC('+', args, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_vector_push(Z_VECTOR_P(ZEND_THIS), value);
+	if (argc == 0) {
+		return;
+	}
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	const size_t old_size = intern->array.size;
+	const size_t new_size = old_size + argc;
+	/* The compiler will type check but eliminate dead code on platforms where size_t is 32 bits (4 bytes) */
+	if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_size > MAX_VALID_OFFSET + 1 || new_size < old_size)) {
+		zend_throw_exception_ex(spl_ce_UnexpectedValueException, 0, "exceeded max valid offset");
+		RETURN_THROWS();
+	}
+	const size_t old_capacity = intern->array.capacity;
+	if (new_size > old_capacity) {
+		size_t new_capacity = old_size ? old_size * 2 : 4;
+		if (UNEXPECTED(new_size > new_capacity)) {
+			new_capacity = new_size + (new_size >> 1);
+		}
+		if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_capacity > MAX_VALID_OFFSET + 1)) {
+			new_capacity = MAX_VALID_OFFSET + 1;
+		}
+		teds_vector_raise_capacity(intern, new_capacity);
+	}
+	zval *entries = intern->array.entries;
+
+	for (uint32_t i = 0; i < argc; i++) {
+		ZVAL_COPY(&entries[old_size + i], &args[i]);
+	}
+	intern->array.size = new_size;
 }
 
 PHP_METHOD(Teds_Vector, pop)

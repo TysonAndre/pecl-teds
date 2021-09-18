@@ -26,6 +26,7 @@
 * Backwards incompatible change: Change `valueAt`/`setValueAt` to get/set in Deque, Vector, and ImmutableSequence
 * Add optional parameter `$value = null` to `Vector::setSize()` to allow overriding the value used for padding when lengthening an array.
 * Change exception handling for sizes/capacities that are definitely too large to allocate.
+* Make Vector::push() variadic and accept 0 or more arguments, like `array_push` does.
  </notes>
  <contents>
   <dir name="/">
