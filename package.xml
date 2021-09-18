@@ -27,6 +27,7 @@
 * Add optional parameter `$value = null` to `Vector::setSize()` to allow overriding the value used for padding when lengthening an array.
 * Change exception handling for sizes/capacities that are definitely too large to allocate.
 * Make Vector::push() variadic and accept 0 or more arguments, like `array_push` does.
+* Reclaim unused memory in Deque when roughly a quarter or less of the internal buffer is used.
  </notes>
  <contents>
   <dir name="/">
@@ -71,6 +72,8 @@
     <file name="Deque/iterator.phpt" role="test" />
     <file name="Deque/offsetGet.phpt" role="test" />
     <file name="Deque/popFront.phpt" role="test" />
+    <file name="Deque/popMany.phpt" role="test" />
+    <file name="Deque/pushFront.phpt" role="test" />
     <file name="Deque/push_pop.phpt" role="test" />
     <file name="Deque/push_pop_both.phpt" role="test" />
     <file name="Deque/reinit_forbidden.phpt" role="test" />

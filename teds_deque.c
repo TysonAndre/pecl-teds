@@ -78,7 +78,8 @@ typedef struct _teds_deque_it {
 } teds_deque_it;
 
 static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *value);
-static void teds_deque_raise_capacity(teds_deque *intern, const zend_long new_capacity);
+static void teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity);
+static void teds_deque_shrink_capacity(teds_deque_entries *array, const size_t new_capacity);
 
 static teds_deque *teds_deque_from_object(zend_object *obj)
 {
@@ -772,7 +773,7 @@ static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *va
 
 	if (old_size >= old_capacity) {
 		ZEND_ASSERT(old_size == old_capacity);
-		teds_deque_raise_capacity(intern, old_size ? old_size * 2 : 4);
+		teds_deque_raise_capacity(&intern->array, old_size > 2 ? old_size * 2 : 4);
 	}
 	intern->array.size++;
 	zval *dest = teds_deque_get_entry_at_offset(&intern->array, old_size);
@@ -861,28 +862,58 @@ PHP_METHOD(Teds_Deque, offsetSet)
 	teds_deque_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 }
 
-static void teds_deque_raise_capacity(teds_deque *intern, const zend_long new_capacity) {
-	const size_t old_capacity = intern->array.capacity;
-	ZEND_ASSERT(new_capacity > 0);
-	ZEND_ASSERT((zend_ulong) new_capacity > old_capacity);
-	if (teds_deque_entries_empty_capacity(&intern->array)) {
-		intern->array.circular_buffer = safe_emalloc(new_capacity, sizeof(zval), 0);
-	} else if (intern->array.offset + intern->array.size <= old_capacity) {
-		intern->array.circular_buffer = safe_erealloc(intern->array.circular_buffer, new_capacity, sizeof(zval), 0);
+/* Copies all entries in the circular buffer in source starting at offset to *destination. The caller sets the new_capacity after calling this. */
+static void teds_deque_move_circular_buffer_to_new_buffer_of_capacity(teds_deque_entries *array, const size_t new_capacity)
+{
+	zval *const circular_buffer = array->circular_buffer;
+	const size_t size = array->size;
+	const size_t first_len = array->capacity - array->offset;
+	ZEND_ASSERT(new_capacity >= size);
+	ZEND_ASSERT(array->capacity >= size);
+	zval *new_entries = safe_emalloc(new_capacity, sizeof(zval), 0);
+	/* There are 1 or 2 continuous segments of the circular buffer to copy to the start of the new circular buffer */
+	if (size <= first_len) {
+		memcpy(new_entries, circular_buffer + array->offset, size * sizeof(zval));
 	} else {
-		zval *const circular_buffer = intern->array.circular_buffer;
-		const size_t size = intern->array.size;
-		const size_t first_len = intern->array.capacity - intern->array.offset;
-		zval *new_entries = safe_emalloc(new_capacity, sizeof(zval), 0);
-		ZEND_ASSERT(first_len < size);
-		memcpy(new_entries, circular_buffer + intern->array.offset, first_len * sizeof(zval));
+		memcpy(new_entries, circular_buffer + array->offset, first_len * sizeof(zval));
 		memcpy(new_entries + first_len, circular_buffer, (size - first_len) * sizeof(zval));
-		efree(circular_buffer);
-		intern->array.circular_buffer = new_entries;
-		intern->array.offset = 0;
 	}
-	intern->array.capacity = new_capacity;
+	efree(circular_buffer);
+	array->circular_buffer = new_entries;
+	array->offset = 0;
 }
+
+static void teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity)
+{
+	const size_t old_capacity = array->capacity;
+	ZEND_ASSERT(new_capacity > 0);
+	ZEND_ASSERT(new_capacity > old_capacity);
+	if (teds_deque_entries_empty_capacity(array)) {
+		array->circular_buffer = safe_emalloc(new_capacity, sizeof(zval), 0);
+	} else if (array->offset + array->size <= old_capacity) {
+		array->circular_buffer = safe_erealloc(array->circular_buffer, new_capacity, sizeof(zval), 0);
+	} else {
+		teds_deque_move_circular_buffer_to_new_buffer_of_capacity(array, new_capacity);
+	}
+	array->capacity = new_capacity;
+}
+
+static void teds_deque_shrink_capacity(teds_deque_entries *array, size_t new_capacity)
+{
+	ZEND_ASSERT(new_capacity < array->capacity);
+	/* Callers leave some spare capacity for future additions */
+	ZEND_ASSERT(new_capacity > 0);
+	ZEND_ASSERT(!teds_deque_entries_empty_capacity(array));
+
+	if (array->offset + array->size < new_capacity) {
+		/* Shrink the array, probably without copying any data */
+		array->circular_buffer = safe_erealloc(array->circular_buffer, new_capacity, sizeof(zval), 0);
+	} else {
+		teds_deque_move_circular_buffer_to_new_buffer_of_capacity(array, new_capacity);
+	}
+	array->capacity = new_capacity;
+}
+
 
 PHP_METHOD(Teds_Deque, pushBack)
 {
@@ -909,8 +940,8 @@ PHP_METHOD(Teds_Deque, pushFront)
 
 	if (old_size >= old_capacity) {
 		ZEND_ASSERT(old_size == old_capacity);
-		const size_t new_capacity = old_size ? old_size * 2 : 4;
-		teds_deque_raise_capacity(intern, new_capacity);
+		const size_t new_capacity = old_size > 2 ? old_size * 2 : 4;
+		teds_deque_raise_capacity(&intern->array, new_capacity);
 	}
 	if (intern->array.offset == 0) {
 		intern->array.offset = intern->array.capacity - 1;
@@ -936,7 +967,12 @@ PHP_METHOD(Teds_Deque, popBack)
 
 	zval *val = teds_deque_get_entry_at_offset(&intern->array, old_size - 1);
 	intern->array.size--;
-	RETURN_COPY_VALUE(val);
+	RETVAL_COPY_VALUE(val);
+
+	const size_t old_capacity = intern->array.capacity;
+	if (old_size <= (old_capacity >> 2) && old_capacity > 4) {
+		teds_deque_shrink_capacity(&intern->array, old_size >= 2 ? old_size * 2 : 4);
+	}
 }
 
 PHP_METHOD(Teds_Deque, popFront)
@@ -953,11 +989,16 @@ PHP_METHOD(Teds_Deque, popFront)
 
 	intern->array.size--;
 	const size_t old_offset = intern->array.offset;
+	const size_t old_capacity = intern->array.capacity;
 	intern->array.offset++;
-	if (intern->array.offset >= intern->array.capacity) {
+	if (intern->array.offset >= old_capacity) {
 		intern->array.offset = 0;
 	}
-	RETURN_COPY_VALUE(&intern->array.circular_buffer[old_offset]);
+	RETVAL_COPY_VALUE(&intern->array.circular_buffer[old_offset]);
+
+	if (old_size <= (old_capacity >> 2) && old_capacity > 4) {
+		teds_deque_shrink_capacity(&intern->array, old_size >= 2 ? old_size * 2: 4);
+	}
 }
 
 PHP_METHOD(Teds_Deque, offsetUnset)
