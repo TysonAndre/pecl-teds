@@ -1,5 +1,5 @@
 --TEST--
-Teds\Deque offsetSet/setValueAt
+Teds\Deque offsetSet/set
 --FILE--
 <?php
 
@@ -15,17 +15,17 @@ function expect_throws(Closure $cb): void {
 echo "Test empty deque\n";
 $it = new Teds\Deque([]);
 expect_throws(fn() => $it->offsetSet(0, strtoupper('value')));
-expect_throws(fn() => $it->setValueAt(0, strtoupper('value')));
+expect_throws(fn() => $it->set(0, strtoupper('value')));
 
 echo "Test short deque\n";
 $str = 'Test short deque';
 $it = new Teds\Deque(explode(' ', $str));
-$it->setValueAt(0, 'new');
+$it->set(0, 'new');
 $it->offsetSet(2, strtoupper('test'));
 echo json_encode($it), "\n";
-expect_throws(fn() => $it->setValueAt(-1, strtoupper('value')));
-expect_throws(fn() => $it->setValueAt(3, 'end'));
-expect_throws(fn() => $it->setValueAt(PHP_INT_MAX, 'end'));
+expect_throws(fn() => $it->set(-1, strtoupper('value')));
+expect_throws(fn() => $it->set(3, 'end'));
+expect_throws(fn() => $it->set(PHP_INT_MAX, 'end'));
 
 ?>
 --EXPECT--

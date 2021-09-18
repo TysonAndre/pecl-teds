@@ -66,6 +66,9 @@ function bench_spl_stack(int $n, int $iterations) {
         $startMemory = memory_get_usage();
         $values = new SplStack();
         for ($i = 0; $i < $n; $i++) {
+            // XXX: For SplStack, $values[] = $value is unexpectedly twice as slow as push($value)
+            // due to the lack of custom handlers and falling back to the default ArrayAccess->offsetSet call.
+            // This could probably be improved.
             $values->push($i);
         }
         $startReadTime = hrtime(true);

@@ -13,8 +13,8 @@
  <date>2021-09-16</date>
  <time>16:00:00</time>
  <version>
-  <release>0.2.1</release>
-  <api>0.2.1</api>
+  <release>0.3.0dev</release>
+  <api>0.3.0dev</api>
  </version>
  <stability>
   <release>alpha</release>
@@ -22,8 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Support `$vector[] = $value` and `$deque[] = $value` assignments to append to Vector/Deque.
-* Add map() and filter() functions to Vector.
+* Backwards incompatible change: Change `Vector::indexOf` return type from `int|false` to `?int` (and all other `indexOf*` methods in other data structures)
+* Backwards incompatible change: Change `valueAt`/`setValueAt` to get/set in Deque, Vector, and ImmutableSequence
+* Add optional parameter `$value = null` to `Vector::setSize()` to allow overriding the value used for padding when lengthening an array.
+* Change exception handling for sizes/capacities that are definitely too large to allocate.
  </notes>
  <contents>
   <dir name="/">
@@ -131,8 +133,10 @@
     <file name="Vector/offsetGet.phpt" role="test" />
     <file name="Vector/push_pop.phpt" role="test" />
     <file name="Vector/reinit_forbidden.phpt" role="test" />
+    <file name="Vector/reserve.phpt" role="test" />
     <file name="Vector/serialization.phpt" role="test" />
     <file name="Vector/setSize.phpt" role="test" />
+    <file name="Vector/setSize_default.phpt" role="test" />
     <file name="Vector/setValueAt.phpt" role="test" />
     <file name="Vector/set_state.phpt" role="test" />
     <file name="Vector/shrink_capacity.phpt" role="test" />
@@ -167,6 +171,21 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <date>2021-09-16</date>
+  <time>16:00:00</time>
+  <version>
+   <release>0.2.1</release>
+   <api>0.2.1</api>
+  </version>
+  <stability>
+   <release>alpha</release>
+   <api>alpha</api>
+  </stability>
+  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+  <notes>
+* Support `$vector[] = $value` and `$deque[] = $value` assignments to append to Vector/Deque.
+* Add map() and filter() functions to Vector.
+  </notes>
   <release>
    <date>2021-09-12</date>
    <time>16:00:00</time>

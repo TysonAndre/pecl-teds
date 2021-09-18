@@ -40,9 +40,8 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
 
     public function toArray(): array {}
     // Strictly typed, unlike offsetGet/offsetSet
-    public function valueAt(int $offset): mixed {}
-    public function setValueAt(int $offset, mixed $value): void {}
-    // TODO public function setValueAt(int $offset, mixed $value): mixed {}
+    public function get(int $offset): mixed {}
+    public function set(int $offset, mixed $value): void {}
     // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
     public function offsetExists(mixed $offset): bool {}
@@ -50,7 +49,7 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
     // Throws
     public function offsetUnset(mixed $offset): void {}
 
-    public function indexOf(mixed $value): int|false {}
+    public function indexOf(mixed $value): ?int {}
     public function contains(mixed $value): bool {}
 
     public function jsonSerialize(): array {}

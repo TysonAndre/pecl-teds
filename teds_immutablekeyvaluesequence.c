@@ -214,7 +214,9 @@ static void teds_immutablekeyvaluesequence_entries_init_from_traversable(teds_im
  */
 static void teds_immutablekeyvaluesequence_copy_range(teds_immutablekeyvaluesequence_entries *array, size_t offset, zval_pair *begin, zval_pair *end)
 {
-	ZEND_ASSERT(array->size - offset >= end - begin);
+	ZEND_ASSERT(offset <= array->size);
+	ZEND_ASSERT(begin <= end);
+	ZEND_ASSERT(array->size - offset >= (size_t)(end - begin));
 
 	zval_pair *to = &array->entries[offset];
 	while (begin != end) {
@@ -420,7 +422,7 @@ static int teds_immutablekeyvaluesequence_it_valid(zend_object_iterator *iter)
 	teds_immutablekeyvaluesequence_it     *iterator = (teds_immutablekeyvaluesequence_it*)iter;
 	teds_immutablekeyvaluesequence *object   = Z_IMMUTABLEKEYVALUESEQUENCE_P(&iter->data);
 
-	if (iterator->current >= 0 && iterator->current < object->array.size) {
+	if (iterator->current >= 0 && ((zend_ulong) iterator->current) < object->array.size) {
 		return SUCCESS;
 	}
 
@@ -833,7 +835,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, indexOfKey)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_ImmutableKeyValueSequence, indexOfValue)
@@ -851,7 +853,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, indexOfValue)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_ImmutableKeyValueSequence, containsKey)

@@ -25,6 +25,7 @@
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
 #include "ext/json/php_json.h"
+#include "teds_util.h"
 
 #include <stdbool.h>
 
@@ -468,7 +469,7 @@ static int teds_deque_it_valid(zend_object_iterator *iter)
 	const teds_deque_it *iterator = (teds_deque_it*)iter;
 	const teds_deque *object = Z_DEQUE_P(&iter->data);
 
-	if (iterator->current >= 0 && iterator->current < object->array.size) {
+	if (iterator->current >= 0 && (zend_ulong) iterator->current < object->array.size) {
 		return SUCCESS;
 	}
 
@@ -687,7 +688,7 @@ static zend_always_inline void teds_deque_get_value_at_offset(zval *return_value
 	RETURN_COPY(teds_deque_get_entry_at_offset(&intern->array, offset));
 }
 
-PHP_METHOD(Teds_Deque, valueAt)
+PHP_METHOD(Teds_Deque, get)
 {
 	zend_long offset;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -740,7 +741,7 @@ static zval *teds_deque_read_dimension(zend_object *object, zval *offset_zv, int
 
 	const teds_deque *intern = teds_deque_from_object(object);
 
-	if (offset < 0 || offset >= intern->array.size) {
+	if (offset < 0 || (zend_ulong) offset >= intern->array.size) {
 		if (type != BP_VAR_IS) {
 			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		}
@@ -789,7 +790,7 @@ static void teds_deque_write_dimension(zend_object *object, zval *offset_zv, zva
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	const teds_deque *intern = teds_deque_from_object(object);
-	if (offset < 0 || offset >= intern->array.size) {
+	if (offset < 0 || (zend_ulong) offset >= intern->array.size) {
 		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
 		return;
 	}
@@ -812,7 +813,7 @@ PHP_METHOD(Teds_Deque, indexOf)
 			RETURN_LONG(i);
 		}
 	}
-	RETURN_FALSE;
+	RETURN_NULL();
 }
 
 PHP_METHOD(Teds_Deque, contains)
@@ -833,7 +834,7 @@ PHP_METHOD(Teds_Deque, contains)
 	RETURN_FALSE;
 }
 
-PHP_METHOD(Teds_Deque, setValueAt)
+PHP_METHOD(Teds_Deque, set)
 {
 	zend_long offset;
 	zval *value;
@@ -862,7 +863,8 @@ PHP_METHOD(Teds_Deque, offsetSet)
 
 static void teds_deque_raise_capacity(teds_deque *intern, const zend_long new_capacity) {
 	const size_t old_capacity = intern->array.capacity;
-	ZEND_ASSERT(new_capacity > old_capacity);
+	ZEND_ASSERT(new_capacity > 0);
+	ZEND_ASSERT((zend_ulong) new_capacity > old_capacity);
 	if (teds_deque_entries_empty_capacity(&intern->array)) {
 		intern->array.circular_buffer = safe_emalloc(new_capacity, sizeof(zval), 0);
 	} else if (intern->array.offset + intern->array.size <= old_capacity) {

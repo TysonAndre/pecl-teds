@@ -1,5 +1,5 @@
 --TEST--
-Teds\ImmutableSequence offsetGet/valueAt
+Teds\ImmutableSequence offsetGet/get
 --FILE--
 <?php
 
@@ -14,7 +14,7 @@ function expect_throws(Closure $cb): void {
 expect_throws(fn() => (new ReflectionClass(Teds\ImmutableSequence::class))->newInstanceWithoutConstructor());
 $it = new Teds\ImmutableSequence(['first' => new stdClass()]);
 var_dump($it->offsetGet(0));
-var_dump($it->valueAt(0));
+var_dump($it->get(0));
 expect_throws(fn() => $it->offsetSet(0,'x'));
 expect_throws(fn() => $it->offsetUnset(0));
 var_dump($it->offsetGet('0'));
@@ -23,20 +23,20 @@ var_dump($it->offsetExists(1));
 var_dump($it->offsetExists('1'));
 var_dump($it->offsetExists(PHP_INT_MAX));
 var_dump($it->offsetExists(PHP_INT_MIN));
-expect_throws(fn() => $it->valueAt(1));
-expect_throws(fn() => $it->valueAt(-1));
+expect_throws(fn() => $it->get(1));
+expect_throws(fn() => $it->get(-1));
 echo "Invalid offsetGet calls\n";
 expect_throws(fn() => $it->offsetGet(PHP_INT_MAX));
 expect_throws(fn() => $it->offsetGet(PHP_INT_MIN));
 expect_throws(fn() => $it->offsetGet(1));
-expect_throws(fn() => $it->valueAt(PHP_INT_MAX));
-expect_throws(fn() => $it->valueAt(PHP_INT_MIN));
-expect_throws(fn() => $it->valueAt(1));
-expect_throws(fn() => $it->valueAt(-1));
+expect_throws(fn() => $it->get(PHP_INT_MAX));
+expect_throws(fn() => $it->get(PHP_INT_MIN));
+expect_throws(fn() => $it->get(1));
+expect_throws(fn() => $it->get(-1));
 expect_throws(fn() => $it->offsetGet(1));
 expect_throws(fn() => $it->offsetGet('1'));
 expect_throws(fn() => $it->offsetGet('invalid'));
-expect_throws(fn() => $it->valueAt('invalid'));
+expect_throws(fn() => $it->get('invalid'));
 expect_throws(fn() => $it[['invalid']]);
 expect_throws(fn() => $it->offsetUnset(PHP_INT_MAX));
 expect_throws(fn() => $it->offsetSet(PHP_INT_MAX,'x'));
@@ -71,7 +71,7 @@ Caught OutOfBoundsException: Index out of range
 Caught OutOfBoundsException: Index out of range
 Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
-Caught TypeError: Teds\ImmutableSequence::valueAt(): Argument #1 ($offset) must be of type int, string given
+Caught TypeError: Teds\ImmutableSequence::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
 Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable
 Caught RuntimeException: ImmutableSequence does not support offsetSet - it is immutable

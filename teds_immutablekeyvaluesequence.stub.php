@@ -25,8 +25,8 @@ final class ImmutableKeyValueSequence implements \IteratorAggregate, \Countable,
     public function keyAt(int $offset): mixed {}
     public function valueAt(int $offset): mixed {}
 
-    public function indexOfKey(mixed $key): int|false {}
-    public function indexOfValue(mixed $value): int|false {}
+    public function indexOfKey(mixed $key): ?int {}
+    public function indexOfValue(mixed $value): ?int {}
     public function containsKey(mixed $key): bool {}
     public function containsValue(mixed $value): bool {}
 
