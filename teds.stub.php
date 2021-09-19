@@ -55,5 +55,6 @@ function fold(iterable $iterable, callable $callback, mixed $initial): mixed {}
 
 /**
  * Returns the first value for which $callback($value) is truthy.
+ * On failure, returns $default.
  */
 function find(iterable $iterable, callable $callback, mixed $default = null): mixed {}

@@ -1,5 +1,6 @@
 <?php
 
+use Teds\Deque;
 use Teds\Vector;
 
 function bench_array(int $n, int $iterations) {
@@ -54,6 +55,33 @@ function bench_vector(int $n, int $iterations) {
     $totalTime = ($endTime - $startTime) / 1000000000;
     $totalReadTimeSeconds = $totalReadTime / 1000000000;
     printf("Appending to Vector:        n=%8d iterations=%8d memory=%8d bytes, create+destroy time=%.3f read time = %.3f result=%d\n",
+        $n, $iterations, $endMemory - $startMemory, $totalTime - $totalReadTimeSeconds, $totalReadTimeSeconds, $total);
+}
+function bench_queue(int $n, int $iterations) {
+    $startTime = hrtime(true);
+    $totalReadTime = 0.0;
+    $total = 0;
+    for ($j = 0; $j < $iterations; $j++) {
+        $startMemory = memory_get_usage();
+        $values = new Deque();
+        for ($i = 0; $i < $n; $i++) {
+            $values[] = $i;
+        }
+
+        $startReadTime = hrtime(true);
+        for ($i = 0; $i < $n; $i++) {
+            $total += $values[$i];
+        }
+        $endReadTime = hrtime(true);
+        $totalReadTime += $endReadTime - $startReadTime;
+
+        $endMemory = memory_get_usage();
+        unset($values);
+    }
+    $endTime = hrtime(true);
+    $totalTime = ($endTime - $startTime) / 1000000000;
+    $totalReadTimeSeconds = $totalReadTime / 1000000000;
+    printf("Appending to Deque:         n=%8d iterations=%8d memory=%8d bytes, create+destroy time=%.3f read time = %.3f result=%d\n",
         $n, $iterations, $endMemory - $startMemory, $totalTime - $totalReadTimeSeconds, $totalReadTimeSeconds, $total);
 }
 // SplStack is a subclass of SplDoublyLinkedList, so it is a linked list that takes more memory than needed.
@@ -135,6 +163,7 @@ printf(
 foreach ($sizes as [$n, $iterations]) {
     bench_array($n, $iterations);
     bench_vector($n, $iterations);
+    bench_queue($n, $iterations);
     bench_spl_stack($n, $iterations);
     bench_spl_fixed_array($n, $iterations);
     echo "\n";
