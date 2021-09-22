@@ -65,16 +65,11 @@ static void DEBUG_ASSERT_CONSISTENT_DEQUE(const teds_deque_entries *array) {
 	ZEND_ASSERT(array->offset < capacity || capacity == 0);
 	ZEND_ASSERT(array->mask == 0 || (array->circular_buffer != NULL && array->circular_buffer != empty_entry_list));
 	ZEND_ASSERT(teds_is_valid_capacity(capacity));
-	ZEND_ASSERT(array->circular_buffer != NULL || (array->size == 0 && array->offset == 0 || capacity == 0));
+	ZEND_ASSERT(array->circular_buffer != NULL || ((array->size == 0 && array->offset == 0) || capacity == 0));
 }
 #else
 #define DEBUG_ASSERT_CONSISTENT_DEQUE(array) do {} while(0)
 #endif
-
-static zend_always_inline zval* teds_deque_get_offset_entries(const teds_deque_entries *array) {
-	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
-	return &array->circular_buffer[array->offset];
-}
 
 static zend_always_inline zval* teds_deque_get_entry_at_offset(const teds_deque_entries *array, size_t offset) {
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
@@ -432,7 +427,16 @@ PHP_METHOD(Teds_Deque, count)
 	RETURN_LONG(intern->array.size);
 }
 
-/* Get the capacity of this deque */
+/* Returns true if there are 0 elements in this Deque. */
+PHP_METHOD(Teds_Deque, isEmpty)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
+	RETURN_BOOL(intern->array.size == 0);
+}
+
+/* Get the capacity of this deque. Internal api meant for unit tests of Teds\Deque itself.. */
 PHP_METHOD(Teds_Deque, capacity)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -978,7 +982,7 @@ static void teds_deque_shrink_capacity(teds_deque_entries *array, size_t new_cap
 }
 
 
-PHP_METHOD(Teds_Deque, pushBack)
+PHP_METHOD(Teds_Deque, push)
 {
 	zval *value;
 
@@ -989,7 +993,7 @@ PHP_METHOD(Teds_Deque, pushBack)
 	teds_deque_push_back(Z_DEQUE_P(ZEND_THIS), value);
 }
 
-PHP_METHOD(Teds_Deque, pushFront)
+PHP_METHOD(Teds_Deque, unshift)
 {
 	zval *value;
 
@@ -1022,26 +1026,42 @@ static zend_always_inline void teds_deque_try_shrink_capacity(teds_deque *intern
 	}
 }
 
-PHP_METHOD(Teds_Deque, popBack)
+PHP_METHOD(Teds_Deque, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
 	const size_t old_size = intern->array.size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot popBack from empty deque", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty deque", 0);
 		RETURN_THROWS();
 	}
 
 	zval *val = teds_deque_get_entry_at_offset(&intern->array, old_size - 1);
 	intern->array.size--;
+	/* This is being removed. Use a macro that doesn't change the total reference count. */
 	RETVAL_COPY_VALUE(val);
 
 	ZEND_ASSERT(intern->array.mask >= TEDS_DEQUE_MIN_MASK);
 	teds_deque_try_shrink_capacity(intern, old_size);
 }
 
-PHP_METHOD(Teds_Deque, popFront)
+PHP_METHOD(Teds_Deque, top)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
+	const size_t old_size = intern->array.size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read top of empty Teds\\Deque", 0);
+		RETURN_THROWS();
+	}
+
+	/* This is being copied. Use a macro that increases the total reference count. */
+	RETVAL_COPY(teds_deque_get_entry_at_offset(&intern->array, old_size - 1));
+}
+
+PHP_METHOD(Teds_Deque, shift)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
@@ -1049,7 +1069,7 @@ PHP_METHOD(Teds_Deque, popFront)
 	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
 	const size_t old_size = intern->array.size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot popFront from empty deque", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty deque", 0);
 		RETURN_THROWS();
 	}
 
@@ -1062,6 +1082,20 @@ PHP_METHOD(Teds_Deque, popFront)
 	}
 	RETVAL_COPY_VALUE(&intern->array.circular_buffer[old_offset]);
 	teds_deque_try_shrink_capacity(intern, old_size);
+}
+
+PHP_METHOD(Teds_Deque, bottom)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
+	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
+	if (intern->array.size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read bottom of empty Deque", 0);
+		RETURN_THROWS();
+	}
+
+	RETVAL_COPY(&intern->array.circular_buffer[intern->array.offset]);
 }
 
 PHP_METHOD(Teds_Deque, offsetUnset)

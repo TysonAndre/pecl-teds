@@ -1,5 +1,5 @@
 --TEST--
-Teds\Deque pushBack/popBack/pushFront/popFront
+Teds\Deque push/pop/unshift/shift
 --FILE--
 <?php
 use Teds\Deque;
@@ -18,25 +18,25 @@ function dump_it(Deque $dq) {
 }
 
 $it = new Teds\Deque([]);
-expect_throws(fn() => $it->popBack());
-expect_throws(fn() => $it->popFront());
-$it->pushFront(strtolower('HELLO'));
+expect_throws(fn() => $it->pop());
+expect_throws(fn() => $it->shift());
+$it->unshift(strtolower('HELLO'));
 dump_it($it);
-$it->pushBack(strtolower('WORLD'));
+$it->push(strtolower('WORLD'));
 dump_it($it);
 foreach ($it as $key => $value) {
     printf("%s: %s\n", json_encode($key), json_encode($value));
 }
 for ($i = 0; $i < 50; $i++) {
-    $it->pushBack("y$i");
-    $it->pushFront("x$i");
+    $it->push("y$i");
+    $it->unshift("x$i");
 }
 dump_it($it);
 
 ?>
 --EXPECT--
-Caught UnderflowException: Cannot popBack from empty deque
-Caught UnderflowException: Cannot popFront from empty deque
+Caught UnderflowException: Cannot pop from empty deque
+Caught UnderflowException: Cannot shift from empty deque
 count=1 capacity=4 ["hello"]
 count=2 capacity=4 ["hello","world"]
 0: "hello"

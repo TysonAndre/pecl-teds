@@ -1,5 +1,5 @@
 --TEST--
-Teds\Deque pushBack/popBack
+Teds\Deque push/pop
 --FILE--
 <?php
 
@@ -14,29 +14,29 @@ function expect_throws(Closure $cb): void {
 
 echo "Test empty deque\n";
 $it = new Teds\Deque([]);
-expect_throws(fn() => $it->popBack());
-expect_throws(fn() => $it->popBack());
-$it->pushBack(strtoupper('test'));
-$it->pushBack(['literal']);
-$it->pushBack(new stdClass());
+expect_throws(fn() => $it->pop());
+expect_throws(fn() => $it->pop());
+$it->push(strtoupper('test'));
+$it->push(['literal']);
+$it->push(new stdClass());
 $it[] = strtoupper('test2');
 $it[] = false;
 echo json_encode($it), "\n";
 printf("count=%d\n", count($it));
-var_dump($it->popBack());
-var_dump($it->popBack());
-var_dump($it->popBack());
-var_dump($it->popBack());
+var_dump($it->pop());
+var_dump($it->pop());
+var_dump($it->pop());
+var_dump($it->pop());
 echo "After popping 4 elements: ", json_encode($it->toArray()), "\n";
-var_dump($it->popBack());
+var_dump($it->pop());
 echo json_encode($it), "\n";
 printf("count=%d\n", count($it));
 
 ?>
 --EXPECT--
 Test empty deque
-Caught UnderflowException: Cannot popBack from empty deque
-Caught UnderflowException: Cannot popBack from empty deque
+Caught UnderflowException: Cannot pop from empty deque
+Caught UnderflowException: Cannot pop from empty deque
 ["TEST",["literal"],{},"TEST2",false]
 count=5
 bool(false)

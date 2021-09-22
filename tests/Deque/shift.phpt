@@ -1,10 +1,10 @@
 --TEST--
-Teds\Deque popFront
+Teds\Deque shift
 --FILE--
 <?php
 
 $dq = new Teds\Deque([new stdClass(), strtoupper('test')]);
-var_dump($dq->popFront());
+var_dump($dq->shift());
 var_dump($dq[0]);
 ?>
 --EXPECT--
