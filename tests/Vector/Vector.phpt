@@ -3,7 +3,7 @@ Teds\Vector constructed from array
 --FILE--
 <?php
 // discards keys
-$it = new Teds\Vector(['first' => 'x', 'second' => new stdClass()], preserveKeys: false);
+$it = new Teds\Vector(['first' => 'x', 'second' => new stdClass()]);
 foreach ($it as $key => $value) {
     printf("Key: %s\nValue: %s\n", var_export($key, true), var_export($value, true));
 }
@@ -17,21 +17,11 @@ foreach ($it as $key => $value) {
     echo "Unreachable\n";
 }
 
-// The default is to preserve keys
-$it = new Teds\Vector([2 => 'third', 0 => 'first']);
+// Teds\Vector will always reindex keys in the order of iteration, like array_values() does.
+$it = new Teds\Vector([2 => 'a', 0 => 'b']);
 var_dump($it);
 
-try {
-    $it = new Teds\Vector([-1 => new stdClass()]);
-} catch (UnexpectedValueException $e) {
-    echo "Caught: {$e->getMessage()}\n";
-}
-
-try {
-    $it = new Teds\Vector(['0a' => new stdClass()]);
-} catch (UnexpectedValueException $e) {
-    echo "Caught: {$e->getMessage()}\n";
-}
+var_dump(new Teds\Vector([-1 => new stdClass()]));
 ?>
 --EXPECT--
 Key: 0
@@ -57,13 +47,14 @@ object(Teds\Vector)#3 (0) {
 }
 array(0) {
 }
-object(Teds\Vector)#1 (3) {
+object(Teds\Vector)#1 (2) {
   [0]=>
-  string(5) "first"
+  string(1) "a"
   [1]=>
-  NULL
-  [2]=>
-  string(5) "third"
+  string(1) "b"
 }
-Caught: array must contain only positive integer keys
-Caught: array must contain only positive integer keys
+object(Teds\Vector)#3 (1) {
+  [0]=>
+  object(stdClass)#4 (0) {
+  }
+}

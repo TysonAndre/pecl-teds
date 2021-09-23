@@ -18,18 +18,14 @@ $it->reserve(1);
 $it->reserve(0);
 $it->reserve(PHP_INT_MIN);
 printf("unchanged values=%s count=%d capacity=%d\n", json_encode($it), $it->count(), $it->capacity());
-try {
-    $it->reserve(PHP_INT_MAX);
-} catch (UnexpectedValueException $e) {
-    printf("Caught: %s\n", $e->getMessage());
-}
-printf("unchanged values=%s count=%d capacity=%d\n", json_encode($it), $it->count(), $it->capacity());
+$it->reserve(PHP_INT_MAX);
+echo "Unreachable\n";
 ?>
---EXPECT--
+--EXPECTF--
 values=[] count=0 capacity=2
 values=["FIRST","second"] count=2 capacity=2
 capacity=3
 values=["FIRST","second","extra"] count=3 capacity=3
 unchanged values=["FIRST","second","extra"] count=3 capacity=3
-Caught: exceeded max valid offset
-unchanged values=["FIRST","second","extra"] count=3 capacity=3
+
+Fatal error: exceeded max valid Teds\Vector capacity in %s on line 18

@@ -23,7 +23,9 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Backwards incompatible change: Change `Deque` APIs to be consistent with SplDoublyLinkedList and `array_push`: change pushBack/popBack/pushFront/popFront to push/pop/unshift/shift
+* Backwards incompatible change: Remove `$preserve_keys` flag from `Vector::__construct` (Always reindex keys in order of iteration instead).
 * Add Deque::isEmpty() method
+* Make exceeding the capacity limit for a vector a fatal error.
  </notes>
  <contents>
   <dir name="/">
