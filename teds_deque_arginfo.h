@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 98fd30642ad8cd0699960b8735267e9b544d7902 */
+ * Stub hash: a0947ebb693aeb9dac78ba75435d9f2c86ba5b44 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")

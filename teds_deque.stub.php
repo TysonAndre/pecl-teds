@@ -6,7 +6,9 @@
 namespace Teds;
 
 /**
- * A double-ended queue represented internally as a circular buffer.
+ * A double-ended queue (Typically abbreviated as Deque, pronounced "deck", like "cheque")
+ * represented internally as a circular buffer.
+ *
  * This has much lower memory usage than SplDoublyLinkedList or its subclasses (SplStack, SplStack),
  * and operations are significantly faster than SplDoublyLinkedList.
  *
