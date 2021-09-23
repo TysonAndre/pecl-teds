@@ -5,13 +5,13 @@ Teds\Deque push repeatedly
 
 $dq = new Teds\Deque();
 for ($i = 0; $i < 8; $i++) {
-    $dq->pushBack("v$i");
+    $dq->push("v$i");
 }
-$dq->popFront();
-$dq->pushBack("extra");
+$dq->shift();
+$dq->push("extra");
 printf("dq=%s count=%d capacity=%d\n", json_encode($dq), $dq->count(), $dq->capacity());
 for ($i = 0; $i < 7; $i++) {
-    $value = $dq->popFront();
+    $value = $dq->shift();
     printf("popped %s capacity=%d\n", $value, $dq->capacity());
 }
 // Deque should reclaim memory once roughly a quarter of the memory is actually used.

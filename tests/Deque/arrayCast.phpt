@@ -8,7 +8,7 @@ var_dump((array)$it);
 $it[0] = strtoupper('test2');
 var_dump((array)$it);
 var_dump($it);
-$it->popBack();
+$it->pop();
 var_dump($it);
 
 

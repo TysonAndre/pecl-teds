@@ -1,11 +1,11 @@
 --TEST--
-Teds\Deque pushFront
+Teds\Deque unshift
 --FILE--
 <?php
 
 $it = new Teds\Deque();
 for ($i = 0; $i < 20; $i++) {
-    $it->pushFront("$i");
+    $it->unshift("$i");
 }
 foreach ($it as $value) {
     echo "$value,";
@@ -13,7 +13,7 @@ foreach ($it as $value) {
 echo "\n";
 $values = [];
 while (count($it) > 0) {
-    $values[] = $it->popFront();
+    $values[] = $it->shift();
 }
 echo json_encode($values), "\n";
 ?>

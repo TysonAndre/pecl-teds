@@ -68,5 +68,5 @@ After shrinkToFit
 count=0 capacity=0
 After pushing variadic args
 ["TEST","other",1,2,3,4,5,6,7,8,9,10]
-count=12 capacity=18
+count=12 capacity=22
 ["TEST","other",1,2,3,4,5,6,7,8,9,10,"a","b"]

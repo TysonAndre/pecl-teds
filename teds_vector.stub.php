@@ -4,16 +4,27 @@
 
 namespace Teds;
 
+/**
+ * A Vector is a container of a sequence of values (with keys 0, 1, ...count($vector) - 1)
+ * that can change in size.
+ *
+ * This is backed by a memory-efficient representation
+ * (raw array of values) and provides fast access (compared to other objects in the Spl)
+ * and constant amortized-time push/pop operations.
+ *
+ * Attempting to read or write values outside of the range of values with `*get`/`*set` methods will throw at runtime.
+ */
 final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {
     /**
      * Construct a Vector from an iterable.
      *
-     * When $preserveKeys is false, the values will be reindexed without gaps starting from 0
-     * When $preserveKeys is true, any gaps in the keys of the iterable will be filled in with null,
-     * and negative indices or non-integer indices will be rejected and cause an Exception.
+     * The keys will be ignored, and values will be reindexed without gaps starting from 0
      */
-    public function __construct(iterable $iterator = [], bool $preserveKeys = true) {}
+    public function __construct(iterable $iterator = []) {}
+    /**
+     * Returns an iterator that will return the indexes and values of iterable until index >= count()
+     */
     public function getIterator(): \InternalIterator {}
     /**
      * Returns the number of values in this Vector
@@ -60,18 +71,20 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
      * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
      */
     public function offsetGet(mixed $offset): mixed {}
+
     /**
      * Returns true if `0 <= (int)$offset && (int)$offset < $this->count().
      */
     public function offsetExists(mixed $offset): bool {}
 
     /**
+     * Sets the value at offset (int)$offset to $value
      * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
      */
     public function offsetSet(mixed $offset, mixed $value): void {}
 
     /**
-     * @throws \RuntimeException because unset and null are different things, unlike SplFixedArray
+     * @throws \RuntimeException unconditionally because unset and null are different things, unlike SplFixedArray
      */
     public function offsetUnset(mixed $offset): void {}
 

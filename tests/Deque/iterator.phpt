@@ -19,11 +19,11 @@ var_dump($it->key());
 var_dump($it->current());
 var_dump($it->next());
 var_dump($it->valid());
-$dq->popFront();
+$dq->shift();
 var_dump($it->key());
 expect_throws(fn() => $it->current());
 var_dump($it->valid());
-$dq->popFront();
+$dq->shift();
 var_dump($it->key()); // null for invalid iterator
 expect_throws(fn() => $it->current());
 var_dump($it->valid());

@@ -13,11 +13,11 @@ function expect_throws(Closure $cb): void {
 }
 $it = new Teds\Deque();
 for ($i = 0; $i < 7; $i++) {
-    $it->pushBack("x$i");
+    $it->push("x$i");
 }
-var_dump($it->popFront());
-$it->pushBack('new');
-$it->pushBack('another');
+var_dump($it->shift());
+$it->push('new');
+$it->push('another');
 for ($i = 0; $i < count($it); $i++) {
     $it[$i] = $it[$i] . "_$i";
     var_dump($it[$i]);

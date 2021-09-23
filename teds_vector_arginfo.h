@@ -1,9 +1,8 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a84e65af95d34bac5a6cce4f77b0278c77d2bae2 */
+ * Stub hash: d95587ab0e4ff94d8d2a527c328f8b200b536bc7 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
-	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, preserveKeys, _IS_BOOL, 0, "true")
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_Vector_getIterator, 0, 0, InternalIterator, 0)

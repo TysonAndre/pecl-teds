@@ -13,8 +13,8 @@
  <date>2021-09-19</date>
  <time>16:00:00</time>
  <version>
-  <release>0.3.0</release>
-  <api>0.3.0</api>
+  <release>0.4.0dev</release>
+  <api>0.4.0dev</api>
  </version>
  <stability>
   <release>alpha</release>
@@ -22,13 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Backwards incompatible change: Change `Vector::indexOf` return type from `int|false` to `?int` (and all other `indexOf*` methods in other data structures)
-* Backwards incompatible change: Change `valueAt`/`setValueAt` to get/set in Deque, Vector, and ImmutableSequence
-* Add optional parameter `$value = null` to `Vector::setSize()` to allow overriding the value used for padding when lengthening an array.
-* Change exception handling for sizes/capacities that are definitely too large to allocate.
-* Make Vector::push() variadic and accept 0 or more arguments, like `array_push` does.
-* Reclaim unused memory in Deque when roughly a quarter or less of the internal buffer is used.
-* Optimize performance of Deque, always use powers of 2 for the capacity of Deque to speed up reads/writes.
+* Backwards incompatible change: Change `Deque` APIs to be consistent with SplDoublyLinkedList and `array_push`: change pushBack/popBack/pushFront/popFront to push/pop/unshift/shift
+* Backwards incompatible change: Remove `$preserve_keys` flag from `Vector::__construct` (Always reindex keys in order of iteration instead).
+* Add Deque::isEmpty() method
+* Make exceeding the capacity limit for a vector a fatal error.
  </notes>
  <contents>
   <dir name="/">
@@ -73,18 +70,18 @@
     <file name="Deque/iterator.phpt" role="test" />
     <file name="Deque/offsetGet.phpt" role="test" />
     <file name="Deque/offsetGetShifted.phpt" role="test" />
-    <file name="Deque/popFront.phpt" role="test" />
     <file name="Deque/popMany.phpt" role="test" />
-    <file name="Deque/pushFront.phpt" role="test" />
     <file name="Deque/push_pop.phpt" role="test" />
     <file name="Deque/push_pop_both.phpt" role="test" />
     <file name="Deque/reinit_forbidden.phpt" role="test" />
     <file name="Deque/serialization.phpt" role="test" />
     <file name="Deque/setValueAt.phpt" role="test" />
     <file name="Deque/set_state.phpt" role="test" />
+    <file name="Deque/shift.phpt" role="test" />
     <file name="Deque/toArray.phpt" role="test" />
     <file name="Deque/traversable.phpt" role="test" />
     <file name="Deque/unserialize.phpt" role="test" />
+    <file name="Deque/unshift.phpt" role="test" />
     <file name="ImmutableKeyValueSequence/ImmutableKeyValueSequence.phpt" role="test" />
     <file name="ImmutableKeyValueSequence/aggregate.phpt" role="test" />
     <file name="ImmutableKeyValueSequence/clone.phpt" role="test" />
@@ -177,21 +174,45 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
-  <date>2021-09-16</date>
-  <time>16:00:00</time>
-  <version>
-   <release>0.2.1</release>
-   <api>0.2.1</api>
-  </version>
-  <stability>
-   <release>alpha</release>
-   <api>alpha</api>
-  </stability>
-  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
-  <notes>
+  <release>
+   <date>2021-09-19</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.3.0</release>
+    <api>0.3.0</api>
+   </version>
+   <stability>
+    <release>alpha</release>
+    <api>alpha</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Backwards incompatible change: Change `Vector::indexOf` return type from `int|false` to `?int` (and all other `indexOf*` methods in other data structures)
+* Backwards incompatible change: Change `valueAt`/`setValueAt` to get/set in Deque, Vector, and ImmutableSequence
+* Add optional parameter `$value = null` to `Vector::setSize()` to allow overriding the value used for padding when lengthening an array.
+* Change exception handling for sizes/capacities that are definitely too large to allocate.
+* Make Vector::push() variadic and accept 0 or more arguments, like `array_push` does.
+* Reclaim unused memory in Deque when roughly a quarter or less of the internal buffer is used.
+* Optimize performance of Deque, always use powers of 2 for the capacity of Deque to speed up reads/writes.
+   </notes>
+  </release>
+  <release>
+   <date>2021-09-16</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.2.1</release>
+    <api>0.2.1</api>
+   </version>
+   <stability>
+    <release>alpha</release>
+    <api>alpha</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
 * Support `$vector[] = $value` and `$deque[] = $value` assignments to append to Vector/Deque.
 * Add map() and filter() functions to Vector.
-  </notes>
+   </notes>
+  </release>
   <release>
    <date>2021-09-12</date>
    <time>16:00:00</time>
