@@ -26,6 +26,7 @@
 * Backwards incompatible change: Remove `$preserve_keys` flag from `Vector::__construct` (Always reindex keys in order of iteration instead).
 * Add isEmpty() method to datastructures
 * Make exceeding the capacity limit for a vector a fatal error.
+* Make Deque::push() and unshift() variadic.
  </notes>
  <contents>
   <dir name="/">
@@ -72,6 +73,7 @@
     <file name="Deque/offsetGet.phpt" role="test" />
     <file name="Deque/offsetGetShifted.phpt" role="test" />
     <file name="Deque/popMany.phpt" role="test" />
+    <file name="Deque/push_multiple.phpt" role="test" />
     <file name="Deque/push_pop.phpt" role="test" />
     <file name="Deque/push_pop_both.phpt" role="test" />
     <file name="Deque/reinit_forbidden.phpt" role="test" />

@@ -984,38 +984,85 @@ static void teds_deque_shrink_capacity(teds_deque_entries *array, size_t new_cap
 
 PHP_METHOD(Teds_Deque, push)
 {
+	const zval *args;
+	uint32_t argc;
 	zval *value;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_START(0, -1)
+		Z_PARAM_VARIADIC('+', args, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_deque_push_back(Z_DEQUE_P(ZEND_THIS), value);
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+
+	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
+	size_t old_size = intern->array.size;
+	const size_t new_size = old_size + argc;
+	size_t mask = intern->array.mask;
+	const size_t old_capacity = mask ? mask + 1 : 0;
+
+	if (new_size > old_capacity) {
+		const size_t new_capacity = teds_deque_next_pow2_capacity(new_size);
+		teds_deque_raise_capacity(&intern->array, new_capacity);
+		mask = intern->array.mask;
+	}
+	zval *const circular_buffer = intern->array.circular_buffer;
+	const size_t old_offset = intern->array.offset;
+
+	while (1) {
+		zval *dest = &circular_buffer[(old_offset + old_size) & mask];
+		ZVAL_COPY(dest, args);
+		if (++old_size >= new_size) {
+			break;
+		}
+		args++;
+	}
+	intern->array.size = new_size;
 }
 
 PHP_METHOD(Teds_Deque, unshift)
 {
+	const zval *args;
+	uint32_t argc;
 	zval *value;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_START(0, -1)
+		Z_PARAM_VARIADIC('+', args, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	const size_t old_size = intern->array.size;
-	const size_t old_mask = intern->array.mask;
-	const size_t old_capacity = old_mask ? old_mask + 1 : 0;
-
-	if (old_size >= old_capacity) {
-		ZEND_ASSERT(old_size == old_capacity);
-		const size_t new_capacity = old_capacity > 0 ? old_capacity * 2 : 4;
-		teds_deque_raise_capacity(&intern->array, new_capacity);
+	if (UNEXPECTED(argc == 0)) {
+		return;
 	}
-	intern->array.offset = (intern->array.offset - 1) & intern->array.mask;
-	intern->array.size++;
+
+	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
+	size_t old_size = intern->array.size;
+	const size_t new_size = old_size + argc;
+	size_t mask = intern->array.mask;
+	const size_t old_capacity = mask ? mask + 1 : 0;
+
+	if (new_size > old_capacity) {
+		const size_t new_capacity = teds_deque_next_pow2_capacity(new_size);
+		teds_deque_raise_capacity(&intern->array, new_capacity);
+		mask = intern->array.mask;
+	}
+	size_t offset = intern->array.offset;
+	zval *const circular_buffer = intern->array.circular_buffer;
+
+	do {
+		offset = (offset - 1) & mask;
+		zval *dest = &circular_buffer[offset];
+		ZVAL_COPY(dest, args);
+		if (--argc == 0) {
+			break;
+		}
+		args++;
+	} while (1);
+
+	intern->array.offset = offset;
+	intern->array.size = new_size;
+
 	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
-	zval *dest = &intern->array.circular_buffer[intern->array.offset];
-	ZVAL_COPY(dest, value);
 }
 
 static zend_always_inline void teds_deque_try_shrink_capacity(teds_deque *intern, size_t old_size)

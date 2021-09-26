@@ -1124,7 +1124,7 @@ PHP_METHOD(Teds_Vector, push)
 		Z_PARAM_VARIADIC('+', args, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
-	if (argc == 0) {
+	if (UNEXPECTED(argc == 0)) {
 		return;
 	}
 	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);

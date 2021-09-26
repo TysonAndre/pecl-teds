@@ -47,10 +47,10 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
     /** Construct the Deque from the values of the array, ignoring keys */
     public static function __set_state(array $array): Deque {}
 
-    /** Appends a value to the end of the Deque. */
-    public function push(mixed $value): void {}
-    /** Prepends a value to the start of the Deque. */
-    public function unshift(mixed $value): void {}
+    /** Appends value(s) to the end of the Deque, like array_push. */
+    public function push(mixed ...$values): void {}
+    /** Prepends value(s) to the start of the Deque, like array_shift. */
+    public function unshift(mixed ...$values): void {}
     /**
      * Pops a value from the end of the Deque.
      * @throws UnderflowException if the Deque is empty
