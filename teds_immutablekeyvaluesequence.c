@@ -360,7 +360,7 @@ static int teds_immutablekeyvaluesequence_count_elements(zend_object *object, ze
 	return SUCCESS;
 }
 
-/* Get number of entries in this iterable */
+/* Get number of entries in this ImmutableKeyValueSequence */
 PHP_METHOD(Teds_ImmutableKeyValueSequence, count)
 {
 	zval *object = ZEND_THIS;
@@ -369,6 +369,17 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, count)
 
 	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(object);
 	RETURN_LONG(intern->array.size);
+}
+
+/* Get whether this ImmutableKeyValueSequence is empty */
+PHP_METHOD(Teds_ImmutableKeyValueSequence, isEmpty)
+{
+	zval *object = ZEND_THIS;
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_immutablekeyvaluesequence *intern = Z_IMMUTABLEKEYVALUESEQUENCE_P(object);
+	RETURN_BOOL(intern->array.size == 0);
 }
 
 /* Create this from an iterable */

@@ -10,6 +10,8 @@ final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSe
     public function __construct(iterable $iterator) {}
     public function getIterator(): \InternalIterator {}
     public function count(): int {}
+    /** Returns true if there are 0 elements in the ImmutableSequence. */
+    public function isEmpty(): bool {}
 
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}

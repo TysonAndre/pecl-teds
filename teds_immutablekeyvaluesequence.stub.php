@@ -13,6 +13,8 @@ final class ImmutableKeyValueSequence implements \IteratorAggregate, \Countable,
     public function __construct(iterable $iterator) {}
     public function getIterator(): \InternalIterator {}
     public function count(): int {}
+    /** Returns true if count() == 0. */
+    public function isEmpty(): bool {}
     public static function fromPairs(iterable $pairs): ImmutableKeyValueSequence {}
     public function toPairs(): array {}
 

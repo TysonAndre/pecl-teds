@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: bec125d04a807a0665d574627653af07be131e08 */
+ * Stub hash: 36fb5385e388a850a49269576b1837ee246198b9 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -9,6 +9,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSeque
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence_count, 0, 0, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence_isEmpty, 0, 0, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence_fromPairs, 0, 1, Teds\\ImmutableKeyValueSequence, 0)
@@ -60,6 +63,7 @@ ZEND_END_ARG_INFO()
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, __construct);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, getIterator);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, count);
+ZEND_METHOD(Teds_ImmutableKeyValueSequence, isEmpty);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, fromPairs);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, toPairs);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, __serialize);
@@ -80,6 +84,7 @@ static const zend_function_entry class_Teds_ImmutableKeyValueSequence_methods[] 
 	ZEND_ME(Teds_ImmutableKeyValueSequence, __construct, arginfo_class_Teds_ImmutableKeyValueSequence___construct, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, getIterator, arginfo_class_Teds_ImmutableKeyValueSequence_getIterator, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, count, arginfo_class_Teds_ImmutableKeyValueSequence_count, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableKeyValueSequence, isEmpty, arginfo_class_Teds_ImmutableKeyValueSequence_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, fromPairs, arginfo_class_Teds_ImmutableKeyValueSequence_fromPairs, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, toPairs, arginfo_class_Teds_ImmutableKeyValueSequence_toPairs, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, __serialize, arginfo_class_Teds_ImmutableKeyValueSequence___serialize, ZEND_ACC_PUBLIC)

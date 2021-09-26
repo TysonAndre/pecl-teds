@@ -13,6 +13,8 @@ final class KeyValueVector implements \IteratorAggregate, \Countable, \JsonSeria
     public function __construct(iterable $iterator = []) {}
     public function getIterator(): \InternalIterator {}
     public function count(): int {}
+    /** Returns true if count() == 0. */
+    public function isEmpty(): bool {}
     public function capacity(): int {}
     public function clear(): void {}
     public function setSize(int $size): void {}

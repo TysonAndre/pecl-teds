@@ -31,6 +31,10 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
      */
     public function count(): int {}
     /**
+     * Returns whether this vector is empty (has a count of 0)
+     */
+    public function isEmpty(): bool {}
+    /**
      * Returns the total capacity of this Vector.
      */
     public function capacity(): int {}

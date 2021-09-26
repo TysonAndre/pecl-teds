@@ -415,7 +415,7 @@ static int teds_keyvaluevector_count_elements(zend_object *object, zend_long *co
 	return SUCCESS;
 }
 
-/* Get number of entries in this keyvaluevector */
+/* Get number of entries in this KeyValueVector */
 PHP_METHOD(Teds_KeyValueVector, count)
 {
 	zval *object = ZEND_THIS;
@@ -424,6 +424,17 @@ PHP_METHOD(Teds_KeyValueVector, count)
 
 	teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(object);
 	RETURN_LONG(intern->array.size);
+}
+
+/* Get whether this KeyValueVector is empty. */
+PHP_METHOD(Teds_KeyValueVector, isEmpty)
+{
+	zval *object = ZEND_THIS;
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_keyvaluevector *intern = Z_KEYVALUEVECTOR_P(object);
+	RETURN_BOOL(intern->array.size == 0);
 }
 
 /* Get capacity of this KeyValueVector */

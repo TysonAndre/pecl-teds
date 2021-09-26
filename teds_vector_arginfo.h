@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: d95587ab0e4ff94d8d2a527c328f8b200b536bc7 */
+ * Stub hash: 8e1019e3c3773a1f7f273ba87a20acf2d0f18110 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -9,6 +9,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_Vector_getIterator, 0,
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_count, 0, 0, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_isEmpty, 0, 0, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Vector_capacity arginfo_class_Teds_Vector_count
@@ -95,6 +98,7 @@ ZEND_END_ARG_INFO()
 ZEND_METHOD(Teds_Vector, __construct);
 ZEND_METHOD(Teds_Vector, getIterator);
 ZEND_METHOD(Teds_Vector, count);
+ZEND_METHOD(Teds_Vector, isEmpty);
 ZEND_METHOD(Teds_Vector, capacity);
 ZEND_METHOD(Teds_Vector, shrinkToFit);
 ZEND_METHOD(Teds_Vector, reserve);
@@ -123,6 +127,7 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, __construct, arginfo_class_Teds_Vector___construct, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, getIterator, arginfo_class_Teds_Vector_getIterator, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, count, arginfo_class_Teds_Vector_count, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, isEmpty, arginfo_class_Teds_Vector_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, capacity, arginfo_class_Teds_Vector_capacity, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, shrinkToFit, arginfo_class_Teds_Vector_shrinkToFit, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, reserve, arginfo_class_Teds_Vector_reserve, ZEND_ACC_PUBLIC)
