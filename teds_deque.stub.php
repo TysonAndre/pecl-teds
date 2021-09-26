@@ -14,7 +14,7 @@ namespace Teds;
  *
  * See https://en.wikipedia.org/wiki/Double-ended_queue
  *
- * This supports amortized constant time pushing and popping onto the front or back of the array.
+ * This supports amortized constant time pushing and popping onto the front or back of the Deque.
  *
  * Naming is based on https://www.php.net/spldoublylinkedlist
  * and on array_push/pop/unshift/shift.
