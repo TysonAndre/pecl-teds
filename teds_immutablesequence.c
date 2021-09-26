@@ -330,7 +330,7 @@ static int teds_immutablesequence_object_count_elements(zend_object *object, zen
 	return SUCCESS;
 }
 
-/* Get number of entries in this iterable */
+/* Get number of entries in this ImmutableSequence */
 PHP_METHOD(Teds_ImmutableSequence, count)
 {
 	zval *object = ZEND_THIS;
@@ -340,6 +340,18 @@ PHP_METHOD(Teds_ImmutableSequence, count)
 	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(object);
 	RETURN_LONG(intern->array.size);
 }
+
+/* Get whether this ImmutableSequence is empty */
+PHP_METHOD(Teds_ImmutableSequence, isEmpty)
+{
+	zval *object = ZEND_THIS;
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(object);
+	RETURN_BOOL(intern->array.size == 0);
+}
+
 
 /* Create this from an iterable */
 PHP_METHOD(Teds_ImmutableSequence, __construct)

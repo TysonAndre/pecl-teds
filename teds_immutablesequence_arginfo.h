@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: b2f8eaddc435b4a36746d9c503c300fcc5247d0e */
+ * Stub hash: 3c20ef137f7b6251c6b986b05af9383fce6de7d5 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -9,6 +9,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableSequence_getI
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_count, 0, 0, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_isEmpty, 0, 0, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence___serialize, 0, 0, IS_ARRAY, 0)
@@ -59,6 +62,7 @@ ZEND_END_ARG_INFO()
 ZEND_METHOD(Teds_ImmutableSequence, __construct);
 ZEND_METHOD(Teds_ImmutableSequence, getIterator);
 ZEND_METHOD(Teds_ImmutableSequence, count);
+ZEND_METHOD(Teds_ImmutableSequence, isEmpty);
 ZEND_METHOD(Teds_ImmutableSequence, __serialize);
 ZEND_METHOD(Teds_ImmutableSequence, __unserialize);
 ZEND_METHOD(Teds_ImmutableSequence, __set_state);
@@ -77,6 +81,7 @@ static const zend_function_entry class_Teds_ImmutableSequence_methods[] = {
 	ZEND_ME(Teds_ImmutableSequence, __construct, arginfo_class_Teds_ImmutableSequence___construct, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, getIterator, arginfo_class_Teds_ImmutableSequence_getIterator, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, count, arginfo_class_Teds_ImmutableSequence_count, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSequence, isEmpty, arginfo_class_Teds_ImmutableSequence_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, __serialize, arginfo_class_Teds_ImmutableSequence___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, __unserialize, arginfo_class_Teds_ImmutableSequence___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, __set_state, arginfo_class_Teds_ImmutableSequence___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)

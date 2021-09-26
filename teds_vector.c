@@ -385,6 +385,17 @@ PHP_METHOD(Teds_Vector, count)
 	RETURN_LONG(intern->array.size);
 }
 
+/* Get number of entries in this vector */
+PHP_METHOD(Teds_Vector, isEmpty)
+{
+	zval *object = ZEND_THIS;
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_vector *intern = Z_VECTOR_P(object);
+	RETURN_BOOL(intern->array.size == 0);
+}
+
 /* Get capacity of this vector */
 PHP_METHOD(Teds_Vector, capacity)
 {

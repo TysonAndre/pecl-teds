@@ -24,7 +24,7 @@
  <notes>
 * Backwards incompatible change: Change `Deque` APIs to be consistent with SplDoublyLinkedList and `array_push`: change pushBack/popBack/pushFront/popFront to push/pop/unshift/shift
 * Backwards incompatible change: Remove `$preserve_keys` flag from `Vector::__construct` (Always reindex keys in order of iteration instead).
-* Add Deque::isEmpty() method
+* Add isEmpty() method to datastructures
 * Make exceeding the capacity limit for a vector a fatal error.
  </notes>
  <contents>
@@ -67,6 +67,7 @@
     <file name="Deque/clone.phpt" role="test" />
     <file name="Deque/contains.phpt" role="test" />
     <file name="Deque/exceptionhandler.phpt" role="test" />
+    <file name="Deque/isEmpty.phpt" role="test" />
     <file name="Deque/iterator.phpt" role="test" />
     <file name="Deque/offsetGet.phpt" role="test" />
     <file name="Deque/offsetGetShifted.phpt" role="test" />
@@ -131,6 +132,7 @@
     <file name="Vector/contains.phpt" role="test" />
     <file name="Vector/exceptionhandler.phpt" role="test" />
     <file name="Vector/filter.phpt" role="test" />
+    <file name="Vector/isEmpty.phpt" role="test" />
     <file name="Vector/isset.phpt" role="test" />
     <file name="Vector/map.phpt" role="test" />
     <file name="Vector/offsetGet.phpt" role="test" />
@@ -145,7 +147,6 @@
     <file name="Vector/shrink_capacity.phpt" role="test" />
     <file name="Vector/toArray.phpt" role="test" />
     <file name="Vector/traversable.phpt" role="test" />
-    <file name="Vector/traversable_preserve_keys.phpt" role="test" />
     <file name="Vector/unserialize.phpt" role="test" />
     <file name="iterable/all_array.phpt" role="test" />
     <file name="iterable/all_traversable.phpt" role="test" />
