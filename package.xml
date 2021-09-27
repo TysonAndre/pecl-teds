@@ -13,20 +13,16 @@
  <date>2021-09-26</date>
  <time>16:00:00</time>
  <version>
-  <release>0.4.0</release>
-  <api>0.4.0</api>
+  <release>0.4.1</release>
+  <api>0.4.1</api>
  </version>
  <stability>
-  <release>alpha</release>
-  <api>alpha</api>
+  <release>stable</release>
+  <api>stable</api>
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Backwards incompatible change: Change `Deque` APIs to be consistent with SplDoublyLinkedList and `array_push`: change pushBack/popBack/pushFront/popFront to push/pop/unshift/shift
-* Backwards incompatible change: Remove `$preserve_keys` flag from `Vector::__construct` (Always reindex keys in order of iteration instead).
-* Add isEmpty() method to datastructures
-* Make exceeding the capacity limit for a vector a fatal error.
-* Make Deque::push() and unshift() variadic.
+* Fix computation of next power of 2 for sizes of `2 ** 32` or larger.
  </notes>
  <contents>
   <dir name="/">
@@ -177,6 +173,26 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2021-09-26</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.4.0</release>
+    <api>0.4.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Backwards incompatible change: Change `Deque` APIs to be consistent with SplDoublyLinkedList and `array_push`: change pushBack/popBack/pushFront/popFront to push/pop/unshift/shift
+* Backwards incompatible change: Remove `$preserve_keys` flag from `Vector::__construct` (Always reindex keys in order of iteration instead).
+* Add isEmpty() method to datastructures
+* Make exceeding the capacity limit for a vector a fatal error.
+* Make Deque::push() and unshift() variadic.
+ </notes>
+  </release>
   <release>
    <date>2021-09-19</date>
    <time>16:00:00</time>

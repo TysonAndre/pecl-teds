@@ -122,22 +122,33 @@ static bool teds_deque_entries_uninitialized(teds_deque_entries *array)
 	return array->circular_buffer == NULL;
 }
 
-/* Based n zend_hash_check_size. Finds the next largest power of 2. */
+/* Based on zend_hash_check_size which supports 32-bit integers. Finds the next largest power of 2. */
 static inline size_t teds_deque_next_pow2_capacity(size_t nSize) {
 	if (nSize < TEDS_DEQUE_MIN_CAPACITY) {
 		return TEDS_DEQUE_MIN_CAPACITY;
 	}
+	/* Note that for values such as 63 or 31 of the form ((2^n) - 1),
+	 * subtracting and xor are the same things for numbers in the range of 0 to the max. */
 #ifdef ZEND_WIN32
 	unsigned long index;
+#if SIZEOF_SIZE_T > 4
+	if (BitScanReverse64(&index, nSize - 1)) {
+		return 0x2u << ((63 - index) ^ 0x3f);
+	}
+#else
 	if (BitScanReverse(&index, nSize - 1)) {
 		return 0x2u << ((31 - index) ^ 0x1f);
-	} else {
-		/* nSize is ensured to be in the valid range, fall back to it
-		   rather than using an undefined bis scan result. */
-		return nSize;
 	}
+#endif
+	/* nSize is ensured to be in the valid range, fall back to it
+	 * rather than using an undefined bit scan result. */
+	return nSize;
 #elif (defined(__GNUC__) || __has_builtin(__builtin_clz))  && defined(PHP_HAVE_BUILTIN_CLZ)
+#if SIZEOF_SIZE_T > SIZEOF_INT
+	return 0x2u << (__builtin_clzl(nSize - 1) ^ (sizeof(long) * 8 - 1));
+#else
 	return 0x2u << (__builtin_clz(nSize - 1) ^ 0x1f);
+#endif
 #else
 	nSize -= 1;
 	nSize |= (nSize >> 1);
@@ -145,6 +156,9 @@ static inline size_t teds_deque_next_pow2_capacity(size_t nSize) {
 	nSize |= (nSize >> 4);
 	nSize |= (nSize >> 8);
 	nSize |= (nSize >> 16);
+#if SIZEOF_SIZE_T > 4
+	nSize |= (nSize >> 32);
+#endif
 	return nSize + 1;
 #endif
 }
