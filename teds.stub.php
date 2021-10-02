@@ -58,3 +58,19 @@ function fold(iterable $iterable, callable $callback, mixed $initial): mixed {}
  * On failure, returns $default.
  */
 function find(iterable $iterable, callable $callback, mixed $default = null): mixed {}
+
+/**
+ * Returns the first value of the array without affecting the internal array pointer.
+ * If the array is empty, returns null.
+ *
+ * Counterpart to https://php.net/array_key_first
+ */
+function array_value_first(array $array): mixed { }
+
+/**
+ * Returns the last value of the array without affecting the internal array pointer.
+ * If the array is empty, returns null.
+ *
+ * Counterpart to https://php.net/array_key_last
+ */
+function array_value_last(array $array): mixed { }

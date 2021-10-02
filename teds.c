@@ -17,6 +17,10 @@
 #error PHP versions prior to php 8.0 are not supported
 #endif
 
+#if PHP_VERSION_ID < 80100
+#define RETURN_COPY_DEREF(zv)			do { ZVAL_COPY_DEREF(return_value, zv); return; } while (0)
+#endif
+
 #include <ctype.h>
 #include "zend_interfaces.h"
 #include "zend_types.h"
@@ -513,6 +517,42 @@ PHP_FUNCTION(find)
 		}
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
+}
+/* }}} */
+
+/* {{{ Get the value of the first element of the array */
+PHP_FUNCTION(array_value_first)
+{
+	HashTable *target_hash;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ARRAY_HT(target_hash)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (zend_hash_num_elements(target_hash) == 0) {
+		RETURN_NULL();
+	}
+
+	HashPosition pos = 0;
+	RETURN_COPY_DEREF(zend_hash_get_current_data_ex(target_hash, &pos));
+}
+/* }}} */
+
+/* {{{ Get the value of the last element of the array */
+PHP_FUNCTION(array_value_last)
+{
+	HashTable *target_hash;
+	HashPosition pos;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ARRAY_HT(target_hash)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (zend_hash_num_elements(target_hash) == 0) {
+		RETURN_NULL();
+	}
+	zend_hash_internal_pointer_end_ex(target_hash, &pos);
+	RETURN_COPY_DEREF(zend_hash_get_current_data_ex(target_hash, &pos));
 }
 /* }}} */
 
