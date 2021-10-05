@@ -1000,7 +1000,6 @@ PHP_METHOD(Teds_Deque, push)
 {
 	const zval *args;
 	uint32_t argc;
-	zval *value;
 
 	ZEND_PARSE_PARAMETERS_START(0, -1)
 		Z_PARAM_VARIADIC('+', args, argc)
@@ -1039,7 +1038,6 @@ PHP_METHOD(Teds_Deque, unshift)
 {
 	const zval *args;
 	uint32_t argc;
-	zval *value;
 
 	ZEND_PARSE_PARAMETERS_START(0, -1)
 		Z_PARAM_VARIADIC('+', args, argc)
