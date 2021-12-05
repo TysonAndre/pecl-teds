@@ -192,9 +192,6 @@ static void teds_vector_entries_init_from_traversable(teds_vector_entries *array
 		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
-		if (UNEXPECTED(EG(exception))) {
-			break;
-		}
 
 		if (size >= capacity) {
 			/* Not using Countable::count(), that would potentially have side effects or throw UnsupportedOperationException or be slow to compute */
