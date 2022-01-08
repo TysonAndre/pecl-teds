@@ -40,10 +40,19 @@ zend_class_entry *teds_ce_Deque;
 static const zval empty_entry_list[1];
 
 typedef struct _teds_deque_entries {
+	/* The number of elements in the Deque. */
 	size_t size;
 	/* One less than a power of two (the capacity) */
 	size_t mask;
+	/* The offset of the start of the deque in the circular buffer. */
 	size_t offset;
+	/*
+	 * This is a counter which increases when adding elements to the front and decreases when removing elements from the front.
+	 * This is used so that iteration works as expected when the front position is modified during foreach.
+	 *
+	 * This is a uint64_t to work consistently and avoid easily overflowing 4 billion on 32-bit builds.
+	 */
+	uint64_t iteration_offset;
 	/** This is a circular buffer with an offset, size, and capacity(mask + 1) */
 	zval *circular_buffer;
 } teds_deque_entries;
@@ -85,7 +94,8 @@ typedef struct _teds_deque {
 /* Used by InternalIterator returned by Deque->getIterator() */
 typedef struct _teds_deque_it {
 	zend_object_iterator intern;
-	zend_long            current;
+	/* This starts at iteration_offset and increases by one when next() is called. */
+	uint64_t current;
 } teds_deque_it;
 
 static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *value);
@@ -167,6 +177,7 @@ static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_a
 {
 	zend_long size = zend_hash_num_elements(values);
 	array->offset = 0;
+	array->iteration_offset = 0;
 	array->size = 0; /* reset size and capacity in case emalloc() fails */
 	array->mask = 0;
 	if (size > 0) {
@@ -195,6 +206,7 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 	zend_long size = 0, capacity = 0;
 	array->size = 0;
 	array->offset = 0;
+	array->iteration_offset = 0;
 	array->circular_buffer = NULL;
 	zval *circular_buffer = NULL;
 	zval tmp_obj;
@@ -257,6 +269,7 @@ static void teds_deque_entries_copy_ctor(teds_deque_entries *to, const teds_dequ
 	to->size = 0; /* reset size in case emalloc() fails */
 	to->mask = 0;
 	to->offset = 0;
+	to->iteration_offset = 0;
 	if (!size) {
 		to->circular_buffer = (zval *)empty_entry_list;
 		return;
@@ -304,6 +317,7 @@ static void teds_deque_entries_dtor(teds_deque_entries *array)
 		array->offset = 0;
 		array->size = 0;
 		array->mask = 0;
+		/* Changing iteration_offset doesn't matter */
 		do {
 			if (p == end) {
 				p = circular_buffer;
@@ -496,6 +510,7 @@ PHP_METHOD(Teds_Deque, __construct)
 
 	if (iterable == NULL) {
 		intern->array.offset = 0;
+		intern->array.iteration_offset = 0;
 		intern->array.size = 0;
 		intern->array.mask = 0;
 		intern->array.circular_buffer = (zval *)empty_entry_list;
@@ -527,15 +542,17 @@ static void teds_deque_it_dtor(zend_object_iterator *iter)
 
 static void teds_deque_it_rewind(zend_object_iterator *iter)
 {
-	((teds_deque_it*)iter)->current = 0;
+	const teds_deque *object = Z_DEQUE_P(&iter->data);
+	((teds_deque_it*)iter)->current = object->array.iteration_offset;
 }
 
 static int teds_deque_it_valid(zend_object_iterator *iter)
 {
 	const teds_deque_it *iterator = (teds_deque_it*)iter;
 	const teds_deque *object = Z_DEQUE_P(&iter->data);
+	const size_t offset = iterator->current - object->array.iteration_offset;
 
-	if (iterator->current >= 0 && (zend_ulong) iterator->current < object->array.size) {
+	if (offset < object->array.size) {
 		return SUCCESS;
 	}
 
@@ -558,8 +575,9 @@ static zval *teds_deque_it_get_current_data(zend_object_iterator *iter)
 {
 	const teds_deque_it     *iterator = (teds_deque_it*)iter;
 	teds_deque *object   = Z_DEQUE_P(&iter->data);
+	const uint64_t offset = iterator->current - object->array.iteration_offset;
 
-	zval *data = teds_deque_read_offset_helper(object, iterator->current);
+	zval *data = teds_deque_read_offset_helper(object, offset);
 
 	if (UNEXPECTED(data == NULL)) {
 		return &EG(uninitialized_zval);
@@ -572,8 +590,8 @@ static void teds_deque_it_get_current_key(zend_object_iterator *iter, zval *key)
 {
 	const teds_deque_it     *iterator = (teds_deque_it*)iter;
 	const teds_deque *object   = Z_DEQUE_P(&iter->data);
+	const uint64_t offset = iterator->current - object->array.iteration_offset;
 
-	size_t offset = iterator->current;
 	if (offset >= object->array.size) {
 		ZVAL_NULL(key);
 	} else {
@@ -1048,6 +1066,7 @@ PHP_METHOD(Teds_Deque, unshift)
 	}
 
 	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
+	intern->array.iteration_offset -= argc; /* The front moved backwards by the number of elements */
 	size_t old_size = intern->array.size;
 	const size_t new_size = old_size + argc;
 	size_t mask = intern->array.mask;
@@ -1133,6 +1152,7 @@ PHP_METHOD(Teds_Deque, shift)
 	}
 
 	intern->array.size--;
+	intern->array.iteration_offset++;  /* The front moved forward */
 	const size_t old_offset = intern->array.offset;
 	const size_t old_mask = intern->array.mask;
 	intern->array.offset++;

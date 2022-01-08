@@ -12,16 +12,17 @@ function expect_throws(Closure $cb): void {
     }
 }
 
-// Iterators are associated with an index (as in offsetGet), not a position in the deque.
+// Iterators are associated with a position in the deque relative to the front of the deque *when iteration started*. key() returns the distance from the current start of the deque, or null.
 $dq = new Teds\Deque([new stdClass(), strtoupper('test')]);
 $it = $dq->getIterator();
 var_dump($it->key());
 var_dump($it->current());
 var_dump($it->next());
 var_dump($it->valid());
+echo "After shift\n";
 $dq->shift();
 var_dump($it->key());
-expect_throws(fn() => $it->current());
+var_dump($it->current());
 var_dump($it->valid());
 $dq->shift();
 var_dump($it->key()); // null for invalid iterator
@@ -38,9 +39,10 @@ object(stdClass)#2 (0) {
 }
 NULL
 bool(true)
-NULL
-Caught OutOfBoundsException: Index out of range
-bool(false)
+After shift
+int(0)
+string(4) "TEST"
+bool(true)
 NULL
 Caught OutOfBoundsException: Index out of range
 bool(false)
