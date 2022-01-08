@@ -23,7 +23,7 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Add Teds\array_value_first(), Teds\array_value_last()
-* Make Deque iteration account for calls to push/pop tracking the position of the front of the Deque.
+* Make Deque iteration account for calls to shift/unshift tracking the position of the front of the Deque.
   Calls to shift/unshift will do the following:
   - Increase/Decrease the value returned by the iterator's key() by the number of elements added/removed to/from the front of the Deque. (`$deque[$iteratorKey] === $iteratorValue` at the time the key and value are returned).
   - Repeated calls to shift will cause valid() to return false if the iterator's position ends up before the start of the Deque at the time iteration resumes.
