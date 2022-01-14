@@ -168,6 +168,19 @@ function includes_value(iterable $iterable, mixed $value): bool {
 
 ```
 
+## Stable comparison
+
+`Teds\stable_compare` is a function that can be used to compare arbitrary values in a stable order.
+
+This exists because php's `<` operator is not stable. `'10' < '0a' < '1b' < '9' < '10'`.
+`Teds\stable_compare` fixes that by strictly ordering:
+
+- `null < false < true < int,float < string < array < object < resource`.
+- objects and resources are compared by id.
+- arrays are compared recursively. Smaller arrays are less than larger arrays.
+- int/float are compared numerically. If an int is equal to a float, then the int is first.
+- strings are compared with strcmp.
+
 ## Motivation
 
 This contains functionality and data structures that may be proposed for inclusion into PHP itself (under a different namespace) at a future date, reimplemented using [SPL's source code](https://github.com/php/php-src/tree/master/ext/spl) as a starting point.

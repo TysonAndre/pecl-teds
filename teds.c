@@ -556,6 +556,81 @@ PHP_FUNCTION(array_value_last)
 }
 /* }}} */
 
+#define SPACESHIP_OP(n1, n2) ((n1) < (n2) ? -1 : (n1) > (n2) ? 1 : 0)
+
+static zend_long teds_stable_compare(const zval *v1, const zval *v2);
+
+static int teds_stable_compare_wrap(const void *v1, const void *v2) {
+	return teds_stable_compare(v1, v2);
+}
+
+static zend_long teds_stable_compare(const zval *v1, const zval *v2) {
+	ZVAL_DEREF(v1);
+	ZVAL_DEREF(v2);
+	const zend_uchar t1 = Z_TYPE_P(v1);
+	const zend_uchar t2 = Z_TYPE_P(v2);
+	if (t1 != t2) {
+		if (((1 << t1) | (1 << t2)) & ~((1 << IS_LONG) | (1 << IS_DOUBLE))) {
+			/* At least one type is not a long or a double. */
+			return t1 < t2 ? -1 : 1;
+		}
+		if (t1 == IS_DOUBLE) {
+			ZEND_ASSERT(t2 == IS_LONG);
+
+			double n1 = Z_DVAL_P(v1);
+			zend_long n2 = Z_LVAL_P(v2);
+			return n1 < n2 ? -1 : 1;
+		} else {
+			ZEND_ASSERT(t1 == IS_LONG);
+			ZEND_ASSERT(t2 == IS_DOUBLE);
+
+			zend_long n1 = Z_LVAL_P(v1);
+			double n2 = Z_DVAL_P(v2);
+			return n1 <= n2 ? -1 : 1;
+		}
+		return Z_TYPE_P(v1) < Z_TYPE_P(v2) ? -1 : 1;
+	}
+	switch (t1) {
+		case IS_NULL:
+		case IS_FALSE:
+		case IS_TRUE:
+			return 0;
+		case IS_LONG:
+			return SPACESHIP_OP(Z_LVAL_P(v1), Z_LVAL_P(v2));
+		case IS_DOUBLE:
+			return SPACESHIP_OP(Z_DVAL_P(v1), Z_DVAL_P(v2));
+		case IS_STRING: {
+			return zend_binary_zval_strcmp((zval *)v1, (zval *)v2);
+		}
+		case IS_ARRAY:  {
+			HashTable *h1 = Z_ARR_P(v1);
+			HashTable *h2 = Z_ARR_P(v2);
+			return zend_hash_compare(h1, h2, teds_stable_compare_wrap, true);
+		}
+		case IS_OBJECT:
+			return SPACESHIP_OP(Z_OBJ_HANDLE_P(v1), Z_OBJ_HANDLE_P(v2));
+		case IS_RESOURCE:
+			return SPACESHIP_OP(Z_RES_HANDLE_P(v1), Z_RES_HANDLE_P(v2));
+		default:
+			ZEND_UNREACHABLE();
+	}
+}
+
+/* {{{ Compare two elements in a stable order. */
+PHP_FUNCTION(stable_compare)
+{
+	zval *v1;
+	zval *v2;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ZVAL(v1)
+		Z_PARAM_ZVAL(v2)
+	ZEND_PARSE_PARAMETERS_END();
+
+	RETURN_LONG(teds_stable_compare(v1, v2));
+}
+/* }}} */
+
 /* {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(teds)
 {
