@@ -616,7 +616,6 @@ static zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 				return ((zend_ulong)-i1) < i2 ? 1 : -1;
 			}
 		}
-		return Z_TYPE_P(v1) < Z_TYPE_P(v2) ? -1 : 1;
 	}
 	switch (t1) {
 		case IS_NULL:
