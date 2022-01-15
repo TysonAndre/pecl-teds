@@ -72,8 +72,20 @@ usort($values, 'Teds\stable_compare');
 echo "After stable sort\n";
 var_dump($values);
 echo "\n";
+echo "Test floating point edge cases\n";
+$big = (int)(float)(PHP_INT_MAX - 1000000);
+dump_stable_compare($big, (float)$big);
+dump_stable_compare($big - 1, (float)$big);
+dump_stable_compare($big + 1, (float)$big);
+dump_stable_compare($big, NAN);
+dump_stable_compare($big, INF);
+dump_stable_compare($big, -INF);
+dump_stable_compare(0.0, NAN);
+dump_stable_compare(0, NAN);
+dump_stable_compare(INF, NAN);
+dump_stable_compare(NAN, NAN);
 ?>
---EXPECT--
+--EXPECTF--
 stable_compare(NULL, NULL): 0 (opposite 0)
 stable_compare(false, false): 0 (opposite 0)
 stable_compare(true, true): 0 (opposite 0)
@@ -101,7 +113,7 @@ stable_compare(0.0001, 0): 1 (opposite -1)
 stable_compare(0.0, 1.0): -1 (opposite 1)
 stable_compare(0, '0'): -1 (opposite 1)
 stable_compare(1, '0'): -1 (opposite 1)
-stable_compare('10', '9'): -8 (opposite 8)
+stable_compare('10', '9'): -1 (opposite 1)
 stable_compare('A', 'A' . "\0" . ''): -1 (opposite 1)
 stable_compare('A', 'A'): 0 (opposite 0)
 stable_compare(0.0, -0.0): 0 (opposite 0)
@@ -204,3 +216,15 @@ array(19) {
   [18]=>
   resource(5) of type (stream)
 }
+
+Test floating point edge cases
+stable_compare(%s, %s): -1 (opposite 1)
+stable_compare(%s, %s): -1 (opposite 1)
+stable_compare(%s, %s): 1 (opposite -1)
+stable_compare(%s, NAN): -1 (opposite 1)
+stable_compare(%s, INF): -1 (opposite 1)
+stable_compare(%s, -INF): 1 (opposite -1)
+stable_compare(0.0, NAN): -1 (opposite 1)
+stable_compare(0, NAN): -1 (opposite 1)
+stable_compare(INF, NAN): -1 (opposite 1)
+stable_compare(NAN, NAN): 0 (opposite 0)

@@ -577,16 +577,44 @@ static zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 		if (t1 == IS_DOUBLE) {
 			ZEND_ASSERT(t2 == IS_LONG);
 
+			zend_long i2 = Z_LVAL_P(v2);
+			/* Windows long double is an alias of double. */
 			double n1 = Z_DVAL_P(v1);
-			zend_long n2 = Z_LVAL_P(v2);
-			return n1 < n2 ? -1 : 1;
+			double n2 = i2;
+			if (n1 != n2) {
+				return n1 < n2 ? -1 : 1;
+			}
+			if (EXPECTED(i2 == (zend_long)n1)) {
+				/* long before double */
+				return 1;
+			}
+			if (i2 > 0) {
+				zend_ulong i1 = (zend_ulong)n1;
+				return i1 < i2 ? -1 : 1;
+			} else {
+				zend_ulong i1 = (zend_ulong)-n1;
+				return ((zend_ulong)-i1) < i2 ? 1 : -1;
+			}
 		} else {
 			ZEND_ASSERT(t1 == IS_LONG);
 			ZEND_ASSERT(t2 == IS_DOUBLE);
 
-			zend_long n1 = Z_LVAL_P(v1);
+			zend_long i1 = Z_LVAL_P(v1);
+			double n1 = i1;
 			double n2 = Z_DVAL_P(v2);
-			return n1 <= n2 ? -1 : 1;
+			if (n1 != n2) {
+				return n2 < n1 ? 1 : -1;
+			}
+			if (EXPECTED(i1 == (zend_long)n2)) {
+				return -1;
+			}
+			if (i1 > 0) {
+				zend_ulong i2 = (zend_ulong)n2;
+				return i1 < i2 ? -1 : 1;
+			} else {
+				zend_ulong i2 = (zend_ulong)-n2;
+				return ((zend_ulong)-i1) < i2 ? 1 : -1;
+			}
 		}
 		return Z_TYPE_P(v1) < Z_TYPE_P(v2) ? -1 : 1;
 	}
@@ -597,10 +625,22 @@ static zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 			return 0;
 		case IS_LONG:
 			return SPACESHIP_OP(Z_LVAL_P(v1), Z_LVAL_P(v2));
-		case IS_DOUBLE:
-			return SPACESHIP_OP(Z_DVAL_P(v1), Z_DVAL_P(v2));
+		case IS_DOUBLE: {
+			double n1 = Z_DVAL_P(v1);
+			double n2 = Z_DVAL_P(v2);
+			if (n1 == n2) {
+				return 0;
+			}
+			if (UNEXPECTED(n2 != n2)) {
+				/* Treat INF as smaller than NAN */
+				return n1 != n1 ? 0 : -1;
+			}
+			return n1 < n2 ? -1 : 1;
+		}
 		case IS_STRING: {
-			return zend_binary_zval_strcmp((zval *)v1, (zval *)v2);
+			int result = zend_binary_zval_strcmp((zval *)v1, (zval *)v2);
+			/* Avoid platform dependence, zend_binary_zval_strcmp is different on Windows */
+			return SPACESHIP_OP(result, 0);
 		}
 		case IS_ARRAY:  {
 			HashTable *h1 = Z_ARR_P(v1);
