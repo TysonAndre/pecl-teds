@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2021-09-26</date>
+ <date>2022-01-15</date>
  <time>16:00:00</time>
  <version>
-  <release>0.4.2dev</release>
-  <api>0.4.2dev</api>
+  <release>0.4.2</release>
+  <api>0.4.2</api>
  </version>
  <stability>
   <release>stable</release>
@@ -76,6 +76,7 @@
     <file name="Deque/clone.phpt" role="test" />
     <file name="Deque/contains.phpt" role="test" />
     <file name="Deque/exceptionhandler.phpt" role="test" />
+    <file name="Deque/foreach.phpt" role="test" />
     <file name="Deque/isEmpty.phpt" role="test" />
     <file name="Deque/iterator.phpt" role="test" />
     <file name="Deque/offsetGet.phpt" role="test" />
