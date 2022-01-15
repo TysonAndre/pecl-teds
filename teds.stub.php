@@ -74,3 +74,17 @@ function array_value_first(array $array): mixed { }
  * Counterpart to https://php.net/array_key_last
  */
 function array_value_last(array $array): mixed { }
+
+/**
+ * Stable comparison of values.
+ * Like strcmp, this returns a negative value for less than, and positive for greater than, and 0 for equality.
+ * This exists because php's `<` operator is not stable. `'10' < '0a' < '1b' < '9' < '10'`.
+ * Teds\stable_compare fixes that by strictly ordering:
+ *
+ * - `null < false < true < int,float < string < array < object < resource`.
+ * - objects and resources are compared by id.
+ * - arrays are compared recursively. Smaller arrays are less than larger arrays.
+ * - int/float are compared numerically. If an int is equal to a float, then the int is first.
+ * - strings are compared with strcmp.
+ */
+function stable_compare(mixed $v1, mixed $v2): int { }

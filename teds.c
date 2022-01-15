@@ -556,6 +556,121 @@ PHP_FUNCTION(array_value_last)
 }
 /* }}} */
 
+#define SPACESHIP_OP(n1, n2) ((n1) < (n2) ? -1 : (n1) > (n2) ? 1 : 0)
+
+static zend_long teds_stable_compare(const zval *v1, const zval *v2);
+
+static int teds_stable_compare_wrap(const void *v1, const void *v2) {
+	return teds_stable_compare(v1, v2);
+}
+
+static zend_long teds_stable_compare(const zval *v1, const zval *v2) {
+	ZVAL_DEREF(v1);
+	ZVAL_DEREF(v2);
+	const zend_uchar t1 = Z_TYPE_P(v1);
+	const zend_uchar t2 = Z_TYPE_P(v2);
+	if (t1 != t2) {
+		if (((1 << t1) | (1 << t2)) & ~((1 << IS_LONG) | (1 << IS_DOUBLE))) {
+			/* At least one type is not a long or a double. */
+			return t1 < t2 ? -1 : 1;
+		}
+		if (t1 == IS_DOUBLE) {
+			ZEND_ASSERT(t2 == IS_LONG);
+
+			zend_long i2 = Z_LVAL_P(v2);
+			/* Windows long double is an alias of double. */
+			double n1 = Z_DVAL_P(v1);
+			double n2 = i2;
+			if (n1 != n2) {
+				return n1 < n2 ? -1 : 1;
+			}
+			if (EXPECTED(i2 == (zend_long)n1)) {
+				/* long before double */
+				return 1;
+			}
+			if (i2 > 0) {
+				zend_ulong i1 = (zend_ulong)n1;
+				return i1 < i2 ? -1 : 1;
+			} else {
+				zend_ulong i1 = (zend_ulong)-n1;
+				return ((zend_ulong)-i1) < i2 ? 1 : -1;
+			}
+		} else {
+			ZEND_ASSERT(t1 == IS_LONG);
+			ZEND_ASSERT(t2 == IS_DOUBLE);
+
+			zend_long i1 = Z_LVAL_P(v1);
+			double n1 = i1;
+			double n2 = Z_DVAL_P(v2);
+			if (n1 != n2) {
+				return n2 < n1 ? 1 : -1;
+			}
+			if (EXPECTED(i1 == (zend_long)n2)) {
+				return -1;
+			}
+			if (i1 > 0) {
+				zend_ulong i2 = (zend_ulong)n2;
+				return i1 < i2 ? -1 : 1;
+			} else {
+				zend_ulong i2 = (zend_ulong)-n2;
+				return ((zend_ulong)-i1) < i2 ? 1 : -1;
+			}
+		}
+		return Z_TYPE_P(v1) < Z_TYPE_P(v2) ? -1 : 1;
+	}
+	switch (t1) {
+		case IS_NULL:
+		case IS_FALSE:
+		case IS_TRUE:
+			return 0;
+		case IS_LONG:
+			return SPACESHIP_OP(Z_LVAL_P(v1), Z_LVAL_P(v2));
+		case IS_DOUBLE: {
+			double n1 = Z_DVAL_P(v1);
+			double n2 = Z_DVAL_P(v2);
+			if (n1 == n2) {
+				return 0;
+			}
+			if (UNEXPECTED(n2 != n2)) {
+				/* Treat INF as smaller than NAN */
+				return n1 != n1 ? 0 : -1;
+			}
+			return n1 < n2 ? -1 : 1;
+		}
+		case IS_STRING: {
+			int result = zend_binary_zval_strcmp((zval *)v1, (zval *)v2);
+			/* Avoid platform dependence, zend_binary_zval_strcmp is different on Windows */
+			return SPACESHIP_OP(result, 0);
+		}
+		case IS_ARRAY:  {
+			HashTable *h1 = Z_ARR_P(v1);
+			HashTable *h2 = Z_ARR_P(v2);
+			return zend_hash_compare(h1, h2, teds_stable_compare_wrap, true);
+		}
+		case IS_OBJECT:
+			return SPACESHIP_OP(Z_OBJ_HANDLE_P(v1), Z_OBJ_HANDLE_P(v2));
+		case IS_RESOURCE:
+			return SPACESHIP_OP(Z_RES_HANDLE_P(v1), Z_RES_HANDLE_P(v2));
+		default:
+			ZEND_UNREACHABLE();
+	}
+}
+
+/* {{{ Compare two elements in a stable order. */
+PHP_FUNCTION(stable_compare)
+{
+	zval *v1;
+	zval *v2;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ZVAL(v1)
+		Z_PARAM_ZVAL(v2)
+	ZEND_PARSE_PARAMETERS_END();
+
+	RETURN_LONG(teds_stable_compare(v1, v2));
+}
+/* }}} */
+
 /* {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(teds)
 {

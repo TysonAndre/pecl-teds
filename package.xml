@@ -23,6 +23,13 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Add Teds\array_value_first(), Teds\array_value_last()
+* Add `Teds\stable_compare($v1, $v2): int` for a stable comparison function of arbitrary values. (see tests/misc/stable_compare.phpt).
+  Like strcmp, this returns a negative value for less than, and positive for greater than, and 0 for equality.
+  Note that php's `&lt;` operator is not stable. `'10' &lt; '0a' &lt; '1b' &lt; '9' &lt; '10'`.
+  stable_compare fixes that by strictly ordering:
+  `null &lt; false &lt; true &lt; int,float &lt; string &lt; array &lt; object &lt; resource`.
+  (objects and resources are compared by id, and arrays are compared recursively. Numbers are compared numerically. If an int is equal to a float, then the int is first)
+  (strings use strcmp)
 * Make Deque iteration account for calls to shift/unshift tracking the position of the front of the Deque.
   Calls to shift/unshift will do the following:
   - Increase/Decrease the value returned by the iterator's key() by the number of elements added/removed to/from the front of the Deque. (`$deque[$iteratorKey] === $iteratorValue` at the time the key and value are returned).
@@ -163,6 +170,7 @@
     <file name="iterable/includes_value.phpt" role="test" />
     <file name="iterable/none_array.phpt" role="test" />
     <file name="iterable/none_traversable.phpt" role="test" />
+    <file name="misc/stable_compare.phpt" role="test" />
    </dir>
   </dir>
  </contents>
