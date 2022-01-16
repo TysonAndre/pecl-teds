@@ -165,7 +165,6 @@ function includes_value(iterable $iterable, mixed $value): bool {
 	}
 	return false;
 }
-
 ```
 
 ## Stable comparison
@@ -181,6 +180,23 @@ This exists because php's `<` operator is not stable. `'10' < '0a' < '1b' < '9' 
 - arrays are compared recursively. Smaller arrays are less than larger arrays.
 - int/float are compared numerically. If an int is equal to a float, then the int is first.
 - strings are compared with strcmp.
+
+## Strict hashing
+
+`Teds\strict_hash` provides a hash based on value identity.
+
+- Objects are hashed based on `spl_object id`.
+  Different objects will have different hashes for the lifetime of the hash.
+- Resources are hashed based on `get_resource_id`.
+- Strings are hashed
+- References are dereferenced and hashed the same way as the value.
+- Integers are returned
+- Floats are hashed in a possibly platform-specific way.
+- Arrays are hashed recursively. If $a1 === $a2 then they will have the same hash.
+
+This may vary based on php release, OS, CPU architecture, or Teds release
+and should not be saved/loaded outside of a given php process.
+(and `spl_object_id`/`get_resource_id` are unpredictable)
 
 ## Motivation
 

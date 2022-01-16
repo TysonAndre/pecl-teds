@@ -1,7 +1,7 @@
 <?php
 
 /** @generate-class-entries */
-// Stub generation requires build/gen_stubs.php from php 8.1 or newer.
+// Stub generation requires build/gen_stub.php from php 8.1 or newer.
 
 namespace Teds;
 
@@ -107,7 +107,7 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
     public function indexOf(mixed $value): ?int {}
 
     /**
-     * @return bool true if there exists a value === $value in this vector.
+     * Returns true if there exists a value === $value in this vector.
      */
     public function contains(mixed $value): bool {}
 

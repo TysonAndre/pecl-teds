@@ -31,6 +31,7 @@
    <file name="teds.c" role="src" />
    <file name="teds.h" role="src" />
    <file name="teds_arginfo.h" role="src" />
+   <file name="teds_bswap.h" role="src" />
    <file name="teds_deque_arginfo.h" role="src" />
    <file name="teds_deque.c" role="src" />
    <file name="teds_deque.h" role="src" />
@@ -160,6 +161,9 @@
     <file name="iterable/none_array.phpt" role="test" />
     <file name="iterable/none_traversable.phpt" role="test" />
     <file name="misc/stable_compare.phpt" role="test" />
+    <file name="misc/strict_hash.phpt" role="test" />
+    <file name="misc/strict_hash_array_recursion.phpt" role="test" />
+    <file name="misc/strict_hash_array_references.phpt" role="test" />
    </dir>
   </dir>
  </contents>

@@ -97,7 +97,7 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
      */
     public function indexOf(mixed $value): ?int {}
     /**
-     * @return bool true if there exists a value === $value in this vector.
+     * Returns true if there exists a value === $value in this vector.
      */
     public function contains(mixed $value): bool {}
 
