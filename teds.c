@@ -34,6 +34,7 @@
 #include "teds_immutablekeyvaluesequence.h"
 #include "teds_immutablesequence.h"
 #include "teds_keyvaluevector.h"
+#include "teds_strictmap.h"
 #include "teds_vector.h"
 #include "teds_bswap.h"
 
@@ -791,7 +792,7 @@ again:
 }
 
 /* {{{ Generate a hash */
-static zend_long teds_strict_hash(zval *value) {
+zend_long teds_strict_hash(zval *value) {
 	uint64_t raw_data = teds_strict_hash_inner(value);
 	return teds_inline_hash_of_uint64(raw_data);
 }
@@ -817,6 +818,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_keyvaluevector)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_strictmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_vector)(INIT_FUNC_ARGS_PASSTHRU);
 	return SUCCESS;
 }

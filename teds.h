@@ -83,4 +83,6 @@ static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 	} \
 } while(0)
 
+zend_long teds_strict_hash(zval *value);
+
 #endif	/* TEDS_H */
