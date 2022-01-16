@@ -48,6 +48,10 @@
    <file name="teds_keyvaluevector.c" role="src" />
    <file name="teds_keyvaluevector.h" role="src" />
    <file name="teds_keyvaluevector.stub.php" role="src" />
+   <file name="teds_strictmap_arginfo.h" role="src" />
+   <file name="teds_strictmap.c" role="src" />
+   <file name="teds_strictmap.h" role="src" />
+   <file name="teds_strictmap.stub.php" role="src" />
    <file name="teds_util.h" role="src" />
    <file name="teds_vector_arginfo.h" role="src" />
    <file name="teds_vector.c" role="src" />

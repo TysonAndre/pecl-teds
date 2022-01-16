@@ -591,7 +591,7 @@ static void teds_immutablekeyvaluesequence_entries_init_from_array_pairs(teds_im
 	size_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
 		array->size = 0;
-		array->entries = NULL;
+		array->entries = (zval_pair *)empty_entry_list;
 		return;
 	}
 	zval_pair *entries = safe_emalloc(num_entries, sizeof(zval_pair), 0);
@@ -607,7 +607,7 @@ static void teds_immutablekeyvaluesequence_entries_init_from_array_pairs(teds_im
 	ZEND_ASSERT(actual_size <= num_entries);
 	if (UNEXPECTED(!actual_size)) {
 		efree(entries);
-		entries = NULL;
+		entries = (zval_pair *)empty_entry_list;
 	}
 
 	array->entries = entries;

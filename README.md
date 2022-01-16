@@ -72,6 +72,15 @@ Much more efficient in memory usage and random access than SplDoublyLinkedList.
 
 (Also similar to `Ds\Deque`)
 
+### Teds\StrictMap
+
+[`Teds\StrictMap` API](./teds_strictmap.stub.php)
+
+**This is a work in progress.** Iteration will not work as expected if elements are removed during iteration, and hash lookups haven't been implemented yet, so this is inefficient for large maps (scans the entire map).
+
+This is a map where entries for keys of any type can be inserted if they are `!==` to other keys.
+This uses [`Teds\strict_hash`](#strict-hashing) internally.
+
 ### iterable functions
 
 This PECL contains a library of native implementations of various functions acting on iterables.
