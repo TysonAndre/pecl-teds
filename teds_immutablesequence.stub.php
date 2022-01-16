@@ -1,7 +1,7 @@
 <?php
 
 /** @generate-class-entries */
-// Stub generation requires build/gen_stubs.php from php 8.1 or newer.
+// Stub generation requires build/gen_stub.php from php 8.1 or newer.
 
 namespace Teds;
 

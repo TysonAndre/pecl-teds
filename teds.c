@@ -25,6 +25,7 @@
 #include "zend_interfaces.h"
 #include "zend_types.h"
 #include "zend_smart_str.h"
+#include "zend_strtod_int.h" /* WORDS_BIGENDIAN */
 #include "ext/spl/spl_iterators.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/info.h"
@@ -34,6 +35,7 @@
 #include "teds_immutablesequence.h"
 #include "teds_keyvaluevector.h"
 #include "teds_vector.h"
+#include "teds_bswap.h"
 
 #include "teds_arginfo.h"
 #include "php_teds.h"
@@ -646,8 +648,24 @@ static zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 			HashTable *h2 = Z_ARR_P(v2);
 			return zend_hash_compare(h1, h2, teds_stable_compare_wrap, true);
 		}
-		case IS_OBJECT:
-			return SPACESHIP_OP(Z_OBJ_HANDLE_P(v1), Z_OBJ_HANDLE_P(v2));
+		case IS_OBJECT: {
+			/* Sort by class name, then by object handle, to group objects of the same class together. */
+			zend_object *o1 = Z_OBJ_P(v1);
+			zend_object *o2 = Z_OBJ_P(v2);
+			if (o1 == o2) {
+				return 0;
+			}
+			if (o1->ce != o2->ce) {
+				zend_string *c1 = o1->ce->name;
+				zend_string *c2 = o2->ce->name;
+				int result = zend_binary_strcmp(ZSTR_VAL(c1), ZSTR_LEN(c1), ZSTR_VAL(c2), ZSTR_LEN(c2));
+				if (result != 0) {
+					return result < 0 ? -1 : 1;
+				}
+			}
+			ZEND_ASSERT(Z_OBJ_HANDLE_P(v1) != Z_OBJ_HANDLE_P(v2)); /* Implied by o1 != o2 */
+			return Z_OBJ_HANDLE_P(v1) < Z_OBJ_HANDLE_P(v2) ? -1 : 1;
+		}
 		case IS_RESOURCE:
 			return SPACESHIP_OP(Z_RES_HANDLE_P(v1), Z_RES_HANDLE_P(v2));
 		default:
@@ -667,6 +685,128 @@ PHP_FUNCTION(stable_compare)
 	ZEND_PARSE_PARAMETERS_END();
 
 	RETURN_LONG(teds_stable_compare(v1, v2));
+}
+/* }}} */
+
+/* This assumes that pointers differ in low addresses rather than high addresses.
+ * Copied from code written for igbinary. */
+inline static uint64_t teds_inline_hash_of_uint64(uint64_t orig) {
+	/* Works best when data that frequently differs is in the least significant bits of data */
+	uint64_t data = orig * 0x5e2d58d8b3bce8d9;
+	/* bswap is a single assembly instruction on recent compilers/platforms */
+	return bswap_64(data);
+}
+
+inline static uint64_t teds_convert_double_to_uint64_t(double *value) {
+	uint8_t *data = (uint8_t *)value;
+#ifndef WORDS_BIGENDIAN
+	return
+		(((uint64_t)data[0]) << 56) |
+		(((uint64_t)data[1]) << 48) |
+		(((uint64_t)data[2]) << 40) |
+		(((uint64_t)data[3]) << 32) |
+		(((uint64_t)data[4]) << 24) |
+		(((uint64_t)data[5]) << 16) |
+		(((uint64_t)data[6]) << 8) |
+		(((uint64_t)data[7]));
+#else
+	return
+		(((uint64_t)data[7]) << 56) |
+		(((uint64_t)data[6]) << 48) |
+		(((uint64_t)data[5]) << 40) |
+		(((uint64_t)data[4]) << 32) |
+		(((uint64_t)data[3]) << 24) |
+		(((uint64_t)data[2]) << 16) |
+		(((uint64_t)data[1]) << 8) |
+		(((uint64_t)data[0]));
+#endif
+}
+
+static zend_long teds_strict_hash_inner(zval *value) {
+again:
+	switch (Z_TYPE_P(value)) {
+		case IS_NULL:
+			return 8310;
+		case IS_FALSE:
+			return 8311;
+		case IS_TRUE:
+			return 8312;
+		case IS_LONG:
+			return Z_LVAL_P(value);
+		case IS_DOUBLE:
+			return teds_convert_double_to_uint64_t(&Z_DVAL_P(value)) + 8315;
+		case IS_STRING:
+			/* Compute the hash if needed, return it */
+			return ZSTR_HASH(Z_STR_P(value));
+		case IS_ARRAY: {
+			zend_long num_key;
+			zend_string *str_key;
+			zval *field_value;
+
+			uint64_t result = 1;
+			HashTable *ht = Z_ARR_P(value);
+
+			if (zend_hash_num_elements(ht) == 0) {
+				return 8313;
+			}
+
+			if (!(GC_FLAGS(ht) & GC_IMMUTABLE)) {
+				if (GC_IS_RECURSIVE(ht)) {
+					/* This is recursively trying to hash itself. */
+					return 8314;
+				}
+				/* GC_ADDREF(ht); */
+				GC_PROTECT_RECURSION(ht);
+			}
+
+			/* teds_strict_hash_inner has code to dereference IS_INDIRECT/IS_REFERENCE,
+			 * but IS_INDIRECT is probably impossible as of php 8.1's removal of direct access to $GLOBALS? */
+			ZEND_HASH_FOREACH_KEY_VAL(Z_ARR_P(value), num_key, str_key, field_value) {
+				/* str_key is in a hash table meaning the hash was already computed. */
+				result += str_key ? ZSTR_H(str_key) : num_key;
+				result += (teds_strict_hash_inner(field_value) + (result << 7));
+				result = teds_inline_hash_of_uint64(result);
+			} ZEND_HASH_FOREACH_END();
+
+			if (!(GC_FLAGS(ht) & GC_IMMUTABLE)) {
+				GC_UNPROTECT_RECURSION(ht);
+				/* GC_DELREF(ht); */
+			}
+			return result;
+	    }
+		case IS_OBJECT:
+		    /* Avoid hash collisions between objects and small numbers. */
+			return Z_OBJ_HANDLE_P(value) + 31415926;
+		case IS_RESOURCE:
+			return Z_RES_HANDLE_P(value) + 27182818;
+		case IS_REFERENCE:
+			value = Z_REFVAL_P(value);
+			goto again;
+		case IS_INDIRECT:
+			value = Z_INDIRECT_P(value);
+			goto again;
+		default:
+			ZEND_UNREACHABLE();
+	}
+}
+
+/* {{{ Generate a hash */
+static zend_long teds_strict_hash(zval *value) {
+	uint64_t raw_data = teds_strict_hash_inner(value);
+	return teds_inline_hash_of_uint64(raw_data);
+}
+/* }}} */
+
+/* {{{ Compare two elements in a stable order. */
+PHP_FUNCTION(strict_hash)
+{
+	zval *value;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	RETURN_LONG(teds_strict_hash(value));
 }
 /* }}} */
 

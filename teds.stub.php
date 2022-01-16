@@ -1,8 +1,8 @@
 <?php
 /** @generate-class-entries */
-// Stub generation requires build/gen_stubs.php from php 8.1 or newer.
+// Stub generation requires build/gen_stub.php from php 8.1 or newer.
 
-// NOTE: Due to a limitation of gen_stubs.php (at)param is used instead
+// NOTE: Due to a limitation of gen_stub.php (at)param is used instead
 
 namespace Teds;
 
@@ -88,3 +88,23 @@ function array_value_last(array $array): mixed { }
  * - strings are compared with strcmp.
  */
 function stable_compare(mixed $v1, mixed $v2): int { }
+
+/**
+ * Hash based on value with objects hashed by identity, not by hash function or fields.
+ *
+ * - Objects are hashed to their spl_object id.
+ *   Different objects will have different hashes.
+ * - Resources are hashed to their id.
+ * - Strings are hashed
+ * - References are dereferenced.
+ * - Integers are returned
+ * - Floats are hashed in a possibly platform-specific way.
+ * - Arrays are hashed recursively. If $a1 === $a2 then they will have the same hash.
+ *
+ * This may vary based on php release, OS, CPU architecture, or Teds release
+ * and should not be saved/loaded outside of a given php process.
+ * (and spl_object_id/get_resource_id are unpredictable)
+ *
+ * Future releases of Teds may change the hashing algorithm to improve performance/collision resistance.
+ */
+function strict_hash(mixed $value): int { }
