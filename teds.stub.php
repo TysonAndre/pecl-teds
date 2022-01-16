@@ -82,7 +82,8 @@ function array_value_last(array $array): mixed { }
  * Teds\stable_compare fixes that by strictly ordering:
  *
  * - `null < false < true < int,float < string < array < object < resource`.
- * - objects and resources are compared by id.
+ * - objects are compared by class name with strcmp, then by spl_object_id.
+ * - resources are compared by id.
  * - arrays are compared recursively. Smaller arrays are less than larger arrays.
  * - int/float are compared numerically. If an int is equal to a float, then the int is first.
  * - strings are compared with strcmp.

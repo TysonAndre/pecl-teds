@@ -646,8 +646,24 @@ static zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 			HashTable *h2 = Z_ARR_P(v2);
 			return zend_hash_compare(h1, h2, teds_stable_compare_wrap, true);
 		}
-		case IS_OBJECT:
-			return SPACESHIP_OP(Z_OBJ_HANDLE_P(v1), Z_OBJ_HANDLE_P(v2));
+		case IS_OBJECT: {
+			/* Sort by class name, then by object handle, to group objects of the same class together. */
+			zend_object *o1 = Z_OBJ_P(v1);
+			zend_object *o2 = Z_OBJ_P(v2);
+			if (o1 == o2) {
+				return 0;
+			}
+			if (o1->ce != o2->ce) {
+				zend_string *c1 = o1->ce->name;
+				zend_string *c2 = o2->ce->name;
+				int result = zend_binary_strcmp(ZSTR_VAL(c1), ZSTR_LEN(c1), ZSTR_VAL(c2), ZSTR_LEN(c2));
+				if (result != 0) {
+					return result < 0 ? -1 : 1;
+				}
+			}
+			ZEND_ASSERT(Z_OBJ_HANDLE_P(v1) != Z_OBJ_HANDLE_P(v2)); /* Implied by o1 != o2 */
+			return Z_OBJ_HANDLE_P(v1) < Z_OBJ_HANDLE_P(v2) ? -1 : 1;
+		}
 		case IS_RESOURCE:
 			return SPACESHIP_OP(Z_RES_HANDLE_P(v1), Z_RES_HANDLE_P(v2));
 		default:

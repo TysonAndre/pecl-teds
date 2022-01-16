@@ -13,8 +13,8 @@
  <date>2022-01-15</date>
  <time>16:00:00</time>
  <version>
-  <release>0.5.1</release>
-  <api>0.5.1</api>
+  <release>0.5.2dev</release>
+  <api>0.5.2dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,19 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Add Teds\array_value_first(), Teds\array_value_last()
-* Add `Teds\stable_compare($v1, $v2): int` for a stable comparison function of arbitrary values. (see tests/misc/stable_compare.phpt).
-  Like strcmp, this returns a negative value for less than, and positive for greater than, and 0 for equality.
-  Note that php's `&lt;` operator is not stable. `'10' &lt; '0a' &lt; '1b' &lt; '9' &lt; '10'`.
-  stable_compare fixes that by strictly ordering:
-  `null &lt; false &lt; true &lt; int,float &lt; string &lt; array &lt; object &lt; resource`.
-  (objects and resources are compared by id, and arrays are compared recursively. Numbers are compared numerically. If an int is equal to a float, then the int is first)
-  (strings use strcmp)
-* Make Deque iteration account for calls to shift/unshift tracking the position of the front of the Deque.
-  Calls to shift/unshift will do the following:
-  - Increase/Decrease the value returned by the iterator's key() by the number of elements added/removed to/from the front of the Deque. (`$deque[$iteratorKey] === $iteratorValue` at the time the key and value are returned).
-  - Repeated calls to shift will cause valid() to return false if the iterator's position ends up before the start of the Deque at the time iteration resumes.
-  - They will not cause the remaining values to be iterated over more than once or skipped.
+* Make `Teds\stable_compare` sort objects by class name with strcmp before sorting by spl_object_id.
  </notes>
  <contents>
   <dir name="/">
@@ -188,6 +176,35 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-01-15</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.5.1</release>
+    <api>0.5.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Add Teds\array_value_first(), Teds\array_value_last()
+* Add `Teds\stable_compare($v1, $v2): int` for a stable comparison function of arbitrary values. (see tests/misc/stable_compare.phpt).
+  Like strcmp, this returns a negative value for less than, and positive for greater than, and 0 for equality.
+  Note that php's `&lt;` operator is not stable. `'10' &lt; '0a' &lt; '1b' &lt; '9' &lt; '10'`.
+  stable_compare fixes that by strictly ordering:
+  `null &lt; false &lt; true &lt; int,float &lt; string &lt; array &lt; object &lt; resource`.
+  (objects and resources are compared by id, and arrays are compared recursively. Numbers are compared numerically. If an int is equal to a float, then the int is first)
+  (strings use strcmp)
+* Make Deque iteration account for calls to shift/unshift tracking the position of the front of the Deque.
+  Calls to shift/unshift will do the following:
+  - Increase/Decrease the value returned by the iterator's key() by the number of elements added/removed to/from the front of the Deque. (`$deque[$iteratorKey] === $iteratorValue` at the time the key and value are returned).
+  - Repeated calls to shift will cause valid() to return false if the iterator's position ends up before the start of the Deque at the time iteration resumes.
+  - They will not cause the remaining values to be iterated over more than once or skipped.
+   </notes>
+  </release>
+
   <release>
    <date>2021-09-26</date>
    <time>16:00:00</time>
