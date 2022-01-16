@@ -910,12 +910,12 @@ static teds_strictmap_entry *teds_strictmap_find_key_computing_hash(const teds_s
 	return teds_strictmap_find_key(intern, key, teds_strict_hash(key));
 }
 
-static teds_strictmap_entry *teds_strictmap_find_value(const teds_strictmap *intern, zval *key)
+static teds_strictmap_entry *teds_strictmap_find_value(const teds_strictmap *intern, zval *value)
 {
 	const size_t len = intern->array.size;
 	teds_strictmap_entry *entries = intern->array.entries;
 	for (size_t i = 0; i < len; i++) {
-		if (zend_is_identical(key, &entries[i].value)) {
+		if (zend_is_identical(value, &entries[i].value)) {
 			return &entries[i];
 		}
 	}

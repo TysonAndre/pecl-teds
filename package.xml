@@ -48,6 +48,10 @@
    <file name="teds_keyvaluevector.c" role="src" />
    <file name="teds_keyvaluevector.h" role="src" />
    <file name="teds_keyvaluevector.stub.php" role="src" />
+   <file name="teds_sortedstrictmap_arginfo.h" role="src" />
+   <file name="teds_sortedstrictmap.c" role="src" />
+   <file name="teds_sortedstrictmap.h" role="src" />
+   <file name="teds_sortedstrictmap.stub.php" role="src" />
    <file name="teds_strictmap_arginfo.h" role="src" />
    <file name="teds_strictmap.c" role="src" />
    <file name="teds_strictmap.h" role="src" />
@@ -128,6 +132,40 @@
     <file name="KeyValueVector/set_state.phpt" role="test" />
     <file name="KeyValueVector/traversable.phpt" role="test" />
     <file name="KeyValueVector/unserialize.phpt" role="test" />
+    <file name="SortedStrictMap/ImmutableKeyValueSequence.phpt" role="test" />
+    <file name="SortedStrictMap/SortedStrictMap.phpt" role="test" />
+    <file name="SortedStrictMap/aggregate.phpt" role="test" />
+    <file name="SortedStrictMap/array.phpt" role="test" />
+    <file name="SortedStrictMap/clear.phpt" role="test" />
+    <file name="SortedStrictMap/clone.phpt" role="test" />
+    <file name="SortedStrictMap/contains.phpt" role="test" />
+    <file name="SortedStrictMap/exceptionhandler.phpt" role="test" />
+    <file name="SortedStrictMap/from_pairs.phpt" role="test" />
+    <file name="SortedStrictMap/keys_values.phpt" role="test" />
+    <file name="SortedStrictMap/offsetExists.phpt" role="test" />
+    <file name="SortedStrictMap/reinit_forbidden.phpt" role="test" />
+    <file name="SortedStrictMap/remove.phpt" role="test" />
+    <file name="SortedStrictMap/serialization.phpt" role="test" />
+    <file name="SortedStrictMap/traversable.phpt" role="test" />
+    <file name="SortedStrictMap/types.phpt" role="test" />
+    <file name="SortedStrictMap/unserialize.phpt" role="test" />
+    <file name="StrictMap/ImmutableKeyValueSequence.phpt" role="test" />
+    <file name="StrictMap/StrictMap.phpt" role="test" />
+    <file name="StrictMap/aggregate.phpt" role="test" />
+    <file name="StrictMap/array.phpt" role="test" />
+    <file name="StrictMap/clear.phpt" role="test" />
+    <file name="StrictMap/clone.phpt" role="test" />
+    <file name="StrictMap/contains.phpt" role="test" />
+    <file name="StrictMap/exceptionhandler.phpt" role="test" />
+    <file name="StrictMap/from_pairs.phpt" role="test" />
+    <file name="StrictMap/keys_values.phpt" role="test" />
+    <file name="StrictMap/offsetExists.phpt" role="test" />
+    <file name="StrictMap/reinit_forbidden.phpt" role="test" />
+    <file name="StrictMap/remove.phpt" role="test" />
+    <file name="StrictMap/serialization.phpt" role="test" />
+    <file name="StrictMap/traversable.phpt" role="test" />
+    <file name="StrictMap/types.phpt" role="test" />
+    <file name="StrictMap/unserialize.phpt" role="test" />
     <file name="Vector/Vector.phpt" role="test" />
     <file name="Vector/aggregate.phpt" role="test" />
     <file name="Vector/arrayCast.phpt" role="test" />
@@ -165,6 +203,7 @@
     <file name="iterable/none_array.phpt" role="test" />
     <file name="iterable/none_traversable.phpt" role="test" />
     <file name="misc/stable_compare.phpt" role="test" />
+    <file name="misc/stable_compare_2.phpt" role="test" />
     <file name="misc/strict_hash.phpt" role="test" />
     <file name="misc/strict_hash_array_recursion.phpt" role="test" />
     <file name="misc/strict_hash_array_references.phpt" role="test" />

@@ -7,9 +7,9 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef TEDS_STRICTMAP_H
-#define TEDS_STRICTMAP_H
+#ifndef TEDS_SORTEDSTRICTMAP_H
+#define TEDS_SORTEDSTRICTMAP_H
 
-PHP_MINIT_FUNCTION(teds_strictmap);
+PHP_MINIT_FUNCTION(teds_sortedstrictmap);
 
-#endif	/* TEDS_STRICTMAP_H */
+#endif	/* TEDS_SORTEDSTRICTMAP_H */

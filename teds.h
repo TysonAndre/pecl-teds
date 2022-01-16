@@ -85,4 +85,6 @@ static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 
 zend_long teds_strict_hash(zval *value);
 
+zend_long teds_stable_compare(const zval *v1, const zval *v2);
+
 #endif	/* TEDS_H */

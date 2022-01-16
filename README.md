@@ -72,6 +72,15 @@ Much more efficient in memory usage and random access than SplDoublyLinkedList.
 
 (Also similar to `Ds\Deque`)
 
+### Teds\SortedStrictMap
+
+[`Teds\SortedStrictMap` API](./teds_strictmap.stub.php)
+
+**This is a work in progress.** Iteration will not work as expected if elements are removed during iteration, and this is backed by a raw array (using insertion sort) instead of a balanced binary tree, so insertion/removals are inefficient for large maps.
+
+This is a map where entries for keys of any type can be inserted if `Teds\stable_compare !== 0`.
+This uses [`Teds\stable_compare`](#stable-comparison) internally.
+
 ### Teds\StrictMap
 
 [`Teds\StrictMap` API](./teds_strictmap.stub.php)
