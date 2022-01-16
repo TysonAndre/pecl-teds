@@ -34,9 +34,11 @@
 #include "teds_immutablekeyvaluesequence.h"
 #include "teds_immutablesequence.h"
 #include "teds_keyvaluevector.h"
+#include "teds_sortedstrictmap.h"
 #include "teds_strictmap.h"
 #include "teds_vector.h"
 #include "teds_bswap.h"
+#include "teds.h"
 
 #include "teds_arginfo.h"
 #include "php_teds.h"
@@ -561,13 +563,11 @@ PHP_FUNCTION(array_value_last)
 
 #define SPACESHIP_OP(n1, n2) ((n1) < (n2) ? -1 : (n1) > (n2) ? 1 : 0)
 
-static zend_long teds_stable_compare(const zval *v1, const zval *v2);
-
-static int teds_stable_compare_wrap(const void *v1, const void *v2) {
+static zend_always_inline int teds_stable_compare_wrap(const void *v1, const void *v2) {
 	return teds_stable_compare(v1, v2);
 }
 
-static zend_long teds_stable_compare(const zval *v1, const zval *v2) {
+zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 	ZVAL_DEREF(v1);
 	ZVAL_DEREF(v2);
 	const zend_uchar t1 = Z_TYPE_P(v1);
@@ -818,6 +818,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_keyvaluevector)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_sortedstrictmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_strictmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_vector)(INIT_FUNC_ARGS_PASSTHRU);
 	return SUCCESS;
