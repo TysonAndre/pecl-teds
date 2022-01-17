@@ -639,6 +639,60 @@ PHP_METHOD(Teds_SortedStrictSet, values)
 	RETURN_ARR(teds_sortedstrictset_create_array_copy(intern));
 }
 
+#define IMPLEMENT_READ_OFFSET_PHP_METHOD(methodName, index) \
+PHP_METHOD(Teds_SortedStrictSet, methodName) \
+{ \
+	ZEND_PARSE_PARAMETERS_NONE(); \
+	const teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS); \
+	if (intern->array.size == 0) { \
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty SortedStrictSet", 0); \
+		RETURN_THROWS(); \
+	} \
+	teds_sortedstrictset_entry *entries = intern->array.entries; \
+	RETVAL_COPY(&entries[(index)].key); \
+}
+
+IMPLEMENT_READ_OFFSET_PHP_METHOD(bottom, 0)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(top, intern->array.size - 1)
+
+PHP_METHOD(Teds_SortedStrictSet, pop) {
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
+	if (intern->array.size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty SortedStrictSet", 0);
+		RETURN_THROWS();
+	}
+	teds_sortedstrictset_entry *entry = &intern->array.entries[intern->array.size - 1];
+	RETVAL_COPY_VALUE(&entry->key);
+	intern->array.size--;
+}
+
+/* Shifts values. Callers should adjust size and handle zval reference counting. */
+static void teds_sortedstrictset_remove_entry(teds_sortedstrictset_entry *entries, size_t len, teds_sortedstrictset_entry *entry)
+{
+	teds_sortedstrictset_entry *end = entries + len - 1;
+	ZEND_ASSERT(entry <= end);
+	/* Move entries */
+	for (; entry < end; ) {
+		ZVAL_COPY_VALUE(&entry->key, &entry[1].key);
+		entry++;
+	}
+}
+
+PHP_METHOD(Teds_SortedStrictSet, shift) {
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	if (len == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty SortedStrictSet", 0);
+		RETURN_THROWS();
+	}
+	teds_sortedstrictset_entry *entry = &intern->array.entries[0];
+	RETVAL_COPY_VALUE(&entry->key);
+	teds_sortedstrictset_remove_entry(entry, len, entry);
+	intern->array.size--;
+}
+
 static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for_key(const teds_sortedstrictset *intern, zval *key)
 {
 	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */

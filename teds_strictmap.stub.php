@@ -42,6 +42,7 @@ final class StrictMap implements \IteratorAggregate, \Countable, \JsonSerializab
 
     /**
      * Returns the value for the given key.
+     * @throws \OutOfBoundsException if $key is not found and $default was not provided.
      */
     public function offsetGet(mixed $key): mixed {}
     /**
@@ -66,6 +67,12 @@ final class StrictMap implements \IteratorAggregate, \Countable, \JsonSerializab
      * Returns true if there exists a key === $key in this StrictMap.
      */
     public function containsKey(mixed $value): bool {}
+
+    /**
+     * Returns the value at $key.
+     * @throws \OutOfBoundsException if $key is not found and $default was not provided.
+     */
+    public function get(mixed $key, mixed $default = null): mixed {}
 
     /**
      * Returns [[key1, value1], [key2, value2]]

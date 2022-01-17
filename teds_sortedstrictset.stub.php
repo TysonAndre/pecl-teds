@@ -44,6 +44,22 @@ final class SortedStrictSet implements \IteratorAggregate, \Countable, \JsonSeri
     /** Returns a list of the unique values in order of insertion. */
     public function values(): array {}
 
+    /** Returns the first value, throws if empty. */
+    public function bottom(): mixed {}
+
+    /** Returns the last value, throws if empty */
+    public function top(): mixed {}
+
+    /**
+     * Pops a value from the end of the SortedStrictSet.
+     * @throws \UnderflowException if the SortedStrictSet is empty
+     */
+    public function pop(): mixed {}
+    /**
+     * Shifts a value from the front of the SortedStrictSet
+     * @throws \UnderflowException if the SortedStrictSet is empty
+     */
+    public function shift(): mixed {}
     /**
      * Returns true if $value exists in this SortedStrictSet, false otherwise.
      */
