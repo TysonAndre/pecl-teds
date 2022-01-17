@@ -26,8 +26,9 @@
 * Add a hash map `StrictMap` using `Teds\stable_hash` as a hash algorithm.
   Keys are returned in order of insertion.
 * Add a hash set `StrictSet` using `Teds\stable_hash` as a hash algorithm.
-* Add a sorted map `SortedStrictMap` using `Teds\stable_compare` as a hash algorithm.
+* Add a sorted map `SortedStrictMap` using `Teds\stable_compare` as a comparison function.
   Keys are returned ordered by `Teds\stable_compare` and no two keys have `stable_compare` return 0 (i.e. no two keys are equivalent).
+* Add a sorted set `SortedStrictSet` using `Teds\stable_compare` as a comparison function.
  </notes>
  <contents>
   <dir name="/">
@@ -57,6 +58,10 @@
    <file name="teds_sortedstrictmap.c" role="src" />
    <file name="teds_sortedstrictmap.h" role="src" />
    <file name="teds_sortedstrictmap.stub.php" role="src" />
+   <file name="teds_sortedstrictset.h" role="src" />
+   <file name="teds_sortedstrictset.c" role="src" />
+   <file name="teds_sortedstrictset.h" role="src" />
+   <file name="teds_sortedstrictset.stub.php" role="src" />
    <file name="teds_strictmap_arginfo.h" role="src" />
    <file name="teds_strictmap.c" role="src" />
    <file name="teds_strictmap.h" role="src" />
@@ -158,6 +163,17 @@
     <file name="SortedStrictMap/traversable.phpt" role="test" />
     <file name="SortedStrictMap/types.phpt" role="test" />
     <file name="SortedStrictMap/unserialize.phpt" role="test" />
+    <file name="SortedStrictSet/StrictSet.phpt" role="test" />
+    <file name="SortedStrictSet/add.phpt" role="test" />
+    <file name="SortedStrictSet/aggregate.phpt" role="test" />
+    <file name="SortedStrictSet/clone.phpt" role="test" />
+    <file name="SortedStrictSet/contains.phpt" role="test" />
+    <file name="SortedStrictSet/exceptionhandler.phpt" role="test" />
+    <file name="SortedStrictSet/reinit_forbidden.phpt" role="test" />
+    <file name="SortedStrictSet/serialization.phpt" role="test" />
+    <file name="SortedStrictSet/set_state.phpt" role="test" />
+    <file name="SortedStrictSet/traversable.phpt" role="test" />
+    <file name="SortedStrictSet/unserialize.phpt" role="test" />
     <file name="StrictMap/ImmutableKeyValueSequence.phpt" role="test" />
     <file name="StrictMap/StrictMap.phpt" role="test" />
     <file name="StrictMap/aggregate.phpt" role="test" />
@@ -175,6 +191,17 @@
     <file name="StrictMap/traversable.phpt" role="test" />
     <file name="StrictMap/types.phpt" role="test" />
     <file name="StrictMap/unserialize.phpt" role="test" />
+    <file name="StrictSet/StrictSet.phpt" role="test" />
+    <file name="StrictSet/add.phpt" role="test" />
+    <file name="StrictSet/aggregate.phpt" role="test" />
+    <file name="StrictSet/clone.phpt" role="test" />
+    <file name="StrictSet/contains.phpt" role="test" />
+    <file name="StrictSet/exceptionhandler.phpt" role="test" />
+    <file name="StrictSet/reinit_forbidden.phpt" role="test" />
+    <file name="StrictSet/serialization.phpt" role="test" />
+    <file name="StrictSet/set_state.phpt" role="test" />
+    <file name="StrictSet/traversable.phpt" role="test" />
+    <file name="StrictSet/unserialize.phpt" role="test" />
     <file name="Vector/Vector.phpt" role="test" />
     <file name="Vector/aggregate.phpt" role="test" />
     <file name="Vector/arrayCast.phpt" role="test" />

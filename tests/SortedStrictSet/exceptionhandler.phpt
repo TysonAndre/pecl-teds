@@ -1,5 +1,5 @@
 --TEST--
-Teds\StrictSet constructed from Traversable throwing
+Teds\SortedStrictSet constructed from Traversable throwing
 --FILE--
 <?php
 
@@ -22,7 +22,7 @@ function yields_and_throws() {
     echo "Unreachable\n";
 }
 try {
-    $it = new Teds\StrictSet(yields_and_throws());
+    $it = new Teds\SortedStrictSet(yields_and_throws());
 } catch (RuntimeException $e) {
     echo "Caught " . $e->getMessage() . "\n";
 }

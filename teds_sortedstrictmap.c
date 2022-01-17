@@ -677,7 +677,6 @@ static void teds_sortedstrictmap_entries_init_from_traversable_pairs(teds_sorted
 	teds_sortedstrictmap_entries *array = &intern->array;
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	zend_long size = 0, capacity = 0;
 	array->size = 0;
 	array->capacity = 0;
 	array->entries = NULL;
@@ -709,7 +708,6 @@ static void teds_sortedstrictmap_entries_init_from_traversable_pairs(teds_sorted
 		if (!teds_sortedstrictmap_insert_from_pair(intern, pair)) {
 			break;
 		}
-		size++;
 
 		iter->index++;
 		funcs->move_forward(iter);
@@ -838,48 +836,6 @@ PHP_METHOD(Teds_SortedStrictMap, values)
 		}
 	} ZEND_HASH_FILL_END();
 	RETURN_ARR(values);
-}
-
-PHP_METHOD(Teds_SortedStrictMap, indexOfKey)
-{
-	zval *key;
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(key)
-	ZEND_PARSE_PARAMETERS_END();
-
-	const teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
-	const size_t len = intern->array.size;
-	if (len == 0) {
-		return;
-	}
-	teds_sortedstrictmap_entry *entries = intern->array.entries;
-	for (size_t i = 0; i < len; i++) {
-		if (zend_is_identical(key, &entries[i].key)) {
-			RETURN_LONG(i);
-		}
-	}
-	RETURN_NULL();
-}
-
-PHP_METHOD(Teds_SortedStrictMap, indexOfValue)
-{
-	zval *value;
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
-	ZEND_PARSE_PARAMETERS_END();
-
-	const teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
-	const size_t len = intern->array.size;
-	if (len == 0) {
-		return;
-	}
-	teds_sortedstrictmap_entry *entries = intern->array.entries;
-	for (size_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &entries[i].value)) {
-			RETURN_LONG(i);
-		}
-	}
-	RETURN_NULL();
 }
 
 typedef struct _teds_sortedstrictmap_search_result {
