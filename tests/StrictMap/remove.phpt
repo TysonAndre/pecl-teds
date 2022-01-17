@@ -1,5 +1,5 @@
 --TEST--
-Teds\StrictMap constructed from array
+Teds\StrictMap add and remove
 --FILE--
 <?php
 

@@ -1055,10 +1055,7 @@ PHP_METHOD(Teds_SortedStrictMap, containsValue)
 
 	const teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
 	teds_sortedstrictmap_entry *entry = teds_sortedstrictmap_find_value(intern, value);
-	if (entry != NULL) {
-		RETURN_TRUE;
-	}
-	RETURN_FALSE;
+	RETURN_BOOL(entry != NULL);
 }
 
 PHP_METHOD(Teds_SortedStrictMap, containsKey)

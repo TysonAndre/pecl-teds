@@ -23,6 +23,11 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Make `Teds\stable_compare` sort objects by class name with strcmp before sorting by spl_object_id.
+* Add a hash map `StrictMap` using `Teds\stable_hash` as a hash algorithm.
+  Keys are returned in order of insertion.
+* Add a hash set `StrictSet` using `Teds\stable_hash` as a hash algorithm.
+* Add a sorted map `SortedStrictMap` using `Teds\stable_compare` as a hash algorithm.
+  Keys are returned ordered by `Teds\stable_compare` and no two keys have `stable_compare` return 0 (i.e. no two keys are equivalent).
  </notes>
  <contents>
   <dir name="/">
@@ -56,6 +61,10 @@
    <file name="teds_strictmap.c" role="src" />
    <file name="teds_strictmap.h" role="src" />
    <file name="teds_strictmap.stub.php" role="src" />
+   <file name="teds_strictset.h" role="src" />
+   <file name="teds_strictset.c" role="src" />
+   <file name="teds_strictset.h" role="src" />
+   <file name="teds_strictset.stub.php" role="src" />
    <file name="teds_util.h" role="src" />
    <file name="teds_vector_arginfo.h" role="src" />
    <file name="teds_vector.c" role="src" />
