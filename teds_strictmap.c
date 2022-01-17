@@ -688,7 +688,6 @@ static void teds_strictmap_entries_init_from_traversable_pairs(teds_strictmap *i
 	teds_strictmap_entries *array = &intern->array;
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	zend_long size = 0, capacity = 0;
 	array->size = 0;
 	array->capacity = 0;
 	array->entries = NULL;
@@ -720,7 +719,6 @@ static void teds_strictmap_entries_init_from_traversable_pairs(teds_strictmap *i
 		if (!teds_strictmap_insert_from_pair(intern, pair)) {
 			break;
 		}
-		size++;
 
 		iter->index++;
 		funcs->move_forward(iter);

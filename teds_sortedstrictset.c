@@ -125,20 +125,6 @@ static zend_always_inline bool teds_sortedstrictset_entries_empty_capacity(teds_
 	return true;
 }
 
-/* Helps enforce the invariants in debug mode:
- *   - if capacity == 0, then entries == NULL
- *   - if capacity > 0, then entries != NULL
- */
-static bool teds_sortedstrictset_entries_empty_size(teds_sortedstrictset_entries *array)
-{
-	ZEND_ASSERT(array->size <= array->capacity);
-	if (array->size > 0) {
-		ZEND_ASSERT(array->entries != empty_entry_list);
-		return false;
-	}
-	return true;
-}
-
 static bool teds_sortedstrictset_entries_uninitialized(teds_sortedstrictset_entries *array)
 {
 	ZEND_ASSERT(array->size <= array->capacity);
@@ -548,6 +534,7 @@ static const zend_object_iterator_funcs teds_sortedstrictset_it_funcs = {
 zend_object_iterator *teds_sortedstrictset_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
 	teds_sortedstrictset_it *iterator;
+	(void)ce;
 
 	if (UNEXPECTED(by_ref)) {
 		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
@@ -595,7 +582,6 @@ PHP_METHOD(Teds_SortedStrictSet, __unserialize)
 	intern->array.entries = entries;
 
 	zend_string *str;
-	zval key;
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
@@ -740,28 +726,6 @@ PHP_METHOD(Teds_SortedStrictSet, contains)
 	const teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
 	teds_sortedstrictset_search_result result = teds_sortedstrictset_sorted_search_for_key(intern, value);
 	RETURN_BOOL(result.found);
-}
-
-static void teds_sortedstrictset_return_pairs(zval *return_value, teds_sortedstrictset *intern)
-{
-	size_t len = intern->array.size;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
-	}
-
-	teds_sortedstrictset_entry *entries = intern->array.entries;
-	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(values);
-
-	/* Go through values and add values to the return array */
-	ZEND_HASH_FILL_PACKED(values) {
-		for (size_t i = 0; i < len; i++) {
-			Z_TRY_ADDREF_P(&entries[i].key);
-			ZEND_HASH_FILL_ADD(&entries[i].key);
-		}
-	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
 }
 
 static void teds_sortedstrictset_clear(teds_sortedstrictset *intern) {

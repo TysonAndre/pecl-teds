@@ -124,20 +124,6 @@ static zend_always_inline void teds_strictset_entry_compute_and_store_hash(teds_
 	TEDS_ENTRY_HASH(entry) = teds_strict_hash(&entry->key);
 }
 
-/* Helps enforce the invariants in debug mode:
- *   - if capacity == 0, then entries == NULL
- *   - if capacity > 0, then entries != NULL
- */
-static bool teds_strictset_entries_empty_size(teds_strictset_entries *array)
-{
-	ZEND_ASSERT(array->size <= array->capacity);
-	if (array->size > 0) {
-		ZEND_ASSERT(array->entries != empty_entry_list);
-		return false;
-	}
-	return true;
-}
-
 static bool teds_strictset_entries_uninitialized(teds_strictset_entries *array)
 {
 	ZEND_ASSERT(array->size <= array->capacity);
@@ -157,8 +143,6 @@ static void teds_strictset_entries_init_from_array(teds_strictset_entries *array
 {
 	zend_long size = zend_hash_num_elements(values);
 	if (size > 0) {
-		zend_long nkey;
-		zend_string *skey;
 		zval *val;
 		teds_strictset_entry *entries;
 		int i = 0;
@@ -552,6 +536,7 @@ static const zend_object_iterator_funcs teds_strictset_it_funcs = {
 zend_object_iterator *teds_strictset_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
 	teds_strictset_it *iterator;
+	(void) ce;
 
 	if (UNEXPECTED(by_ref)) {
 		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
@@ -599,7 +584,6 @@ PHP_METHOD(Teds_StrictSet, __unserialize)
 	intern->array.entries = entries;
 
 	zend_string *str;
-	zval key;
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
@@ -609,28 +593,6 @@ PHP_METHOD(Teds_StrictSet, __unserialize)
 		}
 
 		teds_strictset_insert(intern, val);
-	} ZEND_HASH_FOREACH_END();
-}
-
-static void teds_strictset_entries_init_from_array_pairs(teds_strictset *intern, zend_array *raw_data)
-{
-	teds_strictset_entries *array = &intern->array;
-	size_t num_entries = zend_hash_num_elements(raw_data);
-	if (num_entries == 0) {
-		array->size = 0;
-		array->entries = (teds_strictset_entry *)empty_entry_list;
-		return;
-	}
-	const size_t capacity = teds_strictset_next_pow2_capacity(num_entries);
-	teds_strictset_entry *entries = teds_strictset_allocate_entries(capacity);
-	array->entries = entries;
-	array->size = 0;
-	array->capacity = capacity;
-	zval *val;
-	ZEND_HASH_FOREACH_VAL(raw_data, val) {
-		if (!teds_strictset_insert(intern, val)) {
-			break;
-		}
 	} ZEND_HASH_FOREACH_END();
 }
 
@@ -752,28 +714,6 @@ PHP_METHOD(Teds_StrictSet, contains)
 	const teds_strictset *intern = Z_STRICTSET_P(ZEND_THIS);
 	teds_strictset_entry *entry = teds_strictset_find_key_computing_hash(intern, value);
 	RETURN_BOOL(entry != NULL);
-}
-
-static void teds_strictset_return_pairs(zval *return_value, teds_strictset *intern)
-{
-	size_t len = intern->array.size;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
-	}
-
-	teds_strictset_entry *entries = intern->array.entries;
-	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(values);
-
-	/* Go through values and add values to the return array */
-	ZEND_HASH_FILL_PACKED(values) {
-		for (size_t i = 0; i < len; i++) {
-			Z_TRY_ADDREF_P(&entries[i].key);
-			ZEND_HASH_FILL_ADD(&entries[i].key);
-		}
-	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
 }
 
 static void teds_strictset_clear(teds_strictset *intern) {

@@ -595,10 +595,10 @@ zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 			}
 			if (i2 > 0) {
 				zend_ulong i1 = (zend_ulong)n1;
-				return i1 < i2 ? -1 : 1;
+				return i1 < (zend_ulong) i2 ? -1 : 1;
 			} else {
 				zend_ulong i1 = (zend_ulong)-n1;
-				return ((zend_ulong)-i1) < i2 ? 1 : -1;
+				return i1 < (zend_ulong) -i2 ? 1 : -1;
 			}
 		} else {
 			ZEND_ASSERT(t1 == IS_LONG);
@@ -615,7 +615,7 @@ zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 			}
 			if (i1 > 0) {
 				zend_ulong i2 = (zend_ulong)n2;
-				return i1 < i2 ? -1 : 1;
+				return ((zend_ulong)i1) < i2 ? -1 : 1;
 			} else {
 				zend_ulong i2 = (zend_ulong)-n2;
 				return ((zend_ulong)-i1) < i2 ? 1 : -1;
@@ -766,7 +766,7 @@ again:
 			 * but IS_INDIRECT is probably impossible as of php 8.1's removal of direct access to $GLOBALS? */
 			ZEND_HASH_FOREACH_KEY_VAL(Z_ARR_P(value), num_key, str_key, field_value) {
 				/* str_key is in a hash table meaning the hash was already computed. */
-				result += str_key ? ZSTR_H(str_key) : num_key;
+				result += str_key ? ZSTR_H(str_key) : (zend_ulong) num_key;
 				result += (teds_strict_hash_inner(field_value) + (result << 7));
 				result = teds_inline_hash_of_uint64(result);
 			} ZEND_HASH_FOREACH_END();
