@@ -19,7 +19,7 @@ final class StrictSet implements \IteratorAggregate, \Countable, \JsonSerializab
 {
     /** Construct the StrictSet from the values of the Traversable/array, ignoring keys. */
     public function __construct(iterable $iterator = []) {}
-    /* Returns an iterator over the values of the StrictSet. key() and value() both return the same value. */
+    /** Returns an iterator over the values of the StrictSet. key() and value() both return the same value. */
     public function getIterator(): \InternalIterator {}
     /** Returns the number of values in the StrictSet. */
     public function count(): int {}

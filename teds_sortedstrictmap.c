@@ -840,48 +840,6 @@ PHP_METHOD(Teds_SortedStrictMap, values)
 	RETURN_ARR(values);
 }
 
-PHP_METHOD(Teds_SortedStrictMap, indexOfKey)
-{
-	zval *key;
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(key)
-	ZEND_PARSE_PARAMETERS_END();
-
-	const teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
-	const size_t len = intern->array.size;
-	if (len == 0) {
-		return;
-	}
-	teds_sortedstrictmap_entry *entries = intern->array.entries;
-	for (size_t i = 0; i < len; i++) {
-		if (zend_is_identical(key, &entries[i].key)) {
-			RETURN_LONG(i);
-		}
-	}
-	RETURN_NULL();
-}
-
-PHP_METHOD(Teds_SortedStrictMap, indexOfValue)
-{
-	zval *value;
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
-	ZEND_PARSE_PARAMETERS_END();
-
-	const teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
-	const size_t len = intern->array.size;
-	if (len == 0) {
-		return;
-	}
-	teds_sortedstrictmap_entry *entries = intern->array.entries;
-	for (size_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &entries[i].value)) {
-			RETURN_LONG(i);
-		}
-	}
-	RETURN_NULL();
-}
-
 typedef struct _teds_sortedstrictmap_search_result {
 	teds_sortedstrictmap_entry *entry;
 	bool found;

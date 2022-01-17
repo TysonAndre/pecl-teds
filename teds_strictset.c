@@ -214,17 +214,7 @@ static void teds_strictset_entries_init_from_traversable(teds_strictset_entries 
 			break;
 		}
 		zval *value = funcs->get_current_data(iter);
-		zval key;
 		if (UNEXPECTED(EG(exception))) {
-			break;
-		}
-		if (funcs->get_current_key) {
-			funcs->get_current_key(iter, &key);
-		} else {
-			ZVAL_NULL(&key);
-		}
-		if (UNEXPECTED(EG(exception))) {
-			zval_ptr_dtor(&key);
 			break;
 		}
 
@@ -238,8 +228,7 @@ static void teds_strictset_entries_init_from_traversable(teds_strictset_entries 
 				entries = safe_emalloc(capacity, sizeof(teds_strictset_entry), 0);
 			}
 		}
-		/* The key's reference count was already increased */
-		ZVAL_COPY_VALUE(&entries[size].key, &key);
+		ZVAL_COPY_DEREF(&entries[size].key, value);
 		teds_strictset_entry_compute_and_store_hash(&entries[size]);
 		size++;
 
@@ -727,7 +716,6 @@ static bool teds_strictset_remove_key(teds_strictset *intern, zval *key)
 	}
 	intern->array.size--;
 
-	// TODO move entries and hashes
 	zval_ptr_dtor(&old_key);
 	return true;
 }

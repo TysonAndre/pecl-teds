@@ -1,5 +1,5 @@
 --TEST--
-Teds\StrictSet constructed from Traversable
+Teds\SortedStrictSet constructed from Traversable
 --FILE--
 <?php
 
@@ -14,8 +14,8 @@ function yields_values() {
     echo "Done evaluating the generator\n";
 }
 
-// Teds\StrictSet eagerly evaluates the passed in Traversable
-$it = new Teds\StrictSet(yields_values());
+// Teds\SortedStrictSet eagerly evaluates the passed in Traversable
+$it = new Teds\SortedStrictSet(yields_values());
 foreach ($it as $value) {
     printf("Value: %s\n", var_export($value, true));
 }
@@ -25,7 +25,7 @@ foreach ($it as $value) {
 }
 unset($it);
 
-$emptyIt = new Teds\StrictSet(new ArrayObject());
+$emptyIt = new Teds\SortedStrictSet(new ArrayObject());
 var_dump($emptyIt);
 foreach ($emptyIt as $key => $value) {
     echo "Unreachable\n";
@@ -70,6 +70,6 @@ Value: (object) array(
 )
 Value: 1
 Value: 2
-object(Teds\StrictSet)#1 (0) {
+object(Teds\SortedStrictSet)#1 (0) {
 }
 Done

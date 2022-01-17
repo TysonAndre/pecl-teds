@@ -81,6 +81,8 @@ Much more efficient in memory usage and random access than SplDoublyLinkedList.
 This is a map where entries for keys of any type can be inserted if `Teds\stable_compare !== 0`.
 This uses [`Teds\stable_compare`](#stable-comparison) internally.
 
+The [`Teds\SortedStrictSet` API](./teds_sortedstrictset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
+
 ### Teds\StrictMap and Teds\StrictSet
 
 [`Teds\StrictMap` API](./teds_strictmap.stub.php)
