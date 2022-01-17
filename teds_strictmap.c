@@ -798,7 +798,6 @@ PHP_METHOD(Teds_StrictMap, __serialize)
 		Z_TRY_ADDREF_P(tmp);
 		zend_hash_next_index_insert(flat_entries_array, tmp);
 	}
-	/* Unlike FixedArray, there's no setSize, so there's no reason to delete indexes */
 
 	RETURN_ARR(flat_entries_array);
 }
@@ -946,7 +945,6 @@ static void teds_strictmap_remove_key(teds_strictmap *intern, zval *key)
 	}
 	intern->array.size--;
 
-	// TODO move entries and hashes
 	zval_ptr_dtor(&old_key);
 	zval_ptr_dtor(&old_value);
 }
@@ -1044,10 +1042,7 @@ PHP_METHOD(Teds_StrictMap, containsValue)
 
 	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
 	teds_strictmap_entry *entry = teds_strictmap_find_value(intern, value);
-	if (entry != NULL) {
-		RETURN_TRUE;
-	}
-	RETURN_FALSE;
+	RETURN_BOOL(entry != NULL);
 }
 
 PHP_METHOD(Teds_StrictMap, containsKey)
