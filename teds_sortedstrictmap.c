@@ -9,15 +9,6 @@
 
 /* This is based on teds_immutablekeyvaluesequence.c.
  * Instead of a C array of zvals, this is based on a C array of pairs of zvals for key-value entries */
-/*
- * Design plan for refactoring:
- * - Buckets: Keys (zval, uint64_t hash) and values (zval) placed based on hash. Similar to HashTable Data Layout as described in Zend_types
- * - Hashes: hash and index, chaining.
- *
- * iteration:
- * - sequence of HashPosition
- * - TODO: associate SortedStrictMap with linked list of iterators
- */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -87,7 +78,7 @@ static zend_always_inline bool teds_sortedstrictmap_entries_empty_capacity(teds_
 {
 	ZEND_ASSERT(array->size <= array->capacity);
 	if (array->capacity > 0) {
-		ZEND_ASSERT(array->entries != empty_entry_list);
+		ZEND_ASSERT(array->entries != empty_entry_list && array->entries != NULL);
 		return false;
 	}
 	ZEND_ASSERT(array->entries == empty_entry_list || array->entries == NULL);
@@ -98,17 +89,17 @@ static zend_always_inline bool teds_sortedstrictmap_entries_empty_capacity(teds_
  *   - if capacity == 0, then entries == NULL
  *   - if capacity > 0, then entries != NULL
  */
-static bool teds_sortedstrictmap_entries_empty_size(teds_sortedstrictmap_entries *array)
+static zend_always_inline bool teds_sortedstrictmap_entries_empty_size(teds_sortedstrictmap_entries *array)
 {
 	ZEND_ASSERT(array->size <= array->capacity);
 	if (array->size > 0) {
-		ZEND_ASSERT(array->entries != empty_entry_list);
+		ZEND_ASSERT(array->entries != empty_entry_list && array->entries != NULL);
 		return false;
 	}
 	return true;
 }
 
-static bool teds_sortedstrictmap_entries_uninitialized(teds_sortedstrictmap_entries *array)
+static zend_always_inline bool teds_sortedstrictmap_entries_uninitialized(teds_sortedstrictmap_entries *array)
 {
 	ZEND_ASSERT(array->size <= array->capacity);
 	if (array->entries == NULL) {
@@ -118,20 +109,6 @@ static bool teds_sortedstrictmap_entries_uninitialized(teds_sortedstrictmap_entr
 	ZEND_ASSERT((array->entries == empty_entry_list && array->capacity == 0) || array->capacity > 0);
 	return false;
 }
-
-/* Initializes the range [from, to) to null. Does not dtor existing entries. */
-/* TODO: Delete if this isn't used in the final version
-static void teds_sortedstrictmap_entries_init_elems(teds_sortedstrictmap_entries *array, zend_long from, zend_long to)
-{
-	ZEND_ASSERT(from <= to);
-	zval *begin = &array->entries[from].key;
-	zval *end = &array->entries[to].key;
-
-	while (begin != end) {
-		ZVAL_NULL(begin++);
-	}
-}
-*/
 
 static teds_sortedstrictmap_entry *teds_sortedstrictmap_allocate_entries(size_t capacity) {
 	return safe_emalloc(capacity, sizeof(teds_sortedstrictmap_entry), 0);
@@ -494,12 +471,12 @@ static int teds_sortedstrictmap_it_valid(zend_object_iterator *iter)
 	return FAILURE;
 }
 
-static teds_sortedstrictmap_entry *teds_sortedstrictmap_read_offset_helper(teds_sortedstrictmap *intern, size_t offset)
+static teds_sortedstrictmap_entry *teds_sortedstrictmap_it_read_offset_helper(teds_sortedstrictmap *intern, size_t offset)
 {
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Iterator out of range", 0);
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];
@@ -511,7 +488,7 @@ static zval *teds_sortedstrictmap_it_get_current_data(zend_object_iterator *iter
 	teds_sortedstrictmap_it     *iterator = (teds_sortedstrictmap_it*)iter;
 	teds_sortedstrictmap *object   = Z_SORTEDSTRICTMAP_P(&iter->data);
 
-	teds_sortedstrictmap_entry *data = teds_sortedstrictmap_read_offset_helper(object, iterator->current);
+	teds_sortedstrictmap_entry *data = teds_sortedstrictmap_it_read_offset_helper(object, iterator->current);
 
 	if (UNEXPECTED(data == NULL)) {
 		return &EG(uninitialized_zval);
@@ -525,7 +502,7 @@ static void teds_sortedstrictmap_it_get_current_key(zend_object_iterator *iter, 
 	teds_sortedstrictmap_it     *iterator = (teds_sortedstrictmap_it*)iter;
 	teds_sortedstrictmap *object   = Z_SORTEDSTRICTMAP_P(&iter->data);
 
-	teds_sortedstrictmap_entry *data = teds_sortedstrictmap_read_offset_helper(object, iterator->current);
+	teds_sortedstrictmap_entry *data = teds_sortedstrictmap_it_read_offset_helper(object, iterator->current);
 
 	if (data == NULL) {
 		ZVAL_NULL(key);
@@ -551,9 +528,9 @@ static const zend_object_iterator_funcs teds_sortedstrictmap_it_funcs = {
 	NULL, /* get_gc */
 };
 
-
 zend_object_iterator *teds_sortedstrictmap_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
+	(void)ce;
 	teds_sortedstrictmap_it *iterator;
 
 	if (UNEXPECTED(by_ref)) {
@@ -790,52 +767,89 @@ PHP_METHOD(Teds_SortedStrictMap, __serialize)
 	RETURN_ARR(flat_entries_array);
 }
 
-PHP_METHOD(Teds_SortedStrictMap, keys)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
-	size_t len = intern->array.size;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
-	}
-	teds_sortedstrictmap_entry *entries = intern->array.entries;
-	zend_array *keys = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(keys);
-
-	/* Go through keys and add values to the return array */
-	ZEND_HASH_FILL_PACKED(keys) {
-		for (size_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i].key;
-			Z_TRY_ADDREF_P(tmp);
-			ZEND_HASH_FILL_ADD(tmp);
-		}
-	} ZEND_HASH_FILL_END();
-	RETURN_ARR(keys);
+#define IMPLEMENT_READ_ARRAY_PHP_METHOD(methodName, property)  \
+PHP_METHOD(Teds_SortedStrictMap, methodName) \
+{ \
+	ZEND_PARSE_PARAMETERS_NONE(); \
+	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS); \
+	size_t len = intern->array.size; \
+	if (!len) { \
+		RETURN_EMPTY_ARRAY(); \
+	} \
+	teds_sortedstrictmap_entry *entries = intern->array.entries; \
+	zend_array *arr = zend_new_array(len); \
+	/* Initialize return array */ \
+	zend_hash_real_init_packed(arr); \
+ \
+	/* Go through arr and add propName to the return array */ \
+	ZEND_HASH_FILL_PACKED(arr) { \
+		for (size_t i = 0; i < len; i++) { \
+			zval *tmp = &entries[i].property; \
+			Z_TRY_ADDREF_P(tmp); \
+			ZEND_HASH_FILL_ADD(tmp); \
+		} \
+	} ZEND_HASH_FILL_END(); \
+	RETURN_ARR(arr); \
 }
 
-PHP_METHOD(Teds_SortedStrictMap, values)
-{
+IMPLEMENT_READ_ARRAY_PHP_METHOD(keys, key)
+IMPLEMENT_READ_ARRAY_PHP_METHOD(values, value)
+
+#define IMPLEMENT_READ_OFFSET_PHP_METHOD(methodName, index, propName) \
+PHP_METHOD(Teds_SortedStrictMap, methodName) \
+{ \
+	ZEND_PARSE_PARAMETERS_NONE(); \
+	const teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS); \
+	if (intern->array.size == 0) { \
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty SortedStrictMap", 0); \
+		RETURN_THROWS(); \
+	} \
+	teds_sortedstrictmap_entry *entries = intern->array.entries; \
+	RETVAL_COPY(&entries[(index)].propName); \
+}
+
+IMPLEMENT_READ_OFFSET_PHP_METHOD(bottom, 0, value)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(bottomKey, 0, key)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(top, intern->array.size - 1, value)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(topKey, intern->array.size - 1, key)
+
+PHP_METHOD(Teds_SortedStrictMap, pop) {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
-	size_t len = intern->array.size;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
+	if (intern->array.size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty SortedStrictMap", 0);
+		RETURN_THROWS();
 	}
-	teds_sortedstrictmap_entry *entries = intern->array.entries;
-	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(values);
+	teds_sortedstrictmap_entry *entry = &intern->array.entries[intern->array.size - 1];
+	RETVAL_ARR(zend_new_pair(&entry->key, &entry->value));
+	intern->array.size--;
+}
 
-	/* Go through values and add values to the return array */
-	ZEND_HASH_FILL_PACKED(values) {
-		for (size_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i].value;
-			Z_TRY_ADDREF_P(tmp);
-			ZEND_HASH_FILL_ADD(tmp);
-		}
-	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
+/* Shifts values. Callers should adjust size and handle zval reference counting. */
+static void teds_sortedstrictmap_remove_entry(teds_sortedstrictmap_entry *entries, size_t len, teds_sortedstrictmap_entry *entry)
+{
+	teds_sortedstrictmap_entry *end = entries + len - 1;
+	ZEND_ASSERT(entry <= end);
+	/* Move entries */
+	for (; entry < end; ) {
+		ZVAL_COPY_VALUE(&entry->key, &entry[1].key);
+		ZVAL_COPY_VALUE(&entry->value, &entry[1].value);
+		entry++;
+	}
+}
+
+PHP_METHOD(Teds_SortedStrictMap, shift) {
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
+	const size_t len = intern->array.size;
+	if (len == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty SortedStrictMap", 0);
+		RETURN_THROWS();
+	}
+	teds_sortedstrictmap_entry *entry = &intern->array.entries[0];
+	RETVAL_ARR(zend_new_pair(&entry->key, &entry->value));
+	teds_sortedstrictmap_remove_entry(entry, len, entry);
+	intern->array.size--;
 }
 
 typedef struct _teds_sortedstrictmap_search_result {
@@ -887,7 +901,8 @@ static teds_sortedstrictmap_entry *teds_sortedstrictmap_find_value(const teds_so
 
 static void teds_sortedstrictmap_remove_key(teds_sortedstrictmap *intern, zval *key)
 {
-	if (intern->array.size == 0) {
+	const size_t len = intern->array.size;
+	if (len == 0) {
 		return;
 	}
 	teds_sortedstrictmap_search_result lookup = teds_sortedstrictmap_sorted_search_for_key(intern, key);
@@ -899,20 +914,13 @@ static void teds_sortedstrictmap_remove_key(teds_sortedstrictmap *intern, zval *
 	zval old_value;
 	ZVAL_COPY_VALUE(&old_key, &entry->key);
 	ZVAL_COPY_VALUE(&old_value, &entry->value);
-	teds_sortedstrictmap_entry *end = intern->array.entries + intern->array.size - 1;
-	ZEND_ASSERT(entry <= end);
-	for (; entry < end; ) {
-		teds_sortedstrictmap_entry *next = &entry[1];
-		ZVAL_COPY_VALUE(&entry->key, &next->key);
-		ZVAL_COPY_VALUE(&entry->value, &next->value);
-		entry = next;
-	}
+	teds_sortedstrictmap_remove_entry(intern->array.entries, len, entry);
 	intern->array.size--;
 
-	// TODO move entries and hashes
 	zval_ptr_dtor(&old_key);
 	zval_ptr_dtor(&old_value);
 }
+
 PHP_METHOD(Teds_SortedStrictMap, offsetExists)
 {
 	zval *key;
@@ -941,10 +949,35 @@ PHP_METHOD(Teds_SortedStrictMap, offsetGet)
 	if (intern->array.size > 0) {
 		teds_sortedstrictmap_search_result result = teds_sortedstrictmap_sorted_search_for_key(intern, key);
 		if (result.found) {
-			RETURN_COPY_VALUE(&result.entry->value);
+			RETURN_COPY(&result.entry->value);
 		}
 	}
-	RETURN_NULL();
+	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+	RETURN_THROWS();
+}
+
+PHP_METHOD(Teds_SortedStrictMap, get)
+{
+	zval *key;
+	zval *default_zv = NULL;
+	ZEND_PARSE_PARAMETERS_START(1, 2)
+		Z_PARAM_ZVAL(key)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_ZVAL(default_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
+	if (intern->array.size > 0) {
+		teds_sortedstrictmap_search_result result = teds_sortedstrictmap_sorted_search_for_key(intern, key);
+		if (result.found) {
+			RETURN_COPY(&result.entry->value);
+		}
+	}
+	if (default_zv != NULL) {
+		RETURN_COPY(default_zv);
+	}
+	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+	RETURN_THROWS();
 }
 
 static void teds_sortedstrictmap_insert(teds_sortedstrictmap *intern, zval *key, zval *value) {

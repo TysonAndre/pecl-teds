@@ -43,8 +43,34 @@ final class SortedStrictMap implements \IteratorAggregate, \Countable, \JsonSeri
     /** Returns a list of the keys in order of insertion. */
     public function keys(): array {}
 
+    // bottom/top matches use for SplDoublyLinkedList.
+
+    /** Returns the first value, throws if empty. */
+    public function bottom(): mixed {}
+
+    /** Returns the first key, throws if empty. */
+    public function bottomKey(): mixed {}
+
+    /** Returns the last value, throws if empty */
+    public function top(): mixed {}
+
+    /** Returns the last key, throws if empty */
+    public function topKey(): mixed {}
+
+    /**
+     * Pops the [key, value] entry from the end of the SortedStrictSet.
+     * @throws \UnderflowException if the SortedStrictSet is empty
+     */
+    public function pop(): array {}
+    /**
+     * Shifts the [key, value] entry from the front of the SortedStrictSet
+     * @throws \UnderflowException if the SortedStrictSet is empty
+     */
+    public function shift(): mixed {}
     /**
      * Returns the value for the given key.
+     * @throws \UnderflowException if the SortedStrictSet is empty
+     * @see SortedStrictMap::get
      */
     public function offsetGet(mixed $key): mixed {}
     /**
@@ -61,12 +87,19 @@ final class SortedStrictMap implements \IteratorAggregate, \Countable, \JsonSeri
     public function offsetUnset(mixed $key): void {}
 
     /**
+     * Returns the value at $key.
+     * @throws \OutOfBoundsException if $key is not found and $default was not provided.
+     */
+    public function get(mixed $key, mixed $default = null): mixed {}
+
+    /**
      * Returns true if there exists a value === $value in this SortedStrictMap.
      */
     public function containsValue(mixed $value): bool {}
 
     /**
      * Returns true if there exists a key === $key in this SortedStrictMap.
+     * Unlike offsetExists, this returns true even if the corresponding value is null.
      */
     public function containsKey(mixed $value): bool {}
 

@@ -53,12 +53,12 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
     public function unshift(mixed ...$values): void {}
     /**
      * Pops a value from the end of the Deque.
-     * @throws UnderflowException if the Deque is empty
+     * @throws \UnderflowException if the Deque is empty
      */
     public function pop(): mixed {}
     /**
      * Shifts a value from the front of the Deque.
-     * @throws UnderflowException if the Deque is empty
+     * @throws \UnderflowException if the Deque is empty
      */
     public function shift(): mixed {}
 
@@ -107,7 +107,7 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
     public function indexOf(mixed $value): ?int {}
 
     /**
-     * Returns true if there exists a value === $value in this vector.
+     * Returns true if there exists a value === $value in this Deque.
      */
     public function contains(mixed $value): bool {}
 

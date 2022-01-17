@@ -160,6 +160,7 @@
     <file name="SortedStrictMap/reinit_forbidden.phpt" role="test" />
     <file name="SortedStrictMap/remove.phpt" role="test" />
     <file name="SortedStrictMap/serialization.phpt" role="test" />
+    <file name="SortedStrictMap/shift.phpt" role="test" />
     <file name="SortedStrictMap/traversable.phpt" role="test" />
     <file name="SortedStrictMap/types.phpt" role="test" />
     <file name="SortedStrictMap/unserialize.phpt" role="test" />
@@ -172,6 +173,7 @@
     <file name="SortedStrictSet/reinit_forbidden.phpt" role="test" />
     <file name="SortedStrictSet/serialization.phpt" role="test" />
     <file name="SortedStrictSet/set_state.phpt" role="test" />
+    <file name="SortedStrictSet/shift.phpt" role="test" />
     <file name="SortedStrictSet/traversable.phpt" role="test" />
     <file name="SortedStrictSet/unserialize.phpt" role="test" />
     <file name="StrictMap/ImmutableKeyValueSequence.phpt" role="test" />

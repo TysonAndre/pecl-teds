@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 9ec811a044a0fb1273207559df949f07de8cb742 */
+ * Stub hash: d339fb388efc98f259a51d1a11420c4f365167ea */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_SortedStrictSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -30,6 +30,15 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_SortedStrictSet_values arginfo_class_Teds_SortedStrictSet___serialize
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_SortedStrictSet_bottom, 0, 0, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_SortedStrictSet_top arginfo_class_Teds_SortedStrictSet_bottom
+
+#define arginfo_class_Teds_SortedStrictSet_pop arginfo_class_Teds_SortedStrictSet_bottom
+
+#define arginfo_class_Teds_SortedStrictSet_shift arginfo_class_Teds_SortedStrictSet_bottom
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_SortedStrictSet_contains, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
@@ -49,6 +58,10 @@ ZEND_METHOD(Teds_SortedStrictSet, clear);
 ZEND_METHOD(Teds_SortedStrictSet, values);
 ZEND_METHOD(Teds_SortedStrictSet, __unserialize);
 ZEND_METHOD(Teds_SortedStrictSet, __set_state);
+ZEND_METHOD(Teds_SortedStrictSet, bottom);
+ZEND_METHOD(Teds_SortedStrictSet, top);
+ZEND_METHOD(Teds_SortedStrictSet, pop);
+ZEND_METHOD(Teds_SortedStrictSet, shift);
 ZEND_METHOD(Teds_SortedStrictSet, contains);
 ZEND_METHOD(Teds_SortedStrictSet, add);
 ZEND_METHOD(Teds_SortedStrictSet, remove);
@@ -64,6 +77,10 @@ static const zend_function_entry class_Teds_SortedStrictSet_methods[] = {
 	ZEND_ME(Teds_SortedStrictSet, __unserialize, arginfo_class_Teds_SortedStrictSet___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictSet, __set_state, arginfo_class_Teds_SortedStrictSet___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_SortedStrictSet, values, arginfo_class_Teds_SortedStrictSet_values, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_SortedStrictSet, bottom, arginfo_class_Teds_SortedStrictSet_bottom, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_SortedStrictSet, top, arginfo_class_Teds_SortedStrictSet_top, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_SortedStrictSet, pop, arginfo_class_Teds_SortedStrictSet_pop, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_SortedStrictSet, shift, arginfo_class_Teds_SortedStrictSet_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictSet, contains, arginfo_class_Teds_SortedStrictSet_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictSet, add, arginfo_class_Teds_SortedStrictSet_add, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictSet, remove, arginfo_class_Teds_SortedStrictSet_remove, ZEND_ACC_PUBLIC)

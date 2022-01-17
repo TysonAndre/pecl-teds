@@ -974,10 +974,35 @@ PHP_METHOD(Teds_StrictMap, offsetGet)
 	if (intern->array.size > 0) {
 		teds_strictmap_entry *entry = teds_strictmap_find_key_computing_hash(intern, key);
 		if (entry) {
-			RETURN_COPY_VALUE(&entry->value);
+			RETURN_COPY(&entry->value);
 		}
 	}
-	RETURN_NULL();
+	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+	RETURN_THROWS();
+}
+
+PHP_METHOD(Teds_StrictMap, get)
+{
+	zval *key;
+	zval *default_zv = NULL;
+	ZEND_PARSE_PARAMETERS_START(1, 2)
+		Z_PARAM_ZVAL(key)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_ZVAL(default_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
+	if (intern->array.size > 0) {
+		teds_strictmap_entry *entry = teds_strictmap_find_key_computing_hash(intern, key);
+		if (entry) {
+			RETURN_COPY(&entry->value);
+		}
+	}
+	if (default_zv != NULL) {
+		RETURN_COPY(default_zv);
+	}
+	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+	RETURN_THROWS();
 }
 
 static void teds_strictmap_insert(teds_strictmap *intern, zval *key, zval *value) {

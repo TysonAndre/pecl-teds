@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 7f611d9688a713227492fdc055e6f08240d392ef */
+ * Stub hash: 61a12fae700b9ce3754cca1b5bc4506f5afab65e */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -61,6 +61,11 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictMap_containsKey arginfo_class_Teds_StrictMap_containsValue
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictMap_get, 0, 1, IS_MIXED, 0)
+	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, default, IS_MIXED, 0, "null")
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_Teds_StrictMap_jsonSerialize arginfo_class_Teds_StrictMap_toPairs
 
 
@@ -82,6 +87,7 @@ ZEND_METHOD(Teds_StrictMap, offsetSet);
 ZEND_METHOD(Teds_StrictMap, offsetUnset);
 ZEND_METHOD(Teds_StrictMap, containsValue);
 ZEND_METHOD(Teds_StrictMap, containsKey);
+ZEND_METHOD(Teds_StrictMap, get);
 ZEND_METHOD(Teds_StrictMap, jsonSerialize);
 
 
@@ -104,6 +110,7 @@ static const zend_function_entry class_Teds_StrictMap_methods[] = {
 	ZEND_ME(Teds_StrictMap, offsetUnset, arginfo_class_Teds_StrictMap_offsetUnset, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, containsValue, arginfo_class_Teds_StrictMap_containsValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, containsKey, arginfo_class_Teds_StrictMap_containsKey, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictMap, get, arginfo_class_Teds_StrictMap_get, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, jsonSerialize, arginfo_class_Teds_StrictMap_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
