@@ -39,7 +39,7 @@ Objects within this data structure or references in arrays in this data structur
 
 ### Teds\ImmutableSequence
 
-[`Teds\ImmutableKeyValueSequence` API](./teds_immutablekeyvaluesequence.stub.php)
+[`Teds\ImmutableSequence` API](./teds_immutablesequence.stub.php)
 
 Similar to SplFixedArray or Ds\Sequence, but immutable.
 This stores a sequence of values with the keys 0, 1, 2....
