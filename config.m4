@@ -49,7 +49,7 @@ if test "$PHP_TEDS" != "no"; then
   ]])],[
   AC_MSG_RESULT([PHP 8])
   ],[
-  AC_MSG_ERROR([PHP 8 or older is not supported by teds.])
+  AC_MSG_ERROR([teds requires php 8.0+])
   ])
 
   dnl Remove this code block if the library supports pkg-config.
@@ -110,5 +110,5 @@ if test "$PHP_TEDS" != "no"; then
   dnl In case of no dependencies
   AC_DEFINE(HAVE_TEDS, 1, [ Have teds support ])
 
-  PHP_NEW_EXTENSION(teds, teds.c teds_immutablesequence.c teds_immutablekeyvaluesequence.c teds_keyvaluevector.c teds_vector.c teds_deque.c teds_sortedstrictmap.c teds_sortedstrictset.c teds_strictmap.c teds_strictset.c, $ext_shared)
+  PHP_NEW_EXTENSION(teds, teds.c teds_immutablesequence.c teds_immutablekeyvaluesequence.c teds_keyvaluevector.c teds_vector.c teds_deque.c teds_sortedstrictmap.c teds_sortedstrictset.c teds_stableheap.c teds_strictmap.c teds_strictset.c, $ext_shared)
 fi
