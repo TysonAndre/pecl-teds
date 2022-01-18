@@ -94,6 +94,26 @@ This uses [`Teds\strict_hash`](#strict-hashing) internally.
 
 The [`Teds\StrictSet` API](./teds_strictset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
 
+### Teds\StableMinHeap and Teds\StableMaxHeap
+
+[`Teds\Stable*Heap` API/polyfill](./teds_stableheap.stub.php)
+
+This uses `Teds\stable_compare` instead of PHP's unstable default comparisons.
+Sorting logic can be customized by inserting `[$priority, $value]` instead of `$value`.
+(Or by subclassing `SplMinHeap`/`SplMaxHeap` and overriding `compare` manually).
+
+```
+php > $x = new SplMinHeap();
+php > foreach (['19', '9', '2b', '2'] as $v) { $x->insert($v); }
+php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // unpredictable order
+2,19,2b,9,
+
+php > $x = new Teds\StableMinHeap();
+php > foreach (['19', '9', '2b', '2'] as $v) { $x->insert($v); }
+php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // lexicographically sorted
+19,2,2b,9,
+```
+
 ### iterable functions
 
 This PECL contains a library of native implementations of various functions acting on iterables.

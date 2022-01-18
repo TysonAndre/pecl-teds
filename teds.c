@@ -36,6 +36,7 @@
 #include "teds_keyvaluevector.h"
 #include "teds_sortedstrictmap.h"
 #include "teds_sortedstrictset.h"
+#include "teds_stableheap.h"
 #include "teds_strictmap.h"
 #include "teds_strictset.h"
 #include "teds_vector.h"
@@ -822,6 +823,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_keyvaluevector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_sortedstrictmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_sortedstrictset)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_stableheap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_strictmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_strictset)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_vector)(INIT_FUNC_ARGS_PASSTHRU);

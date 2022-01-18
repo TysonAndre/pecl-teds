@@ -29,6 +29,7 @@
 * Add a sorted map `SortedStrictMap` using `Teds\stable_compare` as a comparison function.
   Keys are returned ordered by `Teds\stable_compare` and no two keys have `stable_compare` return 0 (i.e. no two keys are equivalent).
 * Add a sorted set `SortedStrictSet` using `Teds\stable_compare` as a comparison function.
+* Add StableMinHeap/StableMaxHeap extending SplMinHeap/SplMaxHeap, using `Teds\stable_compare` as a comparison function.
  </notes>
  <contents>
   <dir name="/">
@@ -62,6 +63,10 @@
    <file name="teds_sortedstrictset.c" role="src" />
    <file name="teds_sortedstrictset.h" role="src" />
    <file name="teds_sortedstrictset.stub.php" role="src" />
+   <file name="teds_stableheap_arginfo.h" role="src" />
+   <file name="teds_stableheap.c" role="src" />
+   <file name="teds_stableheap.h" role="src" />
+   <file name="teds_stableheap.stub.php" role="src" />
    <file name="teds_strictmap_arginfo.h" role="src" />
    <file name="teds_strictmap.c" role="src" />
    <file name="teds_strictmap.h" role="src" />
@@ -176,6 +181,8 @@
     <file name="SortedStrictSet/shift.phpt" role="test" />
     <file name="SortedStrictSet/traversable.phpt" role="test" />
     <file name="SortedStrictSet/unserialize.phpt" role="test" />
+    <file name="StableHeap/StableHeap.phpt" role="test" />
+    <file name="StableHeap/extensible.phpt" role="test" />
     <file name="StrictMap/ImmutableKeyValueSequence.phpt" role="test" />
     <file name="StrictMap/StrictMap.phpt" role="test" />
     <file name="StrictMap/aggregate.phpt" role="test" />
