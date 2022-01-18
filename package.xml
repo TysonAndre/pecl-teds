@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-01-15</date>
+ <date>2022-01-18</date>
  <time>16:00:00</time>
  <version>
-  <release>0.5.2dev</release>
-  <api>0.5.2dev</api>
+  <release>0.5.2</release>
+  <api>0.5.2</api>
  </version>
  <stability>
   <release>stable</release>
@@ -59,7 +59,7 @@
    <file name="teds_sortedstrictmap.c" role="src" />
    <file name="teds_sortedstrictmap.h" role="src" />
    <file name="teds_sortedstrictmap.stub.php" role="src" />
-   <file name="teds_sortedstrictset.h" role="src" />
+   <file name="teds_sortedstrictset_arginfo.h" role="src" />
    <file name="teds_sortedstrictset.c" role="src" />
    <file name="teds_sortedstrictset.h" role="src" />
    <file name="teds_sortedstrictset.stub.php" role="src" />
@@ -71,7 +71,7 @@
    <file name="teds_strictmap.c" role="src" />
    <file name="teds_strictmap.h" role="src" />
    <file name="teds_strictmap.stub.php" role="src" />
-   <file name="teds_strictset.h" role="src" />
+   <file name="teds_strictset_arginfo.h" role="src" />
    <file name="teds_strictset.c" role="src" />
    <file name="teds_strictset.h" role="src" />
    <file name="teds_strictset.stub.php" role="src" />
