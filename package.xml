@@ -242,6 +242,7 @@
     <file name="iterable/none_array.phpt" role="test" />
     <file name="iterable/none_traversable.phpt" role="test" />
     <file name="misc/binary_search.phpt" role="test" />
+    <file name="misc/binary_search_edge_case.phpt" role="test" />
     <file name="misc/stable_compare.phpt" role="test" />
     <file name="misc/stable_compare_2.phpt" role="test" />
     <file name="misc/strict_hash.phpt" role="test" />
