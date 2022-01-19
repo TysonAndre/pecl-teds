@@ -429,12 +429,13 @@ packed_search_start:
 			ZVAL_COPY_VALUE(&args[1], &operator);
 
 			zend_result result = zend_call_function(fci, fci_cache);
-			//zval_ptr_dtor(&operator);
+			zval_ptr_dtor(&operator);
+			zval_ptr_dtor(target);
 			if (UNEXPECTED(result == FAILURE)) {
 				return NULL;
 			}
 			comparison_result = zval_get_long(retval);
-			//zval_ptr_dtor(&retval);
+			zval_ptr_dtor(retval);
 		} else {
 			if (use_key) {
 				zval key_zv;
@@ -514,12 +515,13 @@ bucket_search_start:
 			ZVAL_COPY_VALUE(&args[1], &operator);
 
 			zend_result result = zend_call_function(fci, fci_cache);
-			//zval_ptr_dtor(&operator);
+			zval_ptr_dtor(&operator);
+			zval_ptr_dtor(target);
 			if (UNEXPECTED(result == FAILURE)) {
 				return NULL;
 			}
 			comparison_result = zval_get_long(retval);
-			//zval_ptr_dtor(&retval);
+			zval_ptr_dtor(retval);
 		} else {
 			if (use_key) {
 				zval key_zv;
