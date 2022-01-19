@@ -398,8 +398,24 @@ PHP_FUNCTION(fold)
 }
 /* }}} */
 
+static HashTable *teds_binary_search_create_result(bool found, zval *key, zval *value)
+{
+	zend_array *return_ht = zend_new_array(3);
+	{
+		zval tmp;
+		ZVAL_BOOL(&tmp, found);
+		zend_hash_str_add_new(return_ht, "found", sizeof("found") - 1, &tmp);
+	}
+	/* Caller should increment references */
+	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_KEY), key);
+	ZVAL_DEREF(value);
+	Z_TRY_ADDREF_P(value);
+	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_VALUE), value);
+	return return_ht;
+}
+
 #if PHP_VERSION_ID >= 80200
-static zend_always_inline HashTable *binary_search_for_zvals(HashTable *ht, zval *target, const bool use_key, const bool have_callback, zend_fcall_info *fci, zend_fcall_info_cache *fci_cache, zval *const args, zval *const retval)
+static zend_always_inline HashTable *teds_binary_search_for_zvals(HashTable *ht, zval *target, const bool use_key, const bool have_callback, zend_fcall_info *fci, zend_fcall_info_cache *fci_cache, zval *const args, zval *const retval)
 {
 	zval *const orig_start = ht->arPacked;
 	zval *start = orig_start;
@@ -449,15 +465,9 @@ packed_search_start:
 			return NULL;
 		}
 		if (comparison_result == 0) {
-			zend_array *return_ht = zend_new_array(3);
 			zval tmp;
-			ZVAL_TRUE(&tmp);
-			zend_hash_str_add_new(return_ht, "found", sizeof("found") - 1, &tmp);
 			ZVAL_LONG(&tmp, mid - orig_start);
-			zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_KEY), &tmp);
-			Z_TRY_ADDREF_P(mid);
-			zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_VALUE), mid);
-			return return_ht;
+			return teds_binary_search_create_result(true, &tmp, mid);
 		}
 		if (comparison_result > 0) {
 			largest_smaller_zval_ptr = mid;
@@ -469,19 +479,13 @@ packed_search_start:
 	if (largest_smaller_zval_ptr == NULL) {
 		return NULL;
 	}
-	zend_array *return_ht = zend_new_array(3);
 	zval tmp;
-	ZVAL_FALSE(&tmp);
-	zend_hash_str_add_new(return_ht, "found", sizeof("found") - 1, &tmp);
 	ZVAL_LONG(&tmp, largest_smaller_zval_ptr - orig_start);
-	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_KEY), &tmp);
-	Z_TRY_ADDREF_P(largest_smaller_zval_ptr);
-	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_VALUE), largest_smaller_zval_ptr);
-	return return_ht;
+	return teds_binary_search_create_result(false, &tmp, largest_smaller_zval_ptr);
 }
 #endif
 
-static zend_always_inline HashTable *binary_search_for_bucket(HashTable *ht, zval *target, const bool use_key, const bool have_callback, zend_fcall_info *fci, zend_fcall_info_cache *fci_cache, zval *const args, zval *const retval)
+static zend_always_inline HashTable *teds_binary_search_for_bucket(HashTable *ht, zval *target, const bool use_key, const bool have_callback, zend_fcall_info *fci, zend_fcall_info_cache *fci_cache, zval *const args, zval *const retval)
 {
 	Bucket *start = ht->arData;
 	Bucket *end = start + ht->nNumUsed;
@@ -539,20 +543,14 @@ bucket_search_start:
 			return NULL;
 		}
 		if (comparison_result == 0) {
-			zend_array *return_ht = zend_new_array(3);
 			zval tmp;
-			ZVAL_TRUE(&tmp);
-			zend_hash_str_add_new(return_ht, "found", sizeof("found") - 1, &tmp);
 			if (mid->key) {
 				zend_string_addref(mid->key);
 				ZVAL_STR(&tmp, mid->key);
 			} else {
 				ZVAL_LONG(&tmp, mid->h);
 			}
-			zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_KEY), &tmp);
-			Z_TRY_ADDREF(mid->val);
-			zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_VALUE), &mid->val);
-			return return_ht;
+			return teds_binary_search_create_result(true, &tmp, &mid->val);
 		}
 		if (comparison_result > 0) {
 			largest_smaller_bucket = mid;
@@ -564,20 +562,14 @@ bucket_search_start:
 	if (largest_smaller_bucket == NULL) {
 		return NULL;
 	}
-	zend_array *return_ht = zend_new_array(3);
 	zval tmp;
-	ZVAL_FALSE(&tmp);
-	zend_hash_str_add_new(return_ht, "found", sizeof("found") - 1, &tmp);
 	if (largest_smaller_bucket->key) {
 		zend_string_addref(largest_smaller_bucket->key);
 		ZVAL_STR(&tmp, largest_smaller_bucket->key);
 	} else {
 		ZVAL_LONG(&tmp, largest_smaller_bucket->h);
 	}
-	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_KEY), &tmp);
-	Z_TRY_ADDREF(largest_smaller_bucket->val);
-	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_VALUE), &largest_smaller_bucket->val);
-	return return_ht;
+	return teds_binary_search_create_result(false, &tmp, &largest_smaller_bucket->val);
 }
 
 /* Perform a binary search on a sorted array (Assumed to be sorted by value and/or key, depending on $flags) */
@@ -610,12 +602,12 @@ PHP_FUNCTION(binary_search)
 		HashTable *return_ht;
 #if PHP_VERSION_ID >= 80200
 		if (HT_IS_PACKED(ht)) {
-			return_ht = binary_search_for_zvals(ht, target, use_key, have_callback, &fci, &fci_cache, args, &retval);
+			return_ht = teds_binary_search_for_zvals(ht, target, use_key, have_callback, &fci, &fci_cache, args, &retval);
 		}
 		else
 #endif
 		{
-			return_ht = binary_search_for_bucket(ht, target, use_key, have_callback, &fci, &fci_cache, args, &retval);
+			return_ht = teds_binary_search_for_bucket(ht, target, use_key, have_callback, &fci, &fci_cache, args, &retval);
 		}
 		if (return_ht != NULL) {
 			RETURN_ARR(return_ht);
@@ -625,14 +617,9 @@ PHP_FUNCTION(binary_search)
 		}
 	}
 
-	zend_array *return_ht = zend_new_array(3);
 	zval tmp;
-	ZVAL_FALSE(&tmp);
-	zend_hash_str_add_new(return_ht, "found", sizeof("found") - 1, &tmp);
 	ZVAL_NULL(&tmp);
-	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_KEY), &tmp);
-	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_VALUE), &tmp);
-	RETURN_ARR(return_ht);
+	RETURN_ARR(teds_binary_search_create_result(false, &tmp, &tmp));
 }
 /* }}} */
 
