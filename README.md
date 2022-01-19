@@ -240,6 +240,14 @@ This may vary based on php release, OS, CPU architecture, or Teds release
 and should not be saved/loaded outside of a given php process.
 (and `spl_object_id`/`get_resource_id` are unpredictable)
 
+## Binary search
+
+`Teds\binary_search(array $values, mixed $target, callable $comparer = null, bool $useKey=false)`
+can be used to binary search on arrays that are sorted by key (ksort, uksort) or value (sort, usort, uasort).
+(even if keys were unset).
+
+This may have unpredictable result if the array is out of order. See [`Teds\stable_sort`](#stable-comparison) for ways to sort even arbitrary values in a stable order.
+
 ## Motivation
 
 This contains functionality and data structures that may be proposed for inclusion into PHP itself (under a different namespace) at a future date, reimplemented using [SPL's source code](https://github.com/php/php-src/tree/master/ext/spl) as a starting point.

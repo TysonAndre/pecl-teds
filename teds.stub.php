@@ -109,3 +109,21 @@ function stable_compare(mixed $v1, mixed $v2): int { }
  * Future releases of Teds may change the hashing algorithm to improve performance/collision resistance.
  */
 function strict_hash(mixed $value): int { }
+
+/**
+ * Allows performing binary search on arrays with arbitrary keys.
+ *
+ * $comparer($target, $otherValue) should return an int which is 0 if found,
+ * negative if $target would be found before $other,
+ * or positive if $target would be found after $other.
+ *
+ * If $comparer is not provided, PHPs default sorting order is provided (same as sort/ksort)
+ *
+ * binary_search will return
+ *
+ * - `['found' => true, 'value' => $value, 'key' => $key]` if the target value/key was found.
+ * - `['found' => false, 'value' => $value, 'key' => $key]` if the target value/key was not found,
+ *    with the largest array entry that is smaller than $target.
+ * - `['found' => false, 'value' => null, 'key' => null]` if there is no value smaller or equal to $target.
+ */
+function binary_search(array $array, mixed $target, ?callable $comparer = null, bool $useKey = false): array { }
