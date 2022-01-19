@@ -21,9 +21,11 @@ echo "Recursive arrays hashed in a predictable way\n";
 var_dump($values);
 var_dump(Teds\strict_hash($values));
 $values[0] = &$values[1];
-// NOTE: This does not attempt to distinguish between different recursive arrays or different levels of recursion.
-// Objects with different values are allowed to have the same hash,
-// and this is an uncommon use case.
+// NOTE: This currently distinguishes between different levels of recursion.
+var_dump(Teds\strict_hash($values));
+echo "Test deeper recursion level\n";
+$values[0][0] = &$values;
+
 var_dump(Teds\strict_hash($values));
 ?>
 --EXPECT--
@@ -31,14 +33,14 @@ array(1) {
   [0]=>
   *RECURSION*
 }
-int(-2751415950963617167)
-int(8622596786386105489)
+int(-8312374854449992677)
+int(-7608636289052184164)
 array(1) {
   [0]=>
   *RECURSION*
 }
-int(-2751415950963617167)
-int(8622596786386105489)
+int(-8312374854449992677)
+int(-7608636289052184164)
 Recursive arrays hashed in a predictable way
 array(2) {
   [0]=>
@@ -56,5 +58,7 @@ array(2) {
     int(123)
   }
 }
-int(7301983740570972493)
-int(7301983740570972493)
+int(5570903236879094712)
+int(5570903236879094712)
+Test deeper recursion level
+int(-6092345340150249341)

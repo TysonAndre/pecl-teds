@@ -726,7 +726,12 @@ inline static uint64_t teds_convert_double_to_uint64_t(double *value) {
 #endif
 }
 
-static zend_long teds_strict_hash_inner(zval *value) {
+typedef struct _teds_strict_hash_node {
+	zend_array *ht;
+	struct _teds_strict_hash_node *prev;
+} teds_strict_hash_node;
+
+static inline zend_long teds_strict_hash_inner(zval *value, teds_strict_hash_node *node) {
 again:
 	switch (Z_TYPE_P(value)) {
 		case IS_NULL:
@@ -753,14 +758,24 @@ again:
 			if (zend_hash_num_elements(ht) == 0) {
 				return 8313;
 			}
+			bool protected_recursion = false;
 
+			teds_strict_hash_node new_node;
+			teds_strict_hash_node *new_node_ptr = NULL;
 			if (!(GC_FLAGS(ht) & GC_IMMUTABLE)) {
-				if (GC_IS_RECURSIVE(ht)) {
-					/* This is recursively trying to hash itself. */
-					return 8314;
+				if (UNEXPECTED(GC_IS_RECURSIVE(ht))) {
+					for (zend_long i = 8712; node != NULL; node = node->prev, i++) {
+						if (node->ht == ht) {
+							return i;
+						}
+					}
+				} else {
+					protected_recursion = true;
+					GC_PROTECT_RECURSION(ht);
 				}
-				/* GC_ADDREF(ht); */
-				GC_PROTECT_RECURSION(ht);
+				new_node.prev = node;
+				new_node.ht = ht;
+				new_node_ptr = &new_node;
 			}
 
 			/* teds_strict_hash_inner has code to dereference IS_INDIRECT/IS_REFERENCE,
@@ -768,13 +783,13 @@ again:
 			ZEND_HASH_FOREACH_KEY_VAL(Z_ARR_P(value), num_key, str_key, field_value) {
 				/* str_key is in a hash table meaning the hash was already computed. */
 				result += str_key ? ZSTR_H(str_key) : (zend_ulong) num_key;
-				result += (teds_strict_hash_inner(field_value) + (result << 7));
+				zend_long field_hash = teds_strict_hash_inner(field_value, new_node_ptr);
+				result += (field_hash + (result << 7));
 				result = teds_inline_hash_of_uint64(result);
 			} ZEND_HASH_FOREACH_END();
 
-			if (!(GC_FLAGS(ht) & GC_IMMUTABLE)) {
+			if (protected_recursion) {
 				GC_UNPROTECT_RECURSION(ht);
-				/* GC_DELREF(ht); */
 			}
 			return result;
 	    }
@@ -796,7 +811,7 @@ again:
 
 /* {{{ Generate a hash */
 zend_long teds_strict_hash(zval *value) {
-	uint64_t raw_data = teds_strict_hash_inner(value);
+	uint64_t raw_data = teds_strict_hash_inner(value, NULL);
 	return teds_inline_hash_of_uint64(raw_data);
 }
 /* }}} */
