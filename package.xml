@@ -13,8 +13,8 @@
  <date>2022-01-18</date>
  <time>16:00:00</time>
  <version>
-  <release>0.6.0</release>
-  <api>0.6.0</api>
+  <release>0.6.1dev</release>
+  <api>0.6.1dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,14 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Make `Teds\stable_compare` sort objects by class name with strcmp before sorting by spl_object_id.
-* Add a hash map `StrictMap` using `Teds\stable_hash` as a hash algorithm.
-  Keys are returned in order of insertion.
-* Add a hash set `StrictSet` using `Teds\stable_hash` as a hash algorithm.
-* Add a sorted map `SortedStrictMap` using `Teds\stable_compare` as a comparison function.
-  Keys are returned ordered by `Teds\stable_compare` and no two keys have `stable_compare` return 0 (i.e. no two keys are equivalent).
-* Add a sorted set `SortedStrictSet` using `Teds\stable_compare` as a comparison function.
-* Add StableMinHeap/StableMaxHeap extending SplMinHeap/SplMaxHeap, using `Teds\stable_compare` as a comparison function.
+* Make `Teds\strict_hash` ignore recursion caused by unrelated functions (e.g. var_dump calling `__debugInfo` calling `strict_hash`)
  </notes>
  <contents>
   <dir name="/">
@@ -252,6 +245,7 @@
     <file name="misc/strict_hash.phpt" role="test" />
     <file name="misc/strict_hash_array_recursion.phpt" role="test" />
     <file name="misc/strict_hash_array_references.phpt" role="test" />
+    <file name="misc/strict_hash_recursion.phpt" role="test" />
    </dir>
   </dir>
  </contents>
@@ -268,6 +262,29 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-01-18</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.6.0</release>
+    <api>0.6.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Make `Teds\stable_compare` sort objects by class name with strcmp before sorting by spl_object_id.
+* Add a hash map `StrictMap` using `Teds\stable_hash` as a hash algorithm.
+  Keys are returned in order of insertion.
+* Add a hash set `StrictSet` using `Teds\stable_hash` as a hash algorithm.
+* Add a sorted map `SortedStrictMap` using `Teds\stable_compare` as a comparison function.
+  Keys are returned ordered by `Teds\stable_compare` and no two keys have `stable_compare` return 0 (i.e. no two keys are equivalent).
+* Add a sorted set `SortedStrictSet` using `Teds\stable_compare` as a comparison function.
+* Add StableMinHeap/StableMaxHeap extending SplMinHeap/SplMaxHeap, using `Teds\stable_compare` as a comparison function.
+   </notes>
+  </release>
   <release>
    <date>2022-01-15</date>
    <time>16:00:00</time>
