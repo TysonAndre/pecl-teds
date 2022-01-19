@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 7f85c68ae9c93be0ff339fa34533e6ee7b524b1d */
+ * Stub hash: e22cc207ea993cb3691a8d1537d4c13dc66a48f9 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_any, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, iterable, IS_ITERABLE, 0)
@@ -42,11 +42,11 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_strict_hash, 0, 1, IS_LONG,
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_binary_search, 0, 2, IS_ARRAY, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_binary_search, 0, 2, IS_ARRAY, 0)
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
-	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+	ZEND_ARG_TYPE_INFO(0, target, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, comparer, IS_CALLABLE, 1, "null")
-	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, flags, IS_LONG, 0, "0")
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, useKey, _IS_BOOL, 0, "false")
 ZEND_END_ARG_INFO()
 
 

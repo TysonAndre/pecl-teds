@@ -24,6 +24,7 @@
  <notes>
 * Make `Teds\strict_hash` ignore recursion caused by unrelated functions (e.g. var_dump calling `__debugInfo` calling `strict_hash`)
 * Add `Teds\binary_search(array $values, mixed $target, callable $comparer = null, bool $useKey=false)`
+* Change parent class of `Teds\StableMaxHeap` and `Teds\StableMinHeap` to `SplHeap`.
  </notes>
  <contents>
   <dir name="/">
@@ -177,6 +178,7 @@
     <file name="SortedStrictSet/unserialize.phpt" role="test" />
     <file name="StableHeap/StableHeap.phpt" role="test" />
     <file name="StableHeap/extensible.phpt" role="test" />
+    <file name="StableHeap/reflection.phpt" role="test" />
     <file name="StrictMap/ImmutableKeyValueSequence.phpt" role="test" />
     <file name="StrictMap/StrictMap.phpt" role="test" />
     <file name="StrictMap/aggregate.phpt" role="test" />

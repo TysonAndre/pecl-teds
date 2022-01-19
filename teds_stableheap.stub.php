@@ -5,14 +5,14 @@
 
 namespace Teds;
 
-class StableMaxHeap extends SplMaxHeap
+class StableMaxHeap extends SplHeap
 {
     public function compare(mixed $value1, mixed $value2): int {
         return stable_compare($value1, $value2);
     }
 }
 
-class StableMinHeap extends SplMinHeap
+class StableMinHeap extends SplHeap
 {
     public function compare(mixed $value1, mixed $value2): int {
         return stable_compare($value2, $value1);
