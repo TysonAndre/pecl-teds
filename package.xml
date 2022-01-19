@@ -13,8 +13,8 @@
  <date>2022-01-18</date>
  <time>16:00:00</time>
  <version>
-  <release>0.6.1dev</release>
-  <api>0.6.1dev</api>
+  <release>0.7.0dev</release>
+  <api>0.7.0dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -23,6 +23,7 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Make `Teds\strict_hash` ignore recursion caused by unrelated functions (e.g. var_dump calling `__debugInfo` calling `strict_hash`)
+* Add `Teds\binary_search(array $values, mixed $target, callable $comparer = null, bool $useKey=false)`
  </notes>
  <contents>
   <dir name="/">
@@ -240,6 +241,7 @@
     <file name="iterable/includes_value.phpt" role="test" />
     <file name="iterable/none_array.phpt" role="test" />
     <file name="iterable/none_traversable.phpt" role="test" />
+    <file name="misc/binary_search.phpt" role="test" />
     <file name="misc/stable_compare.phpt" role="test" />
     <file name="misc/stable_compare_2.phpt" role="test" />
     <file name="misc/strict_hash.phpt" role="test" />

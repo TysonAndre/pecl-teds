@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 4d881d637c5698f0045e0a95783ac9e208ba6489 */
+ * Stub hash: 7f85c68ae9c93be0ff339fa34533e6ee7b524b1d */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_any, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, iterable, IS_ITERABLE, 0)
@@ -42,6 +42,13 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_strict_hash, 0, 1, IS_LONG,
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_binary_search, 0, 2, IS_ARRAY, 1)
+	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, comparer, IS_CALLABLE, 1, "null")
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, flags, IS_LONG, 0, "0")
+ZEND_END_ARG_INFO()
+
 
 ZEND_FUNCTION(any);
 ZEND_FUNCTION(all);
@@ -53,6 +60,7 @@ ZEND_FUNCTION(array_value_first);
 ZEND_FUNCTION(array_value_last);
 ZEND_FUNCTION(stable_compare);
 ZEND_FUNCTION(strict_hash);
+ZEND_FUNCTION(binary_search);
 
 
 static const zend_function_entry ext_functions[] = {
@@ -66,5 +74,6 @@ static const zend_function_entry ext_functions[] = {
 	ZEND_NS_FE("Teds", array_value_last, arginfo_Teds_array_value_last)
 	ZEND_NS_FE("Teds", stable_compare, arginfo_Teds_stable_compare)
 	ZEND_NS_FE("Teds", strict_hash, arginfo_Teds_strict_hash)
+	ZEND_NS_FE("Teds", binary_search, arginfo_Teds_binary_search)
 	ZEND_FE_END
 };
