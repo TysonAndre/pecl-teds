@@ -462,7 +462,7 @@ packed_search_start:
 			largest_smaller_zval_ptr = mid;
 			start = mid + 1;
 		} else {
-			end = mid;
+			end = mid_orig;
 		}
 	}
 	if (largest_smaller_zval_ptr == NULL) {
@@ -556,7 +556,7 @@ bucket_search_start:
 			largest_smaller_bucket = mid;
 			start = mid + 1;
 		} else {
-			end = mid;
+			end = mid_orig;
 		}
 	}
 	if (largest_smaller_bucket == NULL) {
