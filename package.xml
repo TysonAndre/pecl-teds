@@ -2,7 +2,7 @@
 <package packagerversion="1.9.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
  <name>teds</name>
  <channel>pecl.php.net</channel>
- <summary>teds extension</summary>
+ <summary>Provides extra data structures and iterable/array functionality.</summary>
  <description>teds (Tentative Extra Data Structures) is a collection of data structures and iterable functionality</description>
  <lead>
   <name>Tyson Andre</name>
