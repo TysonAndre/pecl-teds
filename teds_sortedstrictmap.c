@@ -54,7 +54,7 @@ typedef struct _teds_sortedstrictmap {
 	zend_object				std;
 } teds_sortedstrictmap;
 
-static void teds_sortedstrictmap_insert(teds_sortedstrictmap *intern, zval *key, zval *value);
+static void teds_sortedstrictmap_insert(teds_sortedstrictmap *intern, zval *key, zval *value, bool probably_largest);
 static void teds_sortedstrictmap_clear(teds_sortedstrictmap *intern);
 
 /* Used by InternalIterator returned by SortedStrictMap->getIterator() */
@@ -595,7 +595,7 @@ PHP_METHOD(Teds_SortedStrictMap, __unserialize)
 
 		ZVAL_DEREF(val);
 		if (i % 2 == 1) {
-			teds_sortedstrictmap_insert(intern, &key, val);
+			teds_sortedstrictmap_insert(intern, &key, val, 1);
 		} else {
 			ZVAL_COPY_VALUE(&key, val);
 		}
@@ -624,7 +624,7 @@ static bool teds_sortedstrictmap_insert_from_pair(teds_sortedstrictmap *intern, 
 	}
 	ZVAL_DEREF(key);
 	ZVAL_DEREF(value);
-	teds_sortedstrictmap_insert(intern, key, value);
+	teds_sortedstrictmap_insert(intern, key, value, 0);
 	return true;
 }
 
@@ -867,17 +867,54 @@ static teds_sortedstrictmap_search_result teds_sortedstrictmap_sorted_search_for
 		size_t mid = start + (end - start)/2;
 		teds_sortedstrictmap_entry *e = &entries[mid];
 		int comparison = teds_stable_compare(key, &e->key);
-		if (comparison == 0) {
-			teds_sortedstrictmap_search_result result;
-			result.found = true;
-			result.entry = e;
-			return result;
+		if (comparison > 0) {
+			/* This key is greater than the value at the midpoint. Search the right half. */
+			start = mid + 1;
 		} else if (comparison < 0) {
 			/* This key is less than the value at the midpoint. Search the left half. */
 			end = mid;
 		} else {
-			/* This key is greater than the value at the midpoint. Search the right half. */
-			start = mid + 1;
+			teds_sortedstrictmap_search_result result;
+			result.found = true;
+			result.entry = e;
+			return result;
+		}
+	}
+	/* The entry is the position in the array at which the new value should be inserted. */
+	teds_sortedstrictmap_search_result result;
+	result.found = false;
+	result.entry = &entries[start];
+	return result;
+}
+
+static teds_sortedstrictmap_search_result teds_sortedstrictmap_sorted_search_for_key_probably_largest(const teds_sortedstrictmap *intern, zval *key)
+{
+	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
+	teds_sortedstrictmap_entry *const entries = intern->array.entries;
+	size_t end = intern->array.size;
+	size_t start = 0;
+	if (end > 0) {
+		size_t mid = end - 1;
+		/* This is written in a way that would be fastest for branch prediction if key is larger than the last value in the array. */
+		while (true) {
+			teds_sortedstrictmap_entry *e = &entries[mid];
+			int comparison = teds_stable_compare(key, &e->key);
+			if (comparison > 0) {
+				/* This key is greater than the value at the midpoint. Search the right half. */
+				start = mid + 1;
+			} else if (comparison < 0) {
+				/* This key is less than the value at the midpoint. Search the left half. */
+				end = mid;
+			} else {
+				teds_sortedstrictmap_search_result result;
+				result.found = true;
+				result.entry = e;
+				return result;
+			}
+			if (start >= end) {
+				break;
+			}
+			mid = start + (end - mid) / 2;
 		}
 	}
 	/* The entry is the position in the array at which the new value should be inserted. */
@@ -980,8 +1017,10 @@ PHP_METHOD(Teds_SortedStrictMap, get)
 	RETURN_THROWS();
 }
 
-static void teds_sortedstrictmap_insert(teds_sortedstrictmap *intern, zval *key, zval *value) {
-	teds_sortedstrictmap_search_result result = teds_sortedstrictmap_sorted_search_for_key(intern, key);
+static zend_always_inline void teds_sortedstrictmap_insert(teds_sortedstrictmap *intern, zval *key, zval *value, bool probably_largest) {
+	teds_sortedstrictmap_search_result result = probably_largest
+		? teds_sortedstrictmap_sorted_search_for_key_probably_largest(intern, key)
+		: teds_sortedstrictmap_sorted_search_for_key(intern, key);
 	if (result.found) {
 		/* Replace old value, then free old value */
 		zval old;
@@ -1021,7 +1060,7 @@ PHP_METHOD(Teds_SortedStrictMap, offsetSet)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
-	teds_sortedstrictmap_insert(intern, key, value);
+	teds_sortedstrictmap_insert(intern, key, value, 0);
 }
 
 PHP_METHOD(Teds_SortedStrictMap, offsetUnset)

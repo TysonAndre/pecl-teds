@@ -69,9 +69,12 @@ typedef struct _teds_sortedstrictset_search_result {
 
 static void teds_sortedstrictset_entries_raise_capacity(teds_sortedstrictset_entries *array, size_t new_capacity);
 static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for_key(const teds_sortedstrictset *intern, zval *key);
+static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for_key_probably_largest(const teds_sortedstrictset *intern, zval *key);
 
-static bool teds_sortedstrictset_insert(teds_sortedstrictset *intern, zval *key) {
-	teds_sortedstrictset_search_result result = teds_sortedstrictset_sorted_search_for_key(intern, key);
+static bool teds_sortedstrictset_insert(teds_sortedstrictset *intern, zval *key, bool probably_largest) {
+	teds_sortedstrictset_search_result result = probably_largest
+		? teds_sortedstrictset_sorted_search_for_key_probably_largest(intern, key)
+		: teds_sortedstrictset_sorted_search_for_key(intern, key);
 	if (result.found) {
 		return false;
 	}
@@ -590,9 +593,8 @@ PHP_METHOD(Teds_SortedStrictSet, __unserialize)
 			RETURN_THROWS();
 		}
 
-		teds_sortedstrictset_insert(intern, val);
+		teds_sortedstrictset_insert(intern, val, true);
 	} ZEND_HASH_FOREACH_END();
-
 }
 
 PHP_METHOD(Teds_SortedStrictSet, __set_state)
@@ -703,17 +705,54 @@ static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for
 		size_t mid = start + (end - start)/2;
 		teds_sortedstrictset_entry *e = &entries[mid];
 		int comparison = teds_stable_compare(key, &e->key);
-		if (comparison == 0) {
-			teds_sortedstrictset_search_result result;
-			result.found = true;
-			result.entry = e;
-			return result;
+		if (comparison > 0) {
+			/* This key is greater than the value at the midpoint. Search the right half. */
+			start = mid + 1;
 		} else if (comparison < 0) {
 			/* This key is less than the value at the midpoint. Search the left half. */
 			end = mid;
 		} else {
-			/* This key is greater than the value at the midpoint. Search the right half. */
-			start = mid + 1;
+			teds_sortedstrictset_search_result result;
+			result.found = true;
+			result.entry = e;
+			return result;
+		}
+	}
+	/* The entry is the position in the array at which the new value should be inserted. */
+	teds_sortedstrictset_search_result result;
+	result.found = false;
+	result.entry = &entries[start];
+	return result;
+}
+
+static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for_key_probably_largest(const teds_sortedstrictset *intern, zval *key)
+{
+	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
+	teds_sortedstrictset_entry *const entries = intern->array.entries;
+	size_t end = intern->array.size;
+	size_t start = 0;
+	if (end > 0) {
+		size_t mid = end - 1;
+		/* This is written in a way that would be fastest for branch prediction if key is larger than the last value in the array. */
+		while (true) {
+			teds_sortedstrictset_entry *e = &entries[mid];
+			int comparison = teds_stable_compare(key, &e->key);
+			if (comparison > 0) {
+				/* This key is greater than the value at the midpoint. Search the right half. */
+				start = mid + 1;
+			} else if (comparison < 0) {
+				/* This key is less than the value at the midpoint. Search the left half. */
+				end = mid;
+			} else {
+				teds_sortedstrictset_search_result result;
+				result.found = true;
+				result.entry = e;
+				return result;
+			}
+			if (start >= end) {
+				break;
+			}
+			mid = start + (end - start)/2;
 		}
 	}
 	/* The entry is the position in the array at which the new value should be inserted. */
@@ -767,7 +806,7 @@ PHP_METHOD(Teds_SortedStrictSet, add)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	RETURN_BOOL(teds_sortedstrictset_insert(intern, value));
+	RETURN_BOOL(teds_sortedstrictset_insert(intern, value, false));
 }
 
 PHP_METHOD(Teds_SortedStrictSet, contains)
