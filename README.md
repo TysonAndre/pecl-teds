@@ -207,6 +207,24 @@ function includes_value(iterable $iterable, mixed $value): bool {
 	}
 	return false;
 }
+
+/**
+ * Returns a list of unique values in order of occurrence,
+ * using a hash table with `Teds\strict_hash` to deduplicate values.
+ */
+function unique_values(iterable $iterable): array {
+    // NOTE: The native implementation is a work in progress,
+	// this is inefficient because proper hash tables aren't implemented yet.
+
+	// Without Teds installed, this takes quadratic time instead of linear time.
+	$result = [];
+	foreach ($iterable as $value) {
+		if (!in_array($value, $result, true)) {
+			$result[] = $value;
+		}
+	}
+	return $result;
+}
 ```
 
 ## Stable comparison
