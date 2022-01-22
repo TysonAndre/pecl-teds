@@ -56,6 +56,14 @@
    <file name="teds_sortedstrictset.c" role="src" />
    <file name="teds_sortedstrictset.h" role="src" />
    <file name="teds_sortedstrictset.stub.php" role="src" />
+   <file name="teds_stablesortedlistmap_arginfo.h" role="src" />
+   <file name="teds_stablesortedlistmap.c" role="src" />
+   <file name="teds_stablesortedlistmap.h" role="src" />
+   <file name="teds_stablesortedlistmap.stub.php" role="src" />
+   <file name="teds_stablesortedlistset_arginfo.h" role="src" />
+   <file name="teds_stablesortedlistset.c" role="src" />
+   <file name="teds_stablesortedlistset.h" role="src" />
+   <file name="teds_stablesortedlistset.stub.php" role="src" />
    <file name="teds_stableheap_arginfo.h" role="src" />
    <file name="teds_stableheap.c" role="src" />
    <file name="teds_stableheap.h" role="src" />
