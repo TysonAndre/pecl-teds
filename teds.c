@@ -50,6 +50,16 @@
 #include "zend_enum.h"
 #endif
 
+#define TEDS_STR_DEFS \
+	X(found)
+
+#define TEDS_STR(x) teds_str_ ## str
+
+#define X(str) \
+	static zend_string *TEDS_STR(str);
+TEDS_STR_DEFS
+#undef X
+
 #ifndef ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE
 #define ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(pass_by_ref, name, type_hint, allow_null, default_value) \
 	ZEND_ARG_TYPE_INFO(pass_by_ref, name, type_hint, allow_null)
@@ -487,7 +497,7 @@ static HashTable *teds_binary_search_create_result(bool found, zval *key, zval *
 	{
 		zval tmp;
 		ZVAL_BOOL(&tmp, found);
-		zend_hash_str_add_new(return_ht, "found", sizeof("found") - 1, &tmp);
+		zend_hash_add_new(return_ht, TEDS_STR(found), &tmp);
 	}
 	/* Caller should increment references */
 	zend_hash_add_new(return_ht, ZSTR_KNOWN(ZEND_STR_KEY), key);
@@ -1150,6 +1160,21 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_strictmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_strictset)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_vector)(INIT_FUNC_ARGS_PASSTHRU);
+#define X(str) \
+	TEDS_STR(str) = zend_new_interned_string( \
+			zend_string_init(#str, sizeof(#str) - 1, 1));
+	TEDS_STR_DEFS
+#undef X
+	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ PHP_MINIT_FUNCTION */
+PHP_MSHUTDOWN_FUNCTION(teds)
+{
+#define X(str) zend_string_release(TEDS_STR(str));
+	TEDS_STR_DEFS
+#undef X
 	return SUCCESS;
 }
 /* }}} */
@@ -1181,7 +1206,7 @@ zend_module_entry teds_module_entry = {
 	"teds",				/* Extension name */
 	ext_functions,		/* zend_function_entry */
 	PHP_MINIT(teds),	/* PHP_MINIT - Module initialization */
-	NULL,				/* PHP_MSHUTDOWN - Module shutdown */
+	PHP_MSHUTDOWN(teds), /* PHP_MSHUTDOWN - Module shutdown */
 	PHP_RINIT(teds),		/* PHP_RINIT - Request initialization */
 	NULL,				/* PHP_RSHUTDOWN - Request shutdown */
 	PHP_MINFO(teds),		/* PHP_MINFO - Module info */
