@@ -10,7 +10,7 @@ function yields_values() {
     $o = (object)['key' => 'value'];
     yield $o => $o;
     yield 0 => 1;
-    yield 0 => 2;
+    yield 0 => 2;  // This overwrites the StrictMap entry for 0 => 1
     echo "Done evaluating the generator\n";
 }
 
@@ -66,8 +66,6 @@ Value: (object) array(
    'key' => 'value',
 )
 Key: 0
-Value: 1
-Key: 0
 Value: 2
 Rewind and iterate again starting from r0
 Key: 'r0'
@@ -96,8 +94,6 @@ Key: (object) array(
 Value: (object) array(
    'key' => 'value',
 )
-Key: 0
-Value: 1
 Key: 0
 Value: 2
 object(Teds\StrictMap)#1 (0) {

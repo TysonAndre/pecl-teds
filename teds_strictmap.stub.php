@@ -76,6 +76,7 @@ final class StrictMap implements \IteratorAggregate, \Countable, \JsonSerializab
 
     /**
      * Returns [[key1, value1], [key2, value2]]
+     * @implementation-alias Teds\StrictMap::toPairs
      */
     public function jsonSerialize(): array {}
 }

@@ -63,7 +63,7 @@
 #endif
 
 /* Copied from array_reduce implementation in https://github.com/php/php-src/blob/master/ext/standard/array.c */
-static zend_always_inline void php_array_reduce(HashTable *htbl, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value) /* {{{ */
+static zend_always_inline void teds_array_reduce(HashTable *htbl, zend_fcall_info fci, zend_fcall_info_cache fci_cache, zval* return_value) /* {{{ */
 {
 	zval args[2];
 	zval *operand;
@@ -386,11 +386,94 @@ PHP_FUNCTION(fold)
 
 	switch (Z_TYPE_P(input)) {
 		case IS_ARRAY:
-			php_array_reduce(Z_ARRVAL_P(input), fci, fci_cache, return_value);
+			teds_array_reduce(Z_ARRVAL_P(input), fci, fci_cache, return_value);
 			return;
 		case IS_OBJECT: {
 			ZEND_ASSERT(instanceof_function(Z_OBJCE_P(input), zend_ce_traversable));
 			teds_traversable_reduce(input, fci, fci_cache, return_value);
+			return;
+		}
+		EMPTY_SWITCH_DEFAULT_CASE();
+	}
+}
+/* }}} */
+
+static inline zend_array* teds_move_zend_array_from_entries(const teds_strictset_entries *array) {
+	const size_t size = array->size;
+
+	teds_strictset_entry *it = array->entries;
+	teds_strictset_entry *end = it + size;
+
+	ZEND_ASSERT(size > 0);
+
+	HashTable *result = zend_new_array(size);
+	zend_hash_real_init_packed(result);
+
+	ZEND_HASH_FILL_PACKED(result) {
+		do {
+			ZEND_ASSERT(Z_TYPE_P(&it->key) != IS_UNDEF);
+			ZEND_HASH_FILL_ADD(&it->key);
+			it++;
+		} while (it < end);
+	} ZEND_HASH_FILL_END();
+
+	efree(array->entries);
+
+	return result;
+}
+
+static inline void teds_array_unique_values(HashTable *ht, zval *return_value)
+{
+	if (zend_hash_num_elements(ht) <= 1) {
+		if (zend_hash_num_elements(ht) == 0) {
+			RETURN_EMPTY_ARRAY();
+		}
+		HashTable *result = zend_new_array(1);
+		HashPosition start = 0;
+		zval *value = zend_hash_get_current_data_ex(ht, &start);
+		ZEND_ASSERT(value != NULL);
+		Z_TRY_ADDREF_P(value);
+		zend_hash_next_index_insert(result, value);
+		RETURN_ARR(result);
+	}
+	teds_strictset_entries array;
+	teds_strictset_entries_init_from_array(&array, ht);
+	if (UNEXPECTED(EG(exception))) {
+		RETURN_THROWS();
+	}
+	RETVAL_ARR(teds_move_zend_array_from_entries(&array));
+}
+
+static inline void teds_traversable_unique_values(zend_object *obj, zval *return_value)
+{
+	teds_strictset_entries array;
+	teds_strictset_entries_init_from_traversable(&array, obj);
+	if (UNEXPECTED(EG(exception))) {
+		RETURN_THROWS();
+	}
+	if (array.capacity == 0) {
+		ZEND_ASSERT(array.size == 0);
+		RETURN_EMPTY_ARRAY();
+	}
+	RETVAL_ARR(teds_move_zend_array_from_entries(&array));
+}
+
+/* {{{ extracts unique values from an iterable with a hash table */
+PHP_FUNCTION(unique_values)
+{
+	zval *iterable;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ITERABLE(iterable)
+	ZEND_PARSE_PARAMETERS_END();
+
+	switch (Z_TYPE_P(iterable)) {
+		case IS_ARRAY:
+			teds_array_unique_values(Z_ARRVAL_P(iterable), return_value);
+			return;
+		case IS_OBJECT: {
+			ZEND_ASSERT(instanceof_function(Z_OBJCE_P(iterable), zend_ce_traversable));
+			teds_traversable_unique_values(Z_OBJ_P(iterable), return_value);
 			return;
 		}
 		EMPTY_SWITCH_DEFAULT_CASE();

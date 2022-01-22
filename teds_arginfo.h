@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: e22cc207ea993cb3691a8d1537d4c13dc66a48f9 */
+ * Stub hash: 2baeb0bfbea4fe48b48f4a42470208df63e95fd8 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_any, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, iterable, IS_ITERABLE, 0)
@@ -25,6 +25,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_find, 0, 2, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, iterable, IS_ITERABLE, 0)
 	ZEND_ARG_TYPE_INFO(0, callback, IS_CALLABLE, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, default, IS_MIXED, 0, "null")
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_unique_values, 0, 1, IS_ARRAY, 0)
+	ZEND_ARG_TYPE_INFO(0, iterable, IS_ITERABLE, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Teds_array_value_first, 0, 1, IS_MIXED, 0)
@@ -56,6 +60,7 @@ ZEND_FUNCTION(none);
 ZEND_FUNCTION(includes_value);
 ZEND_FUNCTION(fold);
 ZEND_FUNCTION(find);
+ZEND_FUNCTION(unique_values);
 ZEND_FUNCTION(array_value_first);
 ZEND_FUNCTION(array_value_last);
 ZEND_FUNCTION(stable_compare);
@@ -70,6 +75,7 @@ static const zend_function_entry ext_functions[] = {
 	ZEND_NS_FE("Teds", includes_value, arginfo_Teds_includes_value)
 	ZEND_NS_FE("Teds", fold, arginfo_Teds_fold)
 	ZEND_NS_FE("Teds", find, arginfo_Teds_find)
+	ZEND_NS_FE("Teds", unique_values, arginfo_Teds_unique_values)
 	ZEND_NS_FE("Teds", array_value_first, arginfo_Teds_array_value_first)
 	ZEND_NS_FE("Teds", array_value_last, arginfo_Teds_array_value_last)
 	ZEND_NS_FE("Teds", stable_compare, arginfo_Teds_stable_compare)
