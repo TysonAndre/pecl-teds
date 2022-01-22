@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 61a12fae700b9ce3754cca1b5bc4506f5afab65e */
+ * Stub hash: a0bb97b6d9956414a14b86c4803f1d215a392db2 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -88,7 +88,6 @@ ZEND_METHOD(Teds_StrictMap, offsetUnset);
 ZEND_METHOD(Teds_StrictMap, containsValue);
 ZEND_METHOD(Teds_StrictMap, containsKey);
 ZEND_METHOD(Teds_StrictMap, get);
-ZEND_METHOD(Teds_StrictMap, jsonSerialize);
 
 
 static const zend_function_entry class_Teds_StrictMap_methods[] = {
@@ -111,7 +110,7 @@ static const zend_function_entry class_Teds_StrictMap_methods[] = {
 	ZEND_ME(Teds_StrictMap, containsValue, arginfo_class_Teds_StrictMap_containsValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, containsKey, arginfo_class_Teds_StrictMap_containsKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, get, arginfo_class_Teds_StrictMap_get, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictMap, jsonSerialize, arginfo_class_Teds_StrictMap_jsonSerialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMap, jsonSerialize, toPairs, arginfo_class_Teds_StrictMap_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

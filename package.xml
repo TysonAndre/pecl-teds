@@ -25,6 +25,8 @@
 * Make `Teds\strict_hash` ignore recursion caused by unrelated functions (e.g. var_dump calling `__debugInfo` calling `strict_hash`)
 * Add `Teds\binary_search(array $values, mixed $target, callable $comparer = null, bool $useKey=false)`
 * Change parent class of `Teds\StableMaxHeap` and `Teds\StableMinHeap` to `SplHeap`.
+* Fix deduplication when constructing StrictSet from iterable, StrictMap from Traversable.
+* Add `Teds\unique_values(iterable): array` using `strict_hash` to check for duplicates.
  </notes>
  <contents>
   <dir name="/">
@@ -243,6 +245,8 @@
     <file name="iterable/includes_value.phpt" role="test" />
     <file name="iterable/none_array.phpt" role="test" />
     <file name="iterable/none_traversable.phpt" role="test" />
+    <file name="iterable/unique_values.phpt" role="test" />
+    <file name="iterable/unique_values_traversable.phpt" role="test" />
     <file name="misc/binary_search.phpt" role="test" />
     <file name="misc/binary_search_edge_case.phpt" role="test" />
     <file name="misc/binary_search_edge_case_2.phpt" role="test" />

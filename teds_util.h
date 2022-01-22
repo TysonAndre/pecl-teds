@@ -60,6 +60,7 @@ static inline size_t teds_deque_next_pow2_capacity(size_t nSize) {
 
 #define teds_strictmap_next_pow2_capacity teds_deque_next_pow2_capacity
 #define teds_strictset_next_pow2_capacity teds_deque_next_pow2_capacity
+#define TEDS_STRICTSET_MIN_CAPACITY TEDS_DEQUE_MIN_CAPACITY
 /* TODO remove when rewriting as binary tree */
 #define teds_sortedstrictmap_next_pow2_capacity teds_deque_next_pow2_capacity
 #define teds_sortedstrictset_next_pow2_capacity teds_deque_next_pow2_capacity

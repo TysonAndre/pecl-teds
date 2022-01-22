@@ -11,9 +11,9 @@ class HasDestructor {
 }
 
 function yields_and_throws() {
-    yield 123 => new HasDestructor('in value');
+    yield 123 => new HasDestructor('in value1');
     yield new HasDestructor('in key') => 123;
-    yield 123 => new HasDestructor('in value');
+    yield 123 => new HasDestructor('in value2'); // replaces value1
     yield 'first' => 'second';
 
     throw new RuntimeException('test');
@@ -29,8 +29,8 @@ gc_collect_cycles();
 echo "Done\n";
 ?>
 --EXPECT--
-in HasDestructor::__destruct in value
+in HasDestructor::__destruct in value1
+in HasDestructor::__destruct in value2
 in HasDestructor::__destruct in key
-in HasDestructor::__destruct in value
 Caught test
 Done

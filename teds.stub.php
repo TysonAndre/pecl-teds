@@ -60,6 +60,12 @@ function fold(iterable $iterable, callable $callback, mixed $initial): mixed {}
 function find(iterable $iterable, callable $callback, mixed $default = null): mixed {}
 
 /**
+ * Returns a list of unique values in order of occurrence,
+ * internally using a hash table with `Teds\strict_hash` to deduplicate values.
+ */
+function unique_values(iterable $iterable): array {}
+
+/**
  * Returns the first value of the array without affecting the internal array pointer.
  * If the array is empty, returns null.
  *

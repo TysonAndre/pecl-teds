@@ -66,8 +66,8 @@ typedef struct _teds_strictmap {
 	zend_object				std;
 } teds_strictmap;
 
-static void teds_strictmap_insert(teds_strictmap *intern, zval *key, zval *value);
-static void teds_strictmap_clear(teds_strictmap *intern);
+static bool teds_strictmap_entries_insert(teds_strictmap_entries *array, zval *key, zval *value, bool add_key_ref);
+static void teds_strictmap_entries_clear(teds_strictmap_entries *array);
 
 /* Used by InternalIterator returned by StrictMap->getIterator() */
 typedef struct _teds_strictmap_it {
@@ -183,11 +183,9 @@ static void teds_strictmap_entries_init_from_traversable(teds_strictmap_entries 
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	zend_long size = 0, capacity = 0;
 	array->size = 0;
 	array->capacity = 0;
-	array->entries = NULL;
-	teds_strictmap_entry *entries = NULL;
+	array->entries = (teds_strictmap_entry *)empty_entry_list;
 	zval tmp_obj;
 	ZVAL_OBJ(&tmp_obj, obj);
 	iter = ce->get_iterator(ce, &tmp_obj, 0);
@@ -224,32 +222,21 @@ static void teds_strictmap_entries_init_from_traversable(teds_strictmap_entries 
 			break;
 		}
 
-		if (size >= capacity) {
-			/* TODO: Could use countable and get_count handler to estimate the size of the array to allocate */
-			if (entries) {
-				capacity *= 2;
-				entries = safe_erealloc(entries, capacity, sizeof(teds_strictmap_entry), 0);
-			} else {
-				capacity = 4;
-				entries = safe_emalloc(capacity, sizeof(teds_strictmap_entry), 0);
+		/* The key's reference count was already increased. We need to free it if the entry for the key already existed. */
+		bool created_new_entry = teds_strictmap_entries_insert(array, &key, value, false);
+		if (!created_new_entry) {
+			if (UNEXPECTED(EG(exception))) {
+				break;
 			}
 		}
-		/* The key's reference count was already increased */
-		ZVAL_COPY_VALUE(&entries[size].key, &key);
-		ZVAL_COPY_DEREF(&entries[size].value, value);
-		teds_strictmap_entry_compute_and_store_hash(&entries[size]);
-		size++;
 
 		iter->index++;
 		funcs->move_forward(iter);
-		if (EG(exception)) {
+		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
 	}
 
-	array->size = size;
-	array->capacity = capacity;
-	array->entries = entries;
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}
@@ -596,39 +583,40 @@ PHP_METHOD(Teds_StrictMap, __unserialize)
 		RETURN_THROWS();
 	}
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	if (UNEXPECTED(!teds_strictmap_entries_uninitialized(&intern->array))) {
+	teds_strictmap_entries *array = &intern->array;
+	if (UNEXPECTED(!teds_strictmap_entries_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
 	}
 	if (raw_size == 0) {
-		ZEND_ASSERT(intern->array.size == 0);
-		ZEND_ASSERT(intern->array.capacity == 0);
-		intern->array.entries = (teds_strictmap_entry *)empty_entry_list;
+		ZEND_ASSERT(array->size == 0);
+		ZEND_ASSERT(array->capacity == 0);
+		array->entries = (teds_strictmap_entry *)empty_entry_list;
 		return;
 	}
 
-	ZEND_ASSERT(intern->array.entries == NULL);
+	ZEND_ASSERT(array->entries == NULL);
 
 	size_t i = 0;
 	const size_t capacity = teds_strictmap_next_pow2_capacity(raw_size / 2);
 	teds_strictmap_entry *entries = safe_emalloc(capacity, sizeof(teds_strictmap_entry), 0);
-	intern->array.size = 0;
-	intern->array.capacity = capacity;
-	intern->array.entries = entries;
+	array->size = 0;
+	array->capacity = capacity;
+	array->entries = entries;
 
 	zend_string *str;
 	zval key;
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
-			teds_strictmap_clear(intern);
+			teds_strictmap_entries_clear(array);
 			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StrictMap::__unserialize saw unexpected string key, expected sequence of keys and values", 0);
 			RETURN_THROWS();
 		}
 
 		ZVAL_DEREF(val);
 		if (i % 2 == 1) {
-			teds_strictmap_insert(intern, &key, val);
+			teds_strictmap_entries_insert(array, &key, val, true);
 		} else {
 			ZVAL_COPY_VALUE(&key, val);
 		}
@@ -637,7 +625,7 @@ PHP_METHOD(Teds_StrictMap, __unserialize)
 
 }
 
-static bool teds_strictmap_insert_from_pair(teds_strictmap *intern, zval *raw_val)
+static bool teds_strictmap_entries_insert_from_pair(teds_strictmap_entries *array, zval *raw_val)
 {
 	ZVAL_DEREF(raw_val);
 	if (UNEXPECTED(Z_TYPE_P(raw_val) != IS_ARRAY)) {
@@ -657,13 +645,12 @@ static bool teds_strictmap_insert_from_pair(teds_strictmap *intern, zval *raw_va
 	}
 	ZVAL_DEREF(key);
 	ZVAL_DEREF(value);
-	teds_strictmap_insert(intern, key, value);
+	teds_strictmap_entries_insert(array, key, value, true);
 	return true;
 }
 
-static void teds_strictmap_entries_init_from_array_pairs(teds_strictmap *intern, zend_array *raw_data)
+static void teds_strictmap_entries_init_from_array_pairs(teds_strictmap_entries *array, zend_array *raw_data)
 {
-	teds_strictmap_entries *array = &intern->array;
 	size_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
 		array->size = 0;
@@ -677,15 +664,14 @@ static void teds_strictmap_entries_init_from_array_pairs(teds_strictmap *intern,
 	array->capacity = capacity;
 	zval *val;
 	ZEND_HASH_FOREACH_VAL(raw_data, val) {
-		if (!teds_strictmap_insert_from_pair(intern, val)) {
+		if (!teds_strictmap_entries_insert_from_pair(array, val)) {
 			break;
 		}
 	} ZEND_HASH_FOREACH_END();
 }
 
-static void teds_strictmap_entries_init_from_traversable_pairs(teds_strictmap *intern, zend_object *obj)
+static void teds_strictmap_entries_init_from_traversable_pairs(teds_strictmap_entries *array, zend_object *obj)
 {
-	teds_strictmap_entries *array = &intern->array;
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
 	array->size = 0;
@@ -716,7 +702,7 @@ static void teds_strictmap_entries_init_from_traversable_pairs(teds_strictmap *i
 			break;
 		}
 
-		if (!teds_strictmap_insert_from_pair(intern, pair)) {
+		if (!teds_strictmap_entries_insert_from_pair(array, pair)) {
 			break;
 		}
 
@@ -737,10 +723,10 @@ static zend_object* create_from_pairs(zval *iterable) {
 	teds_strictmap *intern = teds_strictmap_from_obj(object);
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_strictmap_entries_init_from_array_pairs(intern, Z_ARRVAL_P(iterable));
+			teds_strictmap_entries_init_from_array_pairs(&intern->array, Z_ARRVAL_P(iterable));
 			break;
 		case IS_OBJECT:
-			teds_strictmap_entries_init_from_traversable_pairs(intern, Z_OBJ_P(iterable));
+			teds_strictmap_entries_init_from_traversable_pairs(&intern->array, Z_OBJ_P(iterable));
 			break;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -767,7 +753,7 @@ PHP_METHOD(Teds_StrictMap, __set_state)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_strictmap_new(teds_ce_StrictMap);
 	teds_strictmap *intern = teds_strictmap_from_obj(object);
-	teds_strictmap_entries_init_from_array_pairs(intern, array_ht);
+	teds_strictmap_entries_init_from_array_pairs(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
 }
@@ -890,10 +876,10 @@ PHP_METHOD(Teds_StrictMap, indexOfValue)
 	RETURN_NULL();
 }
 
-static teds_strictmap_entry *teds_strictmap_find_key(const teds_strictmap *intern, zval *key, uint32_t hash)
+static teds_strictmap_entry *teds_strictmap_entries_find_key(const teds_strictmap_entries *array, zval *key, uint32_t hash)
 {
-	const size_t len = intern->array.size;
-	teds_strictmap_entry *entries = intern->array.entries;
+	const size_t len = array->size;
+	teds_strictmap_entry *entries = array->entries;
 	for (size_t i = 0; i < len; i++) {
 		if (hash == TEDS_ENTRY_HASH(&entries[i]) && EXPECTED(zend_is_identical(key, &entries[i].key))) {
 			return &entries[i];
@@ -902,15 +888,15 @@ static teds_strictmap_entry *teds_strictmap_find_key(const teds_strictmap *inter
 	return NULL;
 }
 
-static teds_strictmap_entry *teds_strictmap_find_key_computing_hash(const teds_strictmap *intern, zval *key)
+static teds_strictmap_entry *teds_strictmap_entries_find_key_computing_hash(const teds_strictmap_entries *array, zval *key)
 {
-	return teds_strictmap_find_key(intern, key, teds_strict_hash(key));
+	return teds_strictmap_entries_find_key(array, key, teds_strict_hash(key));
 }
 
-static teds_strictmap_entry *teds_strictmap_find_value(const teds_strictmap *intern, zval *value)
+static teds_strictmap_entry *teds_strictmap_entries_find_value(const teds_strictmap_entries *array, zval *value)
 {
-	const size_t len = intern->array.size;
-	teds_strictmap_entry *entries = intern->array.entries;
+	const size_t len = array->size;
+	teds_strictmap_entry *entries = array->entries;
 	for (size_t i = 0; i < len; i++) {
 		if (zend_is_identical(value, &entries[i].value)) {
 			return &entries[i];
@@ -919,12 +905,12 @@ static teds_strictmap_entry *teds_strictmap_find_value(const teds_strictmap *int
 	return NULL;
 }
 
-static void teds_strictmap_remove_key(teds_strictmap *intern, zval *key)
+static void teds_strictmap_entries_remove_key(teds_strictmap_entries *array, zval *key)
 {
-	if (intern->array.size == 0) {
+	if (array->size == 0) {
 		return;
 	}
-	teds_strictmap_entry *entry = teds_strictmap_find_key_computing_hash(intern, key);
+	teds_strictmap_entry *entry = teds_strictmap_entries_find_key_computing_hash(array, key);
 	if (!entry) {
 		return;
 	}
@@ -932,7 +918,7 @@ static void teds_strictmap_remove_key(teds_strictmap *intern, zval *key)
 	zval old_value;
 	ZVAL_COPY_VALUE(&old_key, &entry->key);
 	ZVAL_COPY_VALUE(&old_value, &entry->value);
-	teds_strictmap_entry *end = intern->array.entries + intern->array.size - 1;
+	teds_strictmap_entry *end = array->entries + array->size - 1;
 	ZEND_ASSERT(entry <= end);
 	for (; entry < end; ) {
 		teds_strictmap_entry *next = &entry[1];
@@ -941,7 +927,7 @@ static void teds_strictmap_remove_key(teds_strictmap *intern, zval *key)
 		TEDS_ENTRY_HASH(entry) = TEDS_ENTRY_HASH(next);
 		entry = next;
 	}
-	intern->array.size--;
+	array->size--;
 
 	zval_ptr_dtor(&old_key);
 	zval_ptr_dtor(&old_value);
@@ -955,7 +941,7 @@ PHP_METHOD(Teds_StrictMap, offsetExists)
 
 	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
 	if (intern->array.size > 0) {
-		teds_strictmap_entry *entry = teds_strictmap_find_key_computing_hash(intern, key);
+		teds_strictmap_entry *entry = teds_strictmap_entries_find_key_computing_hash(&intern->array, key);
 		if (entry) {
 			RETURN_BOOL(Z_TYPE(entry->value) != IS_NULL);
 		}
@@ -972,7 +958,7 @@ PHP_METHOD(Teds_StrictMap, offsetGet)
 
 	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
 	if (intern->array.size > 0) {
-		teds_strictmap_entry *entry = teds_strictmap_find_key_computing_hash(intern, key);
+		teds_strictmap_entry *entry = teds_strictmap_entries_find_key_computing_hash(&intern->array, key);
 		if (entry) {
 			RETURN_COPY(&entry->value);
 		}
@@ -993,7 +979,7 @@ PHP_METHOD(Teds_StrictMap, get)
 
 	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
 	if (intern->array.size > 0) {
-		teds_strictmap_entry *entry = teds_strictmap_find_key_computing_hash(intern, key);
+		teds_strictmap_entry *entry = teds_strictmap_entries_find_key_computing_hash(&intern->array, key);
 		if (entry) {
 			RETURN_COPY(&entry->value);
 		}
@@ -1005,9 +991,13 @@ PHP_METHOD(Teds_StrictMap, get)
 	RETURN_THROWS();
 }
 
-static void teds_strictmap_insert(teds_strictmap *intern, zval *key, zval *value) {
+/* Returns true if this is a new entry, false if this replaced an existing entry */
+static zend_always_inline bool teds_strictmap_entries_insert(teds_strictmap_entries *array, zval *key, zval *value, bool add_key_ref) {
 	const uint32_t hash = teds_strict_hash(key);
-	teds_strictmap_entry *entry = teds_strictmap_find_key(intern, key, hash);
+	teds_strictmap_entry *entry = teds_strictmap_entries_find_key(array, key, hash);
+
+	/* I think that keys being non-references is assumed elsewhere throughout php? */
+	ZEND_ASSERT(!Z_ISREF_P(key));
 	if (entry) {
 		/* Replace old value, then free old value */
 		zval old;
@@ -1015,21 +1005,28 @@ static void teds_strictmap_insert(teds_strictmap *intern, zval *key, zval *value
 		ZVAL_COPY(&entry->value, value);
 		ZEND_ASSERT(TEDS_ENTRY_HASH(entry) == hash); /* Not clobbered by ZVAL_COPY macro */
 		zval_ptr_dtor(&old);
-		return;
+		if (!add_key_ref) {
+			zval_ptr_dtor(key);
+		}
+		return false;
 	}
 	/* Reallocate and append */
-	teds_strictmap_entries *array = &intern->array;
 	if (array->size >= array->capacity) {
 		ZEND_ASSERT(array->size == array->capacity);
 		const size_t new_capacity = teds_strictmap_next_pow2_capacity(array->size + 1);
-		teds_strictmap_entries_raise_capacity(&intern->array, new_capacity);
+		teds_strictmap_entries_raise_capacity(array, new_capacity);
 	}
 
 	entry = &array->entries[array->size];
-	ZVAL_COPY(&entry->key, key);
+	if (add_key_ref) {
+		ZVAL_COPY(&entry->key, key);
+	} else {
+		ZVAL_COPY_VALUE(&entry->key, key);
+	}
 	ZVAL_COPY(&entry->value, value);
 	TEDS_ENTRY_HASH(entry) = hash;
 	array->size++;
+	return true;
 }
 
 PHP_METHOD(Teds_StrictMap, offsetSet)
@@ -1042,7 +1039,7 @@ PHP_METHOD(Teds_StrictMap, offsetSet)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	teds_strictmap_insert(intern, key, value);
+	teds_strictmap_entries_insert(&intern->array, key, value, true);
 }
 
 PHP_METHOD(Teds_StrictMap, offsetUnset)
@@ -1053,7 +1050,7 @@ PHP_METHOD(Teds_StrictMap, offsetUnset)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	teds_strictmap_remove_key(intern, key);
+	teds_strictmap_entries_remove_key(&intern->array, key);
 }
 
 PHP_METHOD(Teds_StrictMap, containsValue)
@@ -1064,7 +1061,7 @@ PHP_METHOD(Teds_StrictMap, containsValue)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	teds_strictmap_entry *entry = teds_strictmap_find_value(intern, value);
+	teds_strictmap_entry *entry = teds_strictmap_entries_find_value(&intern->array, value);
 	RETURN_BOOL(entry != NULL);
 }
 
@@ -1078,20 +1075,20 @@ PHP_METHOD(Teds_StrictMap, containsKey)
 	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
 	const size_t len = intern->array.size;
 	if (len > 0) {
-		teds_strictmap_entry *entry = teds_strictmap_find_key_computing_hash(intern, key);
+		teds_strictmap_entry *entry = teds_strictmap_entries_find_key_computing_hash(&intern->array, key);
 		RETURN_BOOL(entry != NULL);
 	}
 	RETURN_FALSE;
 }
 
-static void teds_strictmap_return_pairs(zval *return_value, teds_strictmap *intern)
+static void teds_strictmap_entries_return_pairs(teds_strictmap_entries *array, zval *return_value)
 {
-	size_t len = intern->array.size;
+	size_t len = array->size;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
 
-	teds_strictmap_entry *entries = intern->array.entries;
+	teds_strictmap_entry *entries = array->entries;
 	zend_array *values = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);
@@ -1109,32 +1106,22 @@ static void teds_strictmap_return_pairs(zval *return_value, teds_strictmap *inte
 	RETURN_ARR(values);
 }
 
-PHP_METHOD(Teds_StrictMap, jsonSerialize)
-{
-	/* json_encoder.c will always encode objects as {"0":..., "1":...}, and detects recursion if an object returns its internal property array, so we have to return a new array */
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	teds_strictmap_return_pairs(return_value, intern);
-}
-
 PHP_METHOD(Teds_StrictMap, toPairs)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	teds_strictmap_return_pairs(return_value, intern);
+	teds_strictmap_entries_return_pairs(&intern->array, return_value);
 }
 
-static void teds_strictmap_clear(teds_strictmap *intern) {
-	teds_strictmap_entries *array = &intern->array;
-
+static void teds_strictmap_entries_clear(teds_strictmap_entries *array) {
 	if (teds_strictmap_entries_empty_capacity(array)) {
 		return;
 	}
-	teds_strictmap_entry *entries = intern->array.entries;
-	size_t size = intern->array.size;
-	intern->array.entries = (teds_strictmap_entry *)empty_entry_list;
-	intern->array.size = 0;
-	intern->array.capacity = 0;
+	teds_strictmap_entry *entries = array->entries;
+	size_t size = array->size;
+	array->entries = (teds_strictmap_entry *)empty_entry_list;
+	array->size = 0;
+	array->capacity = 0;
 
 	teds_strictmap_entries_dtor_range(entries, 0, size);
 	efree(entries);
@@ -1145,7 +1132,7 @@ PHP_METHOD(Teds_StrictMap, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	teds_strictmap_clear(intern);
+	teds_strictmap_entries_clear(&intern->array);
 }
 
 PHP_MINIT_FUNCTION(teds_strictmap)
