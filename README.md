@@ -261,10 +261,30 @@ and should not be saved/loaded outside of a given php process.
 ## Binary search
 
 `Teds\binary_search(array $values, mixed $target, callable $comparer = null, bool $useKey=false)`
-can be used to binary search on arrays that are sorted by key (ksort, uksort) or value (sort, usort, uasort).
+can be used to [binary search](https://en.wikipedia.org/wiki/Binary_search_algorithm) on arrays that are sorted by key (ksort, uksort) or value (sort, usort, uasort).
 (even if keys were unset).
 
-This may have unpredictable result if the array is out of order. See [`Teds\stable_sort`](#stable-comparison) for ways to sort even arbitrary values in a stable order.
+This will have unpredictable results if the array is out of order. See [`Teds\stable_sort`](#stable-comparison) for ways to sort even arbitrary values in a stable order.
+
+This is faster for very large sorted arrays. See [benchmarks](benchmarks/).
+
+This returns the key and value of the first entry `<=` $needle according to the comparer, and whether an entry comparing equal was found.
+By default, php's default comparison behavior (`<=>`) is used.
+
+```
+php > $values = [1 => 100, 3 => 200, 4 => 1000];
+php > echo json_encode(Teds\binary_search($values, 1));
+{"found":false,"key":null,"value":null}
+php > echo json_encode(Teds\binary_search($values, 100));
+{"found":true,"key":1,"value":100}
+php > echo json_encode(Teds\binary_search($values, 201));
+{"found":false,"key":3,"value":200}
+php > echo json_encode(Teds\binary_search($values, 99));
+{"found":false,"key":null,"value":null}
+php > echo json_encode(Teds\binary_search($values, 1, useKey: true));
+{"found":true,"key":1,"value":100}
+```
+
 
 ## Motivation
 
