@@ -310,7 +310,7 @@ static HashTable* teds_sortedstrictset_get_gc(zend_object *obj, zval **table, in
 	teds_sortedstrictset *intern = teds_sortedstrictset_from_obj(obj);
 
 	*table = &intern->array.entries[0].key;
-	*n = (int)intern->array.size * 2;
+	*n = (int)intern->array.size;
 
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.

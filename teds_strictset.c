@@ -280,12 +280,20 @@ void teds_strictset_entries_dtor(teds_strictset_entries *array)
 	}
 }
 
-static HashTable* teds_strictset_get_gc(zend_object *obj, zval **table, int *n)
+static HashTable* teds_strictset_get_gc(zend_object *obj, zval **table, int *table_count)
 {
 	teds_strictset *intern = teds_strictset_from_obj(obj);
+	size_t size = intern->array.size;
+	if (size > 0) {
+		teds_strictset_entry *entries = intern->array.entries;
+		zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 
-	*table = &intern->array.entries[0].key;
-	*n = (int)intern->array.size * 2;
+		for (size_t i = 0; i < size; i++) {
+			zend_get_gc_buffer_add_zval(gc_buffer, &entries[i].key);
+		}
+
+		zend_get_gc_buffer_use(gc_buffer, table, table_count);
+	}
 
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.
