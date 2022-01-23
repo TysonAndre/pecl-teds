@@ -420,6 +420,7 @@ PHP_METHOD(Teds_Vector, clear)
 	teds_vector_entries_set_empty_list(&intern->array);
 	teds_zval_dtor_range(old_entries, old_size);
 	efree(old_entries);
+	TEDS_RETURN_VOID();
 }
 
 /* Set size of this Vector */
@@ -1081,6 +1082,7 @@ PHP_METHOD(Teds_Vector, set)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_vector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_Vector, offsetSet)
@@ -1096,6 +1098,7 @@ PHP_METHOD(Teds_Vector, offsetSet)
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	teds_vector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	TEDS_RETURN_VOID();
 }
 
 static zend_always_inline void teds_vector_push(teds_vector *intern, zval *value)
@@ -1144,6 +1147,7 @@ PHP_METHOD(Teds_Vector, push)
 		ZVAL_COPY(&entries[old_size + i], &args[i]);
 	}
 	intern->array.size = new_size;
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_Vector, pop)
@@ -1189,6 +1193,7 @@ PHP_METHOD(Teds_Vector, shrinkToFit)
 		intern->array.entries = safe_erealloc(intern->array.entries, size, sizeof(zval), 0);
 	}
 	intern->array.capacity = size;
+	(void) return_value;
 }
 
 PHP_METHOD(Teds_Vector, reserve)
@@ -1213,6 +1218,7 @@ PHP_METHOD(Teds_Vector, reserve)
 	}
 	/* Raise the capacity */
 	teds_vector_raise_capacity(intern, capacity);
+	(void) return_value;
 }
 
 PHP_METHOD(Teds_Vector, offsetUnset)
@@ -1269,6 +1275,8 @@ static zval *teds_vector_read_dimension(zend_object *object, zval *offset_zv, in
 
 	const teds_vector *intern = teds_vector_from_object(object);
 
+	(void)rv;
+
 	if (UNEXPECTED(offset < 0 || (zend_ulong) offset >= intern->array.size)) {
 		if (type != BP_VAR_IS) {
 			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
@@ -1306,6 +1314,7 @@ static int teds_vector_has_dimension(zend_object *object, zval *offset_zv, int c
 
 PHP_MINIT_FUNCTION(teds_vector)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_Vector = register_class_Teds_Vector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
 	teds_ce_Vector->create_object = teds_vector_new;
 

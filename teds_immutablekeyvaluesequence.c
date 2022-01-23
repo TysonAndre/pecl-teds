@@ -18,6 +18,7 @@
 #include "zend_exceptions.h"
 
 #include "php_teds.h"
+#include "teds.h"
 #include "teds_immutablekeyvaluesequence_arginfo.h"
 #include "teds_immutablekeyvaluesequence.h"
 // #include "ext/spl/spl_functions.h"
@@ -510,6 +511,7 @@ zend_object_iterator *teds_immutablekeyvaluesequence_get_iterator(zend_class_ent
 	iterator = emalloc(sizeof(teds_immutablekeyvaluesequence_it));
 
 	zend_iterator_init((zend_object_iterator*)iterator);
+	(void) ce;
 
 	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
 	iterator->intern.funcs = &teds_immutablekeyvaluesequence_it_funcs;
@@ -945,6 +947,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, toPairs)
 
 PHP_MINIT_FUNCTION(teds_immutablekeyvaluesequence)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_ImmutableKeyValueSequence = register_class_Teds_ImmutableKeyValueSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
 	teds_ce_ImmutableKeyValueSequence->create_object = teds_immutablekeyvaluesequence_new;
 

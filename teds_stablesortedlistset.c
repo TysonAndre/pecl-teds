@@ -578,7 +578,7 @@ PHP_METHOD(Teds_StableSortedListSet, __unserialize)
 
 	ZEND_ASSERT(intern->array.entries == NULL);
 
-	const size_t capacity = teds_stablesortedlistset_next_pow2_capacity(raw_size / 2);
+	const size_t capacity = teds_stablesortedlistset_next_pow2_capacity(raw_size);
 	teds_stablesortedlistset_entry *entries = safe_emalloc(capacity, sizeof(teds_stablesortedlistset_entry), 0);
 	intern->array.size = 0;
 	intern->array.capacity = capacity;
@@ -843,10 +843,12 @@ PHP_METHOD(Teds_StableSortedListSet, clear)
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stablesortedlistset *intern = Z_STABLESORTEDLISTSET_P(ZEND_THIS);
 	teds_stablesortedlistset_clear(intern);
+	TEDS_RETURN_VOID();
 }
 
 PHP_MINIT_FUNCTION(teds_stablesortedlistset)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_StableSortedListSet = register_class_Teds_StableSortedListSet(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
 	teds_ce_StableSortedListSet->create_object = teds_stablesortedlistset_new;
 

@@ -1061,6 +1061,7 @@ PHP_METHOD(Teds_SortedStrictMap, offsetSet)
 
 	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
 	teds_sortedstrictmap_insert(intern, key, value, 0);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_SortedStrictMap, offsetUnset)
@@ -1072,6 +1073,7 @@ PHP_METHOD(Teds_SortedStrictMap, offsetUnset)
 
 	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
 	teds_sortedstrictmap_remove_key(intern, key);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_SortedStrictMap, containsValue)
@@ -1164,10 +1166,12 @@ PHP_METHOD(Teds_SortedStrictMap, clear)
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
 	teds_sortedstrictmap_clear(intern);
+	TEDS_RETURN_VOID();
 }
 
 PHP_MINIT_FUNCTION(teds_sortedstrictmap)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_SortedStrictMap = register_class_Teds_SortedStrictMap(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
 	teds_ce_SortedStrictMap->create_object = teds_sortedstrictmap_new;
 

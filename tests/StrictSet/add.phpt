@@ -8,6 +8,9 @@ $add = function ($value) use ($it) {
     var_dump($it->add($value));
 };
 $remove = function ($value) use ($it) {
+    echo "Remove: ";
+    var_dump($value);
+    var_dump($it->remove($value));
     var_dump($it->remove($value));
 };
 $add(new stdClass());
@@ -61,7 +64,9 @@ object(Teds\StrictSet)#1 (5) {
   string(5) "EXTRA"
 }
 After removing key
+Remove: int(0)
 bool(true)
+bool(false)
 count=4
 object(Teds\StrictSet)#1 (4) {
   [0]=>
@@ -76,9 +81,19 @@ object(Teds\StrictSet)#1 (4) {
   string(5) "EXTRA"
 }
 Remove results
+Remove: object(stdClass)#4 (0) {
+}
 bool(true)
+bool(false)
+Remove: object(stdClass)#5 (0) {
+}
 bool(true)
+bool(false)
+Remove: string(1) "0"
 bool(true)
+bool(false)
+Remove: string(5) "EXTRA"
 bool(true)
+bool(false)
 object(Teds\StrictSet)#1 (0) {
 }

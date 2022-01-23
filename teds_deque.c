@@ -445,6 +445,7 @@ PHP_METHOD(Teds_Deque, clear)
 	teds_deque_entries old_array = intern->array;
 	memset(&intern->array, 0, sizeof(intern->array));
 	teds_deque_entries_dtor(&old_array);
+	TEDS_RETURN_VOID();
 }
 
 /* Create this from an iterable */
@@ -588,6 +589,8 @@ zend_object_iterator *teds_deque_get_iterator(zend_class_entry *ce, zval *object
 
 	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
 	iterator->intern.funcs = &teds_deque_it_funcs;
+
+	(void) ce;
 
 	return &iterator->intern;
 }
@@ -795,6 +798,8 @@ static zval *teds_deque_read_dimension(zend_object *object, zval *offset_zv, int
 
 	const teds_deque *intern = teds_deque_from_object(object);
 
+	(void) rv; /* rv is not used */
+
 	if (UNEXPECTED(offset < 0 || (zend_ulong) offset >= intern->array.size)) {
 		if (type != BP_VAR_IS) {
 			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
@@ -897,6 +902,7 @@ PHP_METHOD(Teds_Deque, set)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_deque_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_Deque, offsetSet)
@@ -912,6 +918,7 @@ PHP_METHOD(Teds_Deque, offsetSet)
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	teds_deque_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	TEDS_RETURN_VOID();
 }
 
 /* Copies all entries in the circular buffer in source starting at offset to *destination. The caller sets the new_capacity after calling this. */
@@ -1008,6 +1015,7 @@ PHP_METHOD(Teds_Deque, push)
 		args++;
 	}
 	intern->array.size = new_size;
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_Deque, unshift)
@@ -1052,6 +1060,7 @@ PHP_METHOD(Teds_Deque, unshift)
 	intern->array.size = new_size;
 
 	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
+	TEDS_RETURN_VOID();
 }
 
 static zend_always_inline void teds_deque_try_shrink_capacity(teds_deque *intern, size_t old_size)
@@ -1188,6 +1197,7 @@ PHP_METHOD(Teds_Deque, jsonSerialize)
 
 PHP_MINIT_FUNCTION(teds_deque)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_Deque = register_class_Teds_Deque(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
 	teds_ce_Deque->create_object = teds_deque_new;
 

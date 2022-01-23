@@ -18,6 +18,7 @@
 #include "zend_exceptions.h"
 
 #include "php_teds.h"
+#include "teds.h"
 #include "teds_keyvaluevector_arginfo.h"
 #include "teds_keyvaluevector.h"
 // #include "ext/spl/spl_functions.h"
@@ -464,6 +465,8 @@ PHP_METHOD(Teds_KeyValueVector, clear)
 	teds_keyvaluevector_entries_set_empty_list(&intern->array);
 	teds_zval_dtor_range(old_entries, old_size * 2);
 	efree(old_entries);
+
+	TEDS_RETURN_VOID();
 }
 
 /* Set size of this KeyValueVector */
@@ -663,6 +666,8 @@ zend_object_iterator *teds_keyvaluevector_get_iterator(zend_class_entry *ce, zva
 
 	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
 	iterator->intern.funcs = &teds_keyvaluevector_it_funcs;
+
+	(void) ce;
 
 	return &iterator->intern;
 }
@@ -1124,6 +1129,8 @@ PHP_METHOD(Teds_KeyValueVector, push)
 	ZVAL_COPY(&dest->key, key);
 	ZVAL_COPY(&dest->value, value);
 	intern->array.size++;
+
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_KeyValueVector, pop)
@@ -1170,8 +1177,8 @@ PHP_METHOD(Teds_KeyValueVector, shrinkToFit)
 		intern->array.entries = safe_erealloc(intern->array.entries, size, sizeof(zval_pair), 0);
 	}
 	intern->array.capacity = size;
+	TEDS_RETURN_VOID();
 }
-
 
 static void teds_keyvaluevector_return_pairs(zval *return_value, teds_keyvaluevector *intern)
 {
@@ -1215,6 +1222,7 @@ PHP_METHOD(Teds_KeyValueVector, toPairs)
 
 PHP_MINIT_FUNCTION(teds_keyvaluevector)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_KeyValueVector = register_class_Teds_KeyValueVector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
 	teds_ce_KeyValueVector->create_object = teds_keyvaluevector_new;
 

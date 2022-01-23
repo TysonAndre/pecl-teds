@@ -578,7 +578,7 @@ PHP_METHOD(Teds_SortedStrictSet, __unserialize)
 
 	ZEND_ASSERT(intern->array.entries == NULL);
 
-	const size_t capacity = teds_sortedstrictset_next_pow2_capacity(raw_size / 2);
+	const size_t capacity = teds_sortedstrictset_next_pow2_capacity(raw_size);
 	teds_sortedstrictset_entry *entries = safe_emalloc(capacity, sizeof(teds_sortedstrictset_entry), 0);
 	intern->array.size = 0;
 	intern->array.capacity = capacity;
@@ -843,10 +843,12 @@ PHP_METHOD(Teds_SortedStrictSet, clear)
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
 	teds_sortedstrictset_clear(intern);
+	TEDS_RETURN_VOID();
 }
 
 PHP_MINIT_FUNCTION(teds_sortedstrictset)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_SortedStrictSet = register_class_Teds_SortedStrictSet(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
 	teds_ce_SortedStrictSet->create_object = teds_sortedstrictset_new;
 

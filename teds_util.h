@@ -16,11 +16,13 @@ static inline void teds_zval_dtor_range(zval *it, size_t n) {
 	}
 }
 
-#define TEDS_DEQUE_MIN_CAPACITY 4
-/* Based on zend_hash_check_size which supports 32-bit integers. Finds the next largest power of 2. */
-static inline size_t teds_deque_next_pow2_capacity(size_t nSize) {
-	if (nSize < TEDS_DEQUE_MIN_CAPACITY) {
-		return TEDS_DEQUE_MIN_CAPACITY;
+static zend_always_inline size_t teds_is_pow2(size_t nSize) {
+	return (nSize & (nSize - 1)) == 0 && nSize > 0;
+}
+
+static zend_always_inline size_t teds_next_pow2_capacity(size_t nSize, size_t min) {
+	if (nSize < min) {
+		return min;
 	}
 	/* Note that for values such as 63 or 31 of the form ((2^n) - 1),
 	 * subtracting and xor are the same things for numbers in the range of 0 to the max. */
@@ -57,10 +59,18 @@ static inline size_t teds_deque_next_pow2_capacity(size_t nSize) {
 	return nSize + 1;
 #endif
 }
+#define TEDS_DEQUE_MIN_CAPACITY 4
+/* Based on zend_hash_check_size which supports 32-bit integers. Finds the next largest power of 2. */
+static zend_always_inline size_t teds_deque_next_pow2_capacity(size_t nSize) {
+	return teds_next_pow2_capacity(nSize, TEDS_DEQUE_MIN_CAPACITY);
+}
 
+#define TEDS_STRICTSET_MIN_CAPACITY 8
+static zend_always_inline size_t teds_strictset_next_pow2_capacity(size_t nSize) {
+	return teds_next_pow2_capacity(nSize, TEDS_STRICTSET_MIN_CAPACITY);
+}
 #define teds_strictmap_next_pow2_capacity teds_deque_next_pow2_capacity
-#define teds_strictset_next_pow2_capacity teds_deque_next_pow2_capacity
-#define TEDS_STRICTSET_MIN_CAPACITY TEDS_DEQUE_MIN_CAPACITY
+
 /* TODO remove when rewriting as binary tree */
 #define teds_sortedstrictmap_next_pow2_capacity teds_deque_next_pow2_capacity
 #define teds_sortedstrictset_next_pow2_capacity teds_deque_next_pow2_capacity

@@ -3,6 +3,11 @@
 
 #include "zend_API.h"
 #include "ext/spl/spl_engine.h"
+#include "teds_bswap.h"
+
+#define TEDS_MINIT_IGNORE_UNUSED() do { (void) type; (void) module_number; } while (0)
+/* Avoid unused parameter warning with -Wunused */
+#define TEDS_RETURN_VOID() do { (void) return_value; return; } while (0)
 
 static zend_always_inline void teds_convert_zval_list_to_php_array_list(zval *return_value, zval *entries, size_t len)
 {
@@ -83,7 +88,91 @@ static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 	} \
 } while(0)
 
-zend_long teds_strict_hash(zval *value);
+typedef struct _teds_strict_hash_node {
+	zend_array *ht;
+	struct _teds_strict_hash_node *prev;
+} teds_strict_hash_node;
+
+zend_long teds_strict_hash_array(HashTable *ht, teds_strict_hash_node *node);
+
+inline static uint64_t teds_convert_double_to_uint64_t(double *value) {
+	uint8_t *data = (uint8_t *)value;
+#ifndef WORDS_BIGENDIAN
+	return
+		(((uint64_t)data[0]) << 56) |
+		(((uint64_t)data[1]) << 48) |
+		(((uint64_t)data[2]) << 40) |
+		(((uint64_t)data[3]) << 32) |
+		(((uint64_t)data[4]) << 24) |
+		(((uint64_t)data[5]) << 16) |
+		(((uint64_t)data[6]) << 8) |
+		(((uint64_t)data[7]));
+#else
+	return
+		(((uint64_t)data[7]) << 56) |
+		(((uint64_t)data[6]) << 48) |
+		(((uint64_t)data[5]) << 40) |
+		(((uint64_t)data[4]) << 32) |
+		(((uint64_t)data[3]) << 24) |
+		(((uint64_t)data[2]) << 16) |
+		(((uint64_t)data[1]) << 8) |
+		(((uint64_t)data[0]));
+#endif
+}
+
+static zend_always_inline zend_long teds_strict_hash_inner(zval *value, teds_strict_hash_node *node) {
+again:
+	switch (Z_TYPE_P(value)) {
+		case IS_NULL:
+			return 8310;
+		case IS_FALSE:
+			return 8311;
+		case IS_TRUE:
+			return 8312;
+		case IS_LONG:
+			return Z_LVAL_P(value);
+		case IS_DOUBLE:
+			return teds_convert_double_to_uint64_t(&Z_DVAL_P(value)) + 8315;
+		case IS_STRING:
+			/* Compute the hash if needed, return it */
+			return ZSTR_HASH(Z_STR_P(value));
+		case IS_ARRAY:
+			return teds_strict_hash_array(Z_ARR_P(value), node);
+		case IS_OBJECT:
+		    /* Avoid hash collisions between objects and small numbers. */
+			return Z_OBJ_HANDLE_P(value) + 31415926;
+		case IS_RESOURCE:
+			return Z_RES_HANDLE_P(value) + 27182818;
+		case IS_REFERENCE:
+			value = Z_REFVAL_P(value);
+			goto again;
+		case IS_INDIRECT:
+			value = Z_INDIRECT_P(value);
+			goto again;
+		default:
+			ZEND_UNREACHABLE();
+	}
+}
+
+/* This assumes that pointers differ in low addresses rather than high addresses.
+ * Copied from code written for igbinary. */
+static zend_always_inline uint64_t teds_inline_hash_of_uint64(uint64_t orig) {
+	/* Works best when data that frequently differs is in the least significant bits of data */
+	uint64_t data = orig * 0x5e2d58d8b3bce8d9;
+	/* bswap is a single assembly instruction on recent compilers/platforms */
+	return bswap_64(data);
+}
+
+/* {{{ Generate a hash */
+static zend_always_inline zend_long teds_strict_hash(zval *value) {
+	uint64_t raw_data = teds_strict_hash_inner(value, NULL);
+	return teds_inline_hash_of_uint64(raw_data);
+}
+/* }}} */
+
+static zend_always_inline uint32_t teds_strict_hash_uint32_t(zval *value) {
+       return (uint32_t) (zend_ulong) teds_strict_hash(value);
+}
 
 zend_long teds_stable_compare(const zval *v1, const zval *v2);
 

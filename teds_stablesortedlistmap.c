@@ -1061,6 +1061,7 @@ PHP_METHOD(Teds_StableSortedListMap, offsetSet)
 
 	teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
 	teds_stablesortedlistmap_insert(intern, key, value, 0);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_StableSortedListMap, offsetUnset)
@@ -1072,6 +1073,7 @@ PHP_METHOD(Teds_StableSortedListMap, offsetUnset)
 
 	teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
 	teds_stablesortedlistmap_remove_key(intern, key);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_StableSortedListMap, containsValue)
@@ -1164,10 +1166,12 @@ PHP_METHOD(Teds_StableSortedListMap, clear)
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
 	teds_stablesortedlistmap_clear(intern);
+	TEDS_RETURN_VOID();
 }
 
 PHP_MINIT_FUNCTION(teds_stablesortedlistmap)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_StableSortedListMap = register_class_Teds_StableSortedListMap(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
 	teds_ce_StableSortedListMap->create_object = teds_stablesortedlistmap_new;
 
