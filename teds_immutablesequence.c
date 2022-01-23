@@ -578,7 +578,7 @@ PHP_METHOD(Teds_ImmutableSequence, __serialize)
 	}
 	zval *entries = intern->array.entries;
 	size_t len = intern->array.size;
-	zend_array *flat_entries_array = zend_new_array(len * 2);
+	zend_array *flat_entries_array = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(flat_entries_array);
 

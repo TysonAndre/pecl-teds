@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-01-22</date>
+ <date>2022-01-23</date>
  <time>16:00:00</time>
  <version>
-  <release>0.7.1dev</release>
-  <api>0.7.1dev</api>
+  <release>0.8.0</release>
+  <api>0.8.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,7 +22,9 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
+* Add `StableSortedListSet` and `StableSortedListMap` as memory-efficient alternatives to `SortedStrictSet`/`SortedStrictMap`.
 * Speed up `SortedStrictSet::__unserialize` and `SortedStrictMap::__unserialize` when data is already sorted.
+* Fix crash in `StrictSet` and `SortedStrictSet` during cyclic garbage collection.
  </notes>
  <contents>
   <dir name="/">
@@ -161,6 +163,7 @@
     <file name="SortedStrictMap/contains.phpt" role="test" />
     <file name="SortedStrictMap/exceptionhandler.phpt" role="test" />
     <file name="SortedStrictMap/from_pairs.phpt" role="test" />
+    <file name="SortedStrictMap/gc.phpt" role="test" />
     <file name="SortedStrictMap/keys_values.phpt" role="test" />
     <file name="SortedStrictMap/offsetExists.phpt" role="test" />
     <file name="SortedStrictMap/reinit_forbidden.phpt" role="test" />
@@ -176,6 +179,7 @@
     <file name="SortedStrictSet/clone.phpt" role="test" />
     <file name="SortedStrictSet/contains.phpt" role="test" />
     <file name="SortedStrictSet/exceptionhandler.phpt" role="test" />
+    <file name="SortedStrictSet/gc.phpt" role="test" />
     <file name="SortedStrictSet/reinit_forbidden.phpt" role="test" />
     <file name="SortedStrictSet/serialization.phpt" role="test" />
     <file name="SortedStrictSet/set_state.phpt" role="test" />
@@ -186,6 +190,39 @@
     <file name="StableHeap/StableHeap.phpt" role="test" />
     <file name="StableHeap/extensible.phpt" role="test" />
     <file name="StableHeap/reflection.phpt" role="test" />
+    <file name="StableSortedListMap/ImmutableKeyValueSequence.phpt" role="test" />
+    <file name="StableSortedListMap/SortedStrictMap.phpt" role="test" />
+    <file name="StableSortedListMap/aggregate.phpt" role="test" />
+    <file name="StableSortedListMap/array.phpt" role="test" />
+    <file name="StableSortedListMap/clear.phpt" role="test" />
+    <file name="StableSortedListMap/clone.phpt" role="test" />
+    <file name="StableSortedListMap/contains.phpt" role="test" />
+    <file name="StableSortedListMap/exceptionhandler.phpt" role="test" />
+    <file name="StableSortedListMap/from_pairs.phpt" role="test" />
+    <file name="StableSortedListMap/gc.phpt" role="test" />
+    <file name="StableSortedListMap/keys_values.phpt" role="test" />
+    <file name="StableSortedListMap/offsetExists.phpt" role="test" />
+    <file name="StableSortedListMap/reinit_forbidden.phpt" role="test" />
+    <file name="StableSortedListMap/remove.phpt" role="test" />
+    <file name="StableSortedListMap/serialization.phpt" role="test" />
+    <file name="StableSortedListMap/shift.phpt" role="test" />
+    <file name="StableSortedListMap/traversable.phpt" role="test" />
+    <file name="StableSortedListMap/types.phpt" role="test" />
+    <file name="StableSortedListMap/unserialize.phpt" role="test" />
+    <file name="StableSortedListSet/StrictSet.phpt" role="test" />
+    <file name="StableSortedListSet/add.phpt" role="test" />
+    <file name="StableSortedListSet/aggregate.phpt" role="test" />
+    <file name="StableSortedListSet/clone.phpt" role="test" />
+    <file name="StableSortedListSet/contains.phpt" role="test" />
+    <file name="StableSortedListSet/exceptionhandler.phpt" role="test" />
+    <file name="StableSortedListSet/gc.phpt" role="test" />
+    <file name="StableSortedListSet/reinit_forbidden.phpt" role="test" />
+    <file name="StableSortedListSet/serialization.phpt" role="test" />
+    <file name="StableSortedListSet/set_state.phpt" role="test" />
+    <file name="StableSortedListSet/shift.phpt" role="test" />
+    <file name="StableSortedListSet/traversable.phpt" role="test" />
+    <file name="StableSortedListSet/unserialize.phpt" role="test" />
+    <file name="StableSortedListSet/unserialize_sorted.phpt" role="test" />
     <file name="StrictMap/ImmutableKeyValueSequence.phpt" role="test" />
     <file name="StrictMap/StrictMap.phpt" role="test" />
     <file name="StrictMap/aggregate.phpt" role="test" />
@@ -195,6 +232,7 @@
     <file name="StrictMap/contains.phpt" role="test" />
     <file name="StrictMap/exceptionhandler.phpt" role="test" />
     <file name="StrictMap/from_pairs.phpt" role="test" />
+    <file name="StrictMap/gc.phpt" role="test" />
     <file name="StrictMap/keys_values.phpt" role="test" />
     <file name="StrictMap/offsetExists.phpt" role="test" />
     <file name="StrictMap/reinit_forbidden.phpt" role="test" />
@@ -209,6 +247,7 @@
     <file name="StrictSet/clone.phpt" role="test" />
     <file name="StrictSet/contains.phpt" role="test" />
     <file name="StrictSet/exceptionhandler.phpt" role="test" />
+    <file name="StrictSet/gc.phpt" role="test" />
     <file name="StrictSet/reinit_forbidden.phpt" role="test" />
     <file name="StrictSet/serialization.phpt" role="test" />
     <file name="StrictSet/set_state.phpt" role="test" />
