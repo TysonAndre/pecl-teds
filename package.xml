@@ -22,7 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Migrate `StrictSet` and `unique_values` implementation to use an actual hash table.
+* Migrate `Teds\StrictSet`, `Teds\StrictMap`, and `Teds\unique_values` implementation to use an actual hash table instead of a list of unique values.
  </notes>
  <contents>
   <dir name="/">
@@ -245,10 +245,13 @@
     <file name="StrictSet/clone.phpt" role="test" />
     <file name="StrictSet/contains.phpt" role="test" />
     <file name="StrictSet/exceptionhandler.phpt" role="test" />
+    <file name="StrictSet/expand.phpt" role="test" />
     <file name="StrictSet/gc.phpt" role="test" />
+    <file name="StrictSet/queue.phpt" role="test" />
     <file name="StrictSet/reinit_forbidden.phpt" role="test" />
     <file name="StrictSet/serialization.phpt" role="test" />
     <file name="StrictSet/set_state.phpt" role="test" />
+    <file name="StrictSet/single.phpt" role="test" />
     <file name="StrictSet/traversable.phpt" role="test" />
     <file name="StrictSet/unserialize.phpt" role="test" />
     <file name="Vector/Vector.phpt" role="test" />

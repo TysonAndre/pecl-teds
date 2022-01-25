@@ -29,6 +29,7 @@ final class StrictMap implements \IteratorAggregate, \Countable, \JsonSerializab
     /** Create this from [[key1, value1], [key2, value2]] */
     public static function fromPairs(iterable $pairs): StrictMap {}
 
+    /** Returns [key1, value1, key2, value2] */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
     /** Construct the StrictMap from the keys and values of the array ([[key1, value1], [key2, value2]]) */

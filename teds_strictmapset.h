@@ -45,18 +45,19 @@ PHP_MINIT_FUNCTION(teds_strictmap);
 	teds_strictmap_entry *_p = __strictmap->arData; \
 	teds_strictmap_entry *const _end = _p + __strictmap->nNumUsed; \
 	for (; _p != _end; _p++) { \
-		zval *_key = &_p->key; \
-		if (Z_TYPE_P(_key) == IS_UNDEF) { continue; }
+		zval *_z = &_p->key; \
+		if (Z_TYPE_P(_z) == IS_UNDEF) { continue; }
 
-#define TEDS_STRICTMAP_FOREACH_KEY_VAL(strictmap, k, v) TEDS_STRICTMAP_FOREACH(strictmap) \
-		k = _key; \
-		v = &_p->value;
+#define TEDS_STRICTMAP_FOREACH_VAL_ASSERT_NO_GAPS(_strictmap, v) do { \
+	const teds_strictmap_entries *const __strictmap = (_strictmap); \
+	teds_strictmap_entry *_p = __strictmap->arData; \
+	teds_strictmap_entry *const _end = _p + __strictmap->nNumUsed; \
+	for (; _p != _end; _p++) { \
+		v = &_p->key; \
+		ZEND_ASSERT(Z_TYPE_P(v) != IS_UNDEF);
 
 #define TEDS_STRICTMAP_FOREACH_VAL(strictmap, v) TEDS_STRICTMAP_FOREACH(strictmap) \
-		v = &_p->value;
-
-#define TEDS_STRICTMAP_FOREACH_KEY(strictmap, k) TEDS_STRICTMAP_FOREACH(strictmap) \
-		k = _key;
+		v = _z;
 
 #define TEDS_STRICTMAP_FOREACH_BUCKET(strictmap, b) TEDS_STRICTMAP_FOREACH(strictmap) \
 		b = _p;
@@ -67,7 +68,7 @@ PHP_MINIT_FUNCTION(teds_strictmap);
 
 typedef struct _teds_strictmap_entry {
 	zval key;   /* TODO: Stores Z_NEXT - similar to https://github.com/php/php-src/pull/6588 */
-	zval value;
+	uint32_t h;
 } teds_strictmap_entry;
 
 /* See Zend/zend_types.h for the zend_array layout this is based on. */
