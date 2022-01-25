@@ -13,8 +13,8 @@
  <date>2022-01-23</date>
  <time>16:00:00</time>
  <version>
-  <release>0.8.0</release>
-  <api>0.8.0</api>
+  <release>0.9.0dev</release>
+  <api>0.9.0dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,9 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Add `StableSortedListSet` and `StableSortedListMap` as memory-efficient alternatives to `SortedStrictSet`/`SortedStrictMap`.
-* Speed up `SortedStrictSet::__unserialize` and `SortedStrictMap::__unserialize` when data is already sorted.
-* Fix crash in `StrictSet` and `SortedStrictSet` during cyclic garbage collection.
+* Migrate `StrictSet` and `unique_values` implementation to use an actual hash table.
  </notes>
  <contents>
   <dir name="/">
@@ -316,6 +314,24 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-01-23</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.8.0</release>
+    <api>0.8.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Add `StableSortedListSet` and `StableSortedListMap` as memory-efficient alternatives to `SortedStrictSet`/`SortedStrictMap`.
+* Speed up `SortedStrictSet::__unserialize` and `SortedStrictMap::__unserialize` when data is already sorted.
+* Fix crash in `StrictSet` and `SortedStrictSet` during cyclic garbage collection.
+   </notes>
+  </release>
   <release>
    <date>2022-01-22</date>
    <time>16:00:00</time>
