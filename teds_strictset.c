@@ -43,6 +43,10 @@
 zend_object_handlers teds_handler_StrictSet;
 zend_class_entry *teds_ce_StrictSet;
 
+#undef HT_HASH_TO_BUCKET_EX
+#undef HT_IDX_TO_HASH
+#undef HT_HASH_TO_IDX
+
 #define TEDS_ENTRY_HASH(entry) ((entry)->h)
 
 /* Need at least 2 for iteration base cases */
@@ -60,7 +64,7 @@ static zend_always_inline teds_strictset_entry *teds_strictset_entries_find_buck
 	uint32_t idx = HT_HASH_EX(arData, nIndex);
 	//fprintf(stderr, "Lookup %x nIndex=%d idx=%d\n", (int)h, (int)nIndex, (int)idx);
 	while (idx != TEDS_STRICTSET_INVALID_INDEX) {
-		ZEND_ASSERT(idx < TEDS_STRICTSET_IDX_TO_HASH(ht->nTableSize));
+		ZEND_ASSERT(idx < ht->nTableSize);
 		p = arData + idx;
 		//fprintf(stderr, "Lookup %x idx=%d p->h=%x type=%d\n", (int)h, (int)idx, (int)p->h, Z_TYPE(p->key));
 		if ((p->h == h) && zend_is_identical(&p->key, key)) {
@@ -106,7 +110,7 @@ add_to_hash:
 	array->nNumOfElements++;
 	p->h = h;
 	TEDS_STRICTSET_IT_NEXT(p) = HT_HASH_EX(arData, nIndex);
-	HT_HASH_EX(arData, nIndex) = HT_IDX_TO_HASH(idx);
+	HT_HASH_EX(arData, nIndex) = idx;
 	ZVAL_COPY(&p->key, key);
 
 	return true;
@@ -174,7 +178,7 @@ static teds_strictset_entry *teds_strictset_alloc_entries(size_t capacity) {
 }
 
 static void teds_strictset_free_entries(teds_strictset_entry *old_entries, size_t old_capacity) {
-	void *const old_ptr = ((void *) old_entries) - teds_strictset_offset_bytes_for_capacity(old_capacity);
+	void * old_ptr = ((uint8_t *) old_entries) - teds_strictset_offset_bytes_for_capacity(old_capacity);
 	efree(old_ptr);
 }
 
@@ -269,7 +273,7 @@ static void teds_strictset_entries_rehash_inplace(teds_strictset_entries *ht)
 					q->h = p->h;
 					const uint32_t nIndex = q->h | ht->nTableMask;
 					TEDS_STRICTSET_IT_NEXT(q) = HT_HASH(ht, nIndex);
-					HT_HASH(ht, nIndex) = HT_IDX_TO_HASH(j);
+					HT_HASH(ht, nIndex) = j;
 					q++;
 					j++;
 				}
@@ -279,7 +283,7 @@ static void teds_strictset_entries_rehash_inplace(teds_strictset_entries *ht)
 		}
 		const uint32_t nIndex = p->h | ht->nTableMask;
 		TEDS_STRICTSET_IT_NEXT(p) = HT_HASH(ht, nIndex);
-		HT_HASH(ht, nIndex) = HT_IDX_TO_HASH(i);
+		HT_HASH(ht, nIndex) = i;
 		p++;
 	} while (++i < ht->nNumUsed);
 
@@ -318,7 +322,7 @@ static void teds_strictset_entries_grow(teds_strictset_entries *array)
 		//fprintf(stderr, "Copying %x %d to i=%d type=%d val=%s\n", (int)h, (int)-nIndex, i, (int)Z_TYPE(it->key), (Z_TYPE(it->key) != IS_STRING ? "()" : Z_STRVAL(it->key)));
 		TEDS_ENTRY_HASH(it) = h;
 		TEDS_STRICTSET_IT_NEXT(it) = HT_HASH_EX(new_entries, nIndex);
-		HT_HASH_EX(new_entries, nIndex) = HT_IDX_TO_HASH(i);
+		HT_HASH_EX(new_entries, nIndex) = i;
 		it++;
 		i++;
 	} TEDS_STRICTSET_FOREACH_END();
@@ -744,10 +748,10 @@ static bool teds_strictset_entries_remove_key(teds_strictset_entries *array, zva
 
 	const uint32_t idx = entry - entries;
 	if (i != idx) {
-		prev = HT_HASH_TO_BUCKET(array, i);
+		prev = &array->arData[i];
 		while (TEDS_STRICTSET_IT_NEXT(prev) != idx) {
 			i = TEDS_STRICTSET_IT_NEXT(prev);
-			prev = HT_HASH_TO_BUCKET(array, i);
+			prev = &array->arData[i];
 		}
 	}
 	if (prev) {

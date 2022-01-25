@@ -15,11 +15,11 @@
 
 PHP_MINIT_FUNCTION(teds_strictset);
 
+#define TEDS_STRICTSET_HASH_TO_BUCKET(ht, idx) \
+	TEDS_STRICTSET_HASH_TO_BUCKET_EX((ht)->arData, idx)
+
 /* Same as HT_SIZE_TO_MAX for now, code duplication is deliberate in case php-src's implementation changes. */
 #define TEDS_STRICTSET_IT_NEXT(entry) Z_NEXT((entry)->key)
-
-#define TEDS_STRICTSET_IDX_TO_HASH(idx) \
-	((idx) * sizeof(teds_strictset_entry))
 
 #define TEDS_STRICTSET_SIZE_TO_MASK(nTableSize) \
 	((uint32_t)(-((nTableSize) + (nTableSize))));
