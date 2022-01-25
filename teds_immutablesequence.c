@@ -480,6 +480,7 @@ zend_object_iterator *teds_immutablesequence_get_iterator(zend_class_entry *ce, 
 	iterator = emalloc(sizeof(teds_immutablesequence_it));
 
 	zend_iterator_init((zend_object_iterator*)iterator);
+	(void) ce;
 
 	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
 	iterator->intern.funcs = &teds_immutablesequence_it_funcs;
@@ -741,6 +742,7 @@ PHP_METHOD(Teds_ImmutableSequence, jsonSerialize)
 
 PHP_MINIT_FUNCTION(teds_immutablesequence)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_ImmutableSequence = register_class_Teds_ImmutableSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
 	teds_ce_ImmutableSequence->create_object = teds_immutablesequence_new;
 

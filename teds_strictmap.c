@@ -564,6 +564,7 @@ zend_object_iterator *teds_strictmap_get_iterator(zend_class_entry *ce, zval *ob
 
 	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
 	iterator->intern.funcs = &teds_strictmap_it_funcs;
+	(void) ce;
 
 	return &iterator->intern;
 }
@@ -1040,6 +1041,7 @@ PHP_METHOD(Teds_StrictMap, offsetSet)
 
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
 	teds_strictmap_entries_insert(&intern->array, key, value, true);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_StrictMap, offsetUnset)
@@ -1051,6 +1053,7 @@ PHP_METHOD(Teds_StrictMap, offsetUnset)
 
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
 	teds_strictmap_entries_remove_key(&intern->array, key);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_StrictMap, containsValue)
@@ -1133,10 +1136,12 @@ PHP_METHOD(Teds_StrictMap, clear)
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
 	teds_strictmap_entries_clear(&intern->array);
+	TEDS_RETURN_VOID();
 }
 
 PHP_MINIT_FUNCTION(teds_strictmap)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_StrictMap = register_class_Teds_StrictMap(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
 	teds_ce_StrictMap->create_object = teds_strictmap_new;
 

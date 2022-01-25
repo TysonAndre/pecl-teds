@@ -57,6 +57,7 @@ PHP_METHOD(Teds_StableMinHeap, compare)
 
 PHP_MINIT_FUNCTION(teds_stableheap)
 {
+	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_StableMinHeap = register_class_Teds_StableMinHeap(spl_ce_SplHeap);
 	teds_ce_StableMaxHeap = register_class_Teds_StableMaxHeap(spl_ce_SplHeap);
 
