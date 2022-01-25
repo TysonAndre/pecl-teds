@@ -4,7 +4,7 @@ Teds\StrictMap unserialize error handling
 <?php
 
 call_user_func(function () {
-    $it = new Teds\StrictMap(['first' => 'second']);
+    $it = new Teds\StrictMap(['unusedkey' => 'unusedvalue']);
     $ser = 'O:14:"Teds\StrictMap":2:{i:0;s:5:"first";s:5:"unexp";s:6:"second";}';
     try {
         unserialize($ser);

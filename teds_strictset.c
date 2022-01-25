@@ -572,7 +572,7 @@ static teds_strictset_entry *teds_strictset_read_offset_helper(teds_strictset *i
 {
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
-	if (UNEXPECTED(offset >= intern->array.nNumOfElements)) {
+	if (UNEXPECTED(offset >= intern->array.nNumUsed) || Z_ISUNDEF(intern->array.arData[offset].key)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		return NULL;
 	} else {
@@ -611,6 +611,7 @@ static void teds_strictset_it_get_current_key(zend_object_iterator *iter, zval *
 static void teds_strictset_it_move_forward(zend_object_iterator *iter)
 {
 	((teds_strictset_it*)iter)->current++;
+	teds_strictset_it_valid(iter);
 }
 
 /* iterator handler table */
@@ -681,6 +682,7 @@ PHP_METHOD(Teds_StrictSet, __unserialize)
 			RETURN_THROWS();
 		}
 
+		ZVAL_DEREF(val);
 		teds_strictset_entries_insert(&intern->array, val, false);
 	} ZEND_HASH_FOREACH_END();
 }
