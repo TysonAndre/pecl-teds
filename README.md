@@ -87,12 +87,14 @@ The [`Teds\SortedStrictSet` API](./teds_sortedstrictset.stub.php) implementation
 
 [`Teds\StrictMap` API](./teds_strictmap.stub.php)
 
-**This is a work in progress.** Iteration will not work as expected if elements are removed during iteration, and hash lookups haven't been implemented yet, so this is inefficient for large maps (scans the entire map).
+**This is a work in progress.** Iteration will not work as expected if the hash table is rehashed due to insertions/removals during iteration.
 
 This is a map where entries for keys of any type can be inserted if they are `!==` to other keys.
 This uses [`Teds\strict_hash`](#strict-hashing) internally.
 
 The [`Teds\StrictSet` API](./teds_strictset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
+
+NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) currently have distinct hashes and are treated as distinct entries.
 
 ### Teds\StableMinHeap and Teds\StableMaxHeap
 
@@ -213,9 +215,6 @@ function includes_value(iterable $iterable, mixed $value): bool {
  * using a hash table with `Teds\strict_hash` to deduplicate values.
  */
 function unique_values(iterable $iterable): array {
-    // NOTE: The native implementation is a work in progress,
-	// this is inefficient because proper hash tables aren't implemented yet.
-
 	// Without Teds installed, this takes quadratic time instead of linear time.
 	$result = [];
 	foreach ($iterable as $value) {
