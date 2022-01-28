@@ -13,8 +13,8 @@
  <date>2022-01-23</date>
  <time>16:00:00</time>
  <version>
-  <release>0.9.0</release>
-  <api>0.9.0</api>
+  <release>0.9.1dev</release>
+  <api>0.9.1dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -297,10 +297,12 @@
     <file name="misc/binary_search_edge_case_2.phpt" role="test" />
     <file name="misc/stable_compare.phpt" role="test" />
     <file name="misc/stable_compare_2.phpt" role="test" />
+    <file name="misc/stable_compare_3.phpt" role="test" />
     <file name="misc/strict_hash.phpt" role="test" />
     <file name="misc/strict_hash_array_recursion.phpt" role="test" />
     <file name="misc/strict_hash_array_references.phpt" role="test" />
     <file name="misc/strict_hash_recursion.phpt" role="test" />
+    <file name="misc/strict_hash_typed_property.phpt" role="test" />
    </dir>
   </dir>
  </contents>
@@ -317,6 +319,22 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+ <date>2022-01-23</date>
+ <time>16:00:00</time>
+ <version>
+  <release>0.9.0</release>
+  <api>0.9.0</api>
+ </version>
+ <stability>
+  <release>stable</release>
+  <api>stable</api>
+ </stability>
+ <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+ <notes>
+* Migrate `Teds\StrictSet`, `Teds\StrictMap`, and `Teds\unique_values` implementation to use an actual hash table instead of a list of unique values.
+ </notes>
+  </release>
   <release>
    <date>2022-01-23</date>
    <time>16:00:00</time>
