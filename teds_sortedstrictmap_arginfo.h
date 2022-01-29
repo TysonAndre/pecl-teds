@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a18fdbea1abb06e764261451cdc37e70729e9fcb */
+ * Stub hash: bf00305e3417798e444dd5009b6b176a4c2826a2 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_SortedStrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -107,7 +107,6 @@ ZEND_METHOD(Teds_SortedStrictMap, offsetUnset);
 ZEND_METHOD(Teds_SortedStrictMap, get);
 ZEND_METHOD(Teds_SortedStrictMap, containsValue);
 ZEND_METHOD(Teds_SortedStrictMap, containsKey);
-ZEND_METHOD(Teds_SortedStrictMap, jsonSerialize);
 
 
 static const zend_function_entry class_Teds_SortedStrictMap_methods[] = {
@@ -136,7 +135,7 @@ static const zend_function_entry class_Teds_SortedStrictMap_methods[] = {
 	ZEND_ME(Teds_SortedStrictMap, get, arginfo_class_Teds_SortedStrictMap_get, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, containsValue, arginfo_class_Teds_SortedStrictMap_containsValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, containsKey, arginfo_class_Teds_SortedStrictMap_containsKey, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_SortedStrictMap, jsonSerialize, arginfo_class_Teds_SortedStrictMap_jsonSerialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_SortedStrictMap, jsonSerialize, toPairs, arginfo_class_Teds_SortedStrictMap_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

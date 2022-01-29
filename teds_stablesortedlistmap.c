@@ -54,7 +54,7 @@ typedef struct _teds_stablesortedlistmap {
 	zend_object				std;
 } teds_stablesortedlistmap;
 
-static void teds_stablesortedlistmap_insert(teds_stablesortedlistmap *intern, zval *key, zval *value, bool probably_largest);
+static zend_always_inline bool teds_stablesortedlistmap_entries_insert(teds_stablesortedlistmap_entries *array, zval *key, zval *value, bool probably_largest);
 static void teds_stablesortedlistmap_clear(teds_stablesortedlistmap *intern);
 
 /* Used by InternalIterator returned by StableSortedListMap->getIterator() */
@@ -69,6 +69,7 @@ static teds_stablesortedlistmap *teds_stablesortedlistmap_from_obj(zend_object *
 }
 
 #define Z_STABLESORTEDLISTMAP_P(zv)  teds_stablesortedlistmap_from_obj(Z_OBJ_P((zv)))
+#define Z_STABLESORTEDLISTMAP_ENTRIES_P(zv)  &(teds_stablesortedlistmap_from_obj(Z_OBJ_P((zv)))->array)
 
 /* Helps enforce the invariants in debug mode:
  *   - if capacity == 0, then entries == NULL
@@ -114,9 +115,17 @@ static teds_stablesortedlistmap_entry *teds_stablesortedlistmap_allocate_entries
 	return safe_emalloc(capacity, sizeof(teds_stablesortedlistmap_entry), 0);
 }
 
+/* Helper function for qsort */
+static int teds_stablesortedlistmap_entry_compare(const void *a, const void *b) {
+	return teds_stable_compare(
+		&((teds_stablesortedlistmap_entry *)a)->key,
+		&((teds_stablesortedlistmap_entry *)b)->key
+	);
+}
+
 static void teds_stablesortedlistmap_entries_init_from_array(teds_stablesortedlistmap_entries *array, zend_array *values)
 {
-	zend_long size = zend_hash_num_elements(values);
+	const zend_long size = zend_hash_num_elements(values);
 	if (size > 0) {
 		zend_long nkey;
 		zend_string *skey;
@@ -141,6 +150,7 @@ static void teds_stablesortedlistmap_entries_init_from_array(teds_stablesortedli
 			ZVAL_COPY_DEREF(&entry->value, val);
 			i++;
 		} ZEND_HASH_FOREACH_END();
+		qsort(entries, size, sizeof(teds_stablesortedlistmap_entry), teds_stablesortedlistmap_entry_compare);
 	} else {
 		array->size = 0;
 		array->capacity = 0;
@@ -152,11 +162,9 @@ static void teds_stablesortedlistmap_entries_init_from_traversable(teds_stableso
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	zend_long size = 0, capacity = 0;
 	array->size = 0;
 	array->capacity = 0;
 	array->entries = NULL;
-	teds_stablesortedlistmap_entry *entries = NULL;
 	zval tmp_obj;
 	ZVAL_OBJ(&tmp_obj, obj);
 	iter = ce->get_iterator(ce, &tmp_obj, 0);
@@ -193,20 +201,9 @@ static void teds_stablesortedlistmap_entries_init_from_traversable(teds_stableso
 			break;
 		}
 
-		if (size >= capacity) {
-			/* TODO: Could use countable and get_count handler to estimate the size of the array to allocate */
-			if (entries) {
-				capacity *= 2;
-				entries = safe_erealloc(entries, capacity, sizeof(teds_stablesortedlistmap_entry), 0);
-			} else {
-				capacity = 4;
-				entries = safe_emalloc(capacity, sizeof(teds_stablesortedlistmap_entry), 0);
-			}
-		}
-		/* The key's reference count was already increased */
-		ZVAL_COPY_VALUE(&entries[size].key, &key);
-		ZVAL_COPY_DEREF(&entries[size].value, value);
-		size++;
+		teds_stablesortedlistmap_entries_insert(array, &key, value, false);
+		/* existing key was updated */
+		zval_ptr_dtor(&key);
 
 		iter->index++;
 		funcs->move_forward(iter);
@@ -215,9 +212,6 @@ static void teds_stablesortedlistmap_entries_init_from_traversable(teds_stableso
 		}
 	}
 
-	array->size = size;
-	array->capacity = capacity;
-	array->entries = entries;
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}
@@ -578,6 +572,7 @@ PHP_METHOD(Teds_StableSortedListMap, __unserialize)
 
 	size_t i = 0;
 	const size_t capacity = teds_stablesortedlistmap_next_pow2_capacity(raw_size / 2);
+	teds_stablesortedlistmap_entries *array = &intern->array;
 	teds_stablesortedlistmap_entry *entries = safe_emalloc(capacity, sizeof(teds_stablesortedlistmap_entry), 0);
 	intern->array.size = 0;
 	intern->array.capacity = capacity;
@@ -595,7 +590,7 @@ PHP_METHOD(Teds_StableSortedListMap, __unserialize)
 
 		ZVAL_DEREF(val);
 		if (i % 2 == 1) {
-			teds_stablesortedlistmap_insert(intern, &key, val, 1);
+			teds_stablesortedlistmap_entries_insert(array, &key, val, true);
 		} else {
 			ZVAL_COPY_VALUE(&key, val);
 		}
@@ -604,7 +599,7 @@ PHP_METHOD(Teds_StableSortedListMap, __unserialize)
 
 }
 
-static bool teds_stablesortedlistmap_insert_from_pair(teds_stablesortedlistmap *intern, zval *raw_val)
+static bool teds_stablesortedlistmap_entries_insert_from_pair(teds_stablesortedlistmap_entries *array, zval *raw_val)
 {
 	ZVAL_DEREF(raw_val);
 	if (UNEXPECTED(Z_TYPE_P(raw_val) != IS_ARRAY)) {
@@ -624,13 +619,12 @@ static bool teds_stablesortedlistmap_insert_from_pair(teds_stablesortedlistmap *
 	}
 	ZVAL_DEREF(key);
 	ZVAL_DEREF(value);
-	teds_stablesortedlistmap_insert(intern, key, value, 0);
+	teds_stablesortedlistmap_entries_insert(array, key, value, false);
 	return true;
 }
 
-static void teds_stablesortedlistmap_entries_init_from_array_pairs(teds_stablesortedlistmap *intern, zend_array *raw_data)
+static void teds_stablesortedlistmap_entries_init_from_array_pairs(teds_stablesortedlistmap_entries *array, zend_array *raw_data)
 {
-	teds_stablesortedlistmap_entries *array = &intern->array;
 	size_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
 		array->size = 0;
@@ -643,15 +637,14 @@ static void teds_stablesortedlistmap_entries_init_from_array_pairs(teds_stableso
 	array->capacity = capacity;
 	zval *val;
 	ZEND_HASH_FOREACH_VAL(raw_data, val) {
-		if (!teds_stablesortedlistmap_insert_from_pair(intern, val)) {
+		if (!teds_stablesortedlistmap_entries_insert_from_pair(array, val)) {
 			break;
 		}
 	} ZEND_HASH_FOREACH_END();
 }
 
-static void teds_stablesortedlistmap_entries_init_from_traversable_pairs(teds_stablesortedlistmap *intern, zend_object *obj)
+static void teds_stablesortedlistmap_entries_init_from_traversable_pairs(teds_stablesortedlistmap_entries *array, zend_object *obj)
 {
-	teds_stablesortedlistmap_entries *array = &intern->array;
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
 	array->size = 0;
@@ -682,7 +675,7 @@ static void teds_stablesortedlistmap_entries_init_from_traversable_pairs(teds_st
 			break;
 		}
 
-		if (!teds_stablesortedlistmap_insert_from_pair(intern, pair)) {
+		if (!teds_stablesortedlistmap_entries_insert_from_pair(array, pair)) {
 			break;
 		}
 
@@ -701,12 +694,13 @@ static void teds_stablesortedlistmap_entries_init_from_traversable_pairs(teds_st
 static zend_object* create_from_pairs(zval *iterable) {
 	zend_object *object = teds_stablesortedlistmap_new(teds_ce_StableSortedListMap);
 	teds_stablesortedlistmap *intern = teds_stablesortedlistmap_from_obj(object);
+	teds_stablesortedlistmap_entries *array = &intern->array;
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_stablesortedlistmap_entries_init_from_array_pairs(intern, Z_ARRVAL_P(iterable));
+			teds_stablesortedlistmap_entries_init_from_array_pairs(array, Z_ARRVAL_P(iterable));
 			break;
 		case IS_OBJECT:
-			teds_stablesortedlistmap_entries_init_from_traversable_pairs(intern, Z_OBJ_P(iterable));
+			teds_stablesortedlistmap_entries_init_from_traversable_pairs(array, Z_OBJ_P(iterable));
 			break;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -733,7 +727,7 @@ PHP_METHOD(Teds_StableSortedListMap, __set_state)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_stablesortedlistmap_new(teds_ce_StableSortedListMap);
 	teds_stablesortedlistmap *intern = teds_stablesortedlistmap_from_obj(object);
-	teds_stablesortedlistmap_entries_init_from_array_pairs(intern, array_ht);
+	teds_stablesortedlistmap_entries_init_from_array_pairs(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
 }
@@ -857,12 +851,12 @@ typedef struct _teds_stablesortedlistmap_search_result {
 	bool found;
 } teds_stablesortedlistmap_search_result;
 
-static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_sorted_search_for_key(const teds_stablesortedlistmap *intern, zval *key)
+static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_entries_sorted_search_for_key(const teds_stablesortedlistmap_entries *array, zval *key)
 {
 	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
-	teds_stablesortedlistmap_entry *const entries = intern->array.entries;
+	teds_stablesortedlistmap_entry *const entries = array->entries;
 	size_t start = 0;
-	size_t end = intern->array.size;
+	size_t end = array->size;
 	while (start < end) {
 		size_t mid = start + (end - start)/2;
 		teds_stablesortedlistmap_entry *e = &entries[mid];
@@ -887,11 +881,10 @@ static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_sorted_se
 	return result;
 }
 
-static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_sorted_search_for_key_probably_largest(const teds_stablesortedlistmap *intern, zval *key)
+static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_entries_sorted_search_for_key_probably_largest(const teds_stablesortedlistmap_entries *array, zval *key)
 {
-	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
-	teds_stablesortedlistmap_entry *const entries = intern->array.entries;
-	size_t end = intern->array.size;
+	teds_stablesortedlistmap_entry *const entries = array->entries;
+	size_t end = array->size;
 	size_t start = 0;
 	if (end > 0) {
 		size_t mid = end - 1;
@@ -936,13 +929,13 @@ static teds_stablesortedlistmap_entry *teds_stablesortedlistmap_find_value(const
 	return NULL;
 }
 
-static void teds_stablesortedlistmap_remove_key(teds_stablesortedlistmap *intern, zval *key)
+static void teds_stablesortedlistmap_entries_remove_key(teds_stablesortedlistmap_entries *array, zval *key)
 {
-	const size_t len = intern->array.size;
+	const size_t len = array->size;
 	if (len == 0) {
 		return;
 	}
-	teds_stablesortedlistmap_search_result lookup = teds_stablesortedlistmap_sorted_search_for_key(intern, key);
+	teds_stablesortedlistmap_search_result lookup = teds_stablesortedlistmap_entries_sorted_search_for_key(array, key);
 	if (!lookup.found) {
 		return;
 	}
@@ -951,8 +944,8 @@ static void teds_stablesortedlistmap_remove_key(teds_stablesortedlistmap *intern
 	zval old_value;
 	ZVAL_COPY_VALUE(&old_key, &entry->key);
 	ZVAL_COPY_VALUE(&old_value, &entry->value);
-	teds_stablesortedlistmap_remove_entry(intern->array.entries, len, entry);
-	intern->array.size--;
+	teds_stablesortedlistmap_remove_entry(array->entries, len, entry);
+	array->size--;
 
 	zval_ptr_dtor(&old_key);
 	zval_ptr_dtor(&old_value);
@@ -967,7 +960,7 @@ PHP_METHOD(Teds_StableSortedListMap, offsetExists)
 
 	const teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
 	if (intern->array.size > 0) {
-		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_sorted_search_for_key(intern, key);
+		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_entries_sorted_search_for_key(&intern->array, key);
 		if (result.found) {
 			RETURN_BOOL(Z_TYPE(result.entry->value) != IS_NULL);
 		}
@@ -984,7 +977,7 @@ PHP_METHOD(Teds_StableSortedListMap, offsetGet)
 
 	const teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
 	if (intern->array.size > 0) {
-		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_sorted_search_for_key(intern, key);
+		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_entries_sorted_search_for_key(&intern->array, key);
 		if (result.found) {
 			RETURN_COPY(&result.entry->value);
 		}
@@ -1003,9 +996,9 @@ PHP_METHOD(Teds_StableSortedListMap, get)
 		Z_PARAM_ZVAL(default_zv)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
-	if (intern->array.size > 0) {
-		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_sorted_search_for_key(intern, key);
+	const teds_stablesortedlistmap_entries *array = Z_STABLESORTEDLISTMAP_ENTRIES_P(ZEND_THIS);
+	if (array->size > 0) {
+		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_entries_sorted_search_for_key(array, key);
 		if (result.found) {
 			RETURN_COPY(&result.entry->value);
 		}
@@ -1017,26 +1010,25 @@ PHP_METHOD(Teds_StableSortedListMap, get)
 	RETURN_THROWS();
 }
 
-static zend_always_inline void teds_stablesortedlistmap_insert(teds_stablesortedlistmap *intern, zval *key, zval *value, bool probably_largest) {
+static zend_always_inline bool teds_stablesortedlistmap_entries_insert(teds_stablesortedlistmap_entries *array, zval *key, zval *value, bool probably_largest) {
 	teds_stablesortedlistmap_search_result result = probably_largest
-		? teds_stablesortedlistmap_sorted_search_for_key_probably_largest(intern, key)
-		: teds_stablesortedlistmap_sorted_search_for_key(intern, key);
+		? teds_stablesortedlistmap_entries_sorted_search_for_key_probably_largest(array, key)
+		: teds_stablesortedlistmap_entries_sorted_search_for_key(array, key);
 	if (result.found) {
 		/* Replace old value, then free old value */
 		zval old;
 		ZVAL_COPY_VALUE(&old, &result.entry->value);
 		ZVAL_COPY(&result.entry->value, value);
 		zval_ptr_dtor(&old);
-		return;
+		return false;
 	}
 	/* Reallocate and insert (insertion sort) */
-	teds_stablesortedlistmap_entries *array = &intern->array;
 	teds_stablesortedlistmap_entry *entry = result.entry;
 	if (array->size >= array->capacity) {
 		const size_t new_offset = result.entry - array->entries;
 		ZEND_ASSERT(array->size == array->capacity);
 		const size_t new_capacity = teds_stablesortedlistmap_next_pow2_capacity(array->size + 1);
-		teds_stablesortedlistmap_entries_raise_capacity(&intern->array, new_capacity);
+		teds_stablesortedlistmap_entries_raise_capacity(array, new_capacity);
 		entry = array->entries + new_offset;
 	}
 
@@ -1048,6 +1040,7 @@ static zend_always_inline void teds_stablesortedlistmap_insert(teds_stablesorted
 	array->size++;
 	ZVAL_COPY(&entry->key, key);
 	ZVAL_COPY(&entry->value, value);
+	return true;
 }
 
 PHP_METHOD(Teds_StableSortedListMap, offsetSet)
@@ -1059,8 +1052,7 @@ PHP_METHOD(Teds_StableSortedListMap, offsetSet)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
-	teds_stablesortedlistmap_insert(intern, key, value, 0);
+	teds_stablesortedlistmap_entries_insert(Z_STABLESORTEDLISTMAP_ENTRIES_P(ZEND_THIS), key, value, 0);
 	TEDS_RETURN_VOID();
 }
 
@@ -1071,8 +1063,7 @@ PHP_METHOD(Teds_StableSortedListMap, offsetUnset)
 		Z_PARAM_ZVAL(key)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
-	teds_stablesortedlistmap_remove_key(intern, key);
+	teds_stablesortedlistmap_entries_remove_key(Z_STABLESORTEDLISTMAP_ENTRIES_P(ZEND_THIS), key);
 	TEDS_RETURN_VOID();
 }
 
@@ -1098,7 +1089,7 @@ PHP_METHOD(Teds_StableSortedListMap, containsKey)
 	const teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
 	const size_t len = intern->array.size;
 	if (len > 0) {
-		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_sorted_search_for_key(intern, key);
+		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_entries_sorted_search_for_key(&intern->array, key);
 		RETURN_BOOL(result.found);
 	}
 	RETURN_FALSE;

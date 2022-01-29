@@ -27,6 +27,8 @@ printf("count=%d\n", count($it));
 var_dump($it);
 echo "Remove results\n";
 foreach ($it->values() as $v) {
+    echo "Remove: ";
+    var_dump($v);
     $remove($v);
 }
 var_dump($it);
@@ -76,9 +78,15 @@ object(Teds\SortedStrictSet)#1 (4) {
   }
 }
 Remove results
+Remove: string(1) "0"
 bool(true)
+Remove: string(5) "EXTRA"
 bool(true)
+Remove: object(stdClass)#4 (0) {
+}
 bool(true)
+Remove: object(stdClass)#5 (0) {
+}
 bool(true)
 object(Teds\SortedStrictSet)#1 (0) {
 }

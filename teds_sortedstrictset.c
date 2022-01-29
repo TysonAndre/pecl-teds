@@ -7,17 +7,7 @@
   +----------------------------------------------------------------------+
 */
 
-/* This is based on teds_immutablekeyvaluesequence.c.
- * Instead of a C array of zvals, this is based on a C array of pairs of zvals for key-value entries */
-/*
- * Design plan for refactoring:
- * - Buckets: Keys (zval, uint64_t hash) and values (zval) placed based on hash. Similar to HashTable Data Layout as described in Zend_types
- * - Hashes: hash and index, chaining.
- *
- * iteration:
- * - sequence of HashPosition
- * - TODO: associate SortedStrictSet with linked list of iterators
- */
+/* This is a binary search tree. */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -43,142 +33,158 @@
 zend_object_handlers teds_handler_SortedStrictSet;
 zend_class_entry *teds_ce_SortedStrictSet;
 
-typedef struct _teds_sortedstrictset_entry {
-	zval key;
-} teds_sortedstrictset_entry;
-
-/* This is a placeholder value to distinguish between empty and uninitialized SortedStrictSet instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const teds_sortedstrictset_entry empty_entry_list[1];
-
-typedef struct _teds_sortedstrictset_entries {
-	size_t size;
-	size_t capacity;
-	teds_sortedstrictset_entry *entries;
-} teds_sortedstrictset_entries;
-
-typedef struct _teds_sortedstrictset {
-	teds_sortedstrictset_entries		array;
-	zend_object				std;
-} teds_sortedstrictset;
-
-typedef struct _teds_sortedstrictset_search_result {
-	teds_sortedstrictset_entry *entry;
-	bool found;
-} teds_sortedstrictset_search_result;
-
-static void teds_sortedstrictset_entries_raise_capacity(teds_sortedstrictset_entries *array, size_t new_capacity);
-static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for_key(const teds_sortedstrictset *intern, zval *key);
-static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for_key_probably_largest(const teds_sortedstrictset *intern, zval *key);
-
-static bool teds_sortedstrictset_insert(teds_sortedstrictset *intern, zval *key, bool probably_largest) {
-	teds_sortedstrictset_search_result result = probably_largest
-		? teds_sortedstrictset_sorted_search_for_key_probably_largest(intern, key)
-		: teds_sortedstrictset_sorted_search_for_key(intern, key);
-	if (result.found) {
-		return false;
+static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_tree_find_key(const teds_sortedstrictset_tree *tree, zval *key)
+{
+	teds_sortedstrictset_node *it = tree->root;
+	while (it != NULL) {
+		const int comparison = teds_stable_compare(key, &it->key);
+		if (comparison > 0) {
+			it = it->right;
+		} else if (comparison < 0) {
+			it = it->left;
+		} else {
+			return it;
+		}
 	}
-	/* Reallocate and insert (insertion sort) */
-	teds_sortedstrictset_entries *array = &intern->array;
-	teds_sortedstrictset_entry *entry = result.entry;
-	if (array->size >= array->capacity) {
-		const size_t new_offset = result.entry - array->entries;
-		ZEND_ASSERT(array->size == array->capacity);
-		const size_t new_capacity = teds_sortedstrictset_next_pow2_capacity(array->size + 1);
-		teds_sortedstrictset_entries_raise_capacity(&intern->array, new_capacity);
-		entry = array->entries + new_offset;
-	}
-
-	for (teds_sortedstrictset_entry *it = array->entries + array->size; it > entry; it--) {
-		ZVAL_COPY_VALUE(&it[0].key, &it[-1].key);
-	}
-
-	ZVAL_COPY(&entry->key, key);
-	array->size++;
-	return true;
+	return NULL;
 }
 
-static void teds_sortedstrictset_clear(teds_sortedstrictset *intern);
+static zend_always_inline void teds_sortedstrictset_tree_remove_node(teds_sortedstrictset_tree *array, teds_sortedstrictset_node *const node, bool free_zval);
+
+static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_node_alloc(const zval *key, teds_sortedstrictset_node *parent) {
+	teds_sortedstrictset_node *n = emalloc(sizeof(teds_sortedstrictset_node));
+	n->parent = parent;
+	ZVAL_COPY(&n->key, key);
+	TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(n) = 1;
+	return n;
+}
+
+static zend_always_inline void teds_sortedstrictset_node_release(teds_sortedstrictset_node *node) {
+	ZEND_ASSERT(node != NULL);
+	ZEND_ASSERT(TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node) > 0);
+	if (--TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node) == 0) {
+		ZEND_ASSERT(Z_ISUNDEF(node->key));
+		efree_size(node, sizeof(teds_sortedstrictset_node));
+	}
+}
+
+/* Returns true if a new entry was added to the map, false if updated. Based on _zend_hash_add_or_update_i. */
+static zend_always_inline bool teds_sortedstrictset_tree_insert(teds_sortedstrictset_tree *tree, zval *key, bool add_new)
+{
+	ZEND_ASSERT(Z_TYPE_P(key) != IS_UNDEF);
+
+	/* TODO optimize */
+	teds_sortedstrictset_node *it = tree->root;
+	if (it == NULL) {
+		/* Initialize this tree as a new binary search tree of size 1 */
+		it = teds_sortedstrictset_node_alloc(key, NULL);
+		tree->root = it;
+		it->left = NULL;
+		it->right = NULL;
+		it->prev = NULL;
+		it->next = NULL;
+		tree->nNumOfElements++;
+		return true;
+	}
+	while (true) {
+		const int comparison = teds_stable_compare(key, &it->key);
+		if (comparison > 0) {
+			if (it->right == NULL) {
+				teds_sortedstrictset_node *const c = teds_sortedstrictset_node_alloc(key, it);
+				teds_sortedstrictset_node *const next = it->next;
+
+				c->left = NULL;
+				c->right = NULL;
+				c->prev = it;
+				c->next = next;
+				it->next = c;
+				it->right = c;
+				if (next) {
+					next->prev = c;
+				}
+				tree->nNumOfElements++;
+				/* TODO rebalance */
+
+				return true;
+			}
+			it = it->right;
+		} else if ((add_new && !ZEND_DEBUG) || comparison < 0) {
+			if (it->left == NULL) {
+				teds_sortedstrictset_node *const c = teds_sortedstrictset_node_alloc(key, it);
+				teds_sortedstrictset_node *const prev = it->prev;
+
+				c->left = NULL;
+				c->right = NULL;
+				c->prev = prev;
+				c->next = it;
+				it->prev = c;
+				it->left = c;
+				if (prev) {
+					prev->next = c;
+				}
+				tree->nNumOfElements++;
+				/* TODO rebalance */
+
+				return true;
+
+			}
+			it = it->left;
+		} else {
+			ZEND_ASSERT(!add_new);
+			/* Already exists */
+			return false;
+		}
+	}
+}
+
+static void teds_sortedstrictset_tree_clear(teds_sortedstrictset_tree *array);
 
 /* Used by InternalIterator returned by SortedStrictSet->getIterator() */
 typedef struct _teds_sortedstrictset_it {
-	zend_object_iterator intern;
-	zend_long            current;
+	zend_object_iterator       intern;
+	teds_sortedstrictset_node *node;
 } teds_sortedstrictset_it;
 
-static teds_sortedstrictset *teds_sortedstrictset_from_obj(zend_object *obj)
+static zend_always_inline teds_sortedstrictset *teds_sortedstrictset_from_obj(zend_object *obj)
 {
 	return (teds_sortedstrictset*)((char*)(obj) - XtOffsetOf(teds_sortedstrictset, std));
 }
 
 #define Z_SORTEDSTRICTSET_P(zv)  teds_sortedstrictset_from_obj(Z_OBJ_P((zv)))
 
-/* Helps enforce the invariants in debug mode:
- *   - if capacity == 0, then entries == NULL
- *   - if capacity > 0, then entries != NULL
- */
-static zend_always_inline bool teds_sortedstrictset_entries_empty_capacity(teds_sortedstrictset_entries *array)
+static bool teds_sortedstrictset_tree_uninitialized(teds_sortedstrictset_tree *array)
 {
-	ZEND_ASSERT(array->size <= array->capacity);
-	if (array->capacity > 0) {
-		ZEND_ASSERT(array->entries != empty_entry_list);
+	if (array->initialized) {
 		return false;
 	}
-	ZEND_ASSERT(array->entries == empty_entry_list || array->entries == NULL);
+	ZEND_ASSERT(array->root == NULL);
+	ZEND_ASSERT(array->nNumOfElements == 0);
 	return true;
 }
 
-static bool teds_sortedstrictset_entries_uninitialized(teds_sortedstrictset_entries *array)
+static void teds_sortedstrictset_tree_set_empty_tree(teds_sortedstrictset_tree *array)
 {
-	ZEND_ASSERT(array->size <= array->capacity);
-	if (array->entries == NULL) {
-		ZEND_ASSERT(array->capacity == 0);
-		return true;
-	}
-	ZEND_ASSERT((array->entries == empty_entry_list && array->capacity == 0) || array->capacity > 0);
-	return false;
+	array->root = NULL;
+	array->nNumOfElements = 0;
+	array->initialized = true;
 }
 
-static teds_sortedstrictset_entry *teds_sortedstrictset_allocate_entries(size_t capacity) {
-	return safe_emalloc(capacity, sizeof(teds_sortedstrictset_entry), 0);
-}
-
-static void teds_sortedstrictset_entries_init_from_array(teds_sortedstrictset_entries *array, zend_array *values)
+void teds_sortedstrictset_tree_init_from_array(teds_sortedstrictset_tree *array, zend_array *values)
 {
-	zend_long size = zend_hash_num_elements(values);
-	if (size > 0) {
-		zval *val;
-		teds_sortedstrictset_entry *entries;
-		int i = 0;
-		zend_long capacity = teds_sortedstrictset_next_pow2_capacity(size);
+	zval *val;
 
-		array->size = 0; /* reset size in case emalloc() fails */
-		array->capacity = 0;
-		array->entries = entries = teds_sortedstrictset_allocate_entries(capacity);
-		array->capacity = size;
-		array->size = size;
-		ZEND_HASH_FOREACH_VAL(values, val)  {
-			ZEND_ASSERT(i < size);
-			teds_sortedstrictset_entry *entry = &entries[i];
-			ZVAL_COPY_DEREF(&entry->key, val);
-			i++;
-		} ZEND_HASH_FOREACH_END();
-	} else {
-		array->size = 0;
-		array->capacity = 0;
-		array->entries = (teds_sortedstrictset_entry *)empty_entry_list;
-	}
+	teds_sortedstrictset_tree_set_empty_tree(array);
+	ZEND_HASH_FOREACH_VAL(values, val)  {
+		ZVAL_DEREF(val);
+		teds_sortedstrictset_tree_insert(array, val, false);
+	} ZEND_HASH_FOREACH_END();
 }
 
-static void teds_sortedstrictset_entries_init_from_traversable(teds_sortedstrictset_entries *array, zend_object *obj)
+void teds_sortedstrictset_tree_init_from_traversable(teds_sortedstrictset_tree *array, zend_object *obj)
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	zend_long size = 0, capacity = 0;
-	array->size = 0;
-	array->capacity = 0;
-	array->entries = NULL;
-	teds_sortedstrictset_entry *entries = NULL;
+	teds_sortedstrictset_tree_set_empty_tree(array);
 	zval tmp_obj;
 	ZVAL_OBJ(&tmp_obj, obj);
 	iter = ce->get_iterator(ce, &tmp_obj, 0);
@@ -197,120 +203,115 @@ static void teds_sortedstrictset_entries_init_from_traversable(teds_sortedstrict
 	}
 
 	while (funcs->valid(iter) == SUCCESS) {
-		if (EG(exception)) {
-			break;
-		}
-		zval *value = funcs->get_current_data(iter);
 		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
+		zval *value = funcs->get_current_data(iter);
+		if (UNEXPECTED(EG(exception)) || value == NULL) {
+			break;
+		}
 
-		if (size >= capacity) {
-			/* TODO: Could use countable and get_count handler to estimate the size of the array to allocate */
-			if (entries) {
-				capacity *= 2;
-				entries = safe_erealloc(entries, capacity, sizeof(teds_sortedstrictset_entry), 0);
-			} else {
-				capacity = 4;
-				entries = safe_emalloc(capacity, sizeof(teds_sortedstrictset_entry), 0);
+		ZVAL_DEREF(value);
+		const bool created_new_entry = teds_sortedstrictset_tree_insert(array, value, false);
+		if (!created_new_entry) {
+			if (UNEXPECTED(EG(exception))) {
+				break;
 			}
 		}
-		ZVAL_COPY_DEREF(&entries[size].key, value);
-		size++;
 
 		iter->index++;
 		funcs->move_forward(iter);
-		if (EG(exception)) {
+		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
 	}
 
-	array->size = size;
-	array->capacity = capacity;
-	array->entries = entries;
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}
+	if (UNEXPECTED(EG(exception))) {
+		teds_sortedstrictset_tree_clear(array);
+	}
 }
 
-static void teds_sortedstrictset_entries_raise_capacity(teds_sortedstrictset_entries *array, size_t new_capacity)
-{
-	ZEND_ASSERT(new_capacity > array->capacity);
-	if (teds_sortedstrictset_entries_empty_capacity(array)) {
-		array->entries = safe_emalloc(new_capacity, sizeof(teds_sortedstrictset_entry), 0);
+static teds_sortedstrictset_node *teds_sortedstrictset_node_copy_ctor_recursive(const teds_sortedstrictset_node *from, teds_sortedstrictset_node *parent, teds_sortedstrictset_node *left_parent_node, teds_sortedstrictset_node *right_parent_node) {
+	ZEND_ASSERT(from != NULL);
+	teds_sortedstrictset_node *copy = teds_sortedstrictset_node_alloc(&from->key, parent);
+	if (from->left) {
+		copy->left = teds_sortedstrictset_node_copy_ctor_recursive(from->left, copy, left_parent_node, copy);
 	} else {
-		array->entries = safe_erealloc(array->entries, new_capacity, sizeof(teds_sortedstrictset_entry), 0);
+		copy->left = NULL;
+		/* This is the first node after left_parent_node */
+		copy->prev = left_parent_node;
+		if (left_parent_node) {
+			left_parent_node->next = copy;
+		}
 	}
-	array->capacity = new_capacity;
+	if (from->right) {
+		copy->right = teds_sortedstrictset_node_copy_ctor_recursive(from->right, copy, copy, right_parent_node);
+	} else {
+		copy->right = NULL;
+		/* This is the last node before right_parent_node */
+		copy->next = right_parent_node;
+		if (right_parent_node) {
+			right_parent_node->prev = copy;
+		}
+	}
+	return copy;
 }
 
-/* Copies the range [begin, end) into the sortedstrictset, beginning at `offset`.
- * Does not dtor the existing elements.
- */
-static void teds_sortedstrictset_copy_range(teds_sortedstrictset_entries *array, size_t offset, teds_sortedstrictset_entry *begin, teds_sortedstrictset_entry *end)
+static void teds_sortedstrictset_tree_copy_ctor(teds_sortedstrictset_tree *to, teds_sortedstrictset_tree *from)
 {
-	ZEND_ASSERT(offset <= array->size);
-	ZEND_ASSERT(begin <= end);
-	ZEND_ASSERT(array->size - offset >= (size_t)(end - begin));
-
-	teds_sortedstrictset_entry *to = &array->entries[offset];
-	while (begin != end) {
-		ZVAL_COPY(&to->key, &begin->key);
-		begin++;
-		to++;
+	teds_sortedstrictset_tree_set_empty_tree(to);
+	/* Copy the original tree structure. It will be balanced if the original tree is balanced. */
+	to->nNumOfElements = from->nNumOfElements;
+	to->initialized = true;
+	if (!teds_sortedstrictset_tree_empty_size(from)) {
+		to->root = teds_sortedstrictset_node_copy_ctor_recursive(from->root, NULL, NULL, NULL);
+	} else {
+		to->root = NULL;
 	}
 }
 
-static void teds_sortedstrictset_entries_copy_ctor(teds_sortedstrictset_entries *to, teds_sortedstrictset_entries *from)
+static void teds_sortedstrictset_node_dtor(teds_sortedstrictset_node *node)
 {
-	const zend_long size = from->size;
-	if (!size) {
-		to->size = 0;
-		to->capacity = 0;
-		to->entries = (teds_sortedstrictset_entry *)empty_entry_list;
-		return;
-	}
-
-	const size_t capacity = from->capacity;
-	to->size = 0; /* reset size in case emalloc() fails */
-	to->capacity = 0; /* reset size in case emalloc() fails */
-	to->entries = safe_emalloc(capacity, sizeof(teds_sortedstrictset_entry), 0);
-	to->size = size;
-	to->capacity = capacity;
-
-	teds_sortedstrictset_entry *begin = from->entries, *end = from->entries + size;
-	teds_sortedstrictset_copy_range(to, 0, begin, end);
-}
-
-/* Destructs the entries in the range [from, to).
- * Caller is expected to bounds check.
- */
-static void teds_sortedstrictset_entries_dtor_range(teds_sortedstrictset_entry *start, size_t from, size_t to)
-{
-	teds_sortedstrictset_entry *begin = start + from, *end = start + to;
-	while (begin < end) {
-		zval_ptr_dtor(&begin->key);
-		begin++;
+	/* Free keys in sorted order */
+	while (node != NULL) {
+		teds_sortedstrictset_node_dtor(node->left);
+		teds_sortedstrictset_node *right = node->right;
+		zval_ptr_dtor(&node->key);
+		ZVAL_UNDEF(&node->key);
+		teds_sortedstrictset_node_release(node);
+		node = right;
 	}
 }
 
 /* Destructs and frees contents and the array itself.
  * If you want to re-use the array then you need to re-initialize it.
  */
-static void teds_sortedstrictset_entries_dtor(teds_sortedstrictset_entries *array)
+void teds_sortedstrictset_tree_dtor(teds_sortedstrictset_tree *array)
 {
-	if (!teds_sortedstrictset_entries_empty_capacity(array)) {
-		teds_sortedstrictset_entries_dtor_range(array->entries, 0, array->size);
-		efree(array->entries);
+	if (teds_sortedstrictset_tree_empty_size(array)) {
+		return;
 	}
+	teds_sortedstrictset_node *root = array->root;
+	teds_sortedstrictset_tree_set_empty_tree(array);
+	teds_sortedstrictset_node_dtor(root);
 }
 
-static HashTable* teds_sortedstrictset_get_gc(zend_object *obj, zval **table, int *n)
+static HashTable* teds_sortedstrictset_get_gc(zend_object *obj, zval **table, int *table_count)
 {
 	teds_sortedstrictset *intern = teds_sortedstrictset_from_obj(obj);
+	if (intern->array.nNumOfElements > 0) {
+		zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
+		zval *key;
 
-	*table = &intern->array.entries[0].key;
-	*n = (int)intern->array.size;
+		TEDS_SORTEDSTRICTSET_FOREACH_KEY(&intern->array, key) {
+			zend_get_gc_buffer_add_zval(gc_buffer, key);
+		} TEDS_SORTEDSTRICTSET_FOREACH_END();
+
+		zend_get_gc_buffer_use(gc_buffer, table, table_count);
+	}
 
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.
@@ -320,15 +321,20 @@ static HashTable* teds_sortedstrictset_get_gc(zend_object *obj, zval **table, in
 static HashTable* teds_sortedstrictset_get_properties(zend_object *obj)
 {
 	teds_sortedstrictset *intern = teds_sortedstrictset_from_obj(obj);
-	size_t len = intern->array.size;
+	const uint32_t len = intern->array.nNumOfElements;
 	HashTable *ht = zend_std_get_properties(obj);
-	size_t old_length = zend_hash_num_elements(ht);
-	teds_sortedstrictset_entry *entries = intern->array.entries;
+	uint32_t old_length = zend_hash_num_elements(ht);
 	/* Initialize properties array */
-	for (size_t i = 0; i < len; i++) {
-		Z_TRY_ADDREF_P(&entries[i].key);
-		zend_hash_index_update(ht, i, &entries[i].key);
-	}
+	uint32_t i = 0;
+	zval *key;
+	TEDS_SORTEDSTRICTSET_FOREACH_KEY(&intern->array, key) {
+		Z_TRY_ADDREF_P(key);
+		zend_hash_index_update(ht, i, key);
+		i++;
+	} TEDS_SORTEDSTRICTSET_FOREACH_END();
+
+	ZEND_ASSERT(i == len);
+
 	for (size_t i = len; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
@@ -339,7 +345,7 @@ static HashTable* teds_sortedstrictset_get_properties(zend_object *obj)
 static void teds_sortedstrictset_free_storage(zend_object *object)
 {
 	teds_sortedstrictset *intern = teds_sortedstrictset_from_obj(object);
-	teds_sortedstrictset_entries_dtor(&intern->array);
+	teds_sortedstrictset_tree_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
 
@@ -357,9 +363,9 @@ static zend_object *teds_sortedstrictset_new_ex(zend_class_entry *class_type, ze
 
 	if (orig && clone_orig) {
 		teds_sortedstrictset *other = teds_sortedstrictset_from_obj(orig);
-		teds_sortedstrictset_entries_copy_ctor(&intern->array, &other->array);
+		teds_sortedstrictset_tree_copy_ctor(&intern->array, &other->array);
 	} else {
-		intern->array.entries = NULL;
+		intern->array.root = NULL;
 	}
 
 	return &intern->std;
@@ -385,7 +391,7 @@ static int teds_sortedstrictset_count_elements(zend_object *object, zend_long *c
 	teds_sortedstrictset *intern;
 
 	intern = teds_sortedstrictset_from_obj(object);
-	*count = intern->array.size;
+	*count = intern->array.nNumOfElements;
 	return SUCCESS;
 }
 
@@ -397,7 +403,7 @@ PHP_METHOD(Teds_SortedStrictSet, count)
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(object);
-	RETURN_LONG(intern->array.size);
+	RETURN_LONG(intern->array.nNumOfElements);
 }
 
 /* Get whether this SortedStrictSet is empty */
@@ -408,7 +414,7 @@ PHP_METHOD(Teds_SortedStrictSet, isEmpty)
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(object);
-	RETURN_BOOL(intern->array.size == 0);
+	RETURN_BOOL(intern->array.nNumOfElements == 0);
 }
 
 /* Create this from an iterable */
@@ -423,25 +429,23 @@ PHP_METHOD(Teds_SortedStrictSet, __construct)
 
 	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
 
-	if (UNEXPECTED(!teds_sortedstrictset_entries_uninitialized(&intern->array))) {
+	if (UNEXPECTED(!teds_sortedstrictset_tree_uninitialized(&intern->array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\SortedStrictSet::__construct twice", 0);
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
 	}
 
 	if (iterable == NULL) {
-		intern->array.size = 0;
-		intern->array.capacity = 0;
-		intern->array.entries = (teds_sortedstrictset_entry *)empty_entry_list;
+		teds_sortedstrictset_tree_set_empty_tree(&intern->array);
 		return;
 	}
 
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_sortedstrictset_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
+			teds_sortedstrictset_tree_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
 			return;
 		case IS_OBJECT:
-			teds_sortedstrictset_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
+			teds_sortedstrictset_tree_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -456,69 +460,74 @@ PHP_METHOD(Teds_SortedStrictSet, getIterator)
 
 static void teds_sortedstrictset_it_dtor(zend_object_iterator *iter)
 {
+	teds_sortedstrictset_node *node = ((teds_sortedstrictset_it*)iter)->node;
+	if (node) {
+		teds_sortedstrictset_node_release(node);
+		((teds_sortedstrictset_it*)iter)->node = NULL;
+	}
 	zval_ptr_dtor(&iter->data);
 }
 
 static void teds_sortedstrictset_it_rewind(zend_object_iterator *iter)
 {
-	((teds_sortedstrictset_it*)iter)->current = 0;
+	teds_sortedstrictset *object   = Z_SORTEDSTRICTSET_P(&iter->data);
+	teds_sortedstrictset_node *const orig_node = ((teds_sortedstrictset_it*)iter)->node;
+	teds_sortedstrictset_node *const new_node = teds_sortedstrictset_tree_get_first(&object->array);
+	if (new_node == orig_node) {
+		return;
+	}
+	((teds_sortedstrictset_it*)iter)->node = new_node;
+	if (new_node != NULL) {
+		TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(new_node)++;
+	}
+	if (orig_node != NULL) {
+		teds_sortedstrictset_node_release(orig_node);
+	}
+}
+
+static zend_always_inline bool teds_sortedstrictset_node_valid(teds_sortedstrictset_node *node) {
+	/* TODO: Mark key as invalid when removing? */
+	return node != NULL && !Z_ISUNDEF(node->key);
 }
 
 static int teds_sortedstrictset_it_valid(zend_object_iterator *iter)
 {
 	teds_sortedstrictset_it     *iterator = (teds_sortedstrictset_it*)iter;
-	teds_sortedstrictset *object   = Z_SORTEDSTRICTSET_P(&iter->data);
-
-	if (iterator->current >= 0 && ((zend_ulong) iterator->current) < object->array.size) {
-		return SUCCESS;
-	}
-
-	return FAILURE;
-}
-
-static teds_sortedstrictset_entry *teds_sortedstrictset_read_offset_helper(teds_sortedstrictset *intern, size_t offset)
-{
-	/* we have to return NULL on error here to avoid memleak because of
-	 * ZE duplicating uninitialized_zval_ptr */
-	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		return NULL;
-	} else {
-		return &intern->array.entries[offset];
-	}
+	return teds_sortedstrictset_node_valid(iterator->node) ? SUCCESS : FAILURE;
 }
 
 static zval *teds_sortedstrictset_it_get_current_data(zend_object_iterator *iter)
 {
-	teds_sortedstrictset_it     *iterator = (teds_sortedstrictset_it*)iter;
-	teds_sortedstrictset *object   = Z_SORTEDSTRICTSET_P(&iter->data);
-
-	teds_sortedstrictset_entry *data = teds_sortedstrictset_read_offset_helper(object, iterator->current);
-
-	if (UNEXPECTED(data == NULL)) {
-		return &EG(uninitialized_zval);
+	teds_sortedstrictset_node *node = ((teds_sortedstrictset_it*)iter)->node;
+	if (teds_sortedstrictset_node_valid(node)) {
+		return &node->key;
 	} else {
-		return &data->key;
+		return &EG(uninitialized_zval);
 	}
 }
 
 static void teds_sortedstrictset_it_get_current_key(zend_object_iterator *iter, zval *key)
 {
-	teds_sortedstrictset_it     *iterator = (teds_sortedstrictset_it*)iter;
-	teds_sortedstrictset *object   = Z_SORTEDSTRICTSET_P(&iter->data);
-
-	teds_sortedstrictset_entry *data = teds_sortedstrictset_read_offset_helper(object, iterator->current);
-
-	if (data == NULL) {
-		ZVAL_NULL(key);
+	teds_sortedstrictset_node *node = ((teds_sortedstrictset_it*)iter)->node;
+	if (teds_sortedstrictset_node_valid(node)) {
+		ZVAL_COPY(key, &node->key);
 	} else {
-		ZVAL_COPY(key, &data->key);
+		ZVAL_NULL(key);
 	}
 }
 
 static void teds_sortedstrictset_it_move_forward(zend_object_iterator *iter)
 {
-	((teds_sortedstrictset_it*)iter)->current++;
+	teds_sortedstrictset_node *const node = ((teds_sortedstrictset_it*)iter)->node;
+	if (!teds_sortedstrictset_node_valid(node)) {
+		return;
+	}
+	teds_sortedstrictset_node *const next = node->next;
+	((teds_sortedstrictset_it*)iter)->node = next;
+	if (next) {
+		TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(next)++;
+	}
+	teds_sortedstrictset_node_release(node);
 }
 
 /* iterator handler table */
@@ -537,7 +546,6 @@ static const zend_object_iterator_funcs teds_sortedstrictset_it_funcs = {
 zend_object_iterator *teds_sortedstrictset_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
 	teds_sortedstrictset_it *iterator;
-	(void)ce;
 
 	if (UNEXPECTED(by_ref)) {
 		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
@@ -550,6 +558,12 @@ zend_object_iterator *teds_sortedstrictset_get_iterator(zend_class_entry *ce, zv
 
 	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
 	iterator->intern.funcs = &teds_sortedstrictset_it_funcs;
+	teds_sortedstrictset_node *node = teds_sortedstrictset_tree_get_first(&Z_SORTEDSTRICTSET_P(object)->array);
+	if (node) {
+		TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node)++;
+	}
+	iterator->node = node;
+	(void) ce;
 
 	return &iterator->intern;
 }
@@ -557,43 +571,31 @@ zend_object_iterator *teds_sortedstrictset_get_iterator(zend_class_entry *ce, zv
 PHP_METHOD(Teds_SortedStrictSet, __unserialize)
 {
 	HashTable *raw_data;
-	zval *val;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "h", &raw_data) == FAILURE) {
 		RETURN_THROWS();
 	}
 
-	size_t raw_size = zend_hash_num_elements(raw_data);
-	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	if (UNEXPECTED(!teds_sortedstrictset_entries_uninitialized(&intern->array))) {
+	teds_sortedstrictset *const intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
+	teds_sortedstrictset_tree *const array = &intern->array;
+	if (UNEXPECTED(!teds_sortedstrictset_tree_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
 	}
-	if (raw_size == 0) {
-		ZEND_ASSERT(intern->array.size == 0);
-		ZEND_ASSERT(intern->array.capacity == 0);
-		intern->array.entries = (teds_sortedstrictset_entry *)empty_entry_list;
-		return;
-	}
 
-	ZEND_ASSERT(intern->array.entries == NULL);
-
-	const size_t capacity = teds_sortedstrictset_next_pow2_capacity(raw_size);
-	teds_sortedstrictset_entry *entries = safe_emalloc(capacity, sizeof(teds_sortedstrictset_entry), 0);
-	intern->array.size = 0;
-	intern->array.capacity = capacity;
-	intern->array.entries = entries;
+	teds_sortedstrictset_tree_set_empty_tree(array);
 
 	zend_string *str;
+	zval *val;
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
-			teds_sortedstrictset_clear(intern);
+			teds_sortedstrictset_tree_clear(array);
 			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\SortedStrictSet::__unserialize saw unexpected string key, expected sequence of values", 0);
 			RETURN_THROWS();
 		}
 
-		teds_sortedstrictset_insert(intern, val, true);
+		teds_sortedstrictset_tree_insert(array, val, false);
 	} ZEND_HASH_FOREACH_END();
 }
 
@@ -606,196 +608,169 @@ PHP_METHOD(Teds_SortedStrictSet, __set_state)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_sortedstrictset_new(teds_ce_SortedStrictSet);
 	teds_sortedstrictset *intern = teds_sortedstrictset_from_obj(object);
-	teds_sortedstrictset_entries_init_from_array(&intern->array, array_ht);
+	teds_sortedstrictset_tree_init_from_array(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
 }
 
-static zend_array *teds_sortedstrictset_create_array_copy(teds_sortedstrictset *intern) {
-	teds_sortedstrictset_entry *entries = intern->array.entries;
-	const size_t len = intern->array.size;
+#define IMPLEMENT_READ_POSITION_PHP_METHOD(methodName, pos) \
+PHP_METHOD(Teds_SortedStrictSet, methodName) \
+{ \
+       ZEND_PARSE_PARAMETERS_NONE(); \
+       const teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS); \
+       if (teds_sortedstrictset_tree_empty_size(&intern->array)) { \
+               zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty SortedStrictSet", 0); \
+               RETURN_THROWS(); \
+       } \
+       teds_sortedstrictset_node *node = teds_sortedstrictset_tree_get_ ## pos(&intern->array); \
+       RETVAL_COPY(&node->key); \
+}
+
+IMPLEMENT_READ_POSITION_PHP_METHOD(bottom, first)
+IMPLEMENT_READ_POSITION_PHP_METHOD(top, last)
+
+#define IMPLEMENT_REMOVE_POSITION_PHP_METHOD(methodName, pos) \
+PHP_METHOD(Teds_SortedStrictSet, methodName) \
+{ \
+	ZEND_PARSE_PARAMETERS_NONE(); \
+	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS); \
+	if (teds_sortedstrictset_tree_empty_size(&intern->array)) { \
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot " # methodName " from empty SortedStrictSet", 0); \
+		RETURN_THROWS(); \
+	} \
+	teds_sortedstrictset_node *node = teds_sortedstrictset_tree_get_ ## pos(&intern->array); \
+	RETVAL_COPY_VALUE(&node->key); \
+	teds_sortedstrictset_tree_remove_node(&intern->array, node, false); \
+}
+
+IMPLEMENT_REMOVE_POSITION_PHP_METHOD(pop, last)
+IMPLEMENT_REMOVE_POSITION_PHP_METHOD(shift, first)
+
+PHP_METHOD(Teds_SortedStrictSet, values)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
+	size_t len = intern->array.nNumOfElements;
+	if (!len) {
+		RETURN_EMPTY_ARRAY();
+	}
 	zend_array *values = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);
 
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
-		for (size_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i].key;
-			Z_TRY_ADDREF_P(tmp);
-			ZEND_HASH_FILL_ADD(tmp);
-		}
+		zval *value;
+		TEDS_SORTEDSTRICTSET_FOREACH_KEY(&intern->array, value) {
+			Z_TRY_ADDREF_P(value);
+			ZEND_HASH_FILL_ADD(value);
+		} TEDS_SORTEDSTRICTSET_FOREACH_END();
 	} ZEND_HASH_FILL_END();
-	return values;
+	RETURN_ARR(values);
 }
 
-PHP_METHOD(Teds_SortedStrictSet, values)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	size_t len = intern->array.size;
-	if (!len) {
-		/* NOTE: This macro sets immutable gc flags, differently from RETURN_ARR */
-		RETURN_EMPTY_ARRAY();
+static void teds_sortedstrictset_tree_replace_node_with_child(teds_sortedstrictset_tree *tree, teds_sortedstrictset_node *removed_node, teds_sortedstrictset_node *child_node) {
+	teds_sortedstrictset_node *const parent = removed_node->parent;
+	if (child_node) {
+		child_node->parent = parent;
 	}
-	RETURN_ARR(teds_sortedstrictset_create_array_copy(intern));
-}
-
-#define IMPLEMENT_READ_OFFSET_PHP_METHOD(methodName, index) \
-PHP_METHOD(Teds_SortedStrictSet, methodName) \
-{ \
-	ZEND_PARSE_PARAMETERS_NONE(); \
-	const teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS); \
-	if (intern->array.size == 0) { \
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty SortedStrictSet", 0); \
-		RETURN_THROWS(); \
-	} \
-	teds_sortedstrictset_entry *entries = intern->array.entries; \
-	RETVAL_COPY(&entries[(index)].key); \
-}
-
-IMPLEMENT_READ_OFFSET_PHP_METHOD(bottom, 0)
-IMPLEMENT_READ_OFFSET_PHP_METHOD(top, intern->array.size - 1)
-
-PHP_METHOD(Teds_SortedStrictSet, pop) {
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	if (intern->array.size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty SortedStrictSet", 0);
-		RETURN_THROWS();
+	if (parent == NULL) {
+		ZEND_ASSERT(removed_node == tree->root);
+		tree->root = child_node;
+		return;
 	}
-	teds_sortedstrictset_entry *entry = &intern->array.entries[intern->array.size - 1];
-	RETVAL_COPY_VALUE(&entry->key);
-	intern->array.size--;
-}
-
-/* Shifts values. Callers should adjust size and handle zval reference counting. */
-static void teds_sortedstrictset_remove_entry(teds_sortedstrictset_entry *entries, size_t len, teds_sortedstrictset_entry *entry)
-{
-	teds_sortedstrictset_entry *end = entries + len - 1;
-	ZEND_ASSERT(entry <= end);
-	/* Move entries */
-	for (; entry < end; ) {
-		ZVAL_COPY_VALUE(&entry->key, &entry[1].key);
-		entry++;
+	if (parent->left == removed_node) {
+		parent->left = child_node;
+	} else {
+		ZEND_ASSERT(parent->right == removed_node);
+		parent->right = child_node;
 	}
 }
 
-PHP_METHOD(Teds_SortedStrictSet, shift) {
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	const size_t len = intern->array.size;
-	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty SortedStrictSet", 0);
-		RETURN_THROWS();
-	}
-	teds_sortedstrictset_entry *entry = &intern->array.entries[0];
-	RETVAL_COPY_VALUE(&entry->key);
-	teds_sortedstrictset_remove_entry(entry, len, entry);
-	intern->array.size--;
-}
-
-static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for_key(const teds_sortedstrictset *intern, zval *key)
-{
-	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
-	teds_sortedstrictset_entry *const entries = intern->array.entries;
-	size_t start = 0;
-	size_t end = intern->array.size;
-	while (start < end) {
-		size_t mid = start + (end - start)/2;
-		teds_sortedstrictset_entry *e = &entries[mid];
-		int comparison = teds_stable_compare(key, &e->key);
-		if (comparison > 0) {
-			/* This key is greater than the value at the midpoint. Search the right half. */
-			start = mid + 1;
-		} else if (comparison < 0) {
-			/* This key is less than the value at the midpoint. Search the left half. */
-			end = mid;
-		} else {
-			teds_sortedstrictset_search_result result;
-			result.found = true;
-			result.entry = e;
-			return result;
+static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_node_remove_leftmost(teds_sortedstrictset_node *node) {
+	while (true) {
+		ZEND_ASSERT(node != NULL);
+		ZEND_ASSERT(node->parent != NULL);
+		if (node->left) {
+			node = node->left;
+			continue;
 		}
-	}
-	/* The entry is the position in the array at which the new value should be inserted. */
-	teds_sortedstrictset_search_result result;
-	result.found = false;
-	result.entry = &entries[start];
-	return result;
-}
-
-static teds_sortedstrictset_search_result teds_sortedstrictset_sorted_search_for_key_probably_largest(const teds_sortedstrictset *intern, zval *key)
-{
-	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
-	teds_sortedstrictset_entry *const entries = intern->array.entries;
-	size_t end = intern->array.size;
-	size_t start = 0;
-	if (end > 0) {
-		size_t mid = end - 1;
-		/* This is written in a way that would be fastest for branch prediction if key is larger than the last value in the array. */
-		while (true) {
-			teds_sortedstrictset_entry *e = &entries[mid];
-			int comparison = teds_stable_compare(key, &e->key);
-			if (comparison > 0) {
-				/* This key is greater than the value at the midpoint. Search the right half. */
-				start = mid + 1;
-			} else if (comparison < 0) {
-				/* This key is less than the value at the midpoint. Search the left half. */
-				end = mid;
+		teds_sortedstrictset_node *right = node->right;
+		if (right) {
+			right->parent = node->parent;
+			if (node->parent->left == node) {
+				node->parent->left = right;
 			} else {
-				teds_sortedstrictset_search_result result;
-				result.found = true;
-				result.entry = e;
-				return result;
+				ZEND_ASSERT(node->parent->right == node);
+				node->parent->right = right;
 			}
-			if (start >= end) {
-				break;
+			node->right = NULL;
+		}
+		node->parent = NULL;
+		return node;
+	}
+}
+
+static zend_always_inline void teds_sortedstrictset_tree_remove_node(teds_sortedstrictset_tree *tree, teds_sortedstrictset_node *const node, bool free_zval) {
+	teds_sortedstrictset_node *const prev = node->prev;
+	teds_sortedstrictset_node *const next = node->next;
+	if (prev) {
+		prev->next = next;
+	}
+	if (next) {
+		next->prev = prev;
+	}
+	node->prev = NULL;
+	node->next = NULL;
+
+	if (!node->left) {
+		teds_sortedstrictset_tree_replace_node_with_child(tree, node, node->right);
+	} else if (!node->right) {
+		teds_sortedstrictset_tree_replace_node_with_child(tree, node, node->left);
+	} else {
+		teds_sortedstrictset_node *const replacement = teds_sortedstrictset_node_remove_leftmost(node->right);
+		teds_sortedstrictset_node *const parent = node->parent;
+		replacement->left = node->left;
+		if (node->left) {
+			node->left->parent = replacement;
+		}
+		replacement->right = node->right;
+		if (node->right) {
+			node->right->parent = replacement;
+		}
+		replacement->parent = parent;
+		if (parent == NULL) {
+			ZEND_ASSERT(tree->root == node);
+			tree->root = replacement;
+		} else {
+			if (parent->left == node) {
+				parent->left = replacement;
+			} else {
+				ZEND_ASSERT(parent->right == node);
+				parent->right = replacement;
 			}
-			mid = start + (end - start)/2;
 		}
 	}
-	/* The entry is the position in the array at which the new value should be inserted. */
-	teds_sortedstrictset_search_result result;
-	result.found = false;
-	result.entry = &entries[start];
-	return result;
+
+	ZEND_ASSERT(tree->nNumOfElements > 0);
+	tree->nNumOfElements--;
+	if (free_zval) {
+		zval_ptr_dtor(&node->key);
+	}
+	ZVAL_UNDEF(&node->key);
+	teds_sortedstrictset_node_release(node);
 }
 
-static bool teds_sortedstrictset_remove_key(teds_sortedstrictset *intern, zval *key)
+static bool teds_sortedstrictset_tree_remove_key(teds_sortedstrictset_tree *tree, zval *key)
 {
-	if (intern->array.size == 0) {
+	/* FIXME implement binary tree removal */
+	teds_sortedstrictset_node *const node = teds_sortedstrictset_tree_find_key(tree, key);
+	if (node == NULL) {
+		/* Nothing to remove */
 		return false;
 	}
-	teds_sortedstrictset_search_result lookup = teds_sortedstrictset_sorted_search_for_key(intern, key);
-	if (!lookup.found) {
-		return false;
-	}
-	teds_sortedstrictset_entry *entry = lookup.entry;
-	zval old_key;
-	ZVAL_COPY_VALUE(&old_key, &entry->key);
-	teds_sortedstrictset_entry *end = intern->array.entries + intern->array.size - 1;
-	ZEND_ASSERT(entry <= end);
-	for (; entry < end; ) {
-		teds_sortedstrictset_entry *next = &entry[1];
-		ZVAL_COPY_VALUE(&entry->key, &next->key);
-		entry = next;
-	}
-	intern->array.size--;
-
-	zval_ptr_dtor(&old_key);
+	teds_sortedstrictset_tree_remove_node(tree, node, true);
 	return true;
-}
-
-PHP_METHOD(Teds_SortedStrictSet, remove)
-{
-	zval *value;
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
-	ZEND_PARSE_PARAMETERS_END();
-
-	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	RETURN_BOOL(teds_sortedstrictset_remove_key(intern, value));
 }
 
 PHP_METHOD(Teds_SortedStrictSet, add)
@@ -806,35 +781,44 @@ PHP_METHOD(Teds_SortedStrictSet, add)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	RETURN_BOOL(teds_sortedstrictset_insert(intern, value, false));
+	RETURN_BOOL(teds_sortedstrictset_tree_insert(&intern->array, value, false));
+}
+
+PHP_METHOD(Teds_SortedStrictSet, remove)
+{
+	zval *key;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(key)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
+	RETURN_BOOL(teds_sortedstrictset_tree_remove_key(&intern->array, key));
 }
 
 PHP_METHOD(Teds_SortedStrictSet, contains)
 {
-	zval *value;
+	zval *key;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
+		Z_PARAM_ZVAL(key)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	teds_sortedstrictset_search_result result = teds_sortedstrictset_sorted_search_for_key(intern, value);
-	RETURN_BOOL(result.found);
+	if (intern->array.nNumOfElements > 0) {
+		teds_sortedstrictset_node *entry = teds_sortedstrictset_tree_find_key(&intern->array, key);
+		RETURN_BOOL(entry != NULL);
+	}
+	RETURN_FALSE;
 }
 
-static void teds_sortedstrictset_clear(teds_sortedstrictset *intern) {
-	teds_sortedstrictset_entries *array = &intern->array;
-
-	if (teds_sortedstrictset_entries_empty_capacity(array)) {
+static void teds_sortedstrictset_tree_clear(teds_sortedstrictset_tree *array) {
+	if (teds_sortedstrictset_tree_empty_size(array)) {
 		return;
 	}
-	teds_sortedstrictset_entry *entries = intern->array.entries;
-	size_t size = intern->array.size;
-	intern->array.entries = (teds_sortedstrictset_entry *)empty_entry_list;
-	intern->array.size = 0;
-	intern->array.capacity = 0;
+	teds_sortedstrictset_tree array_copy = *array;
 
-	teds_sortedstrictset_entries_dtor_range(entries, 0, size);
-	efree(entries);
+	teds_sortedstrictset_tree_set_empty_tree(array);
+
+	teds_sortedstrictset_tree_dtor(&array_copy);
 	/* Could call teds_sortedstrictset_get_properties but properties array is typically not initialized unless var_dump or other inefficient functionality is used */
 }
 
@@ -842,7 +826,7 @@ PHP_METHOD(Teds_SortedStrictSet, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	teds_sortedstrictset_clear(intern);
+	teds_sortedstrictset_tree_clear(&intern->array);
 	TEDS_RETURN_VOID();
 }
 

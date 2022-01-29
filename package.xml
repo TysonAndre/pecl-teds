@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-01-23</date>
+ <date>2022-01-29</date>
  <time>16:00:00</time>
  <version>
-  <release>0.9.1dev</release>
-  <api>0.9.1dev</api>
+  <release>0.9.1</release>
+  <api>0.9.1</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,7 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Migrate `Teds\StrictSet`, `Teds\StrictMap`, and `Teds\unique_values` implementation to use an actual hash table instead of a list of unique values.
+* Make SortedStrictSet/SortedStrictMap use a binary search tree (not yet a balanced tree).
+* Associate iterators on SortedStrictSet/SortedStrictMap with nodes of the tree.
+  Invalidate iterators pointing to a node when that node of the set/map is removed.
+* Fix sorting order when instantiating StableSortedListSet/SortedStrictSet/SortedStrictMap from unsorted arrays.
  </notes>
  <contents>
   <dir name="/">
@@ -162,10 +165,13 @@
     <file name="SortedStrictMap/exceptionhandler.phpt" role="test" />
     <file name="SortedStrictMap/from_pairs.phpt" role="test" />
     <file name="SortedStrictMap/gc.phpt" role="test" />
+    <file name="SortedStrictMap/iteration_delete.phpt" role="test" />
+    <file name="SortedStrictMap/iteration_insert.phpt" role="test" />
     <file name="SortedStrictMap/keys_values.phpt" role="test" />
     <file name="SortedStrictMap/offsetExists.phpt" role="test" />
     <file name="SortedStrictMap/reinit_forbidden.phpt" role="test" />
     <file name="SortedStrictMap/remove.phpt" role="test" />
+    <file name="SortedStrictMap/remove_single.phpt" role="test" />
     <file name="SortedStrictMap/serialization.phpt" role="test" />
     <file name="SortedStrictMap/shift.phpt" role="test" />
     <file name="SortedStrictMap/traversable.phpt" role="test" />
@@ -178,6 +184,8 @@
     <file name="SortedStrictSet/contains.phpt" role="test" />
     <file name="SortedStrictSet/exceptionhandler.phpt" role="test" />
     <file name="SortedStrictSet/gc.phpt" role="test" />
+    <file name="SortedStrictSet/iteration_delete.phpt" role="test" />
+    <file name="SortedStrictSet/iteration_insert.phpt" role="test" />
     <file name="SortedStrictSet/reinit_forbidden.phpt" role="test" />
     <file name="SortedStrictSet/serialization.phpt" role="test" />
     <file name="SortedStrictSet/set_state.phpt" role="test" />

@@ -15,6 +15,7 @@ var_dump($it);
 var_dump((array)$it);
 foreach ($it as $key => $value) {
     echo "Unreachable\n";
+    var_dump($key, $value);
 }
 
 ?>

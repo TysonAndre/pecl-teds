@@ -39,6 +39,8 @@ echo "Done\n";
 ?>
 --EXPECT--
 Done evaluating the generator
+Key: 0
+Value: 2
 Key: 'r0'
 Value: 's0'
 Key: 'r1'
@@ -65,11 +67,9 @@ Key: (object) array(
 Value: (object) array(
    'key' => 'value',
 )
-Key: 0
-Value: 1
-Key: 0
-Value: 2
 Rewind and iterate again starting from r0
+Key: 0
+Value: 2
 Key: 'r0'
 Value: 's0'
 Key: 'r1'
@@ -96,10 +96,6 @@ Key: (object) array(
 Value: (object) array(
    'key' => 'value',
 )
-Key: 0
-Value: 1
-Key: 0
-Value: 2
 object(Teds\StableSortedListMap)#1 (0) {
 }
 Done

@@ -216,11 +216,9 @@ void teds_strictmap_entries_init_from_array(teds_strictmap_entries *array, zend_
 				ZVAL_LONG(&key, nkey);
 			}
 			ZVAL_DEREF(val);
-			if (!teds_strictmap_entries_insert(array, &key, val, true)) {
-				if (skey) {
-					GC_DELREF(skey);
-				}
-			}
+			/* key is unique in an array */
+			bool result = teds_strictmap_entries_insert(array, &key, val, true);
+			ZEND_ASSERT(result);
 		} ZEND_HASH_FOREACH_END();
 	} else {
 		teds_strictmap_entries_set_empty_entry_list(array);

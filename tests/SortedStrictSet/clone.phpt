@@ -3,7 +3,10 @@ Teds\SortedStrictSet can be cloned
 --FILE--
 <?php
 
-$it = new Teds\SortedStrictSet([new stdClass(), new ArrayObject()]);
+class A {}
+class B {}
+class C {}
+$it = new Teds\SortedStrictSet([new A(), new B(), new C(), new A()]);
 $it2 = clone $it;
 unset($it);
 foreach ($it2 as $value) {
@@ -11,10 +14,11 @@ foreach ($it2 as $value) {
 }
 ?>
 --EXPECT--
-object(stdClass)#2 (0) {
+object(A)#2 (0) {
 }
-object(ArrayObject)#3 (1) {
-  ["storage":"ArrayObject":private]=>
-  array(0) {
-  }
+object(A)#5 (0) {
+}
+object(B)#3 (0) {
+}
+object(C)#4 (0) {
 }
