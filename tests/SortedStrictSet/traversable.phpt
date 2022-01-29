@@ -39,6 +39,8 @@ echo "Done\n";
 ?>
 --EXPECT--
 Done evaluating the generator
+Value: 1
+Value: 2
 Value: 's0'
 Value: 's1'
 Value: 's2'
@@ -52,9 +54,9 @@ Value: 's9'
 Value: (object) array(
    'key' => 'value',
 )
-Value: 1
-Value: 2
 Rewind and iterate again starting from r0
+Value: 1
+Value: 2
 Value: 's0'
 Value: 's1'
 Value: 's2'
@@ -68,8 +70,6 @@ Value: 's9'
 Value: (object) array(
    'key' => 'value',
 )
-Value: 1
-Value: 2
 object(Teds\SortedStrictSet)#1 (0) {
 }
 Done

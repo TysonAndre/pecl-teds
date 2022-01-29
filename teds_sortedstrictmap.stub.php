@@ -105,6 +105,7 @@ final class SortedStrictMap implements \IteratorAggregate, \Countable, \JsonSeri
 
     /**
      * Returns [[key1, value1], [key2, value2]]
+     * @implementation-alias Teds\SortedStrictMap::toPairs
      */
     public function jsonSerialize(): array {}
 }
