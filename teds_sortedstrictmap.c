@@ -57,7 +57,90 @@ static zend_always_inline teds_sortedstrictmap_node *teds_sortedstrictmap_node_a
 	ZVAL_COPY(&n->key, key);
 	ZVAL_COPY(&n->value, value);
 	TEDS_SORTEDSTRICTMAP_NODE_REFCOUNT(n) = 1;
+	TEDS_SORTEDSTRICTMAP_NODE_COLOR(n) = TEDS_NODE_RED;
 	return n;
+}
+
+/* Given a node, rotate it so that the child node becomes the parent of that node */
+static zend_always_inline void teds_sortedstrictmap_node_rotate_dir(teds_sortedstrictmap_node *const node, int dir) {
+	teds_sortedstrictmap_node *const c = node->children[dir];
+	teds_sortedstrictmap_node *const parent = node->parent;
+	teds_sortedstrictmap_node *const transfer = c->children[1 - dir];
+
+	if (parent != NULL) {
+		if (parent->children[dir] == node) {
+			parent->children[dir] = c;
+		} else {
+			ZEND_ASSERT(parent->children[1 - dir] == node);
+			parent->children[1 - dir] = c;
+		}
+	}
+	c->parent = parent;
+
+	c->children[1 - dir] = node;
+	node->parent = c;
+
+	node->children[dir] = transfer;
+	if (transfer != NULL) {
+		transfer->parent = node;
+	}
+}
+
+static zend_always_inline void teds_sortedstrictmap_entries_rebalance_after_insert(teds_sortedstrictmap_tree *tree, teds_sortedstrictmap_node *node) {
+	while (true) {
+		teds_sortedstrictmap_node *parent = node->parent;
+		// ZEND_ASSERT(TEDS_SORTEDSTRICTMAP_NODE_COLOR(node) == TEDS_NODE_RED);
+
+		/* Based on https://en.wikipedia.org/wiki/Red%E2%80%93black_tree */
+		if (parent == NULL || TEDS_SORTEDSTRICTMAP_NODE_COLOR(parent) == TEDS_NODE_BLACK) {
+			return;
+		}
+
+		teds_sortedstrictmap_node *const grandparent = parent->parent;
+		if (grandparent == NULL) {
+			TEDS_SORTEDSTRICTMAP_NODE_COLOR(parent) = TEDS_NODE_BLACK;
+			return;
+		}
+		/* In a valid tree, the grandparent node would be black if parent was red */
+
+		const int dir = grandparent->right == parent ? 1 : 0;
+		ZEND_ASSERT(grandparent->children[dir] == parent);
+		teds_sortedstrictmap_node *uncle;
+		if (dir) {
+			uncle = grandparent->left;
+		} else {
+			uncle = grandparent->right;
+		}
+
+		if (uncle && TEDS_SORTEDSTRICTMAP_NODE_COLOR(uncle) == TEDS_NODE_RED) {
+			TEDS_SORTEDSTRICTMAP_NODE_COLOR(uncle) = TEDS_NODE_BLACK;
+			TEDS_SORTEDSTRICTMAP_NODE_COLOR(parent) = TEDS_NODE_BLACK;
+			TEDS_SORTEDSTRICTMAP_NODE_COLOR(grandparent) = TEDS_NODE_RED;
+			node = grandparent;
+			continue;
+		}
+		/* Parent node is red but the uncle node is black. */
+		/* In a valid tree, the grandparent node would be black */
+		if (node == parent->children[1 - dir]) {
+			teds_sortedstrictmap_node_rotate_dir(parent, 1 - dir);
+			teds_sortedstrictmap_node *orig_node = node;
+			node = parent;
+			parent = orig_node;
+		}
+		ZEND_ASSERT(grandparent->children[dir] == parent);
+		ZEND_ASSERT(parent->children[dir] == node);
+		ZEND_ASSERT(parent->parent == grandparent);
+		ZEND_ASSERT(node->parent == parent);
+
+		teds_sortedstrictmap_node_rotate_dir(grandparent, dir);
+		TEDS_SORTEDSTRICTMAP_NODE_COLOR(parent) = TEDS_NODE_BLACK;
+		TEDS_SORTEDSTRICTMAP_NODE_COLOR(grandparent) = TEDS_NODE_RED;
+
+		if (grandparent == tree->root) {
+			tree->root = parent;
+		}
+		return;
+	}
 }
 
 static zend_always_inline void teds_sortedstrictmap_node_release(teds_sortedstrictmap_node *node) {
@@ -87,11 +170,13 @@ static zend_always_inline bool teds_sortedstrictmap_tree_insert(teds_sortedstric
 		tree->nNumOfElements++;
 		return true;
 	}
+	/* c must be declared in outer scope for goto to work. */
+	teds_sortedstrictmap_node *c;
 	while (true) {
 		const int comparison = teds_stable_compare(key, &it->key);
 		if (comparison > 0) {
 			if (it->right == NULL) {
-				teds_sortedstrictmap_node *const c = teds_sortedstrictmap_node_alloc(key, value, it);
+				c = teds_sortedstrictmap_node_alloc(key, value, it);
 				teds_sortedstrictmap_node *const next = it->next;
 
 				c->left = NULL;
@@ -103,15 +188,16 @@ static zend_always_inline bool teds_sortedstrictmap_tree_insert(teds_sortedstric
 				if (next) {
 					next->prev = c;
 				}
+finish_insert:
 				tree->nNumOfElements++;
-				/* TODO rebalance */
+				teds_sortedstrictmap_entries_rebalance_after_insert(tree, c);
 
 				return true;
 			}
 			it = it->right;
 		} else if ((add_new && !ZEND_DEBUG) || comparison < 0) {
 			if (it->left == NULL) {
-				teds_sortedstrictmap_node *const c = teds_sortedstrictmap_node_alloc(key, value, it);
+				c = teds_sortedstrictmap_node_alloc(key, value, it);
 				teds_sortedstrictmap_node *const prev = it->prev;
 
 				c->left = NULL;
@@ -123,11 +209,7 @@ static zend_always_inline bool teds_sortedstrictmap_tree_insert(teds_sortedstric
 				if (prev) {
 					prev->next = c;
 				}
-				tree->nNumOfElements++;
-				/* TODO rebalance */
-
-				return true;
-
+				goto finish_insert;
 			}
 			it = it->left;
 		} else {
@@ -907,20 +989,24 @@ static zend_always_inline teds_sortedstrictmap_node *teds_sortedstrictmap_node_r
 	while (true) {
 		ZEND_ASSERT(node != NULL);
 		ZEND_ASSERT(node->parent != NULL);
+		ZEND_ASSERT(node->parent != node);
 		if (node->left) {
+			ZEND_ASSERT(node->left->parent == node);
 			node = node->left;
 			continue;
 		}
-		teds_sortedstrictmap_node *right = node->right;
+		teds_sortedstrictmap_node *const parent = node->parent;
+		teds_sortedstrictmap_node *const right = node->right;
 		if (right) {
-			right->parent = node->parent;
-			if (node->parent->left == node) {
-				node->parent->left = right;
-			} else {
-				ZEND_ASSERT(node->parent->right == node);
-				node->parent->right = right;
-			}
+			ZEND_ASSERT(right->parent == node);
+			right->parent = parent;
 			node->right = NULL;
+		}
+		if (parent->left == node) {
+			parent->left = right;
+		} else {
+			ZEND_ASSERT(parent->right == node);
+			parent->right = right;
 		}
 		node->parent = NULL;
 		return node;
@@ -942,18 +1028,23 @@ static zend_always_inline void teds_sortedstrictmap_tree_remove_node(teds_sorted
 	if (!node->left) {
 		teds_sortedstrictmap_tree_replace_node_with_child(tree, node, node->right);
 	} else if (!node->right) {
+		ZEND_ASSERT(node->left->parent == node);
 		teds_sortedstrictmap_tree_replace_node_with_child(tree, node, node->left);
 	} else {
+		ZEND_ASSERT(node->right->parent == node);
 		teds_sortedstrictmap_node *const replacement = teds_sortedstrictmap_node_remove_leftmost(node->right);
 		teds_sortedstrictmap_node *const parent = node->parent;
+		ZEND_ASSERT(replacement != node);
 		replacement->left = node->left;
 		if (node->left) {
+			ZEND_ASSERT(node->left != replacement);
 			node->left->parent = replacement;
 		}
-		replacement->right = node->right;
 		if (node->right) {
+			ZEND_ASSERT(node->right != replacement);
 			node->right->parent = replacement;
 		}
+		replacement->right = node->right;
 		replacement->parent = parent;
 		if (parent == NULL) {
 			ZEND_ASSERT(tree->root == node);
@@ -1132,6 +1223,52 @@ PHP_METHOD(Teds_SortedStrictMap, toPairs)
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
 	teds_sortedstrictmap_tree_return_pairs(&intern->array, return_value);
+}
+
+static ZEND_COLD void teds_sortedstrictmap_node_debug_representation(zval *return_value, teds_sortedstrictmap_node *node, zend_string *strings[5]) {
+	if (!node) {
+		RETURN_EMPTY_ARRAY();
+	}
+	if (node->parent) {
+		ZEND_ASSERT(node != node->parent);
+		if (node->parent->parent) {
+			ZEND_ASSERT(node != node->parent->parent);
+		}
+	}
+	zend_array *ht = zend_new_array(5);
+	Z_TRY_ADDREF(node->key);
+	zend_hash_add_new(ht, strings[0], &node->key);
+
+	Z_TRY_ADDREF(node->value);
+	zend_hash_add_new(ht, strings[1], &node->value);
+
+	zval tmp;
+	ZVAL_BOOL(&tmp, TEDS_SORTEDSTRICTMAP_NODE_COLOR(node) == TEDS_NODE_RED);
+	zend_hash_add_new(ht, strings[2], &tmp);
+
+	teds_sortedstrictmap_node_debug_representation(&tmp, node->left, strings);
+	zend_hash_add_new(ht, strings[3], &tmp);
+
+	teds_sortedstrictmap_node_debug_representation(&tmp, node->right, strings);
+	zend_hash_add_new(ht, strings[4], &tmp);
+	RETURN_ARR(ht);
+}
+
+ZEND_COLD PHP_METHOD(Teds_SortedStrictMap, debugGetTreeRepresentation)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
+	if (intern->array.nNumOfElements == 0) {
+		RETURN_EMPTY_ARRAY();
+	}
+	zend_string *strings[5] = {
+		zend_string_init_interned("key", sizeof("key") - 1, 0),
+		zend_string_init_interned("value", sizeof("value") - 1, 0),
+		zend_string_init_interned("red", sizeof("red") - 1, 0),
+		zend_string_init_interned("left", sizeof("left") - 1, 0),
+		zend_string_init_interned("right", sizeof("right") - 1, 0),
+	};
+	teds_sortedstrictmap_node_debug_representation(return_value, intern->array.root, strings);
 }
 
 static void teds_sortedstrictmap_tree_clear(teds_sortedstrictmap_tree *array) {

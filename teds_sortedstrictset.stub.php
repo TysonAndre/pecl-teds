@@ -80,4 +80,9 @@ final class SortedStrictSet implements \IteratorAggregate, \Countable, \JsonSeri
      * @implementation-alias Teds\SortedStrictSet::values
      */
     public function jsonSerialize(): array {}
+
+    /**
+     * @internal used for unit tests. Do not use.
+     */
+    public function debugGetTreeRepresentation(): array {}
 }

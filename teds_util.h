@@ -2,6 +2,8 @@
 #define TEDS_UTIL
 
 #include "zend_types.h"
+#define TEDS_NODE_RED 0
+#define TEDS_NODE_BLACK 1
 
 static inline zval *teds_zval_copy_range(const zval *original, size_t n) {
 	const size_t bytes = n * sizeof(zval);

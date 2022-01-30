@@ -108,4 +108,9 @@ final class SortedStrictMap implements \IteratorAggregate, \Countable, \JsonSeri
      * @implementation-alias Teds\SortedStrictMap::toPairs
      */
     public function jsonSerialize(): array {}
+
+    /**
+     * @internal used for unit tests. Do not use.
+     */
+    public function debugGetTreeRepresentation(): array {}
 }
