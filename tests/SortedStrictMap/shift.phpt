@@ -7,6 +7,10 @@ $it = new Teds\SortedStrictMap();
 for ($i = 0; $i < 7; $i++) {
     $j = $i * 5 % 7;
     $it["k$j"] = "v$j";
+    if (!$it->debugIsBalanced()) {
+        echo json_encode($it->debugGetTreeRepresentation(), JSON_PRETTY_PRINT), "\n";
+        return;
+    }
 }
 echo "shift\n";
 echo json_encode($it->shift()), "\n";

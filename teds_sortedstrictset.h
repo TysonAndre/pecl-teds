@@ -29,6 +29,7 @@ typedef struct _teds_sortedstrictset_node {
 
 #define TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node) Z_EXTRA((node)->key)
 #define TEDS_SORTEDSTRICTSET_NODE_COLOR(node) ((node)->color)
+#define TEDS_SORTEDSTRICTSET_NODE_COLOR_NULLABLE(node) ((node) != NULL ? TEDS_SORTEDSTRICTSET_NODE_COLOR(node) : TEDS_NODE_BLACK)
 
 typedef struct _teds_sortedstrictset_tree {
 	struct _teds_sortedstrictset_node *root;

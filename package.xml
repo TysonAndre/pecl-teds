@@ -22,7 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Make SortedStrictSet/SortedStrictMap rebalance the tree on insertions (not yet rebalancing for deletions).
+* Make SortedStrictSet/SortedStrictMap use a red-black tree that is rebalanced on insertions and removals.
  </notes>
  <contents>
   <dir name="/">

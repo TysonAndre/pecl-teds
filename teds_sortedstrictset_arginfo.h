@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 50554240dfc8bd1ea716ef43c26801beb8b5b5be */
+ * Stub hash: cf1869416076f877c1daea047fc394361bfd77c4 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_SortedStrictSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -51,6 +51,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_SortedStrictSet_debugGetTreeRepresentation arginfo_class_Teds_SortedStrictSet___serialize
 
+#define arginfo_class_Teds_SortedStrictSet_debugIsBalanced arginfo_class_Teds_SortedStrictSet_isEmpty
+
 
 ZEND_METHOD(Teds_SortedStrictSet, __construct);
 ZEND_METHOD(Teds_SortedStrictSet, getIterator);
@@ -68,6 +70,7 @@ ZEND_METHOD(Teds_SortedStrictSet, contains);
 ZEND_METHOD(Teds_SortedStrictSet, add);
 ZEND_METHOD(Teds_SortedStrictSet, remove);
 ZEND_METHOD(Teds_SortedStrictSet, debugGetTreeRepresentation);
+ZEND_METHOD(Teds_SortedStrictSet, debugIsBalanced);
 
 
 static const zend_function_entry class_Teds_SortedStrictSet_methods[] = {
@@ -89,6 +92,7 @@ static const zend_function_entry class_Teds_SortedStrictSet_methods[] = {
 	ZEND_ME(Teds_SortedStrictSet, remove, arginfo_class_Teds_SortedStrictSet_remove, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_SortedStrictSet, jsonSerialize, values, arginfo_class_Teds_SortedStrictSet_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictSet, debugGetTreeRepresentation, arginfo_class_Teds_SortedStrictSet_debugGetTreeRepresentation, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_SortedStrictSet, debugIsBalanced, arginfo_class_Teds_SortedStrictSet_debugIsBalanced, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
