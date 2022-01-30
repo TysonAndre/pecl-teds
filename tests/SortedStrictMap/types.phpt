@@ -25,6 +25,11 @@ $values = [
 ];
 foreach ($values as $i => $value) {
     $it[$value] = create_key($i);
+    if (!$it->debugIsBalanced()) {
+        printf("Unexpected: inserting %s caused tree to be unbalanced", var_export($value, true));
+        var_dump($it->debugGetTreeRepresentation());
+        return;
+    }
 }
 
 var_dump($it);
@@ -37,6 +42,12 @@ var_dump($it);
 foreach ($values as $value) {
     echo "Remove: "; var_dump($value);
     unset($it[$value]);
+    if (!$it->debugIsBalanced()) {
+        printf("Unexpected: removing %s caused tree to be unbalanced\n", var_export($value, true));
+        echo "Unbalanced tree:\n";
+        var_dump($it->debugGetTreeRepresentation());
+        return;
+    }
 }
 printf("After unsetting, count=%d\n", count($it));
 var_dump($it);

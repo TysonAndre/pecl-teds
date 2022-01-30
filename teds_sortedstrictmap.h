@@ -30,6 +30,7 @@ typedef struct _teds_sortedstrictmap_node {
 
 #define TEDS_SORTEDSTRICTMAP_NODE_REFCOUNT(node) Z_EXTRA((node)->key)
 #define TEDS_SORTEDSTRICTMAP_NODE_COLOR(node) Z_EXTRA((node)->value)
+#define TEDS_SORTEDSTRICTMAP_NODE_COLOR_NULLABLE(node) ((node) != NULL ? TEDS_SORTEDSTRICTMAP_NODE_COLOR(node) : TEDS_NODE_BLACK)
 
 typedef struct _teds_sortedstrictmap_tree {
 	struct _teds_sortedstrictmap_node *root;

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 7a9ed1e6aa83efd26a70e82441b16d352f5d1d9a */
+ * Stub hash: 8d4403aff629f8794d9014d9172920a73aa4942d */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_SortedStrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -83,6 +83,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_SortedStrictMap_debugGetTreeRepresentation arginfo_class_Teds_SortedStrictMap_toPairs
 
+#define arginfo_class_Teds_SortedStrictMap_debugIsBalanced arginfo_class_Teds_SortedStrictMap_isEmpty
+
 
 ZEND_METHOD(Teds_SortedStrictMap, __construct);
 ZEND_METHOD(Teds_SortedStrictMap, getIterator);
@@ -110,6 +112,7 @@ ZEND_METHOD(Teds_SortedStrictMap, get);
 ZEND_METHOD(Teds_SortedStrictMap, containsValue);
 ZEND_METHOD(Teds_SortedStrictMap, containsKey);
 ZEND_METHOD(Teds_SortedStrictMap, debugGetTreeRepresentation);
+ZEND_METHOD(Teds_SortedStrictMap, debugIsBalanced);
 
 
 static const zend_function_entry class_Teds_SortedStrictMap_methods[] = {
@@ -140,6 +143,7 @@ static const zend_function_entry class_Teds_SortedStrictMap_methods[] = {
 	ZEND_ME(Teds_SortedStrictMap, containsKey, arginfo_class_Teds_SortedStrictMap_containsKey, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_SortedStrictMap, jsonSerialize, toPairs, arginfo_class_Teds_SortedStrictMap_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, debugGetTreeRepresentation, arginfo_class_Teds_SortedStrictMap_debugGetTreeRepresentation, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_SortedStrictMap, debugIsBalanced, arginfo_class_Teds_SortedStrictMap_debugIsBalanced, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

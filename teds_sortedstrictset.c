@@ -30,6 +30,9 @@
 
 #include <stdbool.h>
 
+#define RBTREE_INVARIANT_ASSERT(cond) ZEND_ASSERT((cond))
+#define DEBUG_PRINTF(...) do { } while (0)
+
 zend_object_handlers teds_handler_SortedStrictSet;
 zend_class_entry *teds_ce_SortedStrictSet;
 
@@ -49,7 +52,27 @@ static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_tree_f
 	return NULL;
 }
 
-static zend_always_inline void teds_sortedstrictset_tree_remove_node(teds_sortedstrictset_tree *array, teds_sortedstrictset_node *const node, bool free_zval);
+/*
+static void teds_sortedstrictset_node_debug_check_linked_to_parent(const teds_sortedstrictset_node *node) {
+#if ZEND_DEBUG
+	if (!node) {
+		return;
+	}
+
+	DEBUG_PRINTF("teds_sortedstrictset_node_debug_check_linked_to_parent %p\n", node);
+	if (node->left) {
+		ZEND_ASSERT(node->left->parent == node);
+		teds_sortedstrictset_node_debug_check_linked_to_parent(node->left);
+	}
+	if (node->right) {
+		ZEND_ASSERT(node->right->parent == node);
+		teds_sortedstrictset_node_debug_check_linked_to_parent(node->right);
+	}
+#endif
+}
+*/
+
+static zend_always_inline void teds_sortedstrictset_tree_remove_node(teds_sortedstrictset_tree *array, teds_sortedstrictset_node *const node, bool free_zvals);
 
 static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_node_alloc(const zval *key, teds_sortedstrictset_node *parent) {
 	teds_sortedstrictset_node *n = emalloc(sizeof(teds_sortedstrictset_node));
@@ -60,11 +83,38 @@ static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_node_a
 	return n;
 }
 
-/* Given a node, rotate it so that the child node becomes the parent of that node */
+/* Given a node, rotate it so that the child node becomes the parent of that node.
+ * teds_sortedstrictset_tree_rotate_dir_root should be used if node might be the root node. */
 static zend_always_inline void teds_sortedstrictset_node_rotate_dir(teds_sortedstrictset_node *const node, int dir) {
 	teds_sortedstrictset_node *const c = node->children[dir];
 	teds_sortedstrictset_node *const parent = node->parent;
 	teds_sortedstrictset_node *const transfer = c->children[1 - dir];
+
+	ZEND_ASSERT(transfer == NULL || transfer->parent == c);
+	ZEND_ASSERT(parent != NULL);
+	if (parent->children[dir] == node) {
+		parent->children[dir] = c;
+	} else {
+		ZEND_ASSERT(parent->children[1 - dir] == node);
+		parent->children[1 - dir] = c;
+	}
+	c->parent = parent;
+
+	c->children[1 - dir] = node;
+	node->parent = c;
+
+	node->children[dir] = transfer;
+	if (transfer != NULL) {
+		transfer->parent = node;
+	}
+}
+
+static zend_always_inline void teds_sortedstrictset_tree_rotate_dir_root(teds_sortedstrictset_tree *const tree, teds_sortedstrictset_node *const node, int dir) {
+	teds_sortedstrictset_node *const c = node->children[dir];
+	ZEND_ASSERT(c != NULL);
+	teds_sortedstrictset_node *const parent = node->parent;
+	teds_sortedstrictset_node *const transfer = c->children[1 - dir];
+	ZEND_ASSERT(transfer == NULL || transfer->parent == c);
 
 	if (parent != NULL) {
 		if (parent->children[dir] == node) {
@@ -73,6 +123,9 @@ static zend_always_inline void teds_sortedstrictset_node_rotate_dir(teds_sorteds
 			ZEND_ASSERT(parent->children[1 - dir] == node);
 			parent->children[1 - dir] = c;
 		}
+	} else {
+		ZEND_ASSERT(tree->root == node);
+		tree->root = c;
 	}
 	c->parent = parent;
 
@@ -131,13 +184,9 @@ static zend_always_inline void teds_sortedstrictset_entries_rebalance_after_inse
 		ZEND_ASSERT(parent->parent == grandparent);
 		ZEND_ASSERT(node->parent == parent);
 
-		teds_sortedstrictset_node_rotate_dir(grandparent, dir);
+		teds_sortedstrictset_tree_rotate_dir_root(tree, grandparent, dir);
 		TEDS_SORTEDSTRICTSET_NODE_COLOR(parent) = TEDS_NODE_BLACK;
 		TEDS_SORTEDSTRICTSET_NODE_COLOR(grandparent) = TEDS_NODE_RED;
-
-		if (grandparent == tree->root) {
-			tree->root = parent;
-		}
 		return;
 	}
 }
@@ -151,7 +200,7 @@ static zend_always_inline void teds_sortedstrictset_node_release(teds_sortedstri
 	}
 }
 
-/* Returns true if a new entry was added to the map, false if updated. Based on _zend_hash_add_or_update_i. */
+/* Returns true if a new entry was added to the set, false if updated. Based on _zend_hash_add_or_update_i. */
 static zend_always_inline bool teds_sortedstrictset_tree_insert(teds_sortedstrictset_tree *tree, zval *key, bool add_new)
 {
 	ZEND_ASSERT(Z_TYPE_P(key) != IS_UNDEF);
@@ -779,10 +828,11 @@ static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_node_r
 			node = node->left;
 			continue;
 		}
-		teds_sortedstrictset_node *const right = node->right;
 		teds_sortedstrictset_node *const parent = node->parent;
-		ZEND_ASSERT(right->parent == node);
+		teds_sortedstrictset_node *const right = node->right;
 		if (right) {
+			ZEND_ASSERT(right->parent == node);
+			RBTREE_INVARIANT_ASSERT(TEDS_SORTEDSTRICTSET_NODE_COLOR(right) == TEDS_NODE_RED);
 			right->parent = parent;
 			node->right = NULL;
 		}
@@ -792,12 +842,177 @@ static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_node_r
 			ZEND_ASSERT(parent->right == node);
 			parent->right = right;
 		}
-		node->parent = NULL;
 		return node;
 	}
 }
 
-static zend_always_inline void teds_sortedstrictset_tree_remove_node(teds_sortedstrictset_tree *tree, teds_sortedstrictset_node *const node, bool free_zval) {
+static void teds_sortedstrictset_tree_rebalance_after_removal(teds_sortedstrictset_tree *tree, teds_sortedstrictset_node *p) {
+	/* Based on https://en.wikipedia.org/wiki/Red%E2%80%93black_tree#Removal:_simple_cases */
+	/* p is the parent of the removed node n. Before being removed, n was a black node with 2 children. */
+	ZEND_ASSERT(p != NULL);
+	/* Side of the parent on which the value with no children was removed */
+	teds_sortedstrictset_node *n = NULL;
+	teds_sortedstrictset_node *root = tree->root;
+	ZEND_ASSERT(root != NULL);
+	DEBUG_PRINTF("Delete from tree\n");
+	do {
+		const int dir = (p->right == n) ? 1 : 0;
+		DEBUG_PRINTF("Delete from tree step n=%p dir=%d\n", n, dir);
+		if (dir) {
+			if (p->left == n) {
+				if (n == NULL) {
+					DEBUG_PRINTF("Delete saw unexpected null siblings\n");
+					// RBTREE_INVARIANT_ASSERT(n != NULL);
+					return;
+				} else {
+					ZEND_ASSERT(false && "bad tree");
+					return;
+				}
+			}
+		} else {
+			ZEND_ASSERT(p->left == n);
+			RBTREE_INVARIANT_ASSERT(p->right != n);
+			if (UNEXPECTED(p->right == n)) {
+				return;
+			}
+		}
+		ZEND_ASSERT(p->children[dir] == n);
+		/* sibling - in a valid tree this would be non-null because n was black before removal */
+		teds_sortedstrictset_node *s = p->children[1 - dir];
+		RBTREE_INVARIANT_ASSERT(s != NULL);
+		if (UNEXPECTED(s == NULL)) {
+			return;
+		}
+		ZEND_ASSERT(s->parent == p);
+		/* close sibling on same side of sibling as node n is of parent p */
+		teds_sortedstrictset_node *c = s->children[    dir];
+		ZEND_ASSERT(!c || c->parent == s);
+		/* distant sibling on opposite side of sibling as node n is of parent p */
+		teds_sortedstrictset_node *d = s->children[1 - dir];
+		ZEND_ASSERT(!d || d->parent == s);
+
+		const bool s_black = TEDS_SORTEDSTRICTSET_NODE_COLOR(s) != TEDS_NODE_RED;
+		const bool c_black = TEDS_SORTEDSTRICTSET_NODE_COLOR_NULLABLE(c) != TEDS_NODE_RED;
+		const bool d_black = TEDS_SORTEDSTRICTSET_NODE_COLOR_NULLABLE(d) != TEDS_NODE_RED;
+		const bool p_black = TEDS_SORTEDSTRICTSET_NODE_COLOR(p) != TEDS_NODE_RED;
+		if (s_black) {
+			if (!d_black) {
+				/* Delete case 6 - s is black, d is red */
+				DEBUG_PRINTF("Delete case 6\n");
+delete_case_6:
+				DEBUG_PRINTF("Delete case 6 inner\n");
+				teds_sortedstrictset_tree_rotate_dir_root(tree, p, 1 - dir);
+				TEDS_SORTEDSTRICTSET_NODE_COLOR(s) = TEDS_SORTEDSTRICTSET_NODE_COLOR(p);
+				TEDS_SORTEDSTRICTSET_NODE_COLOR(p) = TEDS_NODE_BLACK;
+				TEDS_SORTEDSTRICTSET_NODE_COLOR(d) = TEDS_NODE_BLACK;
+				return;
+			}
+			if (c_black) {
+				if (p_black) {
+					/* Delete case 1 - change sibling to red node and recurse on black node parent*/
+					n = p;
+					p = p->parent;
+					TEDS_SORTEDSTRICTSET_NODE_COLOR(s) = TEDS_NODE_RED;
+					DEBUG_PRINTF("Delete case 1\n");
+					continue;
+				} else {
+					/* Delete case 4 - change parent to black node and sibling to red node, making path counts balanced. */
+					DEBUG_PRINTF("Delete case 4\n");
+					TEDS_SORTEDSTRICTSET_NODE_COLOR(p) = TEDS_NODE_BLACK;
+					TEDS_SORTEDSTRICTSET_NODE_COLOR(s) = TEDS_NODE_RED;
+					return;
+				}
+			} else {
+				DEBUG_PRINTF("Delete case 5\n");
+				/* Delete case 5: c is red, s is black, d is black */
+				ZEND_ASSERT(tree->root != s);
+				teds_sortedstrictset_node_rotate_dir(s, dir);
+				TEDS_SORTEDSTRICTSET_NODE_COLOR(s) = TEDS_NODE_RED;
+				TEDS_SORTEDSTRICTSET_NODE_COLOR(c) = TEDS_NODE_BLACK;
+				d = s;
+				s = c;
+				/* c is not used */
+				/* Case 6 */
+				goto delete_case_6;
+			}
+		} else {
+			/* s is red - delete case 3 */
+			DEBUG_PRINTF("Delete case 3\n");
+			if (UNEXPECTED(!(p_black && c_black && d_black))) {
+				RBTREE_INVARIANT_ASSERT(false);
+				return;
+			}
+			ZEND_ASSERT(c != NULL);
+			teds_sortedstrictset_tree_rotate_dir_root(tree, p, 1 - dir);
+			TEDS_SORTEDSTRICTSET_NODE_COLOR(p) = TEDS_NODE_RED;
+			TEDS_SORTEDSTRICTSET_NODE_COLOR(s) = TEDS_NODE_BLACK;
+			continue;
+		}
+
+		/* Unimplemented case */
+#define DEBUG_COLOR(x_black) ((x_black) ? "black" : "red")
+		DEBUG_PRINTF("TODO implement removal case p=%s c=%s s=%s d=%s\n", DEBUG_COLOR(p_black), DEBUG_COLOR(c_black), DEBUG_COLOR(s_black), DEBUG_COLOR(d_black));
+		return;
+	} while (p != NULL);
+
+	DEBUG_PRINTF("Delete case 2 - n is root\n");
+	ZEND_ASSERT(p == NULL);
+	ZEND_ASSERT(n != NULL);
+	ZEND_ASSERT(tree->root == n);
+}
+
+static zend_always_inline void teds_sortedstrictset_tree_replace_node_with_descendant_and_rebalance(teds_sortedstrictset_tree *tree, teds_sortedstrictset_node *node) {
+	teds_sortedstrictset_node *const replacement = teds_sortedstrictset_node_remove_leftmost(node->right);
+	teds_sortedstrictset_node *const parent = node->parent;
+	ZEND_ASSERT(replacement->parent != NULL);
+	/* parent_of_removed_node is non-null if replacement is a black node with no children. */
+	teds_sortedstrictset_node *parent_of_removed_node;
+	if (replacement->right == NULL && TEDS_SORTEDSTRICTSET_NODE_COLOR(replacement) == TEDS_NODE_BLACK) {
+		/* Note that the removed node's parent is the node then the new parent is the replacement itself. */
+		parent_of_removed_node = replacement->parent != node ? replacement->parent : replacement;
+		ZEND_ASSERT(parent_of_removed_node != NULL);
+	} else {
+		parent_of_removed_node = NULL;
+	}
+	ZEND_ASSERT(replacement->left == NULL);
+	ZEND_ASSERT(replacement != node);
+
+	if (node->left) {
+		ZEND_ASSERT(node->left != replacement);
+		node->left->parent = replacement;
+	}
+	replacement->left = node->left;
+
+	if (node->right) {
+		ZEND_ASSERT(node->right != replacement);
+		node->right->parent = replacement;
+	}
+	replacement->right = node->right;
+
+	TEDS_SORTEDSTRICTSET_NODE_COLOR(replacement) = TEDS_SORTEDSTRICTSET_NODE_COLOR(node);
+	replacement->parent = parent;
+	if (parent == NULL) {
+		ZEND_ASSERT(tree->root == node);
+		tree->root = replacement;
+	} else {
+		if (parent->left == node) {
+			parent->left = replacement;
+		} else {
+			ZEND_ASSERT(parent->right == node);
+			parent->right = replacement;
+		}
+	}
+	/* teds_sortedstrictset_node_debug_check_linked_to_parent(tree->root); */
+
+	if (parent_of_removed_node) {
+		/* Paths going through the replaced replacement node (black with both nil children)
+		 * now have one less black node than all other paths and this needs to be rebalanced. */
+		teds_sortedstrictset_tree_rebalance_after_removal(tree, parent_of_removed_node);
+		/* replacement was a black node with no children */
+	}
+}
+
+static zend_always_inline void teds_sortedstrictset_tree_remove_node(teds_sortedstrictset_tree *tree, teds_sortedstrictset_node *const node, bool free_zvals) {
 	teds_sortedstrictset_node *const prev = node->prev;
 	teds_sortedstrictset_node *const next = node->next;
 	if (prev) {
@@ -810,37 +1025,44 @@ static zend_always_inline void teds_sortedstrictset_tree_remove_node(teds_sorted
 	node->next = NULL;
 
 	if (!node->left) {
-		teds_sortedstrictset_tree_replace_node_with_child(tree, node, node->right);
-	} else if (!node->right) {
-		teds_sortedstrictset_tree_replace_node_with_child(tree, node, node->left);
-	} else {
-		teds_sortedstrictset_node *const replacement = teds_sortedstrictset_node_remove_leftmost(node->right);
-		teds_sortedstrictset_node *const parent = node->parent;
-		replacement->left = node->left;
-		if (node->left) {
-			node->left->parent = replacement;
-		}
-		replacement->right = node->right;
-		if (node->right) {
-			node->right->parent = replacement;
-		}
-		replacement->parent = parent;
-		if (parent == NULL) {
-			ZEND_ASSERT(tree->root == node);
-			tree->root = replacement;
-		} else {
-			if (parent->left == node) {
-				parent->left = replacement;
-			} else {
-				ZEND_ASSERT(parent->right == node);
-				parent->right = replacement;
+		/* If a valid red-black tree has only 1 child,
+		 * then that child is guaranteed to be red, so that the number of black nodes on paths on both sides are equal. */
+		teds_sortedstrictset_node *const right = node->right;
+		ZEND_ASSERT(right == NULL || right->parent == node);
+		teds_sortedstrictset_tree_replace_node_with_child(tree, node, right);
+
+		if (right == NULL) {
+			if (TEDS_SORTEDSTRICTSET_NODE_COLOR(node) == TEDS_NODE_BLACK) {
+				if (node->parent != NULL) {
+					/* This was a black node with no children. The tree needs to be rebalanced if it was not empty. */
+					teds_sortedstrictset_tree_rebalance_after_removal(tree, node->parent);
+				} else {
+					ZEND_ASSERT(tree->root == NULL);
+				}
 			}
+		} else {
+			/* Change right node's color to black to maintain the invariant */
+			RBTREE_INVARIANT_ASSERT(TEDS_SORTEDSTRICTSET_NODE_COLOR(node) == TEDS_NODE_BLACK);
+			RBTREE_INVARIANT_ASSERT(TEDS_SORTEDSTRICTSET_NODE_COLOR(right) == TEDS_NODE_RED);
+			TEDS_SORTEDSTRICTSET_NODE_COLOR(right) = TEDS_NODE_BLACK;
 		}
+	} else if (!node->right) {
+		ZEND_ASSERT(node->left->parent == node);
+		teds_sortedstrictset_tree_replace_node_with_child(tree, node, node->left);
+		/* Change left node's color to black to maintain the invariant */
+		RBTREE_INVARIANT_ASSERT(TEDS_SORTEDSTRICTSET_NODE_COLOR(node) == TEDS_NODE_BLACK);
+		RBTREE_INVARIANT_ASSERT(TEDS_SORTEDSTRICTSET_NODE_COLOR(node->left) == TEDS_NODE_RED);
+		TEDS_SORTEDSTRICTSET_NODE_COLOR(node->left) = TEDS_NODE_BLACK;
+	} else {
+		ZEND_ASSERT(node->left->parent == node);
+		ZEND_ASSERT(node->right->parent == node);
+
+		teds_sortedstrictset_tree_replace_node_with_descendant_and_rebalance(tree, node);
 	}
 
 	ZEND_ASSERT(tree->nNumOfElements > 0);
 	tree->nNumOfElements--;
-	if (free_zval) {
+	if (free_zvals) {
 		zval_ptr_dtor(&node->key);
 	}
 	ZVAL_UNDEF(&node->key);
@@ -936,6 +1158,36 @@ ZEND_COLD PHP_METHOD(Teds_SortedStrictSet, debugGetTreeRepresentation)
 		zend_string_init_interned("right", sizeof("right") - 1, 0),
 	};
 	teds_sortedstrictset_node_debug_representation(return_value, intern->array.root, strings);
+}
+
+/* Returns -1 for unbalanced tree */
+static ZEND_COLD int teds_sortedstrictset_node_is_balanced(const teds_sortedstrictset_node *node) {
+	if (!node) {
+		return 0;
+	}
+
+	ZEND_ASSERT(!node->left || node->left->parent == node);
+	int left_result = teds_sortedstrictset_node_is_balanced(node->left);
+	if (left_result < 0) {
+		return left_result;
+	}
+	ZEND_ASSERT(!node->right || node->right->parent == node);
+	int right_result = teds_sortedstrictset_node_is_balanced(node->right);
+	if (right_result < 0) {
+		return right_result;
+	}
+	if (left_result != right_result) {
+		return -1;
+	}
+	return left_result + ((TEDS_SORTEDSTRICTSET_NODE_COLOR(node) == TEDS_NODE_BLACK) ? 1 : 0);
+}
+
+ZEND_COLD PHP_METHOD(Teds_SortedStrictSet, debugIsBalanced)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
+	int result = teds_sortedstrictset_node_is_balanced(intern->array.root);
+	RETURN_BOOL(result >= 0);
 }
 
 static void teds_sortedstrictset_tree_clear(teds_sortedstrictset_tree *array) {

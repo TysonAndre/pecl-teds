@@ -7,13 +7,12 @@ namespace Teds;
 
 /**
  * Set using a stable sort, which can contain any value type.
- * Iteration will return values in the order they would be sorted by `Teds\stable_compare`, ascending.
- * This is a set where entries for keys of any type can be created if `Teds\stable_compare($key1, $key2) != 0`,
- * otherwise the previous entry is deleted.
+ * Iteration will return values in the order they would be sorted by `Teds\stable_compare`, from smallest to largest.
  *
- * **This is a work in progress.** Iteration will not work as expected if values are removed during iteration,
- * and this is backed by a raw array (using insertion sort) instead of a balanced binary tree,
- * meaning that insertion/removals are inefficient (linear time to move values) for large sets.
+ * This is a set where entries for keys of any type can be created if `Teds\stable_compare($key1, $key2) != 0`,
+ * otherwise the previous entry is kept.
+ *
+ * This is backed by a balanced red-black tree to ensure that insertions/removals/lookups take logarithmic time in the worst case.
  */
 final class SortedStrictSet implements \IteratorAggregate, \Countable, \JsonSerializable
 {
@@ -85,4 +84,9 @@ final class SortedStrictSet implements \IteratorAggregate, \Countable, \JsonSeri
      * @internal used for unit tests. Do not use.
      */
     public function debugGetTreeRepresentation(): array {}
+
+    /**
+     * @internal used for unit tests. Do not use.
+     */
+    public function debugIsBalanced(): bool {}
 }

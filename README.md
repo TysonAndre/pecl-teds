@@ -78,12 +78,13 @@ Much more efficient in memory usage and random access than SplDoublyLinkedList.
 
 This is a map where entries for keys of any type can be inserted if `Teds\stable_compare !== 0`.
 
-**This is a work in progress.** This is currently using an **unbalanced** binary search tree (balancing is planned), so insertions/removals are inefficient for sorted values resulting in unbalanced trees.
+This uses a balanced [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) to ensure logarithmic time is needed for insertions/removals/lookups.
+
 Iteration will stop if the current key of an iterator is removed.
 
 This uses [`Teds\stable_compare`](#stable-comparison) internally.
 
-The [`Teds\SortedStrictSet` API](./teds_sortedstrictset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
+The [`Teds\SortedStrictSet` API](./teds_sortedstrictset.stub.php) implementation is similar, but does not associate values with keys. Also, `SortedStrictSet` does not implement ArrayAccess and uses different method names.
 
 ### Teds\StrictMap and Teds\StrictSet
 

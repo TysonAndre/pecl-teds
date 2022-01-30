@@ -7,13 +7,12 @@ namespace Teds;
 
 /**
  * Map using a stable sort, which can contain any key type.
- * Iteration will return elements in the order their keys would be sorted by `Teds\stable_compare`, ascending.
- * This is a map where entries for keys of any type can be created if `Teds\stable_compare($key1, $key2) != 0`,
- * otherwise the previous entry is deleted.
+ * Iteration will return elements in the order their keys would be sorted by `Teds\stable_compare`, from smallest to largest.
  *
- * **This is a work in progress.** Iteration will not work as expected if elements are removed during iteration,
- * and this is backed by a raw array (using insertion sort) instead of a balanced binary tree,
- * meaning that insertion/removals are inefficient (linear time to move values) for large maps.
+ * This is a map where entries for keys of any type can be created if `Teds\stable_compare($key1, $key2) != 0`,
+ * otherwise the value for the previous entry is replaced.
+ *
+ * This is backed by a balanced red-black tree to ensure that insertions/removals/lookups take logarithmic time in the worst case.
  */
 final class SortedStrictMap implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {
@@ -113,4 +112,9 @@ final class SortedStrictMap implements \IteratorAggregate, \Countable, \JsonSeri
      * @internal used for unit tests. Do not use.
      */
     public function debugGetTreeRepresentation(): array {}
+
+    /**
+     * @internal used for unit tests. Do not use.
+     */
+    public function debugIsBalanced(): bool {}
 }
