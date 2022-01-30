@@ -195,9 +195,11 @@ static zend_always_inline void teds_sortedstrictmap_entries_rebalance_after_inse
 static zend_always_inline void teds_sortedstrictmap_node_release(teds_sortedstrictmap_node *node) {
 	ZEND_ASSERT(node != NULL);
 	ZEND_ASSERT(TEDS_SORTEDSTRICTMAP_NODE_REFCOUNT(node) > 0);
-	if (--TEDS_SORTEDSTRICTMAP_NODE_REFCOUNT(node) == 0) {
+	if (EXPECTED(TEDS_SORTEDSTRICTMAP_NODE_REFCOUNT(node) == 1)) {
 		ZEND_ASSERT(Z_ISUNDEF(node->key));
 		efree_size(node, sizeof(teds_sortedstrictmap_node));
+	} else {
+		--TEDS_SORTEDSTRICTMAP_NODE_REFCOUNT(node);
 	}
 }
 
@@ -306,13 +308,79 @@ static void teds_sortedstrictmap_tree_set_empty_tree(teds_sortedstrictmap_tree *
 	array->initialized = true;
 }
 
+static teds_sortedstrictmap_node *teds_sortedstrictmap_node_build_tree_from_sorted_nodes_helper(teds_sortedstrictmap_node **nodes, const uint32_t n, teds_sortedstrictmap_node *left_parent, teds_sortedstrictmap_node *right_parent, int leaf_depth)
+{
+	ZEND_ASSERT(n > 0);
+	const uint32_t mid = n/2;
+	teds_sortedstrictmap_node *const root = nodes[mid];
+	ZEND_ASSERT(leaf_depth >= 0);
+	TEDS_SORTEDSTRICTMAP_NODE_COLOR(root) = (leaf_depth == 0 ? TEDS_NODE_RED : TEDS_NODE_BLACK);
+	leaf_depth--;
+	{
+		if (mid > 0) {
+			teds_sortedstrictmap_node *const left = teds_sortedstrictmap_node_build_tree_from_sorted_nodes_helper(nodes, mid, left_parent, root, leaf_depth);
+			root->left = left;
+			left->parent = root;
+			ZEND_ASSERT(root != left);
+		} else {
+			root->left = NULL;
+			/* This is the first node after left_parent */
+			root->prev = left_parent;
+			if (left_parent) {
+				left_parent->next = root;
+			}
+		}
+	}
+
+	{
+		const uint32_t right_count = n - mid - 1;
+		if (right_count > 0) {
+			teds_sortedstrictmap_node *const right = teds_sortedstrictmap_node_build_tree_from_sorted_nodes_helper(nodes + mid + 1, right_count, root, right_parent, leaf_depth);
+			root->right = right;
+			ZEND_ASSERT(root != right);
+			right->parent = root;
+		} else {
+			root->right = NULL;
+			/* This is the last node before right_parent */
+			root->next = right_parent;
+			if (right_parent) {
+				right_parent->prev = root;
+			}
+		}
+	}
+	return root;
+}
+
+static teds_sortedstrictmap_node *teds_sortedstrictmap_node_build_tree_from_sorted_nodes(teds_sortedstrictmap_node **nodes, const uint32_t n)
+{
+	ZEND_ASSERT(n >= 1);
+	int leaf_depth = 1;
+	uint32_t i = n + 1;
+	/* for n = 1..2, leaf_depth is 1 (first layer is black) */
+	/* for n = 3..6, leaf_depth is 2 (first 2 layers are black) */
+	/* for n = 7..14, leaf_depth is 3 */
+	while (i >= 3) {
+		leaf_depth++;
+		i >>= 1;
+	}
+	return teds_sortedstrictmap_node_build_tree_from_sorted_nodes_helper(nodes, n, NULL, NULL, leaf_depth);
+}
+
 void teds_sortedstrictmap_tree_init_from_array(teds_sortedstrictmap_tree *array, zend_array *values)
 {
+	teds_sortedstrictmap_tree_set_empty_tree(array);
+	if (values->nNumOfElements == 0) {
+		return;
+	}
+	teds_sortedstrictmap_node **nodes = emalloc(values->nNumOfElements * sizeof(teds_sortedstrictmap_node*));
+	teds_sortedstrictmap_node *prev = NULL;
+	uint32_t i = 0;
+
 	zend_long nkey;
 	zend_string *skey;
 	zval *val;
 
-	teds_sortedstrictmap_tree_set_empty_tree(array);
+	/* Note: The comparison is redundant for a packed array and can be sped up more. */
 	ZEND_HASH_FOREACH_KEY_VAL(values, nkey, skey, val)  {
 		zval key;
 		if (skey) {
@@ -321,9 +389,28 @@ void teds_sortedstrictmap_tree_init_from_array(teds_sortedstrictmap_tree *array,
 			ZVAL_LONG(&key, nkey);
 		}
 		ZVAL_DEREF(val);
+		if (nodes != NULL) {
+			if (i == 0 || teds_stable_compare(&key, &prev->key) > 0) {
+				prev = teds_sortedstrictmap_node_alloc(&key, val, NULL);
+				nodes[i] = prev;
+				i++;
+				continue;
+			}
+			array->root = teds_sortedstrictmap_node_build_tree_from_sorted_nodes(nodes, i);
+			array->nNumOfElements = i;
+			efree(nodes);
+			nodes = NULL;
+		}
+
 		bool created = teds_sortedstrictmap_tree_insert(array, &key, val, true);
 		ZEND_ASSERT(created);
 	} ZEND_HASH_FOREACH_END();
+
+	if (nodes != NULL) {
+		array->root = teds_sortedstrictmap_node_build_tree_from_sorted_nodes(nodes, i);
+		array->nNumOfElements = i;
+		efree(nodes);
+	}
 }
 
 void teds_sortedstrictmap_tree_init_from_traversable(teds_sortedstrictmap_tree *array, zend_object *obj)
@@ -737,7 +824,7 @@ PHP_METHOD(Teds_SortedStrictMap, __unserialize)
 		RETURN_THROWS();
 	}
 
-	size_t raw_size = zend_hash_num_elements(raw_data);
+	const uint32_t raw_size = zend_hash_num_elements(raw_data);
 	if (UNEXPECTED(raw_size % 2 != 0)) {
 		zend_throw_exception(spl_ce_UnexpectedValueException, "Odd number of elements", 0);
 		RETURN_THROWS();
@@ -754,22 +841,54 @@ PHP_METHOD(Teds_SortedStrictMap, __unserialize)
 	zend_string *str;
 	zval key;
 	bool is_key = true;
+	teds_sortedstrictmap_node **nodes = emalloc(raw_size / 2 * sizeof(teds_sortedstrictmap_node*));
+	teds_sortedstrictmap_node *prev = NULL;
+	uint32_t sorted_nodes_count = 0;
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
 			teds_sortedstrictmap_tree_clear(array);
 			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\SortedStrictMap::__unserialize saw unexpected string key, expected sequence of keys and values", 0);
+			if (nodes != NULL) {
+				while (sorted_nodes_count > 0) {
+					teds_sortedstrictmap_node *n = nodes[--sorted_nodes_count];
+					zval_ptr_dtor(&n->key);
+					zval_ptr_dtor(&n->value);
+					ZVAL_UNDEF(&n->key);
+					teds_sortedstrictmap_node_release(n);
+				}
+				efree(nodes);
+			}
 			RETURN_THROWS();
 		}
 
 		ZVAL_DEREF(val);
 		if (!is_key) {
+			is_key = true;
+			if (nodes != NULL) {
+				if (sorted_nodes_count == 0 || teds_stable_compare(&key, &prev->key) > 0) {
+					prev = teds_sortedstrictmap_node_alloc(&key, val, NULL);
+					nodes[sorted_nodes_count] = prev;
+					sorted_nodes_count++;
+					continue;
+				}
+				array->root = teds_sortedstrictmap_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
+				array->nNumOfElements = sorted_nodes_count;
+				efree(nodes);
+				nodes = NULL;
+			}
 			teds_sortedstrictmap_tree_insert(array, &key, val, false);
 		} else {
 			ZVAL_COPY_VALUE(&key, val);
+			is_key = false;
 		}
-		is_key = !is_key;
 	} ZEND_HASH_FOREACH_END();
+
+	if (nodes != NULL) {
+		array->root = teds_sortedstrictmap_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
+		array->nNumOfElements = sorted_nodes_count;
+		efree(nodes);
+	}
 }
 
 static bool teds_sortedstrictmap_tree_insert_from_pair(teds_sortedstrictmap_tree *array, zval *raw_val)
