@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-01-29</date>
+ <date>2022-01-30</date>
  <time>16:00:00</time>
  <version>
-  <release>0.9.2dev</release>
-  <api>0.9.2dev</api>
+  <release>0.9.2</release>
+  <api>0.9.2</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,7 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Make SortedStrictSet/SortedStrictMap use a red-black tree that is rebalanced on insertions and removals.
+* Make SortedStrictSet/SortedStrictMap use a red-black tree that is rebalanced on insertions and removals, guaranteeing worst-case logarithmic time for insertions/removals/lookups.
  </notes>
  <contents>
   <dir name="/">
@@ -165,12 +165,15 @@
     <file name="SortedStrictMap/iteration_delete.phpt" role="test" />
     <file name="SortedStrictMap/iteration_insert.phpt" role="test" />
     <file name="SortedStrictMap/keys_values.phpt" role="test" />
+    <file name="SortedStrictMap/large.phpt" role="test" />
     <file name="SortedStrictMap/offsetExists.phpt" role="test" />
+    <file name="SortedStrictMap/rebalance_insert.phpt" role="test" />
     <file name="SortedStrictMap/reinit_forbidden.phpt" role="test" />
     <file name="SortedStrictMap/remove.phpt" role="test" />
     <file name="SortedStrictMap/remove_single.phpt" role="test" />
     <file name="SortedStrictMap/serialization.phpt" role="test" />
     <file name="SortedStrictMap/shift.phpt" role="test" />
+    <file name="SortedStrictMap/shift_repeated.phpt" role="test" />
     <file name="SortedStrictMap/traversable.phpt" role="test" />
     <file name="SortedStrictMap/types.phpt" role="test" />
     <file name="SortedStrictMap/unserialize.phpt" role="test" />
@@ -183,10 +186,12 @@
     <file name="SortedStrictSet/gc.phpt" role="test" />
     <file name="SortedStrictSet/iteration_delete.phpt" role="test" />
     <file name="SortedStrictSet/iteration_insert.phpt" role="test" />
+    <file name="SortedStrictSet/rebalance_add.phpt" role="test" />
     <file name="SortedStrictSet/reinit_forbidden.phpt" role="test" />
     <file name="SortedStrictSet/serialization.phpt" role="test" />
     <file name="SortedStrictSet/set_state.phpt" role="test" />
     <file name="SortedStrictSet/shift.phpt" role="test" />
+    <file name="SortedStrictSet/shift_repeated.phpt" role="test" />
     <file name="SortedStrictSet/traversable.phpt" role="test" />
     <file name="SortedStrictSet/unserialize.phpt" role="test" />
     <file name="SortedStrictSet/unserialize_sorted.phpt" role="test" />
