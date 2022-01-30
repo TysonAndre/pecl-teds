@@ -75,6 +75,7 @@ static void teds_sortedstrictset_node_debug_check_linked_to_parent(const teds_so
 static zend_always_inline void teds_sortedstrictset_tree_remove_node(teds_sortedstrictset_tree *array, teds_sortedstrictset_node *const node, bool free_zvals);
 
 static zend_always_inline teds_sortedstrictset_node *teds_sortedstrictset_node_alloc(const zval *key, teds_sortedstrictset_node *parent) {
+	ZEND_ASSERT(!Z_ISUNDEF_P(key));
 	teds_sortedstrictset_node *n = emalloc(sizeof(teds_sortedstrictset_node));
 	n->parent = parent;
 	ZVAL_COPY(&n->key, key);
@@ -194,9 +195,11 @@ static zend_always_inline void teds_sortedstrictset_entries_rebalance_after_inse
 static zend_always_inline void teds_sortedstrictset_node_release(teds_sortedstrictset_node *node) {
 	ZEND_ASSERT(node != NULL);
 	ZEND_ASSERT(TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node) > 0);
-	if (--TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node) == 0) {
+	if (EXPECTED(TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node) == 1)) {
 		ZEND_ASSERT(Z_ISUNDEF(node->key));
 		efree_size(node, sizeof(teds_sortedstrictset_node));
+	} else {
+		--TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node);
 	}
 }
 
@@ -300,15 +303,102 @@ static void teds_sortedstrictset_tree_set_empty_tree(teds_sortedstrictset_tree *
 	array->initialized = true;
 }
 
+static teds_sortedstrictset_node *teds_sortedstrictset_node_build_tree_from_sorted_nodes_helper(teds_sortedstrictset_node **nodes, const uint32_t n, teds_sortedstrictset_node *left_parent, teds_sortedstrictset_node *right_parent, int leaf_depth)
+{
+	ZEND_ASSERT(n > 0);
+	const uint32_t mid = n/2;
+	teds_sortedstrictset_node *const root = nodes[mid];
+	ZEND_ASSERT(leaf_depth >= 0);
+	TEDS_SORTEDSTRICTSET_NODE_COLOR(root) = (leaf_depth == 0 ? TEDS_NODE_RED : TEDS_NODE_BLACK);
+	leaf_depth--;
+	{
+		if (mid > 0) {
+			teds_sortedstrictset_node *const left = teds_sortedstrictset_node_build_tree_from_sorted_nodes_helper(nodes, mid, left_parent, root, leaf_depth);
+			root->left = left;
+			left->parent = root;
+			ZEND_ASSERT(root != left);
+		} else {
+			root->left = NULL;
+			/* This is the first node after left_parent */
+			root->prev = left_parent;
+			if (left_parent) {
+				left_parent->next = root;
+			}
+		}
+	}
+
+	{
+		const uint32_t right_count = n - mid - 1;
+		if (right_count > 0) {
+			teds_sortedstrictset_node *const right = teds_sortedstrictset_node_build_tree_from_sorted_nodes_helper(nodes + mid + 1, right_count, root, right_parent, leaf_depth);
+			root->right = right;
+			ZEND_ASSERT(root != right);
+			right->parent = root;
+		} else {
+			root->right = NULL;
+			/* This is the last node before right_parent */
+			root->next = right_parent;
+			if (right_parent) {
+				right_parent->prev = root;
+			}
+		}
+	}
+	return root;
+}
+
+static teds_sortedstrictset_node *teds_sortedstrictset_node_build_tree_from_sorted_nodes(teds_sortedstrictset_node **nodes, const uint32_t n)
+{
+	ZEND_ASSERT(n >= 1);
+	int leaf_depth = 1;
+	uint32_t i = n + 1;
+	/* for n = 1..2, leaf_depth is 1 (first layer is black) */
+	/* for n = 3..6, leaf_depth is 2 (first 2 layers are black) */
+	/* for n = 7..14, leaf_depth is 3 */
+	while (i >= 3) {
+		leaf_depth++;
+		i >>= 1;
+	}
+	return teds_sortedstrictset_node_build_tree_from_sorted_nodes_helper(nodes, n, NULL, NULL, leaf_depth);
+}
+
+
 void teds_sortedstrictset_tree_init_from_array(teds_sortedstrictset_tree *array, zend_array *values)
 {
 	zval *val;
 
 	teds_sortedstrictset_tree_set_empty_tree(array);
+	if (values->nNumOfElements == 0) {
+		return;
+	}
+
+	/* Optimization for constructing this from a sorted array */
+	teds_sortedstrictset_node **nodes = emalloc(values->nNumOfElements * sizeof(teds_sortedstrictset_node*));
+	teds_sortedstrictset_node *prev = NULL;
+	uint32_t i = 0;
+
 	ZEND_HASH_FOREACH_VAL(values, val)  {
 		ZVAL_DEREF(val);
+
+		if (nodes != NULL) {
+			if (i == 0 || teds_stable_compare(val, &prev->key) > 0) {
+				prev = teds_sortedstrictset_node_alloc(val, NULL);
+				nodes[i] = prev;
+				i++;
+				continue;
+			}
+			array->root = teds_sortedstrictset_node_build_tree_from_sorted_nodes(nodes, i);
+			array->nNumOfElements = i;
+			efree(nodes);
+			nodes = NULL;
+		}
 		teds_sortedstrictset_tree_insert(array, val, false);
 	} ZEND_HASH_FOREACH_END();
+
+	if (nodes != NULL) {
+		array->root = teds_sortedstrictset_node_build_tree_from_sorted_nodes(nodes, i);
+		array->nNumOfElements = i;
+		efree(nodes);
+	}
 }
 
 void teds_sortedstrictset_tree_init_from_traversable(teds_sortedstrictset_tree *array, zend_object *obj)
@@ -715,19 +805,53 @@ PHP_METHOD(Teds_SortedStrictSet, __unserialize)
 	}
 
 	teds_sortedstrictset_tree_set_empty_tree(array);
+	if (raw_data->nNumOfElements == 0) {
+		return;
+	}
 
 	zend_string *str;
 	zval *val;
+
+	teds_sortedstrictset_node **nodes = emalloc(raw_data->nNumOfElements * sizeof(teds_sortedstrictset_node*));
+	teds_sortedstrictset_node *prev = NULL;
+	uint32_t sorted_nodes_count = 0;
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
 			teds_sortedstrictset_tree_clear(array);
 			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\SortedStrictSet::__unserialize saw unexpected string key, expected sequence of values", 0);
+			if (nodes != NULL) {
+				while (sorted_nodes_count > 0) {
+					teds_sortedstrictset_node *n = nodes[--sorted_nodes_count];
+					zval_ptr_dtor(&n->key);
+					ZVAL_UNDEF(&n->key);
+					teds_sortedstrictset_node_release(n);
+				}
+				efree(nodes);
+			}
 			RETURN_THROWS();
 		}
 
+		if (nodes != NULL) {
+			if (sorted_nodes_count == 0 || teds_stable_compare(val, &prev->key) > 0) {
+				prev = teds_sortedstrictset_node_alloc(val, NULL);
+				nodes[sorted_nodes_count] = prev;
+				sorted_nodes_count++;
+				continue;
+			}
+			array->root = teds_sortedstrictset_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
+			array->nNumOfElements = sorted_nodes_count;
+			efree(nodes);
+			nodes = NULL;
+		}
 		teds_sortedstrictset_tree_insert(array, val, false);
 	} ZEND_HASH_FOREACH_END();
+
+	if (nodes != NULL) {
+		array->root = teds_sortedstrictset_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
+		array->nNumOfElements = sorted_nodes_count;
+		efree(nodes);
+	}
 }
 
 PHP_METHOD(Teds_SortedStrictSet, __set_state)
