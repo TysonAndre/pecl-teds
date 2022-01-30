@@ -14,15 +14,21 @@ PHP_MINIT_FUNCTION(teds_sortedstrictset);
 
 typedef struct _teds_sortedstrictset_node {
 	zval key;
-
-	struct _teds_sortedstrictset_node *left;
-	struct _teds_sortedstrictset_node *right;
+	union {
+		struct {
+			struct _teds_sortedstrictset_node *left;
+			struct _teds_sortedstrictset_node *right;
+		};
+		struct _teds_sortedstrictset_node *children[2];
+	};
 	struct _teds_sortedstrictset_node *parent;
 	struct _teds_sortedstrictset_node *prev;
 	struct _teds_sortedstrictset_node *next;
+	uint8_t color;
 } teds_sortedstrictset_node;
 
 #define TEDS_SORTEDSTRICTSET_NODE_REFCOUNT(node) Z_EXTRA((node)->key)
+#define TEDS_SORTEDSTRICTSET_NODE_COLOR(node) ((node)->color)
 
 typedef struct _teds_sortedstrictset_tree {
 	struct _teds_sortedstrictset_node *root;

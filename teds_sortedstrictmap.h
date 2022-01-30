@@ -16,14 +16,20 @@ typedef struct _teds_sortedstrictmap_node {
 	zval key;
 	zval value;
 
-	struct _teds_sortedstrictmap_node *left;
-	struct _teds_sortedstrictmap_node *right;
+	union {
+		struct {
+			struct _teds_sortedstrictmap_node *left;
+			struct _teds_sortedstrictmap_node *right;
+		};
+		struct _teds_sortedstrictmap_node *children[2];
+	};
 	struct _teds_sortedstrictmap_node *parent;
 	struct _teds_sortedstrictmap_node *prev;
 	struct _teds_sortedstrictmap_node *next;
 } teds_sortedstrictmap_node;
 
 #define TEDS_SORTEDSTRICTMAP_NODE_REFCOUNT(node) Z_EXTRA((node)->key)
+#define TEDS_SORTEDSTRICTMAP_NODE_COLOR(node) Z_EXTRA((node)->value)
 
 typedef struct _teds_sortedstrictmap_tree {
 	struct _teds_sortedstrictmap_node *root;
