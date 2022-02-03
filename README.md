@@ -26,16 +26,18 @@ On Windows, see https://wiki.php.net/internals/windows/stepbystepbuild_sdk_2 ins
 
 [`Teds\ImmutableKeyValueSequence` API](./teds_immutablekeyvaluesequence.stub.php)
 
-Currently, PHP does not provide a built-in way to store the state of an arbitrary iterable for reuse later (when the iterable has arbitrary keys, or when keys might be repeated). It would be useful to do so for many use cases, such as:
+Currently, PHP does not provide a built-in way to store the state of an arbitrary iterable for reuse later (when the iterable has arbitrary keys, or when keys might be repeated). There are use cases for this, such as:
 
 1. Creating a rewindable copy of a non-rewindable `Traversable` (e.g. a `Generator`) before passing that copy to a function that consumes an `iterable`/`Traversable`. (new ImmutableKeyValueSequence(my_generator()))
 2. Generating an `IteratorAggregate` from a class still implementing `Iterator` (e.g. `SplObjectStorage`) so that code can independently iterate over the key-value sequences. (e.g. `foreach ($immutableKeyValueSequence as $k1 => $v1) { foreach ($immutableKeyValueSequence as $k2 => $v2) { /* process pairs */ } }`)
 3. Providing helpers such as `iterable_flip(iterable $iterable)`, `iterable_take(iterable $iterable, int $limit)`, `iterable_chunk(iterable $iterable, int $chunk_size)` that act on iterables with arbitrary key/value sequences and have return values including iterables with arbitrary key/value sequences
 4. Providing constant time access to both keys and values of arbitrary key-value sequences at any offset (for binary searching on keys and/or values, etc.)
 
-Having this implemented as a native class would also allow it to be much more efficient than a userland solution (in terms of time to create, time to iterate over the result, and total memory usage).
+Having this implemented as a native class allows it to be much more efficient than a userland solution (in terms of time to create, time to iterate over the result, and total memory usage, depending on the representation).
 
 Objects within this data structure or references in arrays in this data structure can still be mutated.
+
+Traversables are eagerly iterated over in the constructor.
 
 ### Teds\ImmutableSequence
 
@@ -292,7 +294,7 @@ php > echo json_encode(Teds\binary_search($values, 1, useKey: true));
 
 This contains functionality and data structures that may be proposed for inclusion into PHP itself (under a different namespace) at a future date, reimplemented using [SPL's source code](https://github.com/php/php-src/tree/master/ext/spl) as a starting point.
 
-Providing this as a PECL first would make this functionality easier to validate for correctness, and make it more practical to change APIs before proposing including them in PHP if needed.
+Providing this as a PECL first makes this functionality easier to validate for correctness, and make it more practical to change APIs before proposing including them in PHP if needed.
 
 ## License
 
