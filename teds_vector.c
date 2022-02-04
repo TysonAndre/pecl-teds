@@ -129,13 +129,10 @@ static inline void teds_vector_shrink_capacity(teds_vector_entries *array, size_
 	ZEND_ASSERT(capacity > 0);
 	ZEND_ASSERT(capacity < array->capacity);
 	ZEND_ASSERT(old_entries == array->entries);
-	zval *new_entries = safe_emalloc(capacity, sizeof(zval), 0);
-	ZEND_ASSERT(new_entries != NULL);
-	memcpy(new_entries, old_entries, size * sizeof(zval));
 
-	array->entries = new_entries;
 	array->capacity = capacity;
-	efree(old_entries);
+	array->entries = erealloc2(old_entries, capacity * sizeof(zval), size * sizeof(zval));
+	ZEND_ASSERT(array->entries != NULL);
 }
 
 /* Initializes the range [from, to) to null. Does not dtor existing entries. */
@@ -1139,10 +1136,9 @@ PHP_METHOD(Teds_Vector, pop)
 	if (old_size * 4 < old_capacity) {
 		/* Shrink the storage if only a quarter of the capacity is used  */
 		const size_t size = old_size - 1;
-		zval *old_entries = intern->array.entries;
 		const size_t capacity = size > 2 ? size * 2 : 4;
 		if (capacity < old_capacity) {
-			teds_vector_shrink_capacity(&intern->array, size, capacity, old_entries);
+			teds_vector_shrink_capacity(&intern->array, size, capacity, intern->array.entries);
 		}
 	}
 }
