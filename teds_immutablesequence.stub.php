@@ -13,6 +13,9 @@ final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSe
     /** Returns true if there are 0 elements in the ImmutableSequence. */
     public function isEmpty(): bool {}
 
+    /**
+     * @implementation-alias Teds\ImmutableSequence::toArray
+     */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
     public static function __set_state(array $array): ImmutableSequence {}
@@ -31,5 +34,8 @@ final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSe
     public function indexOf(mixed $value): ?int {}
     public function contains(mixed $value): bool {}
 
+    /**
+     * @implementation-alias Teds\ImmutableSequence::toArray
+     */
     public function jsonSerialize(): array {}
 }

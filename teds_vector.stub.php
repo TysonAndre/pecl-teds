@@ -58,6 +58,9 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
      */
     public function setSize(int $size, mixed $value = null): void {}
 
+    /**
+     * @implementation-alias Teds\Vector::toArray
+     */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
     public static function __set_state(array $array): Vector {}
@@ -119,5 +122,8 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
      */
     public function filter(?callable $callback = null): Vector {}
 
+    /**
+     * @implementation-alias Teds\Vector::toArray
+     */
     public function jsonSerialize(): array {}
 }

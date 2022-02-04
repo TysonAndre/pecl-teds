@@ -568,34 +568,6 @@ PHP_METHOD(Teds_ImmutableSequence, __set_state)
 	RETURN_OBJ(object);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, __serialize)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
-
-	if (teds_cached_entries_empty(&intern->array)) {
-		RETURN_EMPTY_ARRAY();
-	}
-	zval *entries = intern->array.entries;
-	size_t len = intern->array.size;
-	zend_array *flat_entries_array = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(flat_entries_array);
-
-	/* Go through entries and add keys and values to the return array */
-	ZEND_HASH_FILL_PACKED(flat_entries_array) {
-		for (size_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i];
-			Z_TRY_ADDREF_P(tmp);
-			ZEND_HASH_FILL_ADD(tmp);
-		}
-	} ZEND_HASH_FILL_END();
-	/* Unlike FixedArray, there's no setSize, so there's no reason to delete indexes */
-
-	RETURN_ARR(flat_entries_array);
-}
-
 PHP_METHOD(Teds_ImmutableSequence, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -730,14 +702,6 @@ PHP_METHOD(Teds_ImmutableSequence, offsetUnset)
 static void teds_immutablesequence_return_list(zval *return_value, teds_immutablesequence_object *intern)
 {
 	teds_convert_zval_list_to_php_array_list(return_value, intern->array.entries, intern->array.size);
-}
-
-PHP_METHOD(Teds_ImmutableSequence, jsonSerialize)
-{
-	/* json_encoder.c will always encode objects as {"0":..., "1":...}, and detects recursion if an object returns its internal property array, so we have to return a new array */
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
-	teds_immutablesequence_return_list(return_value, intern);
 }
 
 PHP_MINIT_FUNCTION(teds_immutablesequence)

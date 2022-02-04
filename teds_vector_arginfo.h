@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 0e875ee942b5f60f98bdac38f1af121cd21c3840 */
+ * Stub hash: 3bf1177dfda6d88a36b1e1d8a43a5a2fd6149b98 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -104,12 +104,11 @@ ZEND_METHOD(Teds_Vector, shrinkToFit);
 ZEND_METHOD(Teds_Vector, reserve);
 ZEND_METHOD(Teds_Vector, clear);
 ZEND_METHOD(Teds_Vector, setSize);
-ZEND_METHOD(Teds_Vector, __serialize);
+ZEND_METHOD(Teds_Vector, toArray);
 ZEND_METHOD(Teds_Vector, __unserialize);
 ZEND_METHOD(Teds_Vector, __set_state);
 ZEND_METHOD(Teds_Vector, push);
 ZEND_METHOD(Teds_Vector, pop);
-ZEND_METHOD(Teds_Vector, toArray);
 ZEND_METHOD(Teds_Vector, get);
 ZEND_METHOD(Teds_Vector, set);
 ZEND_METHOD(Teds_Vector, offsetGet);
@@ -120,7 +119,6 @@ ZEND_METHOD(Teds_Vector, indexOf);
 ZEND_METHOD(Teds_Vector, contains);
 ZEND_METHOD(Teds_Vector, map);
 ZEND_METHOD(Teds_Vector, filter);
-ZEND_METHOD(Teds_Vector, jsonSerialize);
 
 
 static const zend_function_entry class_Teds_Vector_methods[] = {
@@ -133,7 +131,7 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, reserve, arginfo_class_Teds_Vector_reserve, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, clear, arginfo_class_Teds_Vector_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, setSize, arginfo_class_Teds_Vector_setSize, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Vector, __serialize, arginfo_class_Teds_Vector___serialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, __serialize, toArray, arginfo_class_Teds_Vector___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, __unserialize, arginfo_class_Teds_Vector___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, __set_state, arginfo_class_Teds_Vector___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_Vector, push, arginfo_class_Teds_Vector_push, ZEND_ACC_PUBLIC)
@@ -149,7 +147,7 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, contains, arginfo_class_Teds_Vector_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, map, arginfo_class_Teds_Vector_map, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, filter, arginfo_class_Teds_Vector_filter, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Vector, jsonSerialize, arginfo_class_Teds_Vector_jsonSerialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, jsonSerialize, toArray, arginfo_class_Teds_Vector_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

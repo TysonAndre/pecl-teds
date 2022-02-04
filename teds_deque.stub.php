@@ -42,6 +42,9 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
     /** Removes all elements from the Deque. */
     public function clear(): void {}
 
+    /**
+     * @implementation-alias Teds\Deque::toArray
+     */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
     /** Construct the Deque from the values of the array, ignoring keys */
@@ -111,6 +114,9 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
      */
     public function contains(mixed $value): bool {}
 
+    /**
+     * @implementation-alias Teds\Deque::toArray
+     */
     public function jsonSerialize(): array {}
 
     /** @internal Returns the capacity of this Deque. This is intended for unit tests of Deque itself */

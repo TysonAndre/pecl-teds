@@ -700,6 +700,7 @@ static zend_array* teds_deque_to_new_array(const teds_deque_entries *array) {
 		do {
 			Z_TRY_ADDREF_P(p);
 			ZEND_HASH_FILL_ADD(p);
+			p++;
 			if (p == end) {
 				p = circular_buffer;
 			}
@@ -707,20 +708,6 @@ static zend_array* teds_deque_to_new_array(const teds_deque_entries *array) {
 		} while (len > 0);
 	} ZEND_HASH_FILL_END();
 	return values;
-}
-
-PHP_METHOD(Teds_Deque, __serialize)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-
-	if (teds_deque_entries_empty_size(&intern->array)) {
-		RETURN_EMPTY_ARRAY();
-	}
-	/* Unlike FixedArray, there's no setSize, so there's no reason to delete indexes */
-
-	RETURN_ARR(teds_deque_to_new_array(&intern->array));
 }
 
 PHP_METHOD(Teds_Deque, toArray)
@@ -1185,14 +1172,6 @@ static void teds_deque_return_list(zval *return_value, const teds_deque *intern)
 		}
 	} ZEND_HASH_FILL_END();
 	RETURN_ARR(values);
-}
-
-PHP_METHOD(Teds_Deque, jsonSerialize)
-{
-	/* json_encoder.c will always encode objects as {"0":..., "1":...}, and detects recursion if an object returns its internal property array, so we have to return a new array */
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	teds_deque_return_list(return_value, intern);
 }
 
 PHP_MINIT_FUNCTION(teds_deque)

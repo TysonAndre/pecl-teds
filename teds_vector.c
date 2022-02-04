@@ -737,33 +737,6 @@ PHP_METHOD(Teds_Vector, __set_state)
 	RETURN_OBJ(object);
 }
 
-PHP_METHOD(Teds_Vector, __serialize)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-
-	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
-
-	if (teds_vector_entries_empty_size(&intern->array)) {
-		RETURN_EMPTY_ARRAY();
-	}
-	zval *entries = intern->array.entries;
-	size_t len = intern->array.size;
-	zend_array *flat_entries_array = zend_new_array(len * 2);
-	/* Initialize return array */
-	zend_hash_real_init_packed(flat_entries_array);
-
-	/* Go through entries and add keys and values to the return array */
-	ZEND_HASH_FILL_PACKED(flat_entries_array) {
-		for (size_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i];
-			Z_TRY_ADDREF_P(tmp);
-			ZEND_HASH_FILL_ADD(tmp);
-		}
-	} ZEND_HASH_FILL_END();
-
-	RETURN_ARR(flat_entries_array);
-}
-
 PHP_METHOD(Teds_Vector, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();

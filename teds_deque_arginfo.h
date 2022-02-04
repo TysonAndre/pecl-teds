@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: f2cb227a69d97690c4a32b616cb9543ab5e9dab9 */
+ * Stub hash: fbf18feb5867f2852f7fd8cc6a540fbe51f992af */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -89,7 +89,7 @@ ZEND_METHOD(Teds_Deque, getIterator);
 ZEND_METHOD(Teds_Deque, count);
 ZEND_METHOD(Teds_Deque, isEmpty);
 ZEND_METHOD(Teds_Deque, clear);
-ZEND_METHOD(Teds_Deque, __serialize);
+ZEND_METHOD(Teds_Deque, toArray);
 ZEND_METHOD(Teds_Deque, __unserialize);
 ZEND_METHOD(Teds_Deque, __set_state);
 ZEND_METHOD(Teds_Deque, push);
@@ -98,7 +98,6 @@ ZEND_METHOD(Teds_Deque, pop);
 ZEND_METHOD(Teds_Deque, shift);
 ZEND_METHOD(Teds_Deque, bottom);
 ZEND_METHOD(Teds_Deque, top);
-ZEND_METHOD(Teds_Deque, toArray);
 ZEND_METHOD(Teds_Deque, get);
 ZEND_METHOD(Teds_Deque, set);
 ZEND_METHOD(Teds_Deque, offsetGet);
@@ -107,7 +106,6 @@ ZEND_METHOD(Teds_Deque, offsetSet);
 ZEND_METHOD(Teds_Deque, offsetUnset);
 ZEND_METHOD(Teds_Deque, indexOf);
 ZEND_METHOD(Teds_Deque, contains);
-ZEND_METHOD(Teds_Deque, jsonSerialize);
 ZEND_METHOD(Teds_Deque, capacity);
 
 
@@ -117,7 +115,7 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_ME(Teds_Deque, count, arginfo_class_Teds_Deque_count, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, isEmpty, arginfo_class_Teds_Deque_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, clear, arginfo_class_Teds_Deque_clear, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Deque, __serialize, arginfo_class_Teds_Deque___serialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Deque, __serialize, toArray, arginfo_class_Teds_Deque___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __unserialize, arginfo_class_Teds_Deque___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __set_state, arginfo_class_Teds_Deque___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_Deque, push, arginfo_class_Teds_Deque_push, ZEND_ACC_PUBLIC)
@@ -135,7 +133,7 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_ME(Teds_Deque, offsetUnset, arginfo_class_Teds_Deque_offsetUnset, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, indexOf, arginfo_class_Teds_Deque_indexOf, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, contains, arginfo_class_Teds_Deque_contains, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Deque, jsonSerialize, arginfo_class_Teds_Deque_jsonSerialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Deque, jsonSerialize, toArray, arginfo_class_Teds_Deque_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, capacity, arginfo_class_Teds_Deque_capacity, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };

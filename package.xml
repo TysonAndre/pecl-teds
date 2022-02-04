@@ -23,6 +23,7 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Speed up unserializing SortedStrictSet/SortedStrictMap when the input data is already sorted. (If the data is not sorted, then build the binary tree the slow but correct way)
+* Deduplicate code.
  </notes>
  <contents>
   <dir name="/">
