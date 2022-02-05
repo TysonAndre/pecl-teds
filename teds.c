@@ -31,6 +31,7 @@
 #include "ext/standard/info.h"
 
 #include "teds_deque.h"
+#include "teds_lowmemoryvector.h"
 #include "teds_immutablekeyvaluesequence.h"
 #include "teds_immutablesequence.h"
 #include "teds_keyvaluevector.h"
@@ -1072,6 +1073,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_keyvaluevector)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_lowmemoryvector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_sortedstrictmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_sortedstrictset)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_stableheap)(INIT_FUNC_ARGS_PASSTHRU);
