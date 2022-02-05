@@ -96,7 +96,7 @@ typedef struct _teds_lowmemoryvector {
 /* Used by InternalIterator returned by LowMemoryVector->getIterator() */
 typedef struct _teds_lowmemoryvector_it {
 	zend_object_iterator intern;
-	zend_long            current;
+	size_t               current;
 	/* Temporary memory location to store the most recent get_current_value() result */
 	zval                 tmp;
 } teds_lowmemoryvector_it;
@@ -107,9 +107,28 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 static zend_always_inline void teds_lowmemoryvector_entries_copy_offset(const teds_lowmemoryvector_entries *array, const zend_ulong offset, zval *dst, bool increase_refcount, bool pop);
 static zend_always_inline zval *teds_lowmemoryvector_entries_read_offset(const teds_lowmemoryvector_entries *intern, const zend_ulong offset, zval *tmp);
 static void teds_lowmemoryvector_entries_init_from_array_values(teds_lowmemoryvector_entries *array, zend_array *raw_data);
+static zend_array *teds_lowmemoryvector_entries_to_refcounted_array(const teds_lowmemoryvector_entries *array);
+
+#ifdef LMV_TYPE_INT64
+#define LMV_GENERATE_INT_CASES() \
+	LMV_INT_CODEGEN(LMV_TYPE_INT8, int8_t,   entries_int8) \
+	LMV_INT_CODEGEN(LMV_TYPE_INT32, int32_t, entries_int32) \
+	LMV_INT_CODEGEN(LMV_TYPE_INT64, int64_t, entries_int64)
+#else
+#define LMV_GENERATE_INT_CASES() \
+	LMV_INT_CODEGEN(LMV_TYPE_INT8, int8_t,   entries_int8) \
+	LMV_INT_CODEGEN(LMV_TYPE_INT32, int32_t, entries_int32)
+#endif
+
+
 static zend_always_inline void teds_lowmemoryvector_entries_set_type(zval *dst, const uint8_t type) {
 	ZEND_ASSERT(type >= IS_NULL && type <= IS_TRUE);
 	Z_TYPE_INFO_P(dst) = type;
+}
+
+static zend_always_inline uint8_t teds_lowmemoryvector_entries_validate_type(const uint8_t type) {
+	ZEND_ASSERT(type >= IS_NULL && type <= IS_TRUE);
+	return type;
 }
 
 static zend_always_inline uint8_t teds_lowmemoryvector_entries_get_type(const zval *dst) {
@@ -127,7 +146,7 @@ static ZEND_COLD void teds_error_noreturn_max_lowmemoryvector_capacity()
 	zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\LowMemoryVector capacity");
 }
 
-static teds_lowmemoryvector *teds_lowmemoryvector_from_object(zend_object *obj)
+static zend_always_inline teds_lowmemoryvector *teds_lowmemoryvector_from_object(zend_object *obj)
 {
 	return (teds_lowmemoryvector*)((char*)(obj) - XtOffsetOf(teds_lowmemoryvector, std));
 }
@@ -135,22 +154,7 @@ static teds_lowmemoryvector *teds_lowmemoryvector_from_object(zend_object *obj)
 #define Z_LOWMEMORYVECTOR_P(zv)  (teds_lowmemoryvector_from_object(Z_OBJ_P((zv))))
 #define Z_LOWMEMORYVECTOR_ENTRIES_P(zv)  (&(Z_LOWMEMORYVECTOR_P((zv))->array))
 
-/* Helps enforce the invariants in debug mode:
- *   - if size == 0, then entries == NULL
- *   - if size > 0, then entries != NULL
- *   - size is not less than 0
- */
-static bool teds_lowmemoryvector_entries_empty_size(const teds_lowmemoryvector_entries *array)
-{
-	if (array->size > 0) {
-		ZEND_ASSERT(array->entries_zval != empty_entry_list);
-		ZEND_ASSERT(array->capacity >= array->size);
-		return false;
-	}
-	return true;
-}
-
-static bool teds_lowmemoryvector_entries_empty_capacity(const teds_lowmemoryvector_entries *array)
+static zend_always_inline bool teds_lowmemoryvector_entries_empty_capacity(const teds_lowmemoryvector_entries *array)
 {
 	if (array->capacity > 0) {
 		ZEND_ASSERT(array->entries_zval != empty_entry_list);
@@ -160,7 +164,7 @@ static bool teds_lowmemoryvector_entries_empty_capacity(const teds_lowmemoryvect
 	return true;
 }
 
-static bool teds_lowmemoryvector_entries_uninitialized(const teds_lowmemoryvector_entries *array)
+static zend_always_inline bool teds_lowmemoryvector_entries_uninitialized(const teds_lowmemoryvector_entries *array)
 {
 	if (array->entries_raw == NULL) {
 		ZEND_ASSERT(array->size == 0);
@@ -227,10 +231,7 @@ static void teds_lowmemoryvector_entries_init_from_traversable(teds_lowmemoryvec
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	size_t size = 0, capacity = 0;
-	array->size = 0;
-	array->entries_raw = NULL;
-	zval *entries = NULL;
+	teds_lowmemoryvector_entries_set_empty_list(array);
 	zval tmp_obj;
 	ZVAL_OBJ(&tmp_obj, obj);
 	iter = ce->get_iterator(ce, &tmp_obj, 0);
@@ -335,7 +336,8 @@ static HashTable* teds_lowmemoryvector_get_gc(zend_object *obj, zval **table, in
 	size_t len = array->size;
 	if (len == 0 || array->type_tag <= LMV_TYPE_LAST_GC_NO_SIDE_EFFECTS) {
 		*n = 0;
-		return NULL;
+		/* Deliberately return null if obj->properties has not yet been instantiated */
+		return obj->properties;
 	}
 	ZEND_ASSERT(array->type_tag == LMV_TYPE_ZVAL);
 
@@ -344,32 +346,75 @@ static HashTable* teds_lowmemoryvector_get_gc(zend_object *obj, zval **table, in
 
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.
-	return NULL;
+	return obj->properties;
 }
 
 static HashTable* teds_lowmemoryvector_get_properties(zend_object *obj)
 {
 	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(obj)->array;
+	if (!array->size && !obj->properties) {
+		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
+		return (HashTable*)&zend_empty_array;
+	}
 	HashTable *ht = zend_std_get_properties(obj);
 
-	/* Re-initialize properties array */
-
-	// Note that destructors may mutate the original array,
-	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
-	for (size_t i = 0; i < array->size; i++) {
+	/*
+	 * Re-initialize properties array.
+	 *
+	 * Note that destructors may mutate the original array,
+	 * so we fetch the size and circular buffer (and type tag) each time to avoid invalid memory accesses.
+	 *
+	 * json_encode needs distinct results of `*get_properties` (Z_OBJPROP) to detect infinite recursion.
+	 * var_export needs `*get_properties_for` to return the same array every time to detect infinite recursion.
+	 * var_dump is doing yet another different thing, and calling `Z_PROTECT_RECURSION(zval *struct)` to set the GC_FLAGS
+	 * on the object?
+	 *
+	 * Garbage collection needs to get this property array to detect reference cycles because this also has references.
+	 * But the point is to reduce memory usage, anyway.
+	 *
+	 * There's the option of allocating a **different** table for var_export to use, exclusively,
+	 * and letting var_dump/var_export use their hash table detection?
+	 */
+	for (uint32_t i = 0; i < array->size; i++) {
 		zval tmp;
 		zval *elem = teds_lowmemoryvector_entries_read_offset(array, i, &tmp);
 		Z_TRY_ADDREF_P(elem);
 		zend_hash_index_update(ht, i, elem);
 	}
-	const size_t properties_size = zend_hash_num_elements(ht);
+	uint32_t properties_size = zend_hash_num_elements(ht);
 	if (UNEXPECTED(properties_size > array->size)) {
-		for (size_t i = array->size; i < properties_size; i++) {
+		for (uint32_t i = array->size; i < properties_size; i++) {
 			zend_hash_index_del(ht, i);
 		}
 	}
 
 	return ht;
+}
+
+static HashTable* teds_lowmemoryvector_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
+{
+	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(obj)->array;
+	if (!array->size && !obj->properties) {
+		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
+		return (HashTable*)&zend_empty_array;
+	}
+	switch (purpose) {
+		case ZEND_PROP_PURPOSE_DEBUG:
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+		case ZEND_PROP_PURPOSE_JSON:
+			return teds_lowmemoryvector_entries_to_refcounted_array(array);
+		case ZEND_PROP_PURPOSE_VAR_EXPORT: {
+			/* var_export uses get_properties_for for infinite recursion detection rather than get_properties(Z_OBJPROP).
+			 * or checking for recursion on the object itself (php_var_dump) */
+			HashTable *ht = teds_lowmemoryvector_get_properties(obj);
+			GC_TRY_ADDREF(ht);
+			return ht;
+	    }
+		default:
+			ZEND_UNREACHABLE();
+			return NULL;
+	}
 }
 
 static void teds_lowmemoryvector_free_storage(zend_object *object)
@@ -412,7 +457,7 @@ static zend_object *teds_lowmemoryvector_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_lowmemoryvector_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }
@@ -475,8 +520,6 @@ PHP_METHOD(Teds_LowMemoryVector, __construct)
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
 	}
-	uint32_t num_elements;
-	HashTable *values;
 	if (!iterable) {
 		teds_lowmemoryvector_entries_set_empty_list(array);
 		return;
@@ -515,7 +558,7 @@ static int teds_lowmemoryvector_it_valid(zend_object_iterator *iter)
 	teds_lowmemoryvector_it     *iterator = (teds_lowmemoryvector_it*)iter;
 	teds_lowmemoryvector *object   = Z_LOWMEMORYVECTOR_P(&iter->data);
 
-	if (iterator->current >= 0 && ((zend_ulong) iterator->current) < object->array.size) {
+	if (iterator->current < object->array.size) {
 		return SUCCESS;
 	}
 
@@ -589,8 +632,6 @@ zend_object_iterator *teds_lowmemoryvector_get_iterator(zend_class_entry *ce, zv
 PHP_METHOD(Teds_LowMemoryVector, __unserialize)
 {
 	HashTable *raw_data;
-	zval *val;
-
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "h", &raw_data) == FAILURE) {
 		RETURN_THROWS();
 	}
@@ -602,10 +643,121 @@ PHP_METHOD(Teds_LowMemoryVector, __unserialize)
 	zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector __unserialize not yet implemented", 0);
 }
 
+static zend_always_inline HashTable *teds_create_serialize_pair(const uint8_t type, zval *data) {
+	zval type_zv;
+	ZVAL_LONG(&type_zv, type);
+	return zend_new_pair(&type_zv, data);
+}
+
+static zend_always_inline zend_string *teds_create_string_from_entries_int8(const char *raw, const size_t len) {
+	return zend_string_init(raw, len, 0);
+}
+
+/*
+static zend_always_inline zend_string *teds_create_string_from_entries_int16(const char *raw, const size_t len) {
+#if WORDS_BIGENDIAN
+	zend_string *const result = zend_string_alloc(len * sizeof(int16_t), 0);
+	uint16_t *dst = (uint16_t *)ZSTR_VAL(result);
+	const uint16_t *src = (const uint16_t *)raw;
+	const uint16_t *const end = src + len;
+	for (;src < end; src++, dst++) {
+		const uint16_t v = *src;
+		*dst = (v >> 8) | (uint16_t)(v << 8);
+	}
+	*(char *)dst = '\0';
+	return result;
+#else
+	return zend_string_init((const char*) array->entries_int8, len * sizeof(int16_t), 0);
+#endif
+}
+*/
+
+static zend_always_inline zend_string *teds_create_string_from_entries_int32(const char *raw, const size_t len) {
+#if WORDS_BIGENDIAN
+	zend_string *const result = zend_string_alloc(len * sizeof(int32_t), 0);
+	uint32_t *dst = (uint32_t *)ZSTR_VAL(result);
+	const uint32_t *src = (const uint32_t *)raw;
+	const uint32_t *const end = src + len;
+	for (;src < end; src++, dst++) {
+		/* This compiles down to a bswap assembly instruction in optimized builds */
+		*dst = bswap_32(*src);
+	}
+	*(char *)dst = '\0';
+	return result;
+#else
+	return zend_string_init(raw, len * sizeof(int32_t), 0);
+#endif
+}
+
+#ifdef LMV_TYPE_INT64
+static zend_always_inline zend_string *teds_create_string_from_entries_int64(const char *raw, const size_t len) {
+#if WORDS_BIGENDIAN
+	zend_string *const result = zend_string_alloc(len * sizeof(int64_t), 0);
+	uint64_t *dst = (uint64_t *)ZSTR_VAL(result);
+	const uint64_t *src = (const uint64_t *)raw;
+	const uint64_t *const end = src + len;
+	for (;src < end; src++, dst++) {
+		/* This compiles down to a bswap assembly instruction in optimized builds */
+		*dst = bswap_64(*src);
+	}
+	*(char *)dst = '\0';
+	return result;
+#else
+	return zend_string_init(raw, len * sizeof(int64_t), 0);
+#endif
+}
+#endif
+
 PHP_METHOD(Teds_LowMemoryVector, __serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector __serialize not yet implemented", 0);
+
+	const teds_lowmemoryvector_entries *const array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t len = array->size;
+	if (len == 0) {
+		RETURN_EMPTY_ARRAY();
+	}
+	php_error_docref(NULL, E_WARNING, "LowMemoryVector::__serialize is a work in progress and the serialization format will change. Unserialization is not implemented");
+	zval tmp;
+	switch (array->type_tag) {
+		case LMV_TYPE_BOOL_OR_NULL: {
+			const uint8_t *src = array->entries_uint8;
+#if ZEND_DEBUG
+			for (size_t i = 0; i < len; i++) {
+				teds_lowmemoryvector_entries_validate_type(src[i]);
+			}
+#endif
+			ZVAL_STR(&tmp, zend_string_init((const char*) src, len, 0));
+			RETURN_ARR(teds_create_serialize_pair(LMV_TYPE_BOOL_OR_NULL, &tmp));
+		}
+
+#define LMV_INT_CODEGEN(LMV_TYPE_X, intx_t, entries_intx) \
+		case LMV_TYPE_X: \
+			ZVAL_STR(&tmp, teds_create_string_from_##entries_intx((const char *)array->entries_int8, len)); \
+			RETURN_ARR(teds_create_serialize_pair(LMV_TYPE_X, &tmp));
+LMV_GENERATE_INT_CASES()
+#undef LMV_INT_CODEGEN
+
+		case LMV_TYPE_ZVAL: {
+			zend_array *values = zend_new_array(len);
+			/* Initialize return array */
+			zend_hash_real_init_packed(values);
+			ZEND_HASH_FILL_PACKED(values) {
+				zval *entries = array->entries_zval;
+				for (size_t i = 0; i < len; i++) {
+					zval *tmp = &entries[i];
+					Z_TRY_ADDREF_P(tmp);
+					ZEND_HASH_FILL_ADD(tmp);
+				}
+			} ZEND_HASH_FILL_END();
+			zval tmp;
+			ZVAL_ARR(&tmp, values);
+			RETURN_ARR(teds_create_serialize_pair(LMV_TYPE_ZVAL, &tmp));
+		}
+		default:
+			ZEND_UNREACHABLE();
+
+	}
 }
 
 static void teds_lowmemoryvector_entries_init_from_array_values(teds_lowmemoryvector_entries *array, zend_array *raw_data)
@@ -636,26 +788,8 @@ PHP_METHOD(Teds_LowMemoryVector, __set_state)
 	RETURN_OBJ(object);
 }
 
-#ifdef LMV_TYPE_INT64
-#define LMV_GENERATE_INT_CASES() \
-	LMV_INT_CODEGEN(LMV_TYPE_INT8, int8_t,   entries_int8) \
-	LMV_INT_CODEGEN(LMV_TYPE_INT32, int32_t, entries_int32) \
-	LMV_INT_CODEGEN(LMV_TYPE_INT64, int64_t, entries_int64)
-#else
-#define LMV_GENERATE_INT_CASES() \
-	LMV_INT_CODEGEN(LMV_TYPE_INT8, int8_t,   entries_int8) \
-	LMV_INT_CODEGEN(LMV_TYPE_INT32, int32_t, entries_int32)
-#endif
-
-
-PHP_METHOD(Teds_LowMemoryVector, toArray)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+static zend_array *teds_lowmemoryvector_entries_to_refcounted_array(const teds_lowmemoryvector_entries *array) {
 	size_t len = array->size;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
-	}
 	zend_array *values = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);
@@ -664,7 +798,7 @@ PHP_METHOD(Teds_LowMemoryVector, toArray)
 	ZEND_HASH_FILL_PACKED(values) {
 		switch (array->type_tag) {
 			case LMV_TYPE_BOOL_OR_NULL: {
-				const int8_t *const entries = array->entries_uint8;
+				const uint8_t *const entries = array->entries_uint8;
 				for (size_t i = 0; i < len; i++) {
 					zval tmp;
 					teds_lowmemoryvector_entries_set_type(&tmp, entries[i]);
@@ -698,7 +832,18 @@ LMV_GENERATE_INT_CASES()
 				ZEND_UNREACHABLE();
 		}
 	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
+	return values;
+}
+
+PHP_METHOD(Teds_LowMemoryVector, toArray)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	const teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+	size_t len = array->size;
+	if (!len) {
+		RETURN_EMPTY_ARRAY();
+	}
+	RETURN_ARR(teds_lowmemoryvector_entries_to_refcounted_array(array));
 }
 
 static zend_always_inline void teds_lowmemoryvector_get_value_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
@@ -1351,6 +1496,7 @@ PHP_MINIT_FUNCTION(teds_lowmemoryvector)
 	teds_handler_LowMemoryVector.clone_obj       = teds_lowmemoryvector_clone;
 	teds_handler_LowMemoryVector.count_elements  = teds_lowmemoryvector_count_elements;
 	teds_handler_LowMemoryVector.get_properties  = teds_lowmemoryvector_get_properties;
+	teds_handler_LowMemoryVector.get_properties_for = teds_lowmemoryvector_get_properties_for;
 	teds_handler_LowMemoryVector.get_gc          = teds_lowmemoryvector_get_gc;
 	teds_handler_LowMemoryVector.free_obj        = teds_lowmemoryvector_free_storage;
 

@@ -12,11 +12,11 @@ function bench_array(int $n, int $iterations) {
         $startMemory = memory_get_usage();
         $values = [];
         for ($i = 0; $i < $n; $i++) {
-            $values[] = $i;
+            $values[] = $i % 3 > 0;
         }
         $startReadTime = hrtime(true);
         for ($i = 0; $i < $n; $i++) {
-            $total += $values[$i];
+            $total += $values[$i] ? 1 : 0;
         }
         $endReadTime = hrtime(true);
         $totalReadTime += $endReadTime - $startReadTime;
@@ -39,12 +39,12 @@ function bench_vector(int $n, int $iterations) {
         $startMemory = memory_get_usage();
         $values = new Vector();
         for ($i = 0; $i < $n; $i++) {
-            $values[] = $i;
+            $values[] = $i % 3 > 0;
         }
 
         $startReadTime = hrtime(true);
         for ($i = 0; $i < $n; $i++) {
-            $total += $values[$i];
+            $total += $values[$i] ? 1 : 0;
         }
         $endReadTime = hrtime(true);
         $totalReadTime += $endReadTime - $startReadTime;
@@ -66,12 +66,12 @@ function bench_low_memory_vector(int $n, int $iterations) {
         $startMemory = memory_get_usage();
         $values = new LowMemoryVector();
         for ($i = 0; $i < $n; $i++) {
-            $values[] = $i;
+            $values[] = $i % 3 > 0;
         }
 
         $startReadTime = hrtime(true);
         for ($i = 0; $i < $n; $i++) {
-            $total += $values[$i];
+            $total += $values[$i] ? 1 : 0;
         }
         $endReadTime = hrtime(true);
         $totalReadTime += $endReadTime - $startReadTime;
@@ -93,12 +93,12 @@ function bench_queue(int $n, int $iterations) {
         $startMemory = memory_get_usage();
         $values = new Deque();
         for ($i = 0; $i < $n; $i++) {
-            $values[] = $i;
+            $values[] = $i % 3 > 0;
         }
 
         $startReadTime = hrtime(true);
         for ($i = 0; $i < $n; $i++) {
-            $total += $values[$i];
+            $total += $values[$i] ? 1 : 0;
         }
         $endReadTime = hrtime(true);
         $totalReadTime += $endReadTime - $startReadTime;
@@ -125,12 +125,12 @@ function bench_spl_stack(int $n, int $iterations) {
             // XXX: For SplStack, $values[] = $value is unexpectedly twice as slow as push($value)
             // due to the lack of custom handlers and falling back to the default ArrayAccess->offsetSet call.
             // This could probably be improved.
-            $values->push($i);
+            $values->push($i % 3 > 0);
         }
         $startReadTime = hrtime(true);
         // Random access is linear time in a linked list, so use foreach instead
         foreach ($values as $value) {
-            $total += $value;
+            $total += $value ? 1 : 0;
         }
         $endReadTime = hrtime(true);
         $totalReadTime += $endReadTime - $startReadTime;
@@ -156,11 +156,11 @@ function bench_spl_fixed_array(int $n, int $iterations) {
             // erealloc() tends to extend the existing array when possible.
             $size = $values->getSize();
             $values->setSize($size + 1);
-            $values->offsetSet($size, $i);
+            $values->offsetSet($size, $i % 3 > 0);
         }
         $startReadTime = hrtime(true);
         for ($i = 0; $i < $n; $i++) {
-            $total += $values[$i];
+            $total += $values[$i] ? 1 : 0;
         }
         $endReadTime = hrtime(true);
         $totalReadTime += $endReadTime - $startReadTime;
@@ -188,7 +188,7 @@ printf(
     PHP_DEBUG ? 'true' : 'false',
     json_encode(function_exists('opcache_get_status') && (opcache_get_status(false)['opcache_enabled'] ?? false))
 );
-echo "(Note that LowMemoryVector has specialized representations for integers and small integers)\n\n";
+echo "(Note that LowMemoryVector has specialized representations for collections of bool and null)\n\n";
 
 foreach ($sizes as [$n, $iterations]) {
     bench_array($n, $iterations);
@@ -201,75 +201,75 @@ foreach ($sizes as [$n, $iterations]) {
 }
 /*
 Results for php 8.2.0-dev debug=false with opcache enabled=true
-(Note that LowMemoryVector has specialized representations for integers and small integers)
+(Note that LowMemoryVector has specialized representations for collections of bool and null)
 
 Appending to array:           n=       1 iterations= 8000000 memory=     216 bytes
- => create+destroy time=0.581 read time = 0.290 total time = 0.871 result=0
+ => create+destroy time=0.671 read time = 0.298 total time = 0.969 result=0
 Appending to Vector:          n=       1 iterations= 8000000 memory=     128 bytes
- => create+destroy time=0.977 read time = 0.334 total time = 1.310 result=0
+ => create+destroy time=1.108 read time = 0.336 total time = 1.444 result=0
 Appending to LowMemoryVector: n=       1 iterations= 8000000 memory=      88 bytes
- => create+destroy time=1.000 read time = 0.354 total time = 1.354 result=0
+ => create+destroy time=1.072 read time = 0.352 total time = 1.424 result=0
 Appending to Deque:           n=       1 iterations= 8000000 memory=     144 bytes
- => create+destroy time=0.962 read time = 0.337 total time = 1.299 result=0
+ => create+destroy time=1.047 read time = 0.337 total time = 1.384 result=0
 Appending to SplStack:        n=       1 iterations= 8000000 memory=     184 bytes
- => create+destroy time=1.607 read time = 0.668 total time = 2.275 result=0
+ => create+destroy time=1.629 read time = 0.660 total time = 2.289 result=0
 Appending to SplFixedArray:   n=       1 iterations= 8000000 memory=      80 bytes
- => create+destroy time=1.719 read time = 0.397 total time = 2.115 result=0
+ => create+destroy time=1.800 read time = 0.372 total time = 2.173 result=0
 
 
 Appending to array:           n=       4 iterations= 2000000 memory=     216 bytes
- => create+destroy time=0.202 read time = 0.112 total time = 0.314 result=12000000
+ => create+destroy time=0.283 read time = 0.125 total time = 0.407 result=4000000
 Appending to Vector:          n=       4 iterations= 2000000 memory=     128 bytes
- => create+destroy time=0.318 read time = 0.161 total time = 0.479 result=12000000
+ => create+destroy time=0.424 read time = 0.159 total time = 0.582 result=4000000
 Appending to LowMemoryVector: n=       4 iterations= 2000000 memory=      88 bytes
- => create+destroy time=0.318 read time = 0.171 total time = 0.489 result=12000000
+ => create+destroy time=0.389 read time = 0.168 total time = 0.557 result=4000000
 Appending to Deque:           n=       4 iterations= 2000000 memory=     144 bytes
- => create+destroy time=0.313 read time = 0.161 total time = 0.474 result=12000000
+ => create+destroy time=0.398 read time = 0.161 total time = 0.559 result=4000000
 Appending to SplStack:        n=       4 iterations= 2000000 memory=     280 bytes
- => create+destroy time=0.680 read time = 0.267 total time = 0.948 result=12000000
+ => create+destroy time=0.738 read time = 0.275 total time = 1.013 result=4000000
 Appending to SplFixedArray:   n=       4 iterations= 2000000 memory=     128 bytes
- => create+destroy time=1.113 read time = 0.216 total time = 1.329 result=12000000
+ => create+destroy time=1.184 read time = 0.189 total time = 1.373 result=4000000
 
 
 Appending to array:           n=       8 iterations= 1000000 memory=     216 bytes
- => create+destroy time=0.137 read time = 0.081 total time = 0.218 result=28000000
+ => create+destroy time=0.222 read time = 0.096 total time = 0.318 result=5000000
 Appending to Vector:          n=       8 iterations= 1000000 memory=     192 bytes
- => create+destroy time=0.223 read time = 0.147 total time = 0.370 result=28000000
+ => create+destroy time=0.328 read time = 0.134 total time = 0.462 result=5000000
 Appending to LowMemoryVector: n=       8 iterations= 1000000 memory=      88 bytes
- => create+destroy time=0.210 read time = 0.150 total time = 0.360 result=28000000
+ => create+destroy time=0.283 read time = 0.149 total time = 0.432 result=5000000
 Appending to Deque:           n=       8 iterations= 1000000 memory=     208 bytes
- => create+destroy time=0.221 read time = 0.148 total time = 0.370 result=28000000
+ => create+destroy time=0.307 read time = 0.135 total time = 0.442 result=5000000
 Appending to SplStack:        n=       8 iterations= 1000000 memory=     408 bytes
- => create+destroy time=0.494 read time = 0.217 total time = 0.711 result=28000000
+ => create+destroy time=0.560 read time = 0.227 total time = 0.787 result=5000000
 Appending to SplFixedArray:   n=       8 iterations= 1000000 memory=     192 bytes
- => create+destroy time=0.989 read time = 0.194 total time = 1.183 result=28000000
+ => create+destroy time=1.077 read time = 0.168 total time = 1.245 result=5000000
 
 
 Appending to array:           n=    1024 iterations=    8000 memory=   20536 bytes
- => create+destroy time=0.079 read time = 0.055 total time = 0.134 result=4190208000
+ => create+destroy time=0.156 read time = 0.069 total time = 0.225 result=5456000
 Appending to Vector:          n=    1024 iterations=    8000 memory=   16448 bytes
- => create+destroy time=0.103 read time = 0.111 total time = 0.213 result=4190208000
-Appending to LowMemoryVector: n=    1024 iterations=    8000 memory=    4176 bytes
- => create+destroy time=0.096 read time = 0.118 total time = 0.214 result=4190208000
+ => create+destroy time=0.213 read time = 0.105 total time = 0.318 result=5456000
+Appending to LowMemoryVector: n=    1024 iterations=    8000 memory=    1104 bytes
+ => create+destroy time=0.168 read time = 0.115 total time = 0.284 result=5456000
 Appending to Deque:           n=    1024 iterations=    8000 memory=   16464 bytes
- => create+destroy time=0.101 read time = 0.111 total time = 0.212 result=4190208000
+ => create+destroy time=0.185 read time = 0.108 total time = 0.294 result=5456000
 Appending to SplStack:        n=    1024 iterations=    8000 memory=   32920 bytes
- => create+destroy time=0.318 read time = 0.137 total time = 0.455 result=4190208000
+ => create+destroy time=0.393 read time = 0.138 total time = 0.530 result=5456000
 Appending to SplFixedArray:   n=    1024 iterations=    8000 memory=   16448 bytes
- => create+destroy time=0.825 read time = 0.153 total time = 0.977 result=4190208000
+ => create+destroy time=0.891 read time = 0.129 total time = 1.020 result=5456000
 
 
 Appending to array:           n= 1048576 iterations=      20 memory=16781392 bytes
- => create+destroy time=0.405 read time = 0.146 total time = 0.551 result=10995105792000
+ => create+destroy time=0.597 read time = 0.184 total time = 0.781 result=13981000
 Appending to Vector:          n= 1048576 iterations=      20 memory=16777304 bytes
- => create+destroy time=0.481 read time = 0.280 total time = 0.761 result=10995105792000
-Appending to LowMemoryVector: n= 1048576 iterations=      20 memory= 4194408 bytes
- => create+destroy time=0.266 read time = 0.284 total time = 0.551 result=10995105792000
+ => create+destroy time=0.760 read time = 0.273 total time = 1.033 result=13981000
+Appending to LowMemoryVector: n= 1048576 iterations=      20 memory= 1048656 bytes
+ => create+destroy time=0.400 read time = 0.281 total time = 0.682 result=13981000
 Appending to Deque:           n= 1048576 iterations=      20 memory=16777320 bytes
- => create+destroy time=0.479 read time = 0.279 total time = 0.758 result=10995105792000
+ => create+destroy time=0.686 read time = 0.277 total time = 0.963 result=13981000
 Appending to SplStack:        n= 1048576 iterations=      20 memory=33554584 bytes
- => create+destroy time=0.865 read time = 0.377 total time = 1.242 result=10995105792000
+ => create+destroy time=1.058 read time = 0.373 total time = 1.432 result=13981000
 Appending to SplFixedArray:   n= 1048576 iterations=      20 memory=16777304 bytes
- => create+destroy time=2.378 read time = 0.377 total time = 2.754 result=10995105792000
+ => create+destroy time=2.591 read time = 0.334 total time = 2.926 result=13981000
 
 */

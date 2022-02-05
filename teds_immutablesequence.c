@@ -21,6 +21,7 @@
 #include "teds_immutablesequence_arginfo.h"
 #include "teds_immutablesequence.h"
 #include "teds.h"
+#include "teds_util.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
@@ -51,7 +52,7 @@ typedef struct _teds_immutablesequence_it {
 	zend_long            current;
 } teds_immutablesequence_it;
 
-static teds_immutablesequence_object *teds_sequence_from_obj(zend_object *obj)
+static zend_always_inline teds_immutablesequence_object *teds_sequence_from_obj(zend_object *obj)
 {
 	return (teds_immutablesequence_object*)((char*)(obj) - XtOffsetOf(teds_immutablesequence_object, std));
 }
@@ -63,7 +64,7 @@ static teds_immutablesequence_object *teds_sequence_from_obj(zend_object *obj)
  *   - if size > 0, then entries != NULL
  *   - size is not less than 0
  */
-static bool teds_cached_entries_empty(teds_cached_entries *array)
+static zend_always_inline bool teds_cached_entries_empty(teds_cached_entries *array)
 {
 	if (array->size > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -73,7 +74,7 @@ static bool teds_cached_entries_empty(teds_cached_entries *array)
 	return true;
 }
 
-static bool teds_cached_entries_uninitialized(teds_cached_entries *array)
+static zend_always_inline bool teds_cached_entries_uninitialized(teds_cached_entries *array)
 {
 	if (array->entries == NULL) {
 		ZEND_ASSERT(array->size == 0);
@@ -316,7 +317,7 @@ static zend_object *teds_immutablesequence_object_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_immutablesequence_object_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }
@@ -697,11 +698,6 @@ PHP_METHOD(Teds_ImmutableSequence, offsetUnset)
 	}
 	zend_throw_exception(spl_ce_RuntimeException, "ImmutableSequence does not support offsetUnset - it is immutable", 0);
 	RETURN_THROWS();
-}
-
-static void teds_immutablesequence_return_list(zval *return_value, teds_immutablesequence_object *intern)
-{
-	teds_convert_zval_list_to_php_array_list(return_value, intern->array.entries, intern->array.size);
 }
 
 PHP_MINIT_FUNCTION(teds_immutablesequence)

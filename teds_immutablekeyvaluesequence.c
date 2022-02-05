@@ -19,6 +19,7 @@
 
 #include "php_teds.h"
 #include "teds.h"
+#include "teds_util.h"
 #include "teds_immutablekeyvaluesequence_arginfo.h"
 #include "teds_immutablekeyvaluesequence.h"
 // #include "ext/spl/spl_functions.h"
@@ -58,7 +59,7 @@ typedef struct _teds_immutablekeyvaluesequence_it {
 	zend_long            current;
 } teds_immutablekeyvaluesequence_it;
 
-static teds_immutablekeyvaluesequence *teds_immutablekeyvaluesequence_from_obj(zend_object *obj)
+static zend_always_inline teds_immutablekeyvaluesequence *teds_immutablekeyvaluesequence_from_obj(zend_object *obj)
 {
 	return (teds_immutablekeyvaluesequence*)((char*)(obj) - XtOffsetOf(teds_immutablekeyvaluesequence, std));
 }
@@ -70,7 +71,7 @@ static teds_immutablekeyvaluesequence *teds_immutablekeyvaluesequence_from_obj(z
  *   - if size > 0, then entries != NULL
  *   - size is not less than 0
  */
-static bool teds_immutablekeyvaluesequence_entries_empty(teds_immutablekeyvaluesequence_entries *array)
+static zend_always_inline bool teds_immutablekeyvaluesequence_entries_empty(teds_immutablekeyvaluesequence_entries *array)
 {
 	if (array->size > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -80,7 +81,7 @@ static bool teds_immutablekeyvaluesequence_entries_empty(teds_immutablekeyvalues
 	return true;
 }
 
-static bool teds_immutablekeyvaluesequence_entries_uninitialized(teds_immutablekeyvaluesequence_entries *array)
+static zend_always_inline bool teds_immutablekeyvaluesequence_entries_uninitialized(teds_immutablekeyvaluesequence_entries *array)
 {
 	if (array->entries == NULL) {
 		ZEND_ASSERT(array->size == 0);
@@ -347,7 +348,7 @@ static zend_object *teds_immutablekeyvaluesequence_clone(zend_object *old_object
 {
 	zend_object *new_object = teds_immutablekeyvaluesequence_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }

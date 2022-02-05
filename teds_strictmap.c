@@ -169,7 +169,7 @@ static bool teds_strictmap_entries_uninitialized(teds_strictmap_entries *array)
 	return false;
 }
 
-static void teds_strictmap_entries_set_empty_entry_list(teds_strictmap_entries *array)
+static zend_always_inline void teds_strictmap_entries_set_empty_entry_list(teds_strictmap_entries *array)
 {
 	array->nNumOfElements = 0;
 	array->nNumUsed = 0;
@@ -178,7 +178,7 @@ static void teds_strictmap_entries_set_empty_entry_list(teds_strictmap_entries *
 	array->nTableMask = TEDS_STRICTMAP_MIN_MASK;
 }
 
-static size_t teds_strictmap_offset_bytes_for_capacity(size_t capacity) {
+static zend_always_inline size_t teds_strictmap_offset_bytes_for_capacity(size_t capacity) {
 	return (capacity * sizeof(uint32_t) * 2);
 }
 
@@ -189,7 +189,7 @@ static teds_strictmap_entry *teds_strictmap_alloc_entries(size_t capacity) {
 	return (void *)(ptr + buckets_byte_count);
 }
 
-static void teds_strictmap_free_entries(teds_strictmap_entry *old_entries, size_t old_capacity) {
+static zend_always_inline void teds_strictmap_free_entries(teds_strictmap_entry *old_entries, size_t old_capacity) {
 	void * old_ptr = ((uint8_t *) old_entries) - teds_strictmap_offset_bytes_for_capacity(old_capacity);
 	efree(old_ptr);
 }
@@ -505,7 +505,7 @@ static zend_object *teds_strictmap_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_strictmap_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }
