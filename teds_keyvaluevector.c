@@ -65,7 +65,7 @@ typedef struct _teds_keyvaluevector_it {
 } teds_keyvaluevector_it;
 
 
-static teds_keyvaluevector *teds_keyvaluevector_from_obj(zend_object *obj)
+static zend_always_inline teds_keyvaluevector *teds_keyvaluevector_from_obj(zend_object *obj)
 {
 	return (teds_keyvaluevector*)((char*)(obj) - XtOffsetOf(teds_keyvaluevector, std));
 }
@@ -77,7 +77,7 @@ static teds_keyvaluevector *teds_keyvaluevector_from_obj(zend_object *obj)
  *   - if size > 0, then entries != NULL
  *   - size is not less than 0
  */
-static bool teds_keyvaluevector_entries_empty_size(teds_keyvaluevector_entries *array)
+static zend_always_inline bool teds_keyvaluevector_entries_empty_size(teds_keyvaluevector_entries *array)
 {
 	if (array->size > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -88,7 +88,7 @@ static bool teds_keyvaluevector_entries_empty_size(teds_keyvaluevector_entries *
 	return true;
 }
 
-static bool teds_keyvaluevector_entries_empty_capacity(teds_keyvaluevector_entries *array)
+static zend_always_inline bool teds_keyvaluevector_entries_empty_capacity(teds_keyvaluevector_entries *array)
 {
 	if (array->capacity > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -98,7 +98,7 @@ static bool teds_keyvaluevector_entries_empty_capacity(teds_keyvaluevector_entri
 	return true;
 }
 
-static bool teds_keyvaluevector_entries_uninitialized(teds_keyvaluevector_entries *array)
+static zend_always_inline bool teds_keyvaluevector_entries_uninitialized(teds_keyvaluevector_entries *array)
 {
 	if (array->entries == NULL) {
 		ZEND_ASSERT(array->size == 0);
@@ -404,7 +404,7 @@ static zend_object *teds_keyvaluevector_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_keyvaluevector_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }

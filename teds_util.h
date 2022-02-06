@@ -18,6 +18,17 @@ static inline void teds_zval_dtor_range(zval *it, size_t n) {
 	}
 }
 
+/* Deliberately called instead of zend_objects_clone_members for final classes.
+ * The properties HashTable is a duplicate of the data already in this value wasting memory,
+ * we're trying to avoid it to the extent possible in get_properties_for.
+ */
+static zend_always_inline void teds_assert_object_has_empty_member_list(const zend_object *new_object) {
+	ZEND_ASSERT(new_object->ce->ce_flags & ZEND_ACC_FINAL);
+	ZEND_ASSERT(new_object->ce->default_properties_count == 0);
+	ZEND_ASSERT(new_object->ce->clone == NULL);
+	ZEND_ASSERT(new_object->properties == NULL);
+}
+
 static zend_always_inline size_t teds_is_pow2(size_t nSize) {
 	return (nSize & (nSize - 1)) == 0 && nSize > 0;
 }

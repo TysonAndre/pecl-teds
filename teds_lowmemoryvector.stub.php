@@ -13,6 +13,8 @@ namespace Teds;
  * and constant amortized-time push/pop operations.
  *
  * Attempting to read or write values outside of the range of values with `*get`/`*set` methods will throw at runtime.
+ *
+ * **UNSERIALIZATION IS NOT IMPLEMENTED YET**
  */
 final class LowMemoryVector implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {
@@ -39,10 +41,11 @@ final class LowMemoryVector implements \IteratorAggregate, \Countable, \JsonSeri
      */
     public function capacity(): int {}
 
-    /**
-     * FIXME finalize implementation before enabling serialization
-     */
     public function __serialize(): array {}
+    /**
+     * FIXME finalize implementation and implement remaining types before enabling unserialization
+     * @throws \RuntimeException unconditionally.
+     */
     public function __unserialize(array $data): void {}
 
     /** Create this from an array */

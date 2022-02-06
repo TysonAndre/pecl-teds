@@ -286,7 +286,7 @@ static zend_always_inline teds_sortedstrictset *teds_sortedstrictset_from_obj(ze
 
 #define Z_SORTEDSTRICTSET_P(zv)  teds_sortedstrictset_from_obj(Z_OBJ_P((zv)))
 
-static bool teds_sortedstrictset_tree_uninitialized(teds_sortedstrictset_tree *array)
+static zend_always_inline bool teds_sortedstrictset_tree_uninitialized(teds_sortedstrictset_tree *array)
 {
 	if (array->initialized) {
 		return false;
@@ -296,7 +296,7 @@ static bool teds_sortedstrictset_tree_uninitialized(teds_sortedstrictset_tree *a
 	return true;
 }
 
-static void teds_sortedstrictset_tree_set_empty_tree(teds_sortedstrictset_tree *array)
+static zend_always_inline void teds_sortedstrictset_tree_set_empty_tree(teds_sortedstrictset_tree *array)
 {
 	array->root = NULL;
 	array->nNumOfElements = 0;
@@ -602,7 +602,7 @@ static zend_object *teds_sortedstrictset_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_sortedstrictset_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }

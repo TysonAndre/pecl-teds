@@ -136,7 +136,7 @@ static zend_always_inline void teds_strictset_entry_compute_and_store_hash(teds_
 	TEDS_ENTRY_HASH(entry) = teds_strict_hash_uint32_t(&entry->key);
 }
 
-static bool teds_strictset_entries_uninitialized(teds_strictset_entries *array)
+static zend_always_inline bool teds_strictset_entries_uninitialized(teds_strictset_entries *array)
 {
 	ZEND_ASSERT(array->nNumOfElements <= array->nTableSize);
 	ZEND_ASSERT(array->nNumOfElements <= array->nNumUsed);
@@ -157,7 +157,7 @@ static bool teds_strictset_entries_uninitialized(teds_strictset_entries *array)
 	return false;
 }
 
-static void teds_strictset_entries_set_empty_entry_list(teds_strictset_entries *array)
+static zend_always_inline void teds_strictset_entries_set_empty_entry_list(teds_strictset_entries *array)
 {
 	array->nNumOfElements = 0;
 	array->nNumUsed = 0;
@@ -166,7 +166,7 @@ static void teds_strictset_entries_set_empty_entry_list(teds_strictset_entries *
 	array->nTableMask = TEDS_STRICTSET_MIN_MASK;
 }
 
-static size_t teds_strictset_offset_bytes_for_capacity(size_t capacity) {
+static zend_always_inline size_t teds_strictset_offset_bytes_for_capacity(size_t capacity) {
 	return (capacity * sizeof(uint32_t) * 2);
 }
 
@@ -464,7 +464,7 @@ static zend_object *teds_strictset_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_strictset_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }

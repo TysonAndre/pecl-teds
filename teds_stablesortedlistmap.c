@@ -364,7 +364,7 @@ static zend_object *teds_stablesortedlistmap_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_stablesortedlistmap_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }

@@ -101,31 +101,20 @@ static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *va
 static void teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity);
 static void teds_deque_shrink_capacity(teds_deque_entries *array, const size_t new_capacity);
 
-static teds_deque *teds_deque_from_object(zend_object *obj)
+static zend_always_inline teds_deque *teds_deque_from_object(zend_object *obj)
 {
 	return (teds_deque*)((char*)(obj) - XtOffsetOf(teds_deque, std));
 }
 
 #define Z_DEQUE_P(zv)  teds_deque_from_object(Z_OBJ_P((zv)))
 
-/* Helps enforce the invariants in debug mode:
- *   - if size == 0, then circular_buffer == NULL
- *   - if size > 0, then circular_buffer != NULL
- *   - size is not less than 0
- */
-static bool teds_deque_entries_empty_size(const teds_deque_entries *array)
-{
-	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
-	return array->size == 0;
-}
-
-static bool teds_deque_entries_empty_capacity(const teds_deque_entries *array)
+static zend_always_inline bool teds_deque_entries_empty_capacity(const teds_deque_entries *array)
 {
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 	return array->mask == 0;
 }
 
-static bool teds_deque_entries_uninitialized(teds_deque_entries *array)
+static zend_always_inline bool teds_deque_entries_uninitialized(teds_deque_entries *array)
 {
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 	return array->circular_buffer == NULL;
@@ -392,7 +381,7 @@ static zend_object *teds_deque_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_deque_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }
@@ -1141,37 +1130,6 @@ PHP_METHOD(Teds_Deque, offsetUnset)
 	// Diverge from SplFixedArray - null isn't the same thing as undefined.
 	zend_throw_exception(spl_ce_RuntimeException, "Teds\\Deque does not support offsetUnset - elements must be set to null or removed by resizing", 0);
 	RETURN_THROWS();
-}
-
-static void teds_deque_return_list(zval *return_value, const teds_deque *intern)
-{
-	// Can't use teds_convert_zval_list_to_php_array_list(return_value, intern->array.circular_buffer, intern->array.size) for deque.
-	const size_t len = intern->array.size;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
-	}
-	ZEND_ASSERT(intern->array.mask > 0);
-
-	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(values);
-
-	zval *const from_buffer_start = intern->array.circular_buffer;
-	zval *from_begin = &from_buffer_start[intern->array.offset];
-	zval *const from_end = &from_buffer_start[intern->array.mask + 1];
-	ZEND_ASSERT(from_begin <= from_end);
-	/* Go through values and add values to the return array */
-	ZEND_HASH_FILL_PACKED(values) {
-		for (size_t i = 0; i < len; i++) {
-			if (from_begin == from_end) {
-				from_begin = from_buffer_start;
-			}
-			Z_TRY_ADDREF_P(from_begin);
-			ZEND_HASH_FILL_ADD(from_begin);
-			from_begin++;
-		}
-	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
 }
 
 PHP_MINIT_FUNCTION(teds_deque)

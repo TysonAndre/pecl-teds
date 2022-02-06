@@ -68,30 +68,14 @@ static ZEND_COLD void teds_error_noreturn_max_vector_capacity()
 	zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\Vector capacity");
 }
 
-static teds_vector *teds_vector_from_object(zend_object *obj)
+static zend_always_inline teds_vector *teds_vector_from_object(zend_object *obj)
 {
 	return (teds_vector*)((char*)(obj) - XtOffsetOf(teds_vector, std));
 }
 
 #define Z_VECTOR_P(zv)  teds_vector_from_object(Z_OBJ_P((zv)))
 
-/* Helps enforce the invariants in debug mode:
- *   - if size == 0, then entries == NULL
- *   - if size > 0, then entries != NULL
- *   - size is not less than 0
- */
-static bool teds_vector_entries_empty_size(const teds_vector_entries *array)
-{
-	if (array->size > 0) {
-		ZEND_ASSERT(array->entries != empty_entry_list);
-		ZEND_ASSERT(array->capacity >= array->size);
-		return false;
-	}
-	// This vector may have reserved capacity.
-	return true;
-}
-
-static bool teds_vector_entries_empty_capacity(const teds_vector_entries *array)
+static zend_always_inline bool teds_vector_entries_empty_capacity(const teds_vector_entries *array)
 {
 	if (array->capacity > 0) {
 		ZEND_ASSERT(array->entries != empty_entry_list);
@@ -101,7 +85,7 @@ static bool teds_vector_entries_empty_capacity(const teds_vector_entries *array)
 	return true;
 }
 
-static bool teds_vector_entries_uninitialized(const teds_vector_entries *array)
+static zend_always_inline bool teds_vector_entries_uninitialized(const teds_vector_entries *array)
 {
 	if (array->entries == NULL) {
 		ZEND_ASSERT(array->size == 0);
@@ -356,7 +340,7 @@ static zend_object *teds_vector_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_vector_new_ex(old_object->ce, old_object, 1);
 
-	zend_objects_clone_members(new_object, old_object);
+	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }
