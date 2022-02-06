@@ -544,8 +544,8 @@ void teds_sortedstrictmap_tree_dtor(teds_sortedstrictmap_tree *array)
 static HashTable* teds_sortedstrictmap_get_gc(zend_object *obj, zval **table, int *table_count)
 {
 	teds_sortedstrictmap *intern = teds_sortedstrictmap_from_obj(obj);
+	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 	if (intern->array.nNumOfElements > 0) {
-		zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 		zval *key, *val;
 
 		TEDS_SORTEDSTRICTMAP_FOREACH_KEY_VAL(&intern->array, key, val) {
@@ -553,8 +553,9 @@ static HashTable* teds_sortedstrictmap_get_gc(zend_object *obj, zval **table, in
 			zend_get_gc_buffer_add_zval(gc_buffer, val);
 		} TEDS_SORTEDSTRICTMAP_FOREACH_END();
 
-		zend_get_gc_buffer_use(gc_buffer, table, table_count);
 	}
+	/* Overwrites table and table_count. The caller of get_gc does not initialize these. */
+	zend_get_gc_buffer_use(gc_buffer, table, table_count);
 
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.

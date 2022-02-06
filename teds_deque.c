@@ -306,6 +306,7 @@ static HashTable* teds_deque_get_gc(zend_object *obj, zval **table, int *n)
 		zend_get_gc_buffer_add_zval(gc_buffer, &circular_buffer[len]);
 	}
 
+	/* This replaces table and n. */
 	zend_get_gc_buffer_use(gc_buffer, table, n);
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.
@@ -1120,7 +1121,7 @@ PHP_METHOD(Teds_Deque, bottom)
 	RETVAL_COPY(&intern->array.circular_buffer[intern->array.offset]);
 }
 
-PHP_METHOD(Teds_Deque, offsetUnset)
+ZEND_COLD PHP_METHOD(Teds_Deque, offsetUnset)
 {
 	zval                  *offset_zv;
 

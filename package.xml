@@ -46,6 +46,10 @@
    <file name="teds_immutablesequence.c" role="src" />
    <file name="teds_immutablesequence.h" role="src" />
    <file name="teds_immutablesequence.stub.php" role="src" />
+   <file name="teds_intvector_arginfo.h" role="src" />
+   <file name="teds_intvector.c" role="src" />
+   <file name="teds_intvector.h" role="src" />
+   <file name="teds_intvector.stub.php" role="src" />
    <file name="teds_keyvaluevector_arginfo.h" role="src" />
    <file name="teds_keyvaluevector.c" role="src" />
    <file name="teds_keyvaluevector.h" role="src" />
@@ -138,6 +142,25 @@
     <file name="ImmutableSequence/toArray.phpt" role="test" />
     <file name="ImmutableSequence/traversable.phpt" role="test" />
     <file name="ImmutableSequence/unserialize.phpt" role="test" />
+    <file name="IntVector/Vector.phpt" role="test" />
+    <file name="IntVector/aggregate.phpt" role="test" />
+    <file name="IntVector/arrayCast.phpt" role="test" />
+    <file name="IntVector/clone.phpt" role="test" />
+    <file name="IntVector/exceptionhandler.phpt" role="test" />
+    <file name="IntVector/isEmpty.phpt" role="test" />
+    <file name="IntVector/isset.phpt" role="test" />
+    <file name="IntVector/offsetGet.phpt" role="test" />
+    <file name="IntVector/promote.phpt" role="test" />
+    <file name="IntVector/push_pop.phpt" role="test" />
+    <file name="IntVector/reinit_forbidden.phpt" role="test" />
+    <file name="IntVector/serialization.phpt" role="test" />
+    <file name="IntVector/serialization_64.phpt" role="test" />
+    <file name="IntVector/setValueAt.phpt" role="test" />
+    <file name="IntVector/set_state.phpt" role="test" />
+    <file name="IntVector/specializations.phpt" role="test" />
+    <file name="IntVector/toArray.phpt" role="test" />
+    <file name="IntVector/traversable.phpt" role="test" />
+    <file name="IntVector/unserialize.phpt" role="test" />
     <file name="KeyValueVector/KeyValueSequence.phpt" role="test" />
     <file name="KeyValueVector/aggregate.phpt" role="test" />
     <file name="KeyValueVector/clone.phpt" role="test" />

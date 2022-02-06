@@ -675,10 +675,10 @@ PHP_METHOD(Teds_ImmutableSequence, offsetExists)
 
 	teds_immutablesequence_object *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
 	size_t len = intern->array.size;
-	RETURN_BOOL((zend_ulong) offset < len);
+	RETURN_BOOL(((zend_ulong) offset) < len);
 }
 
-PHP_METHOD(Teds_ImmutableSequence, offsetSet)
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, offsetSet)
 {
 	zval                  *zindex, *value;
 
@@ -689,7 +689,7 @@ PHP_METHOD(Teds_ImmutableSequence, offsetSet)
 	RETURN_THROWS();
 }
 
-PHP_METHOD(Teds_ImmutableSequence, offsetUnset)
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, offsetUnset)
 {
 	zval                  *zindex;
 

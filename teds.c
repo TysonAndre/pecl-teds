@@ -34,6 +34,7 @@
 #include "teds_lowmemoryvector.h"
 #include "teds_immutablekeyvaluesequence.h"
 #include "teds_immutablesequence.h"
+#include "teds_intvector.h"
 #include "teds_keyvaluevector.h"
 #include "teds_sortedstrictmap.h"
 #include "teds_sortedstrictset.h"
@@ -411,10 +412,10 @@ PHP_FUNCTION(fold)
 
 static inline zend_array* teds_move_zend_array_from_entries(teds_strictset_entries *array) {
 	const size_t size = array->nNumOfElements;
-
 	ZEND_ASSERT(size > 0);
 
-	HashTable *result = zend_new_array(size);
+	/* Traversable can have more elements than HT_MAX_SIZE */
+	HashTable *result = teds_new_array_check_overflow(size);
 	zend_hash_real_init_packed(result);
 
 	ZEND_HASH_FILL_PACKED(result) {
@@ -1072,6 +1073,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_deque)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_intvector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_keyvaluevector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_lowmemoryvector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_sortedstrictmap)(INIT_FUNC_ARGS_PASSTHRU);
