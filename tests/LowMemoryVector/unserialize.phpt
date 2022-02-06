@@ -13,4 +13,4 @@ call_user_func(function () {
 });
 ?>
 --EXPECT--
-Caught RuntimeException: LowMemoryVector __unserialize not yet implemented
+Caught RuntimeException: LowMemoryVector unserialize got invalid type tag, expected int

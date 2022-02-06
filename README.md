@@ -46,6 +46,42 @@ Traversables are eagerly iterated over in the constructor.
 Similar to SplFixedArray or Ds\Sequence, but immutable.
 This stores a sequence of values with the keys 0, 1, 2....
 
+### Teds\LowMemoryVector
+
+[`Teds\LowMemoryVector` API](./teds_lowmemoryvector.stub.php)
+
+This exposes the same API as a Vector, but with a more memory-efficient representation if the LowMemoryVector has only ever included a type that it could optimize.
+
+Benefits:
+
+- For collections of exclusively int, exclusively floats, or exclusively null/true/false, this uses less memory when serialized compared to vectors/arrays.
+- For collections of exclusively int, exclusively floats, or exclusively null/true/false, this uses less memory when serialized compared to vectors/arrays.
+
+  Note that adding other types will make this use as much memory as a Vector, e.g. adding any non-float (including int) to a collection of floats.
+- Has faster checks for contains/indexOf (if values can have an optimized representation)
+- Has faster garbage collection (if values can have an optimized representation due to int/float/bool/null not needing reference counting).
+- Interchangeable with `Vector` or other collections without configuration - this will silently fall back to the default `mixed` representation if a more efficient representation is not supported.
+
+Drawbacks:
+- Slightly more overhead when types aren't specialized.
+- Adding a different type to the collection will permanently make it used the less efficient `mixed` representation.
+
+In 64-bit builds, the following types are supported, with the following amounts of memory (plus constant overhead to represent the LowMemoryVector itself, and extra capacity for growing the LowMemoryVector):
+
+1. null/bool : 1 byte per value.
+
+   (In serialize(), this is even less, adding 1 to 2 bits per value (2 bits if null is included)).
+2. signed 8-bit int (-128..127): 1 byte per value. Adding a larger int to any of these n-bit types will convert them to the collection of that larger int type.
+3. signed 16-bit int: 2 bytes per value.
+4. signed 32-bit int: 4 bytes per value.
+5. signed 64-bit int: 8 bytes per value. (64-bit php builds only)
+6. signed PHP `float`:  8 bytes per value. (C `double`)
+7. `mixed` or combinations of the above: 16 bytes per value. (Same as `Vector`)
+
+In comparison, in 64-bit builds of PHP, PHP's arrays take at least 16 bytes per value in php 8.2, and at least 32 bytes per value before php 8.1, at the time of writing.
+
+Example benchmarks: [benchmarks/benchmark_vector_bool.php](benchmarks/benchmark_vector_bool.php) and [benchmarks/benchmark_vector_unserialize.phpt](benchmarks/benchmark_vector_unserialize.phpt).
+
 ### Teds\Vector
 
 [`Teds\Vector` API](./teds_vector.stub.php)
