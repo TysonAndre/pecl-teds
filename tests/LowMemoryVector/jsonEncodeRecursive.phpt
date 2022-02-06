@@ -2,6 +2,8 @@
 Teds\LowMemoryVector json encoding recursive data
 --FILE--
 <?php
+function my_error_handler($errno, $msg) { echo "Warning: $msg\n"; }
+set_error_handler('my_error_handler');
 // discards keys
 function test() {
     $vec = new Teds\LowMemoryVector();
@@ -24,7 +26,7 @@ function test() {
 }
 test();
 ?>
---EXPECTF--
+--EXPECT--
 JSON: [null]
 Saw key 0
 object(Teds\LowMemoryVector)#1 (1) {
@@ -38,9 +40,7 @@ array(1) {
     *RECURSION*
   }
 }
-
-Warning: Teds\LowMemoryVector::__serialize(): LowMemoryVector::__serialize is a work in progress and the serialization format will change. Unserialization is not implemented in %s on line 15
-O:20:"Teds\LowMemoryVector":2:{i:0;i:5;i:1;a:1:{i:0;r:1;}}
+O:20:"Teds\LowMemoryVector":2:{i:0;i:7;i:1;a:1:{i:0;r:1;}}
 object(Teds\LowMemoryVector)#1 (0) {
 }
 array(0) {

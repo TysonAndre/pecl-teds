@@ -5,16 +5,32 @@
 namespace Teds;
 
 /**
- * A LowMemoryVector is a container of a sequence of values (with keys 0, 1, ...count($vector) - 1)
- * that can change in size.
+ * This exposes the same API as a Vector, but with a more memory-efficient representation.
  *
- * This is backed by a memory-efficient representation
- * (raw array of values) and provides fast access (compared to other objects in the Spl)
- * and constant amortized-time push/pop operations.
+ * Benefits:
  *
- * Attempting to read or write values outside of the range of values with `*get`/`*set` methods will throw at runtime.
+ * - For collections of exclusively int, exclusively floats, or exclusively null/true/false, this uses less memory when serialized compared to vectors/arrays.
  *
- * **UNSERIALIZATION IS NOT IMPLEMENTED YET**
+ *   Note that adding other types will make this use as much memory as a Vector, e.g. adding any non-float (including int) to a collection of floats.
+ * - Has faster checks for contains/indexOf (if values can have an optimized representation)
+ * - Has faster garbage collection (if values can have an optimized representation due to int/float/bool/null not needing reference counting).
+ *
+ * Drawbacks:
+ * - Slightly more overhead when types aren't specialized.
+ *
+ * In 64-bit builds, the following types are supported, with the following amounts of memory (plus constant overhead to represent the LowMemoryVector itself, and extra capacity for growing the LowMemoryVector):
+ *
+ * 1. null/bool : 1 byte per value.
+ *
+ *    (In serialize(), this is even less, adding 1 to 2 bits per value (2 bits if null is included)).
+ * 2. signed 8-bit value (-128..127): 1 byte per value.
+ * 3. signed 16-bit value: 2 bytes per value.
+ * 4. signed 32-bit value: 4 bytes per value.
+ * 5. signed 64-bit value: 8 bytes per value.
+ * 6. signed PHP `float`:  8 bytes per value.
+ * 7. `mixed` or combinations of the above: 16 bytes per value.
+ *
+ * In comparison, in 64-bit builds of PHP, PHP's arrays take at least 16 bytes per value in php 8.2, and at least 32 bytes per value before php 8.1, at the time of writing.
  */
 final class LowMemoryVector implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {

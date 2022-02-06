@@ -23,6 +23,7 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Speed up unserializing SortedStrictSet/SortedStrictMap when the input data is already sorted. (If the data is not sorted, then build the binary tree the slow but correct way)
+* Add a LowMemoryVector type, supporting reduced memory usage
 * Deduplicate code.
  </notes>
  <contents>
@@ -156,6 +157,7 @@
     <file name="LowMemoryVector/Vector.phpt" role="test" />
     <file name="LowMemoryVector/aggregate.phpt" role="test" />
     <file name="LowMemoryVector/arrayCast.phpt" role="test" />
+    <file name="LowMemoryVector/bitsetSerialization.phpt" role="test" />
     <file name="LowMemoryVector/clone.phpt" role="test" />
     <file name="LowMemoryVector/contains.phpt" role="test" />
     <file name="LowMemoryVector/exceptionhandler.phpt" role="test" />
@@ -170,6 +172,7 @@
     <file name="LowMemoryVector/serialization_64.phpt" role="test" />
     <file name="LowMemoryVector/setValueAt.phpt" role="test" />
     <file name="LowMemoryVector/set_state.phpt" role="test" />
+    <file name="LowMemoryVector/specializations.phpt" role="test" />
     <file name="LowMemoryVector/toArray.phpt" role="test" />
     <file name="LowMemoryVector/traversable.phpt" role="test" />
     <file name="LowMemoryVector/unserialize.phpt" role="test" />

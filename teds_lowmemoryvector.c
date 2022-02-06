@@ -40,20 +40,21 @@ zend_class_entry *teds_ce_LowMemoryVector;
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
 static const zval empty_entry_list[1];
 
+#define _LMV_TYPE_BOOL_BITSET   0
 #define LMV_TYPE_UNINITIALIZED  0
 #define LMV_TYPE_BOOL_OR_NULL   1
 #define LMV_TYPE_INT8           2
-#define LMV_TYPE_INT32          3
+#define LMV_TYPE_INT16          3
+#define LMV_TYPE_INT32          4
 #if SIZEOF_ZEND_LONG > 4
-#define LMV_TYPE_INT64          4
-#define LMV_TYPE_LAST_NONREFCOUNTED LMV_TYPE_INT64
+#define LMV_TYPE_INT64          5
 #else
-#define LMV_TYPE_LAST_NONREFCOUNTED LMV_TYPE_INT32
 #endif
-
+#define LMV_TYPE_DOUBLE         6
+#define LMV_TYPE_LAST_NONREFCOUNTED LMV_TYPE_DOUBLE
 #define LMV_TYPE_LAST_GC_NO_SIDE_EFFECTS LMV_TYPE_LAST_NONREFCOUNTED
 
-#define LMV_TYPE_ZVAL           5
+#define LMV_TYPE_ZVAL           7
 #define LMV_TYPE_COUNT          LMV_TYPE_ZVAL + 1
 
 #ifdef LMV_TYPE_INT64
@@ -61,13 +62,25 @@ static const zval empty_entry_list[1];
 #error need to update tables
 #endif
 #endif
-static const uint8_t teds_lmv_memory_per_element[LMV_TYPE_ZVAL + 1] = {
+static const uint8_t teds_lmv_memory_per_element[LMV_TYPE_COUNT] = {
 	0,
 	sizeof(int8_t),  /* LMV_TYPE_BOOL_OR_NULL */
 	sizeof(int8_t),  /* LMV_TYPE_INT8 */
+	sizeof(int16_t), /* LMV_TYPE_INT16 */
 	sizeof(int32_t), /* LMV_TYPE_INT32 */
 	sizeof(int64_t), /* LMV_TYPE_INT64 */
+	sizeof(double),  /* LMV_TYPE_DOUBLE */
 	sizeof(zval),    /* LMV_TYPE_ZVAL */
+};
+static const uint8_t teds_lmv_shift_for_element[LMV_TYPE_COUNT] = {
+	0,
+	0, /* LMV_TYPE_BOOL_OR_NULL */
+	0, /* LMV_TYPE_INT8 */
+	1, /* LMV_TYPE_INT16 */
+	2, /* LMV_TYPE_INT32 */
+	3, /* LMV_TYPE_INT64 */
+	3, /* LMV_TYPE_DOUBLE, 8 bytes = 1 << 3 */
+	4, /* LMV_TYPE_ZVAL, 16 bytes = 1 << 4, but not even used */
 };
 
 typedef struct _teds_lowmemoryvector_entries {
@@ -76,11 +89,12 @@ typedef struct _teds_lowmemoryvector_entries {
 	union {
 		uint8_t     *entries_uint8;
 		int8_t      *entries_int8;
+		int16_t     *entries_int16;
 		int32_t     *entries_int32;
 #ifdef LMV_TYPE_INT64
 		int64_t     *entries_int64;
 #endif
-		/*double      *entries_double; */
+		double      *entries_double;
 		/*zend_string *entries_string; */
 		zval        *entries_zval;
 		void        *entries_raw;
@@ -112,11 +126,13 @@ static zend_array *teds_lowmemoryvector_entries_to_refcounted_array(const teds_l
 #ifdef LMV_TYPE_INT64
 #define LMV_GENERATE_INT_CASES() \
 	LMV_INT_CODEGEN(LMV_TYPE_INT8, int8_t,   entries_int8) \
+	LMV_INT_CODEGEN(LMV_TYPE_INT16, int16_t, entries_int16) \
 	LMV_INT_CODEGEN(LMV_TYPE_INT32, int32_t, entries_int32) \
 	LMV_INT_CODEGEN(LMV_TYPE_INT64, int64_t, entries_int64)
 #else
 #define LMV_GENERATE_INT_CASES() \
 	LMV_INT_CODEGEN(LMV_TYPE_INT8, int8_t,   entries_int8) \
+	LMV_INT_CODEGEN(LMV_TYPE_INT16, int16_t, entries_int16) \
 	LMV_INT_CODEGEN(LMV_TYPE_INT32, int32_t, entries_int32)
 #endif
 
@@ -358,6 +374,9 @@ static HashTable* teds_lowmemoryvector_get_properties(zend_object *obj)
 	}
 	HashTable *ht = zend_std_get_properties(obj);
 
+	/* XXX Here, we deliberately don't support leaking properties to var_export. The entire point is low memory. */
+	/* Related to https://github.com/php/php-src/issues/8044 */
+
 	/*
 	 * Re-initialize properties array.
 	 *
@@ -374,7 +393,6 @@ static HashTable* teds_lowmemoryvector_get_properties(zend_object *obj)
 	 *
 	 * There's the option of allocating a **different** table for var_export to use, exclusively,
 	 * and letting var_dump/var_export use their hash table detection?
-	 */
 	for (uint32_t i = 0; i < array->size; i++) {
 		zval tmp;
 		zval *elem = teds_lowmemoryvector_entries_read_offset(array, i, &tmp);
@@ -387,6 +405,7 @@ static HashTable* teds_lowmemoryvector_get_properties(zend_object *obj)
 			zend_hash_index_del(ht, i);
 		}
 	}
+	 */
 
 	return ht;
 }
@@ -629,6 +648,114 @@ zend_object_iterator *teds_lowmemoryvector_get_iterator(zend_class_entry *ce, zv
 	return &iterator->intern;
 }
 
+static void teds_lowmemoryvector_entries_unserialize_from_mixed_zval_array(teds_lowmemoryvector_entries *array, HashTable *ht) {
+	const uint32_t num_entries = zend_hash_num_elements(ht);
+	zval *entries = emalloc(num_entries * sizeof(zval));
+	zval *it = entries;
+	zval *val;
+	ZEND_HASH_FOREACH_VAL(ht, val) {
+		ZVAL_COPY_DEREF(it, val);
+		it++;
+	} ZEND_HASH_FOREACH_END();
+	ZEND_ASSERT(it == entries + num_entries);
+	array->size = num_entries;
+	array->capacity = num_entries;
+	array->entries_zval = entries;
+}
+
+static void teds_lowmemoryvector_entries_unserialize_from_bitset(teds_lowmemoryvector_entries *array, const uint8_t *bitset_val, size_t bytes) {
+	uint8_t start_len;
+	/* overflow check */
+	if (UNEXPECTED(bytes <= 1 || (start_len = ((uint8_t*)bitset_val)[0]) >= 8) || bytes >= SIZE_MAX / 8 - 8) {
+		zend_throw_exception(spl_ce_RuntimeException, "Unserializing from invalid bitset data", 0);
+		return;
+	}
+	bytes--;
+	/* bytes > 0 */
+	const uint8_t *const end = bitset_val + bytes;
+	const size_t num_entries = bytes * 8 + (start_len ? start_len - 8 : 0);
+	uint8_t *const entries = emalloc(num_entries);
+	uint8_t *dst = entries;
+
+	if (start_len > 0) {
+		/* There are 1 to 7 padding bits to decode */
+		uint8_t val = *bitset_val;
+		do {
+			*dst++ = IS_FALSE + (val & 1);
+			val >>= 1;
+			start_len--;
+		} while (start_len > 0);
+
+		bitset_val++;
+		bytes--;
+	}
+
+	for (;bitset_val < end; bitset_val++, dst += 8) {
+		const uint8_t orig = *bitset_val;
+		/* TODO sse may be faster? */
+		dst[0] = IS_FALSE + ((orig >> 0) & 1);
+		dst[1] = IS_FALSE + ((orig >> 1) & 1);
+		dst[2] = IS_FALSE + ((orig >> 2) & 1);
+		dst[3] = IS_FALSE + ((orig >> 3) & 1);
+		dst[4] = IS_FALSE + ((orig >> 4) & 1);
+		dst[5] = IS_FALSE + ((orig >> 5) & 1);
+		dst[6] = IS_FALSE + ((orig >> 6) & 1);
+		dst[7] = IS_FALSE + ((orig >> 7) & 1);
+	}
+	ZEND_ASSERT(dst == entries + num_entries);
+	array->size = num_entries;
+	array->capacity = num_entries;
+	array->entries_uint8 = entries;
+	array->type_tag = LMV_TYPE_BOOL_OR_NULL;
+}
+
+static zend_always_inline uint8_t teds_lowmemoryvector_entries_compute_type_from_2bit(const uint8_t input) {
+	return input == 0 ? IS_NULL : (IS_NULL - 1) + input;
+}
+
+static void teds_lowmemoryvector_entries_unserialize_from_bool_or_null_set(teds_lowmemoryvector_entries *array, const uint8_t *bitset_val, size_t bytes) {
+	uint8_t start_len;
+	/* overflow check */
+	if (UNEXPECTED(bytes <= 1 || (start_len = ((uint8_t*)bitset_val)[0]) >= 4) || bytes >= SIZE_MAX / 4 - 4) {
+		zend_throw_exception(spl_ce_RuntimeException, "Unserializing from invalid bitset data", 0);
+		return;
+	}
+	/* bytes > 0 */
+	const uint8_t *const end = bitset_val + bytes;
+	bytes--;
+	bitset_val++;
+	const size_t num_entries = bytes * 4 + (start_len ? start_len - 4 : 0);
+	uint8_t *const entries = emalloc(num_entries);
+	uint8_t *dst = entries;
+
+	if (start_len > 0) {
+		/* There are 1 to 3 padding bit pairs to decode */
+		uint8_t val = *bitset_val;
+		do {
+			uint8_t tmp = val & 3;
+			*dst++ = teds_lowmemoryvector_entries_compute_type_from_2bit(tmp);
+			val >>= 2;
+			start_len--;
+		} while (start_len > 0);
+
+		bitset_val++;
+		bytes--;
+	}
+
+	for (;bitset_val < end; bitset_val++, dst += 4) {
+		const uint8_t orig = *bitset_val;
+		dst[0] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 0) & 3);
+		dst[1] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 2) & 3);
+		dst[2] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 4) & 3);
+		dst[3] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 6) & 3);
+	}
+	ZEND_ASSERT(dst == entries + num_entries);
+	array->size = num_entries;
+	array->capacity = num_entries;
+	array->entries_uint8 = entries;
+	array->type_tag = LMV_TYPE_BOOL_OR_NULL;
+}
+
 PHP_METHOD(Teds_LowMemoryVector, __unserialize)
 {
 	HashTable *raw_data;
@@ -640,7 +767,112 @@ PHP_METHOD(Teds_LowMemoryVector, __unserialize)
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector __unserialize not yet implemented", 0);
+	if (zend_hash_num_elements(raw_data) == 0) {
+		teds_lowmemoryvector_entries_set_empty_list(array);
+		return;
+	}
+
+	if (UNEXPECTED(zend_hash_num_elements(raw_data) != 2)) {
+		zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector unexpected __unserialize data: expected exactly 2 values", 0);
+		RETURN_THROWS();
+	}
+	const zval *type_tag_zval = zend_hash_index_find(raw_data, 0);
+	if (UNEXPECTED(type_tag_zval == NULL || Z_TYPE_P(type_tag_zval) != IS_LONG)) {
+		zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector unserialize got invalid type tag, expected int", 0);
+		RETURN_THROWS();
+	}
+	const zend_ulong type_tag = Z_LVAL_P(type_tag_zval);
+	if (UNEXPECTED(type_tag >= LMV_TYPE_COUNT)) {
+		zend_throw_exception_ex(spl_ce_RuntimeException, 0, "LowMemoryVector unserialize got unsupported type tag %d", (int)type_tag);
+		RETURN_THROWS();
+	}
+	const zval *raw_zval = zend_hash_index_find(raw_data, 1);
+	if (UNEXPECTED(raw_zval == NULL)) {
+		zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector missing data to unserialize", 0);
+		RETURN_THROWS();
+	}
+	array->type_tag = type_tag;
+	if (type_tag == LMV_TYPE_ZVAL) {
+		if (UNEXPECTED(Z_TYPE_P(raw_zval) != IS_ARRAY)) {
+			zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector expected array of values for mixed type representation", 0);
+			RETURN_THROWS();
+		}
+		teds_lowmemoryvector_entries_unserialize_from_mixed_zval_array(array, Z_ARR_P(raw_zval));
+		return;
+	}
+	if (Z_TYPE_P(raw_zval) != IS_STRING) {
+		zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector expected string for binary data", 0);
+		RETURN_THROWS();
+	}
+	const size_t str_byte_length = Z_STRLEN_P(raw_zval);
+	const char *strval = Z_STRVAL_P(raw_zval);
+	switch (type_tag) {
+		case _LMV_TYPE_BOOL_BITSET:
+			/* Unserialize bitset to Z_TYPE of IS_TRUE/IS_FALSE */
+			teds_lowmemoryvector_entries_unserialize_from_bitset(array, (const uint8_t*)strval, str_byte_length);
+			return;
+		case LMV_TYPE_BOOL_OR_NULL:
+			teds_lowmemoryvector_entries_unserialize_from_bool_or_null_set(array, (const uint8_t*)strval, str_byte_length);
+			return;
+		case LMV_TYPE_INT32 + 1: /* 32-bit check */
+#ifndef LMV_TYPE_INT64
+			zend_throw_exception(spl_ce_RuntimeException, "LowMemoryVector unserialize binary not implemented for serialized int64 on 32-bit builds", 0);
+			RETURN_THROWS();
+#endif
+		case LMV_TYPE_DOUBLE:
+		case LMV_TYPE_INT32:
+		case LMV_TYPE_INT16:
+		case LMV_TYPE_INT8: {
+			uint8_t shift = teds_lmv_shift_for_element[type_tag];
+			const size_t num_elements = str_byte_length >> shift;
+			if (UNEXPECTED((num_elements << shift) != str_byte_length)) {
+				zend_throw_exception_ex(spl_ce_RuntimeException, 0, "LowMemoryVector Unexpected binary length for type tag, expected multiple of 8 * 2**%d, got %d bytes", (int)shift, (int)str_byte_length);
+				RETURN_THROWS();
+			}
+			char *const values = emalloc(str_byte_length);
+			array->entries_int8 = (int8_t *)values;
+			array->size = num_elements;
+			array->capacity = num_elements;
+#if WORDS_BIGENDIAN
+			/* TODO: Can probably optimize this with C restrict keyword to indicate memory doesn't overlap? */
+			if (type_tag != LMV_TYPE_INT8) {
+				if (type_tag == LMV_TYPE_INT64 || type_tag == LMV_TYPE_DOUBLE) {
+					uint64_t *dst = (uint64_t *)values;
+					const uint64_t *src = (const uint64_t *)strval;
+					const uint64_t *const end = src + num_elements;
+					for (;src < end; src++, dst++) {
+						/* This compiles down to a bswap assembly instruction in optimized builds */
+						*dst = bswap_64(*src);
+					}
+				} else if (type_tag == LMV_TYPE_INT32) {
+					uint32_t *dst = (uint32_t *)values;
+					const uint32_t *src = (const uint32_t *)strval;
+					const uint32_t *const end = src + num_elements;
+					for (;src < end; src++, dst++) {
+						/* This compiles down to a bswap assembly instruction in optimized builds */
+						*dst = bswap_32(*src);
+					}
+				} else if (type_tag == LMV_TYPE_INT16) {
+					uint16_t *dst = (uint16_t *)values;
+					const uint16_t *src = (const uint16_t *)strval;
+					const uint16_t *const end = src + num_elements;
+					for (;src < end; src++, dst++) {
+						/* This compiles down to a bswap assembly instruction in optimized builds */
+						*dst = teds_bswap_16(*src);
+					}
+				} else {
+					ZEND_UNREACHABLE();
+				}
+				return;
+			}
+#endif
+			/* Little-endian and int8_t are just a memcpy */
+			memcpy(values, strval, str_byte_length);
+			break;
+		}
+		default:
+			ZEND_UNREACHABLE();
+	}
 }
 
 static zend_always_inline HashTable *teds_create_serialize_pair(const uint8_t type, zval *data) {
@@ -653,7 +885,6 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int8(cons
 	return zend_string_init(raw, len, 0);
 }
 
-/*
 static zend_always_inline zend_string *teds_create_string_from_entries_int16(const char *raw, const size_t len) {
 #if WORDS_BIGENDIAN
 	zend_string *const result = zend_string_alloc(len * sizeof(int16_t), 0);
@@ -662,15 +893,14 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int16(con
 	const uint16_t *const end = src + len;
 	for (;src < end; src++, dst++) {
 		const uint16_t v = *src;
-		*dst = (v >> 8) | (uint16_t)(v << 8);
+		*dst = teds_bswap_16(*src);
 	}
 	*(char *)dst = '\0';
 	return result;
 #else
-	return zend_string_init((const char*) array->entries_int8, len * sizeof(int16_t), 0);
+	return zend_string_init(raw, len * sizeof(int16_t), 0);
 #endif
 }
-*/
 
 static zend_always_inline zend_string *teds_create_string_from_entries_int32(const char *raw, const size_t len) {
 #if WORDS_BIGENDIAN
@@ -689,7 +919,6 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int32(con
 #endif
 }
 
-#ifdef LMV_TYPE_INT64
 static zend_always_inline zend_string *teds_create_string_from_entries_int64(const char *raw, const size_t len) {
 #if WORDS_BIGENDIAN
 	zend_string *const result = zend_string_alloc(len * sizeof(int64_t), 0);
@@ -706,7 +935,73 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int64(con
 	return zend_string_init(raw, len * sizeof(int64_t), 0);
 #endif
 }
-#endif
+
+static zend_always_inline zend_string *teds_create_string_from_entries_double(const char *raw, const size_t len) {
+	return teds_create_string_from_entries_int64(raw, len);
+}
+
+static zend_string *teds_convert_bool_types_to_bitset(const uint8_t *src, size_t len)
+{
+	ZEND_ASSERT(len > 0);
+	const size_t num_bytes_for_bits = ((len + 15) >> 3);
+	zend_string *const result = zend_string_alloc(num_bytes_for_bits, 0);
+	ZSTR_VAL(result)[0] = len % 8;
+	uint8_t *dst = (uint8_t *)(ZSTR_VAL(result) + 1);
+
+	if (len % 8 > 0) {
+		uint8_t v = 0;
+		for (uint8_t shift = 1; len % 8 > 0; len--, shift <<= 1, src++) {
+			if (*src == IS_TRUE) {
+				v |= shift;
+			}
+		}
+		*dst++ = v;
+	}
+	ZEND_ASSERT(len % 8 == 0);
+
+	for (const uint8_t *const end = src + len; src < end; dst++, src += 8) {
+		*dst = (((src[0] == IS_TRUE) ? (1<<0) : 0)
+			  + ((src[1] == IS_TRUE) ? (1<<1) : 0)
+			  + ((src[2] == IS_TRUE) ? (1<<2) : 0)
+			  + ((src[3] == IS_TRUE) ? (1<<3) : 0)
+			  + ((src[4] == IS_TRUE) ? (1<<4) : 0)
+			  + ((src[5] == IS_TRUE) ? (1<<5) : 0)
+			  + ((src[6] == IS_TRUE) ? (1<<6) : 0)
+			  + ((src[7] == IS_TRUE) ? (1<<7) : 0));
+	}
+	*dst = '\0'; /* zend_string must end in null byte */
+
+	return result;
+}
+
+static zend_string *teds_convert_bool_or_null_types_to_bitset(const uint8_t *src, size_t len)
+{
+	ZEND_ASSERT(len > 0);
+	const size_t num_bytes_for_bit_pairs = ((len + 7) >> 2);
+	zend_string *const result = zend_string_alloc(num_bytes_for_bit_pairs, 0);
+	ZSTR_VAL(result)[0] = len % 4;
+	uint8_t *dst = (uint8_t *)(ZSTR_VAL(result) + 1);
+
+	if (len % 4 > 0) {
+		uint8_t v = 0;
+		for (uint8_t shift = 0; len % 4 > 0; len--, shift += 2, src++) {
+			uint8_t value = (*src - IS_NULL + 1) & 3;
+			v += value << shift;
+		}
+		*dst++ = v;
+	}
+	ZEND_ASSERT(len % 4 == 0);
+
+	for (const uint8_t *const end = src + len; src < end; dst++, src += 4) {
+		*dst = (((src[0] - IS_NULL + 1) & 3) << 0) |
+		       (((src[1] - IS_NULL + 1) & 3) << 2) |
+		       (((src[2] - IS_NULL + 1) & 3) << 4) |
+		       (((src[3] - IS_NULL + 1) & 3) << 6);
+	}
+	*dst = '\0'; /* zend_string must end in null byte */
+
+	return result;
+}
 
 PHP_METHOD(Teds_LowMemoryVector, __serialize)
 {
@@ -717,26 +1012,33 @@ PHP_METHOD(Teds_LowMemoryVector, __serialize)
 	if (len == 0) {
 		RETURN_EMPTY_ARRAY();
 	}
-	php_error_docref(NULL, E_WARNING, "LowMemoryVector::__serialize is a work in progress and the serialization format will change. Unserialization is not implemented");
 	zval tmp;
-	switch (array->type_tag) {
+	uint8_t type_tag = array->type_tag;
+	switch (type_tag) {
 		case LMV_TYPE_BOOL_OR_NULL: {
 			const uint8_t *src = array->entries_uint8;
-#if ZEND_DEBUG
 			for (size_t i = 0; i < len; i++) {
 				teds_lowmemoryvector_entries_validate_type(src[i]);
 			}
-#endif
-			ZVAL_STR(&tmp, zend_string_init((const char*) src, len, 0));
-			RETURN_ARR(teds_create_serialize_pair(LMV_TYPE_BOOL_OR_NULL, &tmp));
+			if (memchr(src, IS_NULL, len) != NULL) {
+				ZVAL_STR(&tmp, teds_convert_bool_or_null_types_to_bitset(src, len));
+			} else {
+				type_tag = _LMV_TYPE_BOOL_BITSET;
+				ZVAL_STR(&tmp, teds_convert_bool_types_to_bitset(src, len));
+			}
+			break;
 		}
 
 #define LMV_INT_CODEGEN(LMV_TYPE_X, intx_t, entries_intx) \
 		case LMV_TYPE_X: \
 			ZVAL_STR(&tmp, teds_create_string_from_##entries_intx((const char *)array->entries_int8, len)); \
-			RETURN_ARR(teds_create_serialize_pair(LMV_TYPE_X, &tmp));
+			break;
 LMV_GENERATE_INT_CASES()
 #undef LMV_INT_CODEGEN
+
+		case LMV_TYPE_DOUBLE:
+			ZVAL_STR(&tmp, teds_create_string_from_entries_double((const char *)array->entries_double, len));
+			break;
 
 		case LMV_TYPE_ZVAL: {
 			zend_array *values = zend_new_array(len);
@@ -750,14 +1052,13 @@ LMV_GENERATE_INT_CASES()
 					ZEND_HASH_FILL_ADD(tmp);
 				}
 			} ZEND_HASH_FILL_END();
-			zval tmp;
 			ZVAL_ARR(&tmp, values);
-			RETURN_ARR(teds_create_serialize_pair(LMV_TYPE_ZVAL, &tmp));
+			break;
 		}
 		default:
 			ZEND_UNREACHABLE();
-
 	}
+	RETURN_ARR(teds_create_serialize_pair(type_tag, &tmp));
 }
 
 static void teds_lowmemoryvector_entries_init_from_array_values(teds_lowmemoryvector_entries *array, zend_array *raw_data)
@@ -818,6 +1119,14 @@ static zend_array *teds_lowmemoryvector_entries_to_refcounted_array(const teds_l
 			}
 LMV_GENERATE_INT_CASES()
 #undef LMV_INT_CODEGEN
+			case LMV_TYPE_DOUBLE: {
+				const double *const entries = array->entries_double;
+				for (size_t i = 0; i < len; i++) {
+					ZEND_HASH_FILL_SET_LONG(entries[i]);
+					ZEND_HASH_FILL_NEXT();
+				}
+				break;
+			}
 
 			case LMV_TYPE_ZVAL: {
 				zval *entries = array->entries_zval;
@@ -904,85 +1213,114 @@ PHP_METHOD(Teds_LowMemoryVector, indexOf)
 
 	const teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t len = array->size;
-	if (len > 0) {
-		switch (array->type_tag) {
-			case LMV_TYPE_BOOL_OR_NULL: {
-				const uint8_t type = Z_TYPE_P(value);
-				if (type > IS_TRUE) {
-					RETURN_NULL();
-				}
-				const uint8_t *start = array->entries_uint8;
-				const uint8_t *it = start;
-				for (const uint8_t *end = it + len; it < end; it++) {
-					if (type == *it) {
-						RETURN_LONG(it - start);
-					}
-				}
-				break;
+	if (len == 0) {
+		RETURN_NULL();
+	}
+	switch (array->type_tag) {
+		case LMV_TYPE_BOOL_OR_NULL: {
+			const uint8_t type = Z_TYPE_P(value);
+			if (type > IS_TRUE) {
+				RETURN_NULL();
 			}
-			case LMV_TYPE_INT8: {
-				if (Z_TYPE_P(value) != IS_LONG) {
-					RETURN_NULL();
+			const uint8_t *start = array->entries_uint8;
+			const uint8_t *it = start;
+			for (const uint8_t *end = it + len; it < end; it++) {
+				if (type == *it) {
+					RETURN_LONG(it - start);
 				}
-				const int8_t v = (int8_t) Z_LVAL_P(value);
-#if SIZEOF_ZEND_LONG > 4
-				if (v != Z_LVAL_P(value)) { RETURN_NULL(); }
-#endif
-				const int8_t *start = array->entries_int8;
-				const int8_t *it = start;
-				for (const int8_t *end = it + len; it < end; it++) {
-					if (v == *it) {
-						RETURN_LONG(it - start);
-					}
-				}
-				break;
 			}
-			case LMV_TYPE_INT32: {
-				if (Z_TYPE_P(value) != IS_LONG) {
-					RETURN_NULL();
-				}
-				const int32_t v = (int32_t) Z_LVAL_P(value);
-#if SIZEOF_ZEND_LONG > 4
-				if (v != Z_LVAL_P(value)) { RETURN_NULL(); }
-#endif
-				const int32_t *start = array->entries_int32;
-				const int32_t *it = start;
-				for (const int32_t *end = it + len; it < end; it++) {
-					if (v == *it) {
-						RETURN_LONG(it - start);
-					}
-				}
-				break;
-			}
-#ifdef LMV_TYPE_INT64
-			case LMV_TYPE_INT64: {
-				if (Z_TYPE_P(value) != IS_LONG) {
-					RETURN_NULL();
-				}
-				const zend_long v = Z_LVAL_P(value);
-				const int64_t *start = array->entries_int64;
-				const int64_t *it = start;
-				for (const int64_t *end = it + len; it < end; it++) {
-					if (v == *it) {
-						RETURN_LONG(it - start);
-					}
-				}
-				break;
-			}
-#endif
-			case LMV_TYPE_ZVAL: {
-				zval *start = array->entries_zval;
-				zval *it = start;
-				for (zval *end = it + len; it < end; it++) {
-					if (zend_is_identical(value, it)) {
-						RETURN_LONG(it - start);
-					}
-				}
-				break;
-			}
-			default:
-				ZEND_UNREACHABLE();
+			break;
 		}
+		case LMV_TYPE_INT8: {
+			if (Z_TYPE_P(value) != IS_LONG) {
+				RETURN_NULL();
+			}
+			const int8_t v = (int8_t) Z_LVAL_P(value);
+			if (v != Z_LVAL_P(value)) { RETURN_NULL(); }
+			const int8_t *start = array->entries_int8;
+			const int8_t *it = start;
+			/* TODO is memchr faster? */
+			for (const int8_t *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_LONG(it - start);
+				}
+			}
+			break;
+		}
+		case LMV_TYPE_INT16: {
+			if (Z_TYPE_P(value) != IS_LONG) {
+				RETURN_NULL();
+			}
+			const int16_t v = (int16_t) Z_LVAL_P(value);
+			if (v != Z_LVAL_P(value)) { RETURN_NULL(); }
+			const int16_t *start = array->entries_int16;
+			const int16_t *it = start;
+			for (const int16_t *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_LONG(it - start);
+				}
+			}
+			break;
+		}
+		case LMV_TYPE_INT32: {
+			if (Z_TYPE_P(value) != IS_LONG) {
+				RETURN_NULL();
+			}
+			const int32_t v = (int32_t) Z_LVAL_P(value);
+#if SIZEOF_ZEND_LONG > 4
+			if (v != Z_LVAL_P(value)) { RETURN_NULL(); }
+#endif
+			const int32_t *start = array->entries_int32;
+			const int32_t *it = start;
+			for (const int32_t *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_LONG(it - start);
+				}
+			}
+			break;
+		}
+#ifdef LMV_TYPE_INT64
+		case LMV_TYPE_INT64: {
+			if (Z_TYPE_P(value) != IS_LONG) {
+				RETURN_NULL();
+			}
+			const zend_long v = Z_LVAL_P(value);
+			const int64_t *start = array->entries_int64;
+			const int64_t *it = start;
+			for (const int64_t *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_LONG(it - start);
+				}
+			}
+			break;
+		}
+#endif
+		case LMV_TYPE_DOUBLE: {
+			if (Z_TYPE_P(value) != IS_DOUBLE) {
+				RETURN_NULL();
+			}
+			const double v = Z_DVAL_P(value);
+			const double *start = array->entries_double;
+			const double *it = start;
+			for (const double *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_LONG(it - start);
+				}
+			}
+			break;
+		}
+		case LMV_TYPE_ZVAL: {
+			zval *start = array->entries_zval;
+			zval *it = start;
+			for (zval *end = it + len; it < end; it++) {
+				if (zend_is_identical(value, it)) {
+					RETURN_LONG(it - start);
+				}
+			}
+			break;
+		}
+		default:
+			ZEND_UNREACHABLE();
 	}
 	RETURN_NULL();
 }
@@ -996,13 +1334,13 @@ PHP_METHOD(Teds_LowMemoryVector, contains)
 
 	const teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t len = array->size;
-	if (len > 0) {
-		switch (array->type_tag) {
-			case LMV_TYPE_BOOL_OR_NULL: {
-				const uint8_t type = Z_TYPE_P(value);
-				if (type > IS_TRUE) {
-					RETURN_FALSE;
-				}
+	if (len == 0) {
+		RETURN_FALSE;
+	}
+	switch (array->type_tag) {
+		case LMV_TYPE_BOOL_OR_NULL: {
+			const uint8_t type = Z_TYPE_P(value);
+			if (type <= IS_TRUE) {
 				const uint8_t *start = array->entries_uint8;
 				const uint8_t *it = start;
 				for (const uint8_t *end = it + len; it < end; it++) {
@@ -1010,69 +1348,95 @@ PHP_METHOD(Teds_LowMemoryVector, contains)
 						RETURN_TRUE;
 					}
 				}
-				break;
 			}
-			case LMV_TYPE_INT8: {
-				if (Z_TYPE_P(value) != IS_LONG) {
-					RETURN_FALSE;
-				}
-				const int8_t v = (int8_t) Z_LVAL_P(value);
-#if SIZEOF_ZEND_LONG > 4
-				if (v != Z_LVAL_P(value)) { RETURN_NULL(); }
-#endif
-				const int8_t *start = array->entries_int8;
-				const int8_t *it = start;
-				for (const int8_t *end = it + len; it < end; it++) {
-					if (v == *it) {
-						RETURN_TRUE;
-					}
-				}
-				break;
-			}
-			case LMV_TYPE_INT32: {
-				if (Z_TYPE_P(value) != IS_LONG) {
-					RETURN_FALSE;
-				}
-				const int32_t v = (int32_t) Z_LVAL_P(value);
-#if SIZEOF_ZEND_LONG > 4
-				if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
-#endif
-				const int32_t *start = array->entries_int32;
-				const int32_t *it = start;
-				for (const int32_t *end = it + len; it < end; it++) {
-					if (v == *it) {
-						RETURN_TRUE;
-					}
-				}
-				break;
-			}
-#ifdef LMV_TYPE_INT64
-			case LMV_TYPE_INT64: {
-				if (Z_TYPE_P(value) != IS_LONG) {
-					RETURN_FALSE;
-				}
-				const zend_long v = Z_LVAL_P(value);
-				const int64_t *it = array->entries_int64;
-				for (const int64_t *end = it + len; it < end; it++) {
-					if (v == *it) {
-						RETURN_TRUE;
-					}
-				}
-				break;
-			}
-#endif
-			case LMV_TYPE_ZVAL: {
-				zval *it = array->entries_zval;
-				for (zval *end = it + len; it < end; it++) {
-					if (zend_is_identical(value, it)) {
-						RETURN_TRUE;
-					}
-				}
-				break;
-			}
-			default:
-				ZEND_UNREACHABLE();
+			break;
 		}
+		case LMV_TYPE_INT8: {
+			if (Z_TYPE_P(value) != IS_LONG) {
+				RETURN_FALSE;
+			}
+			const int8_t v = (int8_t) Z_LVAL_P(value);
+			if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
+			const int8_t *start = array->entries_int8;
+			const int8_t *it = start;
+			for (const int8_t *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_TRUE;
+				}
+			}
+			break;
+		}
+		case LMV_TYPE_INT16: {
+			if (Z_TYPE_P(value) != IS_LONG) {
+				RETURN_FALSE;
+			}
+			const int16_t v = (int16_t) Z_LVAL_P(value);
+			if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
+			const int16_t *start = array->entries_int16;
+			const int16_t *it = start;
+			for (const int16_t *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_TRUE;
+				}
+			}
+			break;
+		}
+		case LMV_TYPE_INT32: {
+			if (Z_TYPE_P(value) != IS_LONG) {
+				RETURN_FALSE;
+			}
+			const int32_t v = (int32_t) Z_LVAL_P(value);
+#if SIZEOF_ZEND_LONG > 4
+			if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
+#endif
+			const int32_t *start = array->entries_int32;
+			const int32_t *it = start;
+			for (const int32_t *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_TRUE;
+				}
+			}
+			break;
+		}
+#ifdef LMV_TYPE_INT64
+		case LMV_TYPE_INT64: {
+			if (Z_TYPE_P(value) != IS_LONG) {
+				RETURN_FALSE;
+			}
+			const zend_long v = Z_LVAL_P(value);
+			const int64_t *it = array->entries_int64;
+			for (const int64_t *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_TRUE;
+				}
+			}
+			break;
+		}
+#endif
+		case LMV_TYPE_DOUBLE: {
+			if (Z_TYPE_P(value) != IS_DOUBLE) {
+				RETURN_FALSE;
+			}
+			const double v = Z_DVAL_P(value);
+			const double *it = array->entries_double;
+			for (const double *end = it + len; it < end; it++) {
+				if (v == *it) {
+					RETURN_TRUE;
+				}
+			}
+			break;
+		}
+		case LMV_TYPE_ZVAL: {
+			zval *it = array->entries_zval;
+			for (zval *end = it + len; it < end; it++) {
+				if (zend_is_identical(value, it)) {
+					RETURN_TRUE;
+				}
+			}
+			break;
+		}
+		default:
+			ZEND_UNREACHABLE();
 	}
 	RETURN_FALSE;
 }
@@ -1098,6 +1462,10 @@ static zend_always_inline void teds_lowmemoryvector_set_value_at_offset(zend_obj
 LMV_GENERATE_INT_CASES()
 #undef LMV_INT_CODEGEN
 
+		case LMV_TYPE_DOUBLE:
+			ZEND_ASSERT(Z_TYPE_P(value) == IS_DOUBLE);
+			array->entries_double[offset] = Z_DVAL_P(value); \
+			break;
 		case LMV_TYPE_ZVAL: {
 			zval tmp;
 			zval *dst = &array->entries_zval[offset];
@@ -1154,7 +1522,9 @@ static zend_always_inline void teds_lowmemoryvector_entries_copy_offset(const te
 		case LMV_TYPE_X: ZVAL_LONG(dst, array->entries_intx[offset]); return;
 LMV_GENERATE_INT_CASES();
 #undef LMV_INT_CODEGEN
-
+		case LMV_TYPE_DOUBLE:
+			ZVAL_DOUBLE(dst, array->entries_double[offset]);
+			return;
 		case LMV_TYPE_ZVAL:
 			if (increase_refcount) {
 				ZVAL_COPY(dst, &array->entries_zval[offset]);
@@ -1181,6 +1551,9 @@ static zend_always_inline zval *teds_lowmemoryvector_entries_read_offset(const t
 LMV_GENERATE_INT_CASES();
 #undef LMV_INT_CODEGEN
 
+		case LMV_TYPE_DOUBLE:
+			ZVAL_DOUBLE(tmp, array->entries_double[offset]);
+			return tmp;
 		case LMV_TYPE_ZVAL:
 			return &array->entries_zval[offset];
 		default:
@@ -1191,44 +1564,52 @@ LMV_GENERATE_INT_CASES();
 static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds_lowmemoryvector_entries *array, const zval *val)
 {
 
-#define TEDS_PROMOTE_INT_TYPE(int_smaller, entries_smaller, int_larger, entries_larger, LMV_TYPE_LARGER) \
-	array->type_tag = LMV_TYPE_LARGER; \
-	int_smaller *const original_entries = array->entries_smaller; \
-	const int_smaller *src = original_entries; \
-	const size_t size = array->size; \
-	const size_t capacity = size >= 2 ? size * 2 : 4; \
-	array->capacity = capacity; \
-	int_larger *const entries_larger  = safe_emalloc(capacity, sizeof(int_larger), 0); \
-	const int_larger *const end = entries_larger + size; \
-	int_larger *dst = entries_larger; \
-	array->entries_larger = entries_larger; \
-	while (dst < end) { \
-		*dst++ = *src++; \
-	} \
-	if (array->capacity > 0) { \
-		efree(original_entries); \
-	}
-
-#define TEDS_CHECK_PROMOTE_INT_TO_ZVAL(intx_t, entries_intx) \
-	if (Z_TYPE_P(val) != IS_LONG) { \
-		array->type_tag = LMV_TYPE_ZVAL; \
-		intx_t *const original_entries = array->entries_intx; \
-		const intx_t *src = original_entries; \
+#define TEDS_PROMOTE_INT_TYPE_AND_RETURN(int_smaller, entries_smaller, int_larger, entries_larger, LMV_TYPE_LARGER) do { \
+		ZEND_ASSERT(sizeof(int_smaller) < sizeof(int_larger)); \
+		array->type_tag = LMV_TYPE_LARGER; \
+		int_smaller *const original_entries = array->entries_smaller; \
+		const int_smaller *src = original_entries; \
 		const size_t size = array->size; \
 		const size_t capacity = size >= 2 ? size * 2 : 4; \
 		array->capacity = capacity; \
-		zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0); \
-		const zval *const end = entries_zval + size; \
-		zval *dst = entries_zval; \
-		array->entries_zval = entries_zval; \
-		for (; dst < end; dst++, src++) { \
-			ZVAL_LONG(dst, *src); \
+		int_larger *const entries_larger  = safe_emalloc(capacity, sizeof(int_larger), 0); \
+		const int_larger *const end = entries_larger + size; \
+		int_larger *dst = entries_larger; \
+		array->entries_larger = entries_larger; \
+		while (dst < end) { \
+			*dst++ = *src++; \
 		} \
 		if (array->capacity > 0) { \
 			efree(original_entries); \
 		} \
 		return; \
-	}
+	} while (0)
+
+#define TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(intx_t) do {  \
+		if (EXPECTED(Z_LVAL_P(val) == (intx_t) Z_LVAL_P(val))) { return; } \
+	} while (0)
+
+#define TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(intx_t, entries_intx) do {\
+		if (UNEXPECTED(Z_TYPE_P(val) != IS_LONG)) { \
+			array->type_tag = LMV_TYPE_ZVAL; \
+			intx_t *const original_entries = array->entries_intx; \
+			const intx_t *src = original_entries; \
+			const size_t size = array->size; \
+			const size_t capacity = size >= 2 ? size * 2 : 4; \
+			array->capacity = capacity; \
+			zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0); \
+			const zval *const end = entries_zval + size; \
+			zval *dst = entries_zval; \
+			array->entries_zval = entries_zval; \
+			for (; dst < end; dst++, src++) { \
+				ZVAL_LONG(dst, *src); \
+			} \
+			if (array->capacity > 0) { \
+				efree(original_entries); \
+			} \
+			return; \
+		} \
+	} while (0)
 
 
 	ZEND_ASSERT(Z_TYPE_P(val) >= IS_NULL && Z_TYPE_P(val) <= IS_RESOURCE);
@@ -1249,18 +1630,25 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 							return;
 						}
 #endif
-						array->type_tag = LMV_TYPE_INT32;
+						if (Z_LVAL_P(val) != (int16_t)Z_LVAL_P(val)) {
+							array->type_tag = LMV_TYPE_INT32;
+							return;
+						}
+						array->type_tag = LMV_TYPE_INT16;
 						return;
 					}
 					array->type_tag = LMV_TYPE_INT8;
 					return;
 				}
+				case IS_DOUBLE:
+					array->type_tag = LMV_TYPE_DOUBLE;
+					return;
 				default:
 					array->type_tag = LMV_TYPE_ZVAL;
 					return;
 			}
 		case LMV_TYPE_BOOL_OR_NULL:
-			if (Z_TYPE_P(val) > IS_TRUE) {
+			if (UNEXPECTED(Z_TYPE_P(val) > IS_TRUE)) {
 				array->type_tag = LMV_TYPE_ZVAL;
 				uint8_t *const original_types = array->entries_uint8;
 				const uint8_t *src = original_types;
@@ -1281,35 +1669,68 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 			}
 			return;
 		case LMV_TYPE_INT8:
-
-			TEDS_CHECK_PROMOTE_INT_TO_ZVAL(int8_t, entries_int8)
-
-			if (Z_LVAL_P(val) != (int8_t) Z_LVAL_P(val)) {
-#ifdef LMV_TYPE_INT64
-				if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
-					TEDS_PROMOTE_INT_TYPE(int8_t, entries_int8, int64_t, entries_int64, LMV_TYPE_INT64);
-					return;
-				}
-#endif
-				TEDS_PROMOTE_INT_TYPE(int8_t, entries_int8, int32_t, entries_int32, LMV_TYPE_INT32);
-			}
-			return;
-		case LMV_TYPE_INT32:
-			TEDS_CHECK_PROMOTE_INT_TO_ZVAL(int32_t, entries_int32)
+			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int8_t, entries_int8);
+			TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(int8_t);
 
 #ifdef LMV_TYPE_INT64
 			if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
-				TEDS_PROMOTE_INT_TYPE(int32_t, entries_int32, int64_t, entries_int64, LMV_TYPE_INT64);
+				TEDS_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int64_t, entries_int64, LMV_TYPE_INT64);
+				return;
+			}
+#endif
+			if (Z_LVAL_P(val) != (int16_t) Z_LVAL_P(val)) {
+				TEDS_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int32_t, entries_int32, LMV_TYPE_INT32);
+				return;
+			}
+			TEDS_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int16_t, entries_int16, LMV_TYPE_INT16);
+			return;
+		case LMV_TYPE_INT16:
+			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int16_t, entries_int16);
+			TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(int16_t);
+
+#ifdef LMV_TYPE_INT64
+			if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
+				TEDS_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int64_t, entries_int64, LMV_TYPE_INT64);
+			}
+#endif
+			TEDS_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int32_t, entries_int32, LMV_TYPE_INT32);
+			return;
+		case LMV_TYPE_INT32:
+			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int32_t, entries_int32);
+
+#ifdef LMV_TYPE_INT64
+			if (UNEXPECTED(Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val))) {
+				TEDS_PROMOTE_INT_TYPE_AND_RETURN(int32_t, entries_int32, int64_t, entries_int64, LMV_TYPE_INT64);
 			}
 #endif
 			return;
 #ifdef LMV_TYPE_INT64
 		case LMV_TYPE_INT64:
-			TEDS_CHECK_PROMOTE_INT_TO_ZVAL(int64_t, entries_int64)
+			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int64_t, entries_int64);
 			return;
 #endif
 
-#undef TEDS_PROMOTE_INT_TYPE
+#undef TEDS_PROMOTE_INT_TYPE_AND_RETURN
+		case LMV_TYPE_DOUBLE:
+			if (UNEXPECTED(Z_TYPE_P(val) != IS_DOUBLE)) {
+				array->type_tag = LMV_TYPE_ZVAL;
+				double *const original_entries = array->entries_double;
+				const double *src = original_entries;
+				const size_t size = array->size;
+				const size_t capacity = size >= 2 ? size * 2 : 4;
+				array->capacity = capacity;
+				zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0);
+				const zval *const end = entries_zval + size;
+				zval *dst = entries_zval;
+				array->entries_zval = entries_zval;
+				for (; dst < end; dst++, src++) {
+					ZVAL_DOUBLE(dst, *src);
+				}
+				if (array->capacity > 0) {
+					efree(original_entries);
+				}
+			}
+			return;
 		case LMV_TYPE_ZVAL:
 			/* This can hold any type */
 			return;
@@ -1345,6 +1766,10 @@ static zend_always_inline void teds_lowmemoryvector_entries_push(teds_lowmemoryv
 LMV_GENERATE_INT_CASES()
 #undef LMV_INT_CODEGEN
 
+		case LMV_TYPE_DOUBLE: \
+			ZEND_ASSERT(Z_TYPE_P(value) == IS_DOUBLE); \
+			array->entries_double[old_size] = Z_DVAL_P(value); \
+			break;
 		case LMV_TYPE_ZVAL:
 			ZVAL_COPY(&array->entries_zval[old_size], value);
 			break;
