@@ -18,9 +18,8 @@ test_serialize_values(0);
 test_serialize_values(null);
 test_serialize_values(0x7f, -0x80);
 test_serialize_values(256, 0x7fff, -0x8000);
-test_serialize_values(0x7fff, (int)-0x8000_0000);
-test_serialize_values(0x7fff, (int)-0x8000_0001);
-test_serialize_values(0x7fff, (int)-0x8000000, []);
+test_serialize_values(0x7fff, (int)-0x8000_0000);  // -0x8000_0001 is not an int in 32-bit php builds
+test_serialize_values(0x7fff, (int)-0x8000_0000, []);
 test_serialize_values('first', 'second');
 
 $it = new Teds\LowMemoryVector([new stdClass()]);
@@ -90,23 +89,14 @@ Unserialized: object(Teds\LowMemoryVector)#3 (2) {
   [1]=>
   int(-2147483648)
 }
-[32767,-2147483649]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:5;i:1;s:16:\"\xff\x7f\x00\x00\x00\x00\x00\x00\xff\xff\xff\x7f\xff\xff\xff\xff\";}"
-
-Unserialized: object(Teds\LowMemoryVector)#3 (2) {
-  [0]=>
-  int(32767)
-  [1]=>
-  int(-2147483649)
-}
-[32767,-134217728,[]]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:7;i:1;a:3:{i:0;i:32767;i:1;i:-134217728;i:2;a:0:{}}}"
+[32767,-2147483648,[]]
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:7;i:1;a:3:{i:0;i:32767;i:1;i:-2147483648;i:2;a:0:{}}}"
 
 Unserialized: object(Teds\LowMemoryVector)#3 (3) {
   [0]=>
   int(32767)
   [1]=>
-  int(-134217728)
+  int(-2147483648)
   [2]=>
   array(0) {
   }
