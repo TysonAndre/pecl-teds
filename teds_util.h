@@ -5,6 +5,20 @@
 #define TEDS_NODE_RED 0
 #define TEDS_NODE_BLACK 1
 
+static zend_always_inline HashTable *teds_new_array_check_overflow(size_t n) {
+#if SIZEOF_ZEND_LONG > 4
+	if (UNEXPECTED(n >= HT_MAX_SIZE)) {
+		zend_error_noreturn(E_ERROR, "Possible integer overflow in memory allocation (%lu * %zu + %zu)", n, sizeof(Bucket), sizeof(Bucket));
+	}
+#endif
+	return zend_new_array(n);
+}
+
+/* Assume that on 64-bit systems, there won't be enough memory (9.22+18 bytes) to overflow */
+static zend_always_inline bool teds_offset_within_size_t(const zend_long offset, const size_t len) {
+	return ((zend_ulong) offset) < len && EXPECTED(SIZEOF_ZEND_LONG > 4 || offset >= 0);
+}
+
 static inline zval *teds_zval_copy_range(const zval *original, size_t n) {
 	const size_t bytes = n * sizeof(zval);
 	zval *copy = emalloc(bytes);

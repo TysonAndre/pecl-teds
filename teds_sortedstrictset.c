@@ -523,16 +523,17 @@ void teds_sortedstrictset_tree_dtor(teds_sortedstrictset_tree *array)
 static HashTable* teds_sortedstrictset_get_gc(zend_object *obj, zval **table, int *table_count)
 {
 	teds_sortedstrictset *intern = teds_sortedstrictset_from_obj(obj);
+	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 	if (intern->array.nNumOfElements > 0) {
-		zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 		zval *key;
 
 		TEDS_SORTEDSTRICTSET_FOREACH_KEY(&intern->array, key) {
 			zend_get_gc_buffer_add_zval(gc_buffer, key);
 		} TEDS_SORTEDSTRICTSET_FOREACH_END();
 
-		zend_get_gc_buffer_use(gc_buffer, table, table_count);
 	}
+	/* Overwrites table and table_count. The caller does not initialize these. */
+	zend_get_gc_buffer_use(gc_buffer, table, table_count);
 
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.

@@ -384,16 +384,15 @@ void teds_strictset_entries_dtor(teds_strictset_entries *array)
 static HashTable* teds_strictset_get_gc(zend_object *obj, zval **table, int *table_count)
 {
 	teds_strictset *intern = teds_strictset_from_obj(obj);
+	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 	if (intern->array.nNumOfElements > 0) {
-		zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 		zval *val;
 
 		TEDS_STRICTSET_FOREACH_VAL(&intern->array, val) {
 			zend_get_gc_buffer_add_zval(gc_buffer, val);
 		} TEDS_STRICTSET_FOREACH_END();
-
-		zend_get_gc_buffer_use(gc_buffer, table, table_count);
 	}
+	zend_get_gc_buffer_use(gc_buffer, table, table_count);
 
 	// Returning the object's properties is redundant if dynamic properties are not allowed,
 	// and this can't be subclassed.

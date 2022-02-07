@@ -82,6 +82,12 @@ In comparison, in 64-bit builds of PHP, PHP's arrays take at least 16 bytes per 
 
 Example benchmarks: [benchmarks/benchmark_vector_bool.php](benchmarks/benchmark_vector_bool.php) and [benchmarks/benchmark_vector_unserialize.phpt](benchmarks/benchmark_vector_unserialize.phpt).
 
+### Teds\IntVector
+
+[`Teds\IntVector` API](./teds_intvector.stub.php)
+
+Similar to `Teds\LowMemoryVector` but throws a TypeError on attempts to add non-integers.
+
 ### Teds\Vector
 
 [`Teds\Vector` API](./teds_vector.stub.php)

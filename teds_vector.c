@@ -335,7 +335,6 @@ static zend_object *teds_vector_new(zend_class_entry *class_type)
 	return teds_vector_new_ex(class_type, NULL, 0);
 }
 
-
 static zend_object *teds_vector_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_vector_new_ex(old_object->ce, old_object, 1);
@@ -1174,7 +1173,7 @@ PHP_METHOD(Teds_Vector, reserve)
 	(void) return_value;
 }
 
-PHP_METHOD(Teds_Vector, offsetUnset)
+ZEND_COLD PHP_METHOD(Teds_Vector, offsetUnset)
 {
 	zval                  *offset_zv;
 

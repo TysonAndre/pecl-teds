@@ -66,7 +66,7 @@ static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 	return 0;
 }
 
-#define CONVERT_OFFSET_TO_LONG_OR_THROW(index, zv) do { \
+#define CONVERT_OFFSET_TO_LONG_OR_THROW(index, offset_zv) do { \
 	if (UNEXPECTED(Z_TYPE_P(offset_zv) != IS_LONG)) { \
 		index = teds_get_offset(offset_zv); \
 		if (UNEXPECTED(EG(exception))) { \
