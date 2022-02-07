@@ -54,6 +54,10 @@
    <file name="teds_keyvaluevector.c" role="src" />
    <file name="teds_keyvaluevector.h" role="src" />
    <file name="teds_keyvaluevector.stub.php" role="src" />
+   <file name="teds_lowmemoryvector_arginfo.h" role="src" />
+   <file name="teds_lowmemoryvector.c" role="src" />
+   <file name="teds_lowmemoryvector.h" role="src" />
+   <file name="teds_lowmemoryvector.stub.php" role="src" />
    <file name="teds_sortedstrictmap_arginfo.h" role="src" />
    <file name="teds_sortedstrictmap.c" role="src" />
    <file name="teds_sortedstrictmap.h" role="src" />
@@ -147,6 +151,7 @@
     <file name="IntVector/arrayCast.phpt" role="test" />
     <file name="IntVector/clone.phpt" role="test" />
     <file name="IntVector/exceptionhandler.phpt" role="test" />
+    <file name="IntVector/gc.phpt" role="test" />
     <file name="IntVector/isEmpty.phpt" role="test" />
     <file name="IntVector/isset.phpt" role="test" />
     <file name="IntVector/offsetGet.phpt" role="test" />
