@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-01-30</date>
+ <date>2022-02-06</date>
  <time>16:00:00</time>
  <version>
-  <release>0.9.3dev</release>
-  <api>0.9.3dev</api>
+  <release>0.10.0</release>
+  <api>0.10.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -23,8 +23,9 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Speed up unserializing SortedStrictSet/SortedStrictMap when the input data is already sorted. (If the data is not sorted, then build the binary tree the slow but correct way)
-* Add a LowMemoryVector type, supporting reduced memory usage
+* Add a LowMemoryVector type and IntVector type, supporting reduced memory usage.
 * Deduplicate code.
+* Fix garbage collection in some classes.
  </notes>
  <contents>
   <dir name="/">
