@@ -5,6 +5,13 @@
 
 namespace Teds;
 
+/**
+ * An ImmutableSequence is a container of a sequence of values (with keys 0, 1, ...count($vector) - 1)
+ * that can't change in size and values can't change (but references in the values or properties of objects can change)
+ *
+ * This is backed by a memory-efficient representation
+ * (raw array of values).
+ */
 final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
 {
     public function __construct(iterable $iterator) {}
@@ -34,6 +41,23 @@ final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSe
     public function indexOf(mixed $value): ?int {}
     public function contains(mixed $value): bool {}
 
+    /**
+     * Returns a new ImmutableSequence instance created from the return values of $callable($element)
+     * being applied to each element of this sequence.
+     *
+     * (at)param null|callable(mixed):mixed $callback
+     */
+    public function map(callable $callback): ImmutableSequence {}
+    /**
+     * Returns the subset of elements of the ImmutableSequence satisfying the predicate.
+     *
+     * If the value returned by the callback is truthy
+     * (e.g. true, non-zero number, non-empty array, truthy object, etc.),
+     * this is treated as satisfying the predicate.
+     *
+     * (at)param null|callable(mixed):bool $callback
+     */
+    public function filter(?callable $callback = null): ImmutableSequence {}
     /**
      * @implementation-alias Teds\ImmutableSequence::toArray
      */

@@ -13,8 +13,8 @@
  <date>2022-02-06</date>
  <time>16:00:00</time>
  <version>
-  <release>0.10.0</release>
-  <api>0.10.0</api>
+  <release>0.11.0dev</release>
+  <api>0.11.0dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,10 +22,9 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Speed up unserializing SortedStrictSet/SortedStrictMap when the input data is already sorted. (If the data is not sorted, then build the binary tree the slow but correct way)
-* Add a LowMemoryVector type and IntVector type, supporting reduced memory usage.
 * Deduplicate code.
-* Fix garbage collection in some classes.
+* Reduce size/capacity limits to the same limits as array for Deque.
+* Add ImmutableSequence::map(), filter()
  </notes>
  <contents>
   <dir name="/">
@@ -384,6 +383,25 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-02-06</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.10.0</release>
+    <api>0.10.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Speed up unserializing SortedStrictSet/SortedStrictMap when the input data is already sorted. (If the data is not sorted, then build the binary tree the slow but correct way)
+* Add a LowMemoryVector type and IntVector type, supporting reduced memory usage.
+* Deduplicate code.
+* Fix garbage collection in some classes.
+   </notes>
+  </release>
   <release>
    <date>2022-01-30</date>
    <time>16:00:00</time>

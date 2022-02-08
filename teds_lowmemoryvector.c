@@ -84,8 +84,8 @@ static const uint8_t teds_lmv_shift_for_element[LMV_TYPE_COUNT] = {
 };
 
 typedef struct _teds_lowmemoryvector_entries {
-	size_t size;
-	size_t capacity;
+	uint32_t size;
+	uint32_t capacity;
 	union {
 		uint8_t     *entries_uint8;
 		int8_t      *entries_int8;
@@ -210,7 +210,7 @@ static void teds_lowmemoryvector_entries_raise_capacity(teds_lowmemoryvector_ent
 	ZEND_ASSERT(array->entries_raw != NULL);
 }
 
-static inline void teds_lowmemoryvector_entries_shrink_capacity(teds_lowmemoryvector_entries *array, size_t size, size_t capacity, void *old_entries_raw) {
+static inline void teds_lowmemoryvector_entries_shrink_capacity(teds_lowmemoryvector_entries *array, uint32_t size, uint32_t capacity, void *old_entries_raw) {
 	ZEND_ASSERT(size <= capacity);
 	ZEND_ASSERT(size == array->size);
 	ZEND_ASSERT(capacity > 0);
@@ -292,7 +292,7 @@ static void teds_lowmemoryvector_entries_init_from_traversable(teds_lowmemoryvec
 /* Copies the range [0, n) into the lowmemoryvector, beginning at `offset`.
  * Does not dtor the existing elements.
  */
-static void teds_lowmemoryvector_copy_range(teds_lowmemoryvector_entries *array, const int8_t *const start, const size_t n, const uint8_t bytes_per_element)
+static void teds_lowmemoryvector_copy_range(teds_lowmemoryvector_entries *array, const int8_t *const start, const uint32_t n, const uint8_t bytes_per_element)
 {
 	if (array->type_tag <= LMV_TYPE_LAST_NONREFCOUNTED) {
 		memcpy(array->entries_int8, start, bytes_per_element * n);
@@ -348,8 +348,7 @@ static HashTable* teds_lowmemoryvector_get_gc(zend_object *obj, zval **table, in
 {
 	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(obj)->array;
 
-	/* TODO: This won't work with zvals and sizeof size_t > sizeof int with 4 billion values*/
-	size_t len = array->size;
+	uint32_t len = array->size;
 	if (len == 0 || array->type_tag <= LMV_TYPE_LAST_GC_NO_SIDE_EFFECTS) {
 		*n = 0;
 		/* Deliberately return null if obj->properties has not yet been instantiated */
@@ -666,14 +665,15 @@ static void teds_lowmemoryvector_entries_unserialize_from_mixed_zval_array(teds_
 static void teds_lowmemoryvector_entries_unserialize_from_bitset(teds_lowmemoryvector_entries *array, const uint8_t *bitset_val, size_t bytes) {
 	uint8_t start_len;
 	/* overflow check */
-	if (UNEXPECTED(bytes <= 1 || (start_len = ((uint8_t*)bitset_val)[0]) >= 8) || bytes >= SIZE_MAX / 8 - 8) {
+	if (UNEXPECTED(bytes <= 1 || (start_len = ((uint8_t*)bitset_val)[0]) >= 8) || bytes >= TEDS_MAX_ZVAL_COLLECTION_SIZE / 8 - 1) {
 		zend_throw_exception(spl_ce_RuntimeException, "Unserializing from invalid bitset data", 0);
 		return;
 	}
 	bytes--;
 	/* bytes > 0 */
 	const uint8_t *const end = bitset_val + bytes;
-	const size_t num_entries = bytes * 8 + (start_len ? start_len - 8 : 0);
+	const uint32_t num_entries = bytes * 8 + (start_len ? start_len - 8 : 0);
+	ZEND_ASSERT(num_entries <= TEDS_MAX_ZVAL_COLLECTION_SIZE);
 	uint8_t *const entries = emalloc(num_entries);
 	uint8_t *dst = entries;
 
@@ -716,15 +716,15 @@ static zend_always_inline uint8_t teds_lowmemoryvector_entries_compute_type_from
 static void teds_lowmemoryvector_entries_unserialize_from_bool_or_null_set(teds_lowmemoryvector_entries *array, const uint8_t *bitset_val, size_t bytes) {
 	uint8_t start_len;
 	/* overflow check */
-	if (UNEXPECTED(bytes <= 1 || (start_len = ((uint8_t*)bitset_val)[0]) >= 4) || bytes >= SIZE_MAX / 4 - 4) {
-		zend_throw_exception(spl_ce_RuntimeException, "Unserializing from invalid bitset data", 0);
+	if (UNEXPECTED(bytes <= 1 || (start_len = ((uint8_t*)bitset_val)[0]) >= 4) || bytes >= TEDS_MAX_ZVAL_COLLECTION_SIZE / 4 - 1) {
+		zend_throw_exception(spl_ce_RuntimeException, "Unserializing from invalid nullable boolset data", 0);
 		return;
 	}
 	/* bytes > 0 */
 	const uint8_t *const end = bitset_val + bytes;
 	bytes--;
 	bitset_val++;
-	const size_t num_entries = bytes * 4 + (start_len ? start_len - 4 : 0);
+	const uint32_t num_entries = bytes * 4 + (start_len ? start_len - 4 : 0);
 	uint8_t *const entries = emalloc(num_entries);
 	uint8_t *dst = entries;
 
@@ -825,6 +825,10 @@ PHP_METHOD(Teds_LowMemoryVector, __unserialize)
 		case LMV_TYPE_INT8: {
 			uint8_t shift = teds_lmv_shift_for_element[type_tag];
 			const size_t num_elements = str_byte_length >> shift;
+			if (UNEXPECTED(num_elements >= TEDS_MAX_ZVAL_COLLECTION_SIZE)) {
+				teds_error_noreturn_max_lowmemoryvector_capacity();
+				ZEND_UNREACHABLE();
+			}
 			if (UNEXPECTED((num_elements << shift) != str_byte_length)) {
 				zend_throw_exception_ex(spl_ce_RuntimeException, 0, "LowMemoryVector Unexpected binary length for type tag, expected multiple of 8 * 2**%d, got %d bytes", (int)shift, (int)str_byte_length);
 				RETURN_THROWS();
@@ -974,10 +978,10 @@ static zend_string *teds_convert_bool_types_to_bitset(const uint8_t *src, size_t
 	return result;
 }
 
-static zend_string *teds_convert_bool_or_null_types_to_bitset(const uint8_t *src, size_t len)
+static zend_string *teds_convert_bool_or_null_types_to_bitset(const uint8_t *src, uint32_t len)
 {
 	ZEND_ASSERT(len > 0);
-	const size_t num_bytes_for_bit_pairs = ((len + 7) >> 2);
+	const uint32_t num_bytes_for_bit_pairs = ((len + 7) >> 2);
 	zend_string *const result = zend_string_alloc(num_bytes_for_bit_pairs, 0);
 	ZSTR_VAL(result)[0] = len % 4;
 	uint8_t *dst = (uint8_t *)(ZSTR_VAL(result) + 1);
@@ -1008,7 +1012,7 @@ PHP_METHOD(Teds_LowMemoryVector, __serialize)
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	const teds_lowmemoryvector_entries *const array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
-	const size_t len = array->size;
+	const uint32_t len = array->size;
 	if (len == 0) {
 		RETURN_EMPTY_ARRAY();
 	}
@@ -1017,9 +1021,11 @@ PHP_METHOD(Teds_LowMemoryVector, __serialize)
 	switch (type_tag) {
 		case LMV_TYPE_BOOL_OR_NULL: {
 			const uint8_t *src = array->entries_uint8;
-			for (size_t i = 0; i < len; i++) {
-				teds_lowmemoryvector_entries_validate_type(src[i]);
+#if ZEND_DEBUG
+			for (const uint8_t *it = src, *end = it + len; it < end; it++) {
+				teds_lowmemoryvector_entries_validate_type(*it);
 			}
+#endif
 			if (memchr(src, IS_NULL, len) != NULL) {
 				ZVAL_STR(&tmp, teds_convert_bool_or_null_types_to_bitset(src, len));
 			} else {
@@ -1046,7 +1052,7 @@ LMV_GENERATE_INT_CASES()
 			zend_hash_real_init_packed(values);
 			ZEND_HASH_FILL_PACKED(values) {
 				zval *entries = array->entries_zval;
-				for (size_t i = 0; i < len; i++) {
+				for (uint32_t i = 0; i < len; i++) {
 					zval *tmp = &entries[i];
 					Z_TRY_ADDREF_P(tmp);
 					ZEND_HASH_FILL_ADD(tmp);
@@ -1063,12 +1069,12 @@ LMV_GENERATE_INT_CASES()
 
 static void teds_lowmemoryvector_entries_init_from_array_values(teds_lowmemoryvector_entries *array, zend_array *raw_data)
 {
-	size_t num_entries = zend_hash_num_elements(raw_data);
+	const uint32_t num_entries = zend_hash_num_elements(raw_data);
 	teds_lowmemoryvector_entries_set_empty_list(array);
 	if (num_entries == 0) {
 		return;
 	}
-	/* TODO: Can probably precompute capacity to avoid reallocations */
+	/* TODO: Can probably precompute capacity to avoid reallocations in common case where type tag doesn't change */
 	zval *val;
 	ZEND_HASH_FOREACH_VAL(raw_data, val) {
 		teds_lowmemoryvector_entries_push(array, val, 1);
@@ -1210,7 +1216,7 @@ PHP_METHOD(Teds_LowMemoryVector, indexOf)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
-	const size_t len = array->size;
+	const uint32_t len = array->size;
 	if (len == 0) {
 		RETURN_NULL();
 	}
@@ -1331,7 +1337,7 @@ PHP_METHOD(Teds_LowMemoryVector, contains)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
-	const size_t len = array->size;
+	const uint32_t len = array->size;
 	if (len == 0) {
 		RETURN_FALSE;
 	}
@@ -1567,10 +1573,10 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 		array->type_tag = LMV_TYPE_LARGER; \
 		int_smaller *const original_entries = array->entries_smaller; \
 		const int_smaller *src = original_entries; \
-		const size_t size = array->size; \
-		const size_t capacity = size >= 2 ? size * 2 : 4; \
-		array->capacity = capacity; \
-		int_larger *const entries_larger  = safe_emalloc(capacity, sizeof(int_larger), 0); \
+		const uint32_t size = array->size; \
+		const uint32_t old_capacity = array->capacity; \
+		const uint32_t capacity = old_capacity >= 4 ? old_capacity : 4; \
+		int_larger *const entries_larger = safe_emalloc(capacity, sizeof(int_larger), 0); \
 		const int_larger *const end = entries_larger + size; \
 		int_larger *dst = entries_larger; \
 		array->entries_larger = entries_larger; \
@@ -1592,17 +1598,17 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 			array->type_tag = LMV_TYPE_ZVAL; \
 			intx_t *const original_entries = array->entries_intx; \
 			const intx_t *src = original_entries; \
-			const size_t size = array->size; \
-			const size_t capacity = size >= 2 ? size * 2 : 4; \
-			array->capacity = capacity; \
+			const uint32_t size = array->size; \
+			const uint32_t old_capacity = array->capacity; \
+			const uint32_t capacity = old_capacity >= 4 ? old_capacity : 4; \
 			zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0); \
-			const zval *const end = entries_zval + size; \
-			zval *dst = entries_zval; \
-			array->entries_zval = entries_zval; \
-			for (; dst < end; dst++, src++) { \
-				ZVAL_LONG(dst, *src); \
-			} \
-			if (array->capacity > 0) { \
+			if (old_capacity > 0) { \
+				const zval *const end = entries_zval + size; \
+				zval *dst = entries_zval; \
+				array->entries_zval = entries_zval; \
+				for (; dst < end; dst++, src++) { \
+					ZVAL_LONG(dst, *src); \
+				} \
 				efree(original_entries); \
 			} \
 			return; \

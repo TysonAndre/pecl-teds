@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 79fecf32ea759172ffa5e71c9fd9eb3eb6d17b20 */
+ * Stub hash: 6c721768a79fd388fe9b09f386e76f9f8d3a3684 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -56,6 +56,14 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_con
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableSequence_map, 0, 1, Teds\\ImmutableSequence, 0)
+	ZEND_ARG_TYPE_INFO(0, callback, IS_CALLABLE, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableSequence_filter, 0, 0, Teds\\ImmutableSequence, 0)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, callback, IS_CALLABLE, 1, "null")
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_Teds_ImmutableSequence_jsonSerialize arginfo_class_Teds_ImmutableSequence___serialize
 
 
@@ -73,6 +81,8 @@ ZEND_METHOD(Teds_ImmutableSequence, offsetSet);
 ZEND_METHOD(Teds_ImmutableSequence, offsetUnset);
 ZEND_METHOD(Teds_ImmutableSequence, indexOf);
 ZEND_METHOD(Teds_ImmutableSequence, contains);
+ZEND_METHOD(Teds_ImmutableSequence, map);
+ZEND_METHOD(Teds_ImmutableSequence, filter);
 
 
 static const zend_function_entry class_Teds_ImmutableSequence_methods[] = {
@@ -91,6 +101,8 @@ static const zend_function_entry class_Teds_ImmutableSequence_methods[] = {
 	ZEND_ME(Teds_ImmutableSequence, offsetUnset, arginfo_class_Teds_ImmutableSequence_offsetUnset, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, indexOf, arginfo_class_Teds_ImmutableSequence_indexOf, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, contains, arginfo_class_Teds_ImmutableSequence_contains, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSequence, map, arginfo_class_Teds_ImmutableSequence_map, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSequence, filter, arginfo_class_Teds_ImmutableSequence_filter, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_ImmutableSequence, jsonSerialize, toArray, arginfo_class_Teds_ImmutableSequence_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };

@@ -101,6 +101,9 @@ static const uint8_t teds_lmv_shift_for_element[TEDS_INTVECTOR_TYPE_COUNT] = {
 };
 
 typedef struct _teds_intvector_entries {
+	/* This is deliberately a size_t instead of an uint32_t.
+	 * This is memory efficient enough that it's more likely to be used in practice for more than 4 billion values,
+	 * and garbage collection isn't a problem. */
 	size_t size;
 	size_t capacity;
 	union {
@@ -149,23 +152,6 @@ static zend_array *teds_intvector_entries_to_refcounted_array(const teds_intvect
 	TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_INT16, int16_t, entries_int16) \
 	TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_INT32, int32_t, entries_int32)
 #endif
-
-
-static zend_always_inline void teds_intvector_entries_set_type(zval *dst, const uint8_t type) {
-	ZEND_ASSERT(type >= IS_NULL && type <= IS_TRUE);
-	Z_TYPE_INFO_P(dst) = type;
-}
-
-static zend_always_inline uint8_t teds_intvector_entries_validate_type(const uint8_t type) {
-	ZEND_ASSERT(type >= IS_NULL && type <= IS_TRUE);
-	return type;
-}
-
-static zend_always_inline uint8_t teds_intvector_entries_get_type(const zval *dst) {
-	const uint8_t type = Z_TYPE_P(dst);
-	ZEND_ASSERT(type >= IS_NULL && type <= IS_TRUE);
-	return type;
-}
 
 /*
  * If a size this large is encountered, assume the allocation will likely fail or
@@ -577,10 +563,6 @@ zend_object_iterator *teds_intvector_get_iterator(zend_class_entry *ce, zval *ob
 	return &iterator->intern;
 }
 
-static zend_always_inline uint8_t teds_intvector_entries_compute_type_from_2bit(const uint8_t input) {
-	return input == 0 ? IS_NULL : (IS_NULL - 1) + input;
-}
-
 PHP_METHOD(Teds_IntVector, __unserialize)
 {
 	HashTable *raw_data;
@@ -743,10 +725,6 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int64(con
 #else
 	return zend_string_init(raw, len * sizeof(int64_t), 0);
 #endif
-}
-
-static zend_always_inline zend_string *teds_create_string_from_entries_double(const char *raw, const size_t len) {
-	return teds_create_string_from_entries_int64(raw, len);
 }
 
 PHP_METHOD(Teds_IntVector, __serialize)

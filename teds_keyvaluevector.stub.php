@@ -17,10 +17,12 @@ final class KeyValueVector implements \IteratorAggregate, \Countable, \JsonSeria
     public function isEmpty(): bool {}
     public function capacity(): int {}
     public function clear(): void {}
+    /* TODO setSize($size, $value=null, $key=null) */
     public function setSize(int $size): void {}
     public static function fromPairs(iterable $pairs): KeyValueVector {}
     public function toPairs(): array {}
 
+    /** Returns [key1, value1, key2, value2, ...] */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
     public static function __set_state(array $array): KeyValueVector {}
@@ -42,5 +44,6 @@ final class KeyValueVector implements \IteratorAggregate, \Countable, \JsonSeria
 
     public function shrinkToFit(): void {}
 
+    /** @implementation-alias Teds\KeyValueVector::toPairs */
     public function jsonSerialize(): array {}
 }
