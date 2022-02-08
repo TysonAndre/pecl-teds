@@ -25,6 +25,7 @@
 * Deduplicate code.
 * Reduce size/capacity limits to the same limits as array for Deque.
 * Add ImmutableSequence::map(), filter()
+* Fix bug in Deque::contains(), Deque::indexOf()
  </notes>
  <contents>
   <dir name="/">

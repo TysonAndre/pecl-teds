@@ -99,7 +99,7 @@ typedef struct _teds_deque_it {
 } teds_deque_it;
 
 static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *value);
-static bool teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity);
+static void teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity);
 static void teds_deque_shrink_capacity(teds_deque_entries *array, const uint32_t new_capacity);
 
 static zend_always_inline teds_deque *teds_deque_from_object(zend_object *obj)
@@ -140,6 +140,7 @@ static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_a
 		array->mask = capacity - 1;
 		ZEND_HASH_FOREACH_VAL(values, val)  {
 			ZEND_ASSERT(i < size);
+			/* This circular buffer is being initialized with an array->offset of 0. */
 			ZVAL_COPY_DEREF(&circular_buffer[i], val);
 			i++;
 		} ZEND_HASH_FOREACH_END();
@@ -152,7 +153,8 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	zend_long size = 0, capacity = 0;
+	uint32_t size = 0;
+	size_t capacity = 0;
 	array->size = 0;
 	array->offset = 0;
 	array->iteration_offset = 0;
@@ -624,7 +626,7 @@ PHP_METHOD(Teds_Deque, __unserialize)
 
 static void teds_deque_entries_init_from_array_values(teds_deque_entries *array, zend_array *raw_data)
 {
-	size_t num_entries = zend_hash_num_elements(raw_data);
+	uint32_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
 		array->size = 0;
 		array->mask = 0;
@@ -634,7 +636,7 @@ static void teds_deque_entries_init_from_array_values(teds_deque_entries *array,
 	const size_t capacity = teds_deque_next_pow2_capacity(num_entries);
 	ZEND_ASSERT(capacity >= num_entries);
 	zval * circular_buffer = safe_emalloc(capacity, sizeof(zval), 0);
-	size_t actual_size = 0;
+	uint32_t actual_size = 0;
 	zval *val;
 	ZEND_HASH_FOREACH_VAL(raw_data, val) {
 		ZVAL_COPY_DEREF(&circular_buffer[actual_size], val);
@@ -668,7 +670,7 @@ static zend_array* teds_deque_to_new_array(const teds_deque_entries *array) {
 	zval *const circular_buffer = array->circular_buffer;
 	zval *p = circular_buffer + array->offset;
 	zval *const end = circular_buffer + array->mask + 1;
-	size_t len = array->size;
+	uint32_t len = array->size;
 	zend_array *values = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);
@@ -692,7 +694,7 @@ PHP_METHOD(Teds_Deque, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	size_t len = intern->array.size;
+	uint32_t len = intern->array.size;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
@@ -702,7 +704,7 @@ PHP_METHOD(Teds_Deque, toArray)
 static zend_always_inline void teds_deque_get_value_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
 {
 	const teds_deque *intern = Z_DEQUE_P(zval_this);
-	size_t len = intern->array.size;
+	uint32_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		RETURN_THROWS();
@@ -744,7 +746,7 @@ PHP_METHOD(Teds_Deque, offsetExists)
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	const size_t len = intern->array.size;
+	const uint32_t len = intern->array.size;
 	if ((zend_ulong) offset >= len) {
 		RETURN_FALSE;
 	}
@@ -789,15 +791,13 @@ static zend_always_inline void teds_deque_set_value_at_offset(zend_object *objec
 }
 
 static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *value) {
-	const size_t old_size = intern->array.size;
-	const size_t old_mask = intern->array.mask;
+	const uint32_t old_size = intern->array.size;
+	const uint32_t old_mask = intern->array.mask;
 	const size_t old_capacity = old_mask ? old_mask + 1 : 0;
 
 	if (old_size >= old_capacity) {
 		ZEND_ASSERT(old_size == old_capacity);
-		if (UNEXPECTED(!teds_deque_raise_capacity(&intern->array, old_capacity ? old_capacity * 2 : TEDS_DEQUE_MIN_CAPACITY))) {
-			return;
-		}
+		teds_deque_raise_capacity(&intern->array, old_capacity ? old_capacity * 2 : TEDS_DEQUE_MIN_CAPACITY);
 	}
 	intern->array.size++;
 	zval *dest = teds_deque_get_entry_at_offset(&intern->array, old_size);
@@ -831,10 +831,11 @@ PHP_METHOD(Teds_Deque, indexOf)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	const size_t len = intern->array.size;
-	zval *circular_buffer = intern->array.circular_buffer;
-	for (size_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &circular_buffer[i])) {
+	const uint32_t len = intern->array.size;
+	/* TODO: Search in 2 parts instead. */
+	for (uint32_t i = 0; i < len; i++) {
+		zval *dest = teds_deque_get_entry_at_offset(&intern->array, i);
+		if (zend_is_identical(value, dest)) {
 			RETURN_LONG(i);
 		}
 	}
@@ -849,10 +850,13 @@ PHP_METHOD(Teds_Deque, contains)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	const size_t len = intern->array.size;
+	const uint32_t len = intern->array.size;
 	zval *circular_buffer = intern->array.circular_buffer;
-	for (size_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &circular_buffer[i])) {
+	/* TODO: Search in 2 parts instead. */
+	/* TODO: See if performance is faster for special cased local copy vs pointer, scalar checks, etc. */
+	for (uint32_t i = 0; i < len; i++) {
+		zval *dest = teds_deque_get_entry_at_offset(&intern->array, i);
+		if (zend_is_identical(value, dest)) {
 			RETURN_TRUE;
 		}
 	}
@@ -892,10 +896,10 @@ PHP_METHOD(Teds_Deque, offsetSet)
 static void teds_deque_move_circular_buffer_to_new_buffer_of_capacity(teds_deque_entries *array, const size_t new_capacity)
 {
 	zval *const circular_buffer = array->circular_buffer;
-	const size_t size = array->size;
+	const uint32_t size = array->size;
 	ZEND_ASSERT(array->mask > 0);
 	const size_t old_capacity = array->mask + 1;
-	const size_t first_len = old_capacity - array->offset;
+	const uint32_t first_len = old_capacity - array->offset;
 	ZEND_ASSERT(new_capacity >= size);
 	ZEND_ASSERT(old_capacity >= size);
 	zval *new_entries = safe_emalloc(new_capacity, sizeof(zval), 0);
@@ -911,7 +915,7 @@ static void teds_deque_move_circular_buffer_to_new_buffer_of_capacity(teds_deque
 	array->offset = 0;
 }
 
-static bool teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity)
+static void teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity)
 {
 	if (UNEXPECTED(new_capacity > TEDS_MAX_ZVAL_COLLECTION_SIZE)) {
 		/* This is a fatal error, because userland code might expect any catchable throwable
@@ -931,7 +935,6 @@ static bool teds_deque_raise_capacity(teds_deque_entries *array, const size_t ne
 	}
 	array->mask = new_capacity - 1;
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
-	return true;
 }
 
 static void teds_deque_shrink_capacity(teds_deque_entries *array, uint32_t new_capacity)
@@ -974,10 +977,7 @@ PHP_METHOD(Teds_Deque, push)
 
 	if (new_size > old_capacity) {
 		const uint32_t new_capacity = teds_deque_next_pow2_capacity(new_size);
-		if (UNEXPECTED(!teds_deque_raise_capacity(&intern->array, new_capacity))) {
-			ZEND_ASSERT(EG(exception));
-			return;
-		}
+		teds_deque_raise_capacity(&intern->array, new_capacity);
 		mask = intern->array.mask;
 	}
 	zval *const circular_buffer = intern->array.circular_buffer;
@@ -1018,10 +1018,7 @@ PHP_METHOD(Teds_Deque, unshift)
 
 	if (new_size > old_capacity) {
 		const size_t new_capacity = teds_deque_next_pow2_capacity(new_size);
-		if (UNEXPECTED(!teds_deque_raise_capacity(&intern->array, new_capacity))) {
-			ZEND_ASSERT(EG(exception));
-			return;
-		}
+		teds_deque_raise_capacity(&intern->array, new_capacity);
 		mask = intern->array.mask;
 	}
 	uint32_t offset = intern->array.offset;
