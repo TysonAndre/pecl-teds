@@ -33,8 +33,6 @@
 zend_object_handlers teds_handler_KeyValueVector;
 zend_class_entry *teds_ce_KeyValueVector;
 
-#define TEDS_MAX_ZVAL_PAIR_COUNT (TEDS_MAX_ZVAL_COLLECTION_SIZE / 2)
-
 /** TODO: Does C guarantee that this has the same memory layout as an array of zvals? */
 typedef struct _zval_pair {
 	zval key;
@@ -590,7 +588,7 @@ static int teds_keyvaluevector_it_valid(zend_object_iterator *iter)
 	teds_keyvaluevector_it     *iterator = (teds_keyvaluevector_it*)iter;
 	teds_keyvaluevector *object   = Z_KEYVALUEVECTOR_P(&iter->data);
 
-	if (iterator->current >= 0 && ((zend_ulong) iterator->current) < object->array.size) {
+	if (((zend_ulong) iterator->current) < object->array.size) {
 		return SUCCESS;
 	}
 

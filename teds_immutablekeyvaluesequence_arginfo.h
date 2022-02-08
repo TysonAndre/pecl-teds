@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 6272ed0dd6adedfa018ed2cacfc5d6f6715ddf67 */
+ * Stub hash: 8f5543c5ef0eb2de2d99129164aae08911c3c45e */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -77,7 +77,6 @@ ZEND_METHOD(Teds_ImmutableKeyValueSequence, indexOfKey);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, indexOfValue);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, containsKey);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, containsValue);
-ZEND_METHOD(Teds_ImmutableKeyValueSequence, jsonSerialize);
 
 
 static const zend_function_entry class_Teds_ImmutableKeyValueSequence_methods[] = {
@@ -98,7 +97,7 @@ static const zend_function_entry class_Teds_ImmutableKeyValueSequence_methods[] 
 	ZEND_ME(Teds_ImmutableKeyValueSequence, indexOfValue, arginfo_class_Teds_ImmutableKeyValueSequence_indexOfValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, containsKey, arginfo_class_Teds_ImmutableKeyValueSequence_containsKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, containsValue, arginfo_class_Teds_ImmutableKeyValueSequence_containsValue, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_ImmutableKeyValueSequence, jsonSerialize, arginfo_class_Teds_ImmutableKeyValueSequence_jsonSerialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_ImmutableKeyValueSequence, jsonSerialize, toPairs, arginfo_class_Teds_ImmutableKeyValueSequence_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

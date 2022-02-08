@@ -851,7 +851,6 @@ PHP_METHOD(Teds_Deque, contains)
 
 	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
 	const uint32_t len = intern->array.size;
-	zval *circular_buffer = intern->array.circular_buffer;
 	/* TODO: Search in 2 parts instead. */
 	/* TODO: See if performance is faster for special cased local copy vs pointer, scalar checks, etc. */
 	for (uint32_t i = 0; i < len; i++) {

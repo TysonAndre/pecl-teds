@@ -22,6 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
+* Breaking change: Make StableMinHeap/StableMaxHeap stop inheriting from SplHeap to be more memory efficient.
 * Deduplicate code.
 * Reduce size/capacity limits to the same limits as array for Deque.
 * Add ImmutableSequence::map(), filter()

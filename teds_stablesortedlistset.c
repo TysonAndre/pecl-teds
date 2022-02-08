@@ -8,14 +8,7 @@
 */
 
 /* This is based on teds_immutablekeyvaluesequence.c.
- * Instead of a C array of zvals, this is based on a C array of pairs of zvals for key-value entries */
-/*
- * Design plan for refactoring:
- * - Buckets: Keys (zval, uint64_t hash) and values (zval) placed based on hash. Similar to HashTable Data Layout as described in Zend_types
- * - Hashes: hash and index, chaining.
- *
- * iteration:
- * - sequence of HashPosition
+ * Instead of a C array of zvals, this is based on a C array of zvals.
  * - TODO: associate StableSortedListSet with linked list of iterators
  */
 #ifdef HAVE_CONFIG_H

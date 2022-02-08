@@ -98,9 +98,9 @@ teds_strictmap_entry *teds_strictmap_entries_find_key(const teds_strictmap_entri
 
 void teds_strictmap_entries_dtor(teds_strictmap_entries *array);
 
-void teds_strictmap_entries_dtor_range(teds_strictmap_entry *start, size_t from, size_t to);
+void teds_strictmap_entries_dtor_range(teds_strictmap_entry *start, uint32_t from, uint32_t to);
 
-static zend_always_inline void teds_strictmap_entries_array_free(teds_strictmap_entry *entries, size_t capacity) {
+static zend_always_inline void teds_strictmap_entries_array_free(teds_strictmap_entry *entries, uint32_t capacity) {
 	ZEND_ASSERT(teds_is_pow2(capacity));
 	ZEND_ASSERT(entries != teds_strictmap_empty_entry_list);
 	uint32_t *data = ((uint32_t *)entries) - 2 * capacity;

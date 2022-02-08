@@ -7,16 +7,8 @@
   +----------------------------------------------------------------------+
 */
 
-/* This is based on teds_immutablekeyvaluesequence.c.
- * Instead of a C array of zvals, this is based on a C array of pairs of zvals for key-value entries */
-/*
- * Design plan for refactoring:
- * - Buckets: Keys (zval, uint32_t hash) and values (zval) placed based on hash. Similar to HashTable Data Layout as described in Zend_types
- * - Hashes: hash and index, chaining.
- *
- * iteration:
- * - sequence of HashPosition
- * - TODO: associate StrictMap with linked list of iterators
+/* This is based on teds_immutablekeyvaluesequence.c and Zend/zend_hash.c
+ * TODO: associate StrictMap with linked list of iterators
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -54,7 +46,7 @@ zend_class_entry *teds_ce_StrictMap;
 const uint32_t teds_strictmap_empty_bucket_list[2] = { TEDS_STRICTMAP_INVALID_INDEX, TEDS_STRICTMAP_INVALID_INDEX };
 
 static void teds_strictmap_entries_grow(teds_strictmap_entries *array);
-static void teds_strictmap_entries_set_capacity(teds_strictmap_entries *array, size_t new_capacity);
+static void teds_strictmap_entries_set_capacity(teds_strictmap_entries *array, uint32_t new_capacity);
 
 static zend_always_inline teds_strictmap_entry *teds_strictmap_entries_find_bucket(const teds_strictmap_entries *ht, zval *key, const uint32_t h)
 {
@@ -134,7 +126,7 @@ static void teds_strictmap_entries_clear(teds_strictmap_entries *array);
 /* Used by InternalIterator returned by StrictMap->getIterator() */
 typedef struct _teds_strictmap_it {
 	zend_object_iterator intern;
-	zend_ulong            current;
+	uint32_t             current;
 } teds_strictmap_it;
 
 static zend_always_inline teds_strictmap *teds_strictmap_from_obj(zend_object *obj)
@@ -174,18 +166,18 @@ static zend_always_inline void teds_strictmap_entries_set_empty_entry_list(teds_
 	array->nTableMask = TEDS_STRICTMAP_MIN_MASK;
 }
 
-static zend_always_inline size_t teds_strictmap_offset_bytes_for_capacity(size_t capacity) {
+static zend_always_inline size_t teds_strictmap_offset_bytes_for_capacity(uint32_t capacity) {
 	return (capacity * sizeof(uint32_t) * 2);
 }
 
-static teds_strictmap_entry *teds_strictmap_alloc_entries(size_t capacity) {
+static teds_strictmap_entry *teds_strictmap_alloc_entries(uint32_t capacity) {
 	uint8_t *ptr = safe_emalloc(capacity, TEDS_STRICTMAP_MEMORY_PER_ENTRY, 0);
 	const size_t buckets_byte_count = teds_strictmap_offset_bytes_for_capacity(capacity);
 	memset(ptr, TEDS_STRICTMAP_INVALID_INDEX, buckets_byte_count);
 	return (void *)(ptr + buckets_byte_count);
 }
 
-static zend_always_inline void teds_strictmap_free_entries(teds_strictmap_entry *old_entries, size_t old_capacity) {
+static zend_always_inline void teds_strictmap_free_entries(teds_strictmap_entry *old_entries, uint32_t old_capacity) {
 	void * old_ptr = ((uint8_t *) old_entries) - teds_strictmap_offset_bytes_for_capacity(old_capacity);
 	efree(old_ptr);
 }
@@ -339,8 +331,12 @@ static void teds_strictmap_entries_grow(teds_strictmap_entries *array)
 		return;
 	}
 	ZEND_ASSERT(teds_is_pow2(array->nTableSize));
+	if (UNEXPECTED(array->nTableSize >= TEDS_MAX_ZVAL_PAIR_COUNT / 2)) {
+		zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\StrictMap capacity");
+		ZEND_UNREACHABLE();
+	}
 
-	const size_t new_capacity = array->nTableSize * 2;
+	const uint32_t new_capacity = array->nTableSize * 2;
 	teds_strictmap_entry *const new_entries = teds_strictmap_alloc_entries(new_capacity);
 	teds_strictmap_entry *old_entry;
 	teds_strictmap_entry *it = new_entries;
@@ -369,7 +365,7 @@ static void teds_strictmap_entries_grow(teds_strictmap_entries *array)
 	array->nTableMask = new_mask;
 }
 
-static void teds_strictmap_entries_set_capacity(teds_strictmap_entries *array, size_t new_capacity)
+static void teds_strictmap_entries_set_capacity(teds_strictmap_entries *array, uint32_t new_capacity)
 {
 	ZEND_ASSERT(array->nTableSize == 0);
 	ZEND_ASSERT(new_capacity > array->nTableSize);
@@ -454,7 +450,7 @@ static HashTable* teds_strictmap_get_properties(zend_object *obj)
 
 	ZEND_ASSERT(i == len);
 
-	for (size_t i = len; i < old_length; i++) {
+	for (uint32_t i = len; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
 
@@ -605,7 +601,7 @@ static int teds_strictmap_it_valid(zend_object_iterator *iter)
 	}
 }
 
-static teds_strictmap_entry *teds_strictmap_read_offset_helper(teds_strictmap *intern, size_t offset)
+static teds_strictmap_entry *teds_strictmap_read_offset_helper(teds_strictmap *intern, uint32_t offset)
 {
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
@@ -693,7 +689,7 @@ PHP_METHOD(Teds_StrictMap, __unserialize)
 		RETURN_THROWS();
 	}
 
-	size_t raw_size = zend_hash_num_elements(raw_data);
+	uint32_t raw_size = zend_hash_num_elements(raw_data);
 	if (UNEXPECTED(raw_size % 2 != 0)) {
 		zend_throw_exception(spl_ce_UnexpectedValueException, "Odd number of elements", 0);
 		RETURN_THROWS();
@@ -711,7 +707,7 @@ PHP_METHOD(Teds_StrictMap, __unserialize)
 		return;
 	}
 
-	const size_t capacity = teds_strictmap_next_pow2_capacity(raw_size);
+	const uint32_t capacity = teds_strictmap_next_pow2_capacity(raw_size);
 	teds_strictmap_entries_set_capacity(array, capacity);
 
 	zend_string *str;
@@ -761,12 +757,12 @@ static bool teds_strictmap_entries_insert_from_pair(teds_strictmap_entries *arra
 
 static void teds_strictmap_entries_init_from_array_pairs(teds_strictmap_entries *array, zend_array *raw_data)
 {
-	size_t num_entries = zend_hash_num_elements(raw_data);
+	uint32_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
 		teds_strictmap_entries_set_empty_entry_list(array);
 		return;
 	}
-	const size_t capacity = teds_strictmap_next_pow2_capacity(num_entries);
+	const uint32_t capacity = teds_strictmap_next_pow2_capacity(num_entries);
 	array->nNumOfElements = 0; /* reset size in case emalloc() fails */
 	array->nNumUsed = 0;
 	array->nTableSize = 0;
@@ -918,7 +914,7 @@ PHP_METHOD(Teds_StrictMap, values)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	size_t len = intern->array.nNumOfElements;
+	const uint32_t len = intern->array.nNumOfElements;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
