@@ -144,10 +144,6 @@ static zend_always_inline teds_strictmap *teds_strictmap_from_obj(zend_object *o
 
 #define Z_STRICTMAP_P(zv)  teds_strictmap_from_obj(Z_OBJ_P((zv)))
 
-static zend_always_inline void teds_strictmap_entry_compute_and_store_hash(teds_strictmap_entry *entry) {
-	TEDS_STRICTMAP_IT_HASH(entry) = teds_strict_hash_uint32_t(&entry->key);
-}
-
 static bool teds_strictmap_entries_uninitialized(teds_strictmap_entries *array)
 {
 	ZEND_ASSERT(array->nNumOfElements <= array->nTableSize);

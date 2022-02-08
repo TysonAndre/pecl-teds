@@ -132,10 +132,6 @@ static zend_always_inline teds_strictset *teds_strictset_from_obj(zend_object *o
 
 #define Z_STRICTSET_P(zv)  teds_strictset_from_obj(Z_OBJ_P((zv)))
 
-static zend_always_inline void teds_strictset_entry_compute_and_store_hash(teds_strictset_entry *entry) {
-	TEDS_ENTRY_HASH(entry) = teds_strict_hash_uint32_t(&entry->key);
-}
-
 static zend_always_inline bool teds_strictset_entries_uninitialized(teds_strictset_entries *array)
 {
 	ZEND_ASSERT(array->nNumOfElements <= array->nTableSize);

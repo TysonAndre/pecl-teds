@@ -42,6 +42,7 @@ expect_throws(fn() => $it->offsetUnset(PHP_INT_MAX));
 expect_throws(fn() => $it->offsetSet(PHP_INT_MAX,'x'));
 expect_throws(function () use ($it) { unset($it[0]); });
 var_dump($it->getIterator());
+
 ?>
 --EXPECT--
 Caught ReflectionException: Class Teds\ImmutableSequence is an internal class marked as final that cannot be instantiated without invoking its constructor
@@ -49,8 +50,8 @@ object(stdClass)#1 (0) {
 }
 object(stdClass)#1 (0) {
 }
-Caught RuntimeException: ImmutableSequence does not support offsetSet - it is immutable
-Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable
+Caught RuntimeException: Teds\ImmutableSequence does not support offsetSet - it is immutable
+Caught RuntimeException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
 object(stdClass)#1 (0) {
 }
 offsetExists checks
@@ -73,8 +74,8 @@ Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\ImmutableSequence::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable
-Caught RuntimeException: ImmutableSequence does not support offsetSet - it is immutable
-Caught RuntimeException: ImmutableSequence does not support offsetUnset - it is immutable
+Caught RuntimeException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
+Caught RuntimeException: Teds\ImmutableSequence does not support offsetSet - it is immutable
+Caught RuntimeException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
 object(InternalIterator)#2 (0) {
 }
