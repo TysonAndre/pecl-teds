@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-02-06</date>
+ <date>2022-02-09</date>
  <time>16:00:00</time>
  <version>
-  <release>0.11.0dev</release>
-  <api>0.11.0dev</api>
+  <release>0.11.0</release>
+  <api>0.11.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -23,6 +23,7 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Breaking change: Make StableMinHeap/StableMaxHeap stop inheriting from SplHeap to be more memory efficient.
+* Properly sort in StableSortedListSet::__construct and __set_state
 * Deduplicate code.
 * Reduce size/capacity limits to the same limits as array for Deque.
 * Add ImmutableSequence::map(), filter()
@@ -138,9 +139,12 @@
     <file name="ImmutableKeyValueSequence/unserialize.phpt" role="test" />
     <file name="ImmutableSequence/ImmutableSequence.phpt" role="test" />
     <file name="ImmutableSequence/aggregate.phpt" role="test" />
+    <file name="ImmutableSequence/arrayAccess.phpt" role="test" />
     <file name="ImmutableSequence/clone.phpt" role="test" />
     <file name="ImmutableSequence/contains.phpt" role="test" />
     <file name="ImmutableSequence/exceptionhandler.phpt" role="test" />
+    <file name="ImmutableSequence/filter.phpt" role="test" />
+    <file name="ImmutableSequence/map.phpt" role="test" />
     <file name="ImmutableSequence/offsetGet.phpt" role="test" />
     <file name="ImmutableSequence/reinit_forbidden.phpt" role="test" />
     <file name="ImmutableSequence/serialization.phpt" role="test" />

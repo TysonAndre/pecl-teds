@@ -61,24 +61,23 @@ typedef struct _teds_stablesortedlistset_search_result {
 } teds_stablesortedlistset_search_result;
 
 static void teds_stablesortedlistset_entries_raise_capacity(teds_stablesortedlistset_entries *array, size_t new_capacity);
-static teds_stablesortedlistset_search_result teds_stablesortedlistset_sorted_search_for_key(const teds_stablesortedlistset *intern, zval *key);
-static teds_stablesortedlistset_search_result teds_stablesortedlistset_sorted_search_for_key_probably_largest(const teds_stablesortedlistset *intern, zval *key);
+static teds_stablesortedlistset_search_result teds_stablesortedlistset_entries_sorted_search_for_key(const teds_stablesortedlistset_entries *array, zval *key);
+static teds_stablesortedlistset_search_result teds_stablesortedlistset_entries_sorted_search_for_key_probably_largest(const teds_stablesortedlistset_entries *array, zval *key);
 
-static bool teds_stablesortedlistset_insert(teds_stablesortedlistset *intern, zval *key, bool probably_largest) {
+static bool teds_stablesortedlistset_entries_insert(teds_stablesortedlistset_entries *array, zval *key, bool probably_largest) {
 	teds_stablesortedlistset_search_result result = probably_largest
-		? teds_stablesortedlistset_sorted_search_for_key_probably_largest(intern, key)
-		: teds_stablesortedlistset_sorted_search_for_key(intern, key);
+		? teds_stablesortedlistset_entries_sorted_search_for_key_probably_largest(array, key)
+		: teds_stablesortedlistset_entries_sorted_search_for_key(array, key);
 	if (result.found) {
 		return false;
 	}
 	/* Reallocate and insert (insertion sort) */
-	teds_stablesortedlistset_entries *array = &intern->array;
 	teds_stablesortedlistset_entry *entry = result.entry;
 	if (array->size >= array->capacity) {
 		const size_t new_offset = result.entry - array->entries;
 		ZEND_ASSERT(array->size == array->capacity);
 		const size_t new_capacity = teds_stablesortedlistset_next_pow2_capacity(array->size + 1);
-		teds_stablesortedlistset_entries_raise_capacity(&intern->array, new_capacity);
+		teds_stablesortedlistset_entries_raise_capacity(array, new_capacity);
 		entry = array->entries + new_offset;
 	}
 
@@ -91,7 +90,7 @@ static bool teds_stablesortedlistset_insert(teds_stablesortedlistset *intern, zv
 	return true;
 }
 
-static void teds_stablesortedlistset_clear(teds_stablesortedlistset *intern);
+static void teds_stablesortedlistset_entries_clear(teds_stablesortedlistset_entries *array);
 
 /* Used by InternalIterator returned by StableSortedListSet->getIterator() */
 typedef struct _teds_stablesortedlistset_it {
@@ -105,6 +104,7 @@ static teds_stablesortedlistset *teds_stablesortedlistset_from_obj(zend_object *
 }
 
 #define Z_STABLESORTEDLISTSET_P(zv)  teds_stablesortedlistset_from_obj(Z_OBJ_P((zv)))
+#define Z_STABLESORTEDLISTSET_ENTRIES_P(zv)  (&Z_STABLESORTEDLISTSET_P((zv))->array)
 
 /* Helps enforce the invariants in debug mode:
  *   - if capacity == 0, then entries == NULL
@@ -142,19 +142,15 @@ static void teds_stablesortedlistset_entries_init_from_array(teds_stablesortedli
 	if (size > 0) {
 		zval *val;
 		teds_stablesortedlistset_entry *entries;
-		int i = 0;
 		zend_long capacity = teds_stablesortedlistset_next_pow2_capacity(size);
 
 		array->size = 0; /* reset size in case emalloc() fails */
 		array->capacity = 0;
 		array->entries = entries = teds_stablesortedlistset_allocate_entries(capacity);
 		array->capacity = size;
-		array->size = size;
-		ZEND_HASH_FOREACH_VAL(values, val)  {
-			ZEND_ASSERT(i < size);
-			teds_stablesortedlistset_entry *entry = &entries[i];
-			ZVAL_COPY_DEREF(&entry->key, val);
-			i++;
+		ZEND_HASH_FOREACH_VAL(values, val) {
+			ZVAL_DEREF(val);
+			teds_stablesortedlistset_entries_insert(array, val, false);
 		} ZEND_HASH_FOREACH_END();
 	} else {
 		array->size = 0;
@@ -556,37 +552,37 @@ PHP_METHOD(Teds_StableSortedListSet, __unserialize)
 		RETURN_THROWS();
 	}
 
-	size_t raw_size = zend_hash_num_elements(raw_data);
-	teds_stablesortedlistset *intern = Z_STABLESORTEDLISTSET_P(ZEND_THIS);
-	if (UNEXPECTED(!teds_stablesortedlistset_entries_uninitialized(&intern->array))) {
+	uint32_t raw_size = zend_hash_num_elements(raw_data);
+	teds_stablesortedlistset_entries *array = Z_STABLESORTEDLISTSET_ENTRIES_P(ZEND_THIS);
+	if (UNEXPECTED(!teds_stablesortedlistset_entries_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
 	}
 	if (raw_size == 0) {
-		ZEND_ASSERT(intern->array.size == 0);
-		ZEND_ASSERT(intern->array.capacity == 0);
-		intern->array.entries = (teds_stablesortedlistset_entry *)empty_entry_list;
+		ZEND_ASSERT(array->size == 0);
+		ZEND_ASSERT(array->capacity == 0);
+		array->entries = (teds_stablesortedlistset_entry *)empty_entry_list;
 		return;
 	}
 
-	ZEND_ASSERT(intern->array.entries == NULL);
+	ZEND_ASSERT(array->entries == NULL);
 
 	const size_t capacity = teds_stablesortedlistset_next_pow2_capacity(raw_size);
 	teds_stablesortedlistset_entry *entries = safe_emalloc(capacity, sizeof(teds_stablesortedlistset_entry), 0);
-	intern->array.size = 0;
-	intern->array.capacity = capacity;
-	intern->array.entries = entries;
+	array->size = 0;
+	array->capacity = capacity;
+	array->entries = entries;
 
 	zend_string *str;
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
-			teds_stablesortedlistset_clear(intern);
+			teds_stablesortedlistset_entries_clear(array);
 			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StableSortedListSet::__unserialize saw unexpected string key, expected sequence of values", 0);
 			RETURN_THROWS();
 		}
 
-		teds_stablesortedlistset_insert(intern, val, true);
+		teds_stablesortedlistset_entries_insert(array, val, true);
 	} ZEND_HASH_FOREACH_END();
 }
 
@@ -663,7 +659,7 @@ PHP_METHOD(Teds_StableSortedListSet, pop) {
 }
 
 /* Shifts values. Callers should adjust size and handle zval reference counting. */
-static void teds_stablesortedlistset_remove_entry(teds_stablesortedlistset_entry *entries, size_t len, teds_stablesortedlistset_entry *entry)
+static void teds_stablesortedlistset_entries_remove_entry(teds_stablesortedlistset_entry *entries, size_t len, teds_stablesortedlistset_entry *entry)
 {
 	teds_stablesortedlistset_entry *end = entries + len - 1;
 	ZEND_ASSERT(entry <= end);
@@ -684,16 +680,16 @@ PHP_METHOD(Teds_StableSortedListSet, shift) {
 	}
 	teds_stablesortedlistset_entry *entry = &intern->array.entries[0];
 	RETVAL_COPY_VALUE(&entry->key);
-	teds_stablesortedlistset_remove_entry(entry, len, entry);
+	teds_stablesortedlistset_entries_remove_entry(entry, len, entry);
 	intern->array.size--;
 }
 
-static teds_stablesortedlistset_search_result teds_stablesortedlistset_sorted_search_for_key(const teds_stablesortedlistset *intern, zval *key)
+static teds_stablesortedlistset_search_result teds_stablesortedlistset_entries_sorted_search_for_key(const teds_stablesortedlistset_entries *array, zval *key)
 {
 	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
-	teds_stablesortedlistset_entry *const entries = intern->array.entries;
+	teds_stablesortedlistset_entry *const entries = array->entries;
 	size_t start = 0;
-	size_t end = intern->array.size;
+	size_t end = array->size;
 	while (start < end) {
 		size_t mid = start + (end - start)/2;
 		teds_stablesortedlistset_entry *e = &entries[mid];
@@ -718,11 +714,11 @@ static teds_stablesortedlistset_search_result teds_stablesortedlistset_sorted_se
 	return result;
 }
 
-static teds_stablesortedlistset_search_result teds_stablesortedlistset_sorted_search_for_key_probably_largest(const teds_stablesortedlistset *intern, zval *key)
+static teds_stablesortedlistset_search_result teds_stablesortedlistset_entries_sorted_search_for_key_probably_largest(const teds_stablesortedlistset_entries *array, zval *key)
 {
 	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
-	teds_stablesortedlistset_entry *const entries = intern->array.entries;
-	size_t end = intern->array.size;
+	teds_stablesortedlistset_entry *const entries = array->entries;
+	size_t end = array->size;
 	size_t start = 0;
 	if (end > 0) {
 		size_t mid = end - 1;
@@ -755,26 +751,26 @@ static teds_stablesortedlistset_search_result teds_stablesortedlistset_sorted_se
 	return result;
 }
 
-static bool teds_stablesortedlistset_remove_key(teds_stablesortedlistset *intern, zval *key)
+static bool teds_stablesortedlistset_entries_remove_key(teds_stablesortedlistset_entries *array, zval *key)
 {
-	if (intern->array.size == 0) {
+	if (array->size == 0) {
 		return false;
 	}
-	teds_stablesortedlistset_search_result lookup = teds_stablesortedlistset_sorted_search_for_key(intern, key);
+	teds_stablesortedlistset_search_result lookup = teds_stablesortedlistset_entries_sorted_search_for_key(array, key);
 	if (!lookup.found) {
 		return false;
 	}
 	teds_stablesortedlistset_entry *entry = lookup.entry;
 	zval old_key;
 	ZVAL_COPY_VALUE(&old_key, &entry->key);
-	teds_stablesortedlistset_entry *end = intern->array.entries + intern->array.size - 1;
+	teds_stablesortedlistset_entry *end = array->entries + array->size - 1;
 	ZEND_ASSERT(entry <= end);
 	for (; entry < end; ) {
 		teds_stablesortedlistset_entry *next = &entry[1];
 		ZVAL_COPY_VALUE(&entry->key, &next->key);
 		entry = next;
 	}
-	intern->array.size--;
+	array->size--;
 
 	zval_ptr_dtor(&old_key);
 	return true;
@@ -787,8 +783,7 @@ PHP_METHOD(Teds_StableSortedListSet, remove)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_stablesortedlistset *intern = Z_STABLESORTEDLISTSET_P(ZEND_THIS);
-	RETURN_BOOL(teds_stablesortedlistset_remove_key(intern, value));
+	RETURN_BOOL(teds_stablesortedlistset_entries_remove_key(Z_STABLESORTEDLISTSET_ENTRIES_P(ZEND_THIS), value));
 }
 
 PHP_METHOD(Teds_StableSortedListSet, add)
@@ -798,8 +793,7 @@ PHP_METHOD(Teds_StableSortedListSet, add)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_stablesortedlistset *intern = Z_STABLESORTEDLISTSET_P(ZEND_THIS);
-	RETURN_BOOL(teds_stablesortedlistset_insert(intern, value, false));
+	RETURN_BOOL(teds_stablesortedlistset_entries_insert(Z_STABLESORTEDLISTSET_ENTRIES_P(ZEND_THIS), value, false));
 }
 
 PHP_METHOD(Teds_StableSortedListSet, contains)
@@ -809,22 +803,19 @@ PHP_METHOD(Teds_StableSortedListSet, contains)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_stablesortedlistset *intern = Z_STABLESORTEDLISTSET_P(ZEND_THIS);
-	teds_stablesortedlistset_search_result result = teds_stablesortedlistset_sorted_search_for_key(intern, value);
+	teds_stablesortedlistset_search_result result = teds_stablesortedlistset_entries_sorted_search_for_key(Z_STABLESORTEDLISTSET_ENTRIES_P(ZEND_THIS), value);
 	RETURN_BOOL(result.found);
 }
 
-static void teds_stablesortedlistset_clear(teds_stablesortedlistset *intern) {
-	teds_stablesortedlistset_entries *array = &intern->array;
-
+static void teds_stablesortedlistset_entries_clear(teds_stablesortedlistset_entries *array) {
 	if (teds_stablesortedlistset_entries_empty_capacity(array)) {
 		return;
 	}
-	teds_stablesortedlistset_entry *entries = intern->array.entries;
-	size_t size = intern->array.size;
-	intern->array.entries = (teds_stablesortedlistset_entry *)empty_entry_list;
-	intern->array.size = 0;
-	intern->array.capacity = 0;
+	teds_stablesortedlistset_entry *entries = array->entries;
+	size_t size = array->size;
+	array->entries = (teds_stablesortedlistset_entry *)empty_entry_list;
+	array->size = 0;
+	array->capacity = 0;
 
 	teds_stablesortedlistset_entries_dtor_range(entries, 0, size);
 	efree(entries);
@@ -834,8 +825,7 @@ static void teds_stablesortedlistset_clear(teds_stablesortedlistset *intern) {
 PHP_METHOD(Teds_StableSortedListSet, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_stablesortedlistset *intern = Z_STABLESORTEDLISTSET_P(ZEND_THIS);
-	teds_stablesortedlistset_clear(intern);
+	teds_stablesortedlistset_entries_clear(Z_STABLESORTEDLISTSET_ENTRIES_P(ZEND_THIS));
 	TEDS_RETURN_VOID();
 }
 
