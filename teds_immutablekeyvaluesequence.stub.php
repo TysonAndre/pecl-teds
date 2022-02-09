@@ -32,6 +32,6 @@ final class ImmutableKeyValueSequence implements \IteratorAggregate, \Countable,
     public function containsKey(mixed $key): bool {}
     public function containsValue(mixed $value): bool {}
 
-
+    /** @implementation-alias Teds\ImmutableKeyValueSequence::toPairs */
     public function jsonSerialize(): array {}
 }

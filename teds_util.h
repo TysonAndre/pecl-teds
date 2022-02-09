@@ -18,6 +18,7 @@
 #endif
 
 #define TEDS_MAX_ZVAL_COLLECTION_SIZE HT_MAX_SIZE
+#define TEDS_MAX_ZVAL_PAIR_COUNT (TEDS_MAX_ZVAL_COLLECTION_SIZE / 2)
 
 static zend_always_inline HashTable *teds_new_array_check_overflow(size_t n) {
 #if SIZEOF_SIZE_T > 4
@@ -139,6 +140,7 @@ static zend_always_inline size_t teds_strictset_next_pow2_capacity(size_t nSize)
 /* TODO remove when rewriting as binary tree */
 #define teds_sortedstrictmap_next_pow2_capacity teds_deque_next_pow2_capacity
 #define teds_sortedstrictset_next_pow2_capacity teds_deque_next_pow2_capacity
+#define teds_stableheap_next_pow2_capacity teds_deque_next_pow2_capacity
 /* TODO: Allow arbitrary capacities for stablesortedlistset,
  * this restriction is copied over from StrictMap. */
 #define teds_stablesortedlistset_next_pow2_capacity teds_deque_next_pow2_capacity

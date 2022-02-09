@@ -5,16 +5,76 @@
 
 namespace Teds;
 
-class StableMaxHeap extends SplHeap
+/** @generate-class-entries */
+
+final class StableMinHeap implements Iterator, Countable
 {
-    public function compare(mixed $value1, mixed $value2): int {
-        return stable_compare($value1, $value2);
-    }
+    public function __construct(iterable $values = []) {}
+
+    public function add(mixed $value): void {}
+
+    public function top(): mixed {}
+
+    public function extract(): mixed {}
+
+    public function count(): int {}
+
+    public function isEmpty(): bool {}
+
+    public function rewind(): void {}
+
+    /**
+     * @implementation-alias Teds\StableMinHeap::top
+     */
+    public function current(): mixed {}
+
+    /**
+     * @implementation-alias Teds\StableMinHeap::top
+     */
+    public function key(): mixed {}
+
+    public function next(): void {}
+
+    public function valid(): bool {}
+
+    public function clear(): void {}
+
+    public static function __set_state(array $state): StableMinHeap { }
 }
 
-class StableMinHeap extends SplHeap
+final class StableMaxHeap implements Iterator, Countable
 {
-    public function compare(mixed $value1, mixed $value2): int {
-        return stable_compare($value2, $value1);
-    }
+    public function __construct(iterable $values = []) {}
+
+    public function add(mixed $value): void {}
+
+    /** @implementation-alias Teds\StableMinHeap::top */
+    public function top(): mixed {}
+
+    public function extract(): mixed {}
+
+    /** @implementation-alias Teds\StableMinHeap::count */
+    public function count(): int {}
+
+    /** @implementation-alias Teds\StableMinHeap::isEmpty */
+    public function isEmpty(): bool {}
+
+    /** @implementation-alias Teds\StableMinHeap::rewind */
+    public function rewind(): void {}
+
+    /** @implementation-alias Teds\StableMinHeap::top */
+    public function current(): mixed {}
+
+    /** @implementation-alias Teds\StableMinHeap::top */
+    public function key(): mixed {}
+
+    public function next(): void {}
+
+    /** @implementation-alias Teds\StableMinHeap::valid */
+    public function valid(): bool {}
+
+    /** @implementation-alias Teds\StableMinHeap::clear */
+    public function clear(): void {}
+
+    public static function __set_state(array $state): StableMaxHeap { }
 }

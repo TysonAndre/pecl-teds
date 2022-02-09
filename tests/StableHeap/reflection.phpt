@@ -7,5 +7,5 @@ foreach (['Teds\StableMinHeap', 'Teds\StableMaxHeap'] as $class) {
 }
 ?>
 --EXPECT--
-Teds\StableMinHeap: parent=SplHeap
-Teds\StableMaxHeap: parent=SplHeap
+Teds\StableMinHeap: parent=
+Teds\StableMaxHeap: parent=
