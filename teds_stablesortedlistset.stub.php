@@ -17,7 +17,7 @@ namespace Teds;
  * - Good performance when writes are infrequent.
  * - Linear time needed for each write due to using insertion sort.
  */
-final class StableSortedListSet implements \IteratorAggregate, \Countable, \JsonSerializable
+final class StableSortedListSet implements \IteratorAggregate, Values, \JsonSerializable
 {
     /** Construct the StableSortedListSet from the keys and values of the Traversable/array. */
     public function __construct(iterable $iterator = []) {}

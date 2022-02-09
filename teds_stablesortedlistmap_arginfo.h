@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 9ad902b13ddcb8b3d4c8b93e9601ddf2ae11df16 */
+ * Stub hash: a5116b0b093840c0049dc2e05b40b8d9a30c40f0 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StableSortedListMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -33,6 +33,8 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_StableSortedListMap___set_state, 0, 1, Teds\\StableSortedListMap, 0)
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_StableSortedListMap_toArray arginfo_class_Teds_StableSortedListMap_toPairs
 
 #define arginfo_class_Teds_StableSortedListMap_values arginfo_class_Teds_StableSortedListMap_toPairs
 
@@ -121,6 +123,7 @@ static const zend_function_entry class_Teds_StableSortedListMap_methods[] = {
 	ZEND_ME(Teds_StableSortedListMap, __serialize, arginfo_class_Teds_StableSortedListMap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, __unserialize, arginfo_class_Teds_StableSortedListMap___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, __set_state, arginfo_class_Teds_StableSortedListMap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_MALIAS(Teds_StableSortedListMap, toArray, values, arginfo_class_Teds_StableSortedListMap_toArray, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, values, arginfo_class_Teds_StableSortedListMap_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, keys, arginfo_class_Teds_StableSortedListMap_keys, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, bottom, arginfo_class_Teds_StableSortedListMap_bottom, ZEND_ACC_PUBLIC)
@@ -140,14 +143,14 @@ static const zend_function_entry class_Teds_StableSortedListMap_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_StableSortedListMap(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Countable, zend_class_entry *class_entry_JsonSerializable, zend_class_entry *class_entry_ArrayAccess)
+static zend_class_entry *register_class_Teds_StableSortedListMap(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Collection, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "StableSortedListMap", class_Teds_StableSortedListMap_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 4, class_entry_IteratorAggregate, class_entry_Countable, class_entry_JsonSerializable, class_entry_ArrayAccess);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Collection, class_entry_JsonSerializable);
 
 	return class_entry;
 }

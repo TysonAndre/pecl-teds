@@ -31,6 +31,7 @@
 #include "teds_strictset_arginfo.h"
 #include "teds_strictset.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -835,7 +836,7 @@ PHP_METHOD(Teds_StrictSet, clear)
 PHP_MINIT_FUNCTION(teds_strictset)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_StrictSet = register_class_Teds_StrictSet(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
+	teds_ce_StrictSet = register_class_Teds_StrictSet(zend_ce_aggregate, teds_ce_Values, php_json_serializable_ce);
 	teds_ce_StrictSet->create_object = teds_strictset_new;
 
 	memcpy(&teds_handler_StrictSet, &std_object_handlers, sizeof(zend_object_handlers));

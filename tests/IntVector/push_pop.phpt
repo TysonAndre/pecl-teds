@@ -32,7 +32,7 @@ echo "After pushing variadic args\n";
 $it->push(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 echo json_encode($it), "\n";
 printf("count=%d capacity=%d\n", count($it), $it->capacity());
-$it->push(1, -1, 1, 567, 123, 11, 11);
+$it->pushInts(1, -1, 1, 567, 123, 11, 11);
 echo json_encode($it), "\n";
 printf("count=%d capacity=%d\n", count($it), $it->capacity());
 

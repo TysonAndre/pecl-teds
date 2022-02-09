@@ -14,7 +14,7 @@ namespace Teds;
  *
  * This is backed by a balanced red-black tree to ensure that insertions/removals/lookups take logarithmic time in the worst case.
  */
-final class SortedStrictMap implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
+final class SortedStrictMap implements \IteratorAggregate, Collection, \JsonSerializable
 {
     /** Construct the SortedStrictMap from the keys and values of the Traversable/array. */
     public function __construct(iterable $iterator = []) {}
@@ -97,8 +97,10 @@ final class SortedStrictMap implements \IteratorAggregate, \Countable, \JsonSeri
     public function containsValue(mixed $value): bool {}
 
     /**
-     * Returns true if there exists a key === $key in this SortedStrictMap.
+     * Returns true if there exists a key where `stable_compare($key, $other) === 0` in this SortedStrictMap.
      * Unlike offsetExists, this returns true even if the corresponding value is null.
+     *
+     * Note that this is not exactly `===` but close: NAN !== NAN but this will return true for NAN.
      */
     public function containsKey(mixed $value): bool {}
 

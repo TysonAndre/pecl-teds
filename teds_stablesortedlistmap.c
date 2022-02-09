@@ -22,6 +22,7 @@
 #include "teds_stablesortedlistmap_arginfo.h"
 #include "teds_stablesortedlistmap.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -35,7 +36,7 @@ zend_object_handlers teds_handler_StableSortedListMap;
 zend_class_entry *teds_ce_StableSortedListMap;
 
 typedef struct _teds_stablesortedlistmap_entry {
-	zval key;   /* TODO: Stores Z_NEXT - similar to https://github.com/php/php-src/pull/6588 */
+	zval key;
 	zval value;
 } teds_stablesortedlistmap_entry;
 
@@ -1163,7 +1164,7 @@ PHP_METHOD(Teds_StableSortedListMap, clear)
 PHP_MINIT_FUNCTION(teds_stablesortedlistmap)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_StableSortedListMap = register_class_Teds_StableSortedListMap(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_StableSortedListMap = register_class_Teds_StableSortedListMap(zend_ce_aggregate, teds_ce_Collection, php_json_serializable_ce);
 	teds_ce_StableSortedListMap->create_object = teds_stablesortedlistmap_new;
 
 	memcpy(&teds_handler_StableSortedListMap, &std_object_handlers, sizeof(zend_object_handlers));

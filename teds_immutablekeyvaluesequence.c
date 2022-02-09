@@ -20,6 +20,7 @@
 #include "php_teds.h"
 #include "teds.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 #include "teds_immutablekeyvaluesequence_arginfo.h"
 #include "teds_immutablekeyvaluesequence.h"
 // #include "ext/spl/spl_functions.h"
@@ -959,7 +960,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, toPairs)
 PHP_MINIT_FUNCTION(teds_immutablekeyvaluesequence)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_ImmutableKeyValueSequence = register_class_Teds_ImmutableKeyValueSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
+	teds_ce_ImmutableKeyValueSequence = register_class_Teds_ImmutableKeyValueSequence(zend_ce_aggregate, teds_ce_Values, php_json_serializable_ce);
 	teds_ce_ImmutableKeyValueSequence->create_object = teds_immutablekeyvaluesequence_new;
 
 	memcpy(&teds_handler_ImmutableKeyValueSequence, &std_object_handlers, sizeof(zend_object_handlers));

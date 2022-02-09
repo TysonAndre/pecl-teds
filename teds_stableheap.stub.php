@@ -7,7 +7,7 @@ namespace Teds;
 
 /** @generate-class-entries */
 
-final class StableMinHeap implements Iterator, Countable
+final class StableMinHeap implements Iterator, Values
 {
     public function __construct(iterable $values = []) {}
 
@@ -40,9 +40,16 @@ final class StableMinHeap implements Iterator, Countable
     public function clear(): void {}
 
     public static function __set_state(array $state): StableMinHeap { }
+
+    /** @return list<mixed> */
+    public function values(): array {}
+
+    /** @implementation-alias Teds\StableMinHeap::values */
+    public function __serialize(): array {}
+    public function __unserialize(array $data): void {}
 }
 
-final class StableMaxHeap implements Iterator, Countable
+final class StableMaxHeap implements Iterator, Values
 {
     public function __construct(iterable $values = []) {}
 
@@ -77,4 +84,11 @@ final class StableMaxHeap implements Iterator, Countable
     public function clear(): void {}
 
     public static function __set_state(array $state): StableMaxHeap { }
+
+    /** @implementation-alias Teds\StableMinHeap::values */
+    public function values(): array {}
+
+    /** @implementation-alias Teds\StableMinHeap::values */
+    public function __serialize(): array {}
+    public function __unserialize(array $data): void {}
 }

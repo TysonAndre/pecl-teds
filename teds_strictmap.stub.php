@@ -12,7 +12,7 @@ namespace Teds;
  * This is a map where entries for keys of any type can be inserted if they are `!==` to other keys.
  * This uses `Teds\strict_hash`
  */
-final class StrictMap implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
+final class StrictMap implements \IteratorAggregate, Collection, \JsonSerializable
 {
     /** Construct the StrictMap from the keys and values of the Traversable/array. */
     public function __construct(iterable $iterator = []) {}
@@ -35,6 +35,12 @@ final class StrictMap implements \IteratorAggregate, \Countable, \JsonSerializab
     /** Construct the StrictMap from the keys and values of the array ([[key1, value1], [key2, value2]]) */
     public static function __set_state(array $array): StrictMap {}
 
+    // FIXME implement toArray
+    /**
+     * FIXME Returns array created by inserting values corresponding to keys of this map
+     * @implementation-alias Teds\StableSortedListMap::values
+     */
+    public function toArray(): array {}
     /** Returns a list of the values in order of insertion. */
     public function values(): array {}
 

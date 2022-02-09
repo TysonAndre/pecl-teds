@@ -21,6 +21,7 @@
 #include "teds_sortedstrictset_arginfo.h"
 #include "teds_sortedstrictset.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -1338,7 +1339,7 @@ PHP_METHOD(Teds_SortedStrictSet, clear)
 PHP_MINIT_FUNCTION(teds_sortedstrictset)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_SortedStrictSet = register_class_Teds_SortedStrictSet(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
+	teds_ce_SortedStrictSet = register_class_Teds_SortedStrictSet(zend_ce_aggregate, teds_ce_Values, php_json_serializable_ce);
 	teds_ce_SortedStrictSet->create_object = teds_sortedstrictset_new;
 
 	memcpy(&teds_handler_SortedStrictSet, &std_object_handlers, sizeof(zend_object_handlers));

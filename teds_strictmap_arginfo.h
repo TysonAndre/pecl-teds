@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 84722fd8dbfdd7e9df6552eaca689b1e4ea27694 */
+ * Stub hash: 956ff49daf1ee2652b5148e528c00fb92021f573 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -33,6 +33,8 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_StrictMap___set_state, 0, 1, Teds\\StrictMap, 0)
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_StrictMap_toArray arginfo_class_Teds_StrictMap_toPairs
 
 #define arginfo_class_Teds_StrictMap_values arginfo_class_Teds_StrictMap_toPairs
 
@@ -79,6 +81,7 @@ ZEND_METHOD(Teds_StrictMap, fromPairs);
 ZEND_METHOD(Teds_StrictMap, __serialize);
 ZEND_METHOD(Teds_StrictMap, __unserialize);
 ZEND_METHOD(Teds_StrictMap, __set_state);
+ZEND_METHOD(Teds_StableSortedListMap, values);
 ZEND_METHOD(Teds_StrictMap, values);
 ZEND_METHOD(Teds_StrictMap, keys);
 ZEND_METHOD(Teds_StrictMap, offsetGet);
@@ -101,6 +104,7 @@ static const zend_function_entry class_Teds_StrictMap_methods[] = {
 	ZEND_ME(Teds_StrictMap, __serialize, arginfo_class_Teds_StrictMap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, __unserialize, arginfo_class_Teds_StrictMap___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, __set_state, arginfo_class_Teds_StrictMap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_MALIAS(Teds_StableSortedListMap, toArray, values, arginfo_class_Teds_StrictMap_toArray, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, values, arginfo_class_Teds_StrictMap_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, keys, arginfo_class_Teds_StrictMap_keys, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, offsetGet, arginfo_class_Teds_StrictMap_offsetGet, ZEND_ACC_PUBLIC)
@@ -114,14 +118,14 @@ static const zend_function_entry class_Teds_StrictMap_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_StrictMap(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Countable, zend_class_entry *class_entry_JsonSerializable, zend_class_entry *class_entry_ArrayAccess)
+static zend_class_entry *register_class_Teds_StrictMap(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Collection, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "StrictMap", class_Teds_StrictMap_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 4, class_entry_IteratorAggregate, class_entry_Countable, class_entry_JsonSerializable, class_entry_ArrayAccess);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Collection, class_entry_JsonSerializable);
 
 	return class_entry;
 }

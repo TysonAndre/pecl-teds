@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 3bf1177dfda6d88a36b1e1d8a43a5a2fd6149b98 */
+ * Stub hash: fd28de9c078787a6d758020c05e06fe2e3040bea */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -50,6 +50,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Vector_toArray arginfo_class_Teds_Vector___serialize
 
+#define arginfo_class_Teds_Vector_values arginfo_class_Teds_Vector___serialize
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_get, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
@@ -66,6 +68,8 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_offsetExists, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_Vector_containsKey arginfo_class_Teds_Vector_offsetExists
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_offsetSet, 0, 2, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
@@ -113,6 +117,7 @@ ZEND_METHOD(Teds_Vector, get);
 ZEND_METHOD(Teds_Vector, set);
 ZEND_METHOD(Teds_Vector, offsetGet);
 ZEND_METHOD(Teds_Vector, offsetExists);
+ZEND_METHOD(Teds_Vector, containsKey);
 ZEND_METHOD(Teds_Vector, offsetSet);
 ZEND_METHOD(Teds_Vector, offsetUnset);
 ZEND_METHOD(Teds_Vector, indexOf);
@@ -137,10 +142,12 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, push, arginfo_class_Teds_Vector_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, pop, arginfo_class_Teds_Vector_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, toArray, arginfo_class_Teds_Vector_toArray, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, values, toArray, arginfo_class_Teds_Vector_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, get, arginfo_class_Teds_Vector_get, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, set, arginfo_class_Teds_Vector_set, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetGet, arginfo_class_Teds_Vector_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetExists, arginfo_class_Teds_Vector_offsetExists, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, containsKey, arginfo_class_Teds_Vector_containsKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetSet, arginfo_class_Teds_Vector_offsetSet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, offsetUnset, arginfo_class_Teds_Vector_offsetUnset, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, indexOf, arginfo_class_Teds_Vector_indexOf, ZEND_ACC_PUBLIC)
@@ -151,14 +158,14 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_Vector(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Countable, zend_class_entry *class_entry_JsonSerializable, zend_class_entry *class_entry_ArrayAccess)
+static zend_class_entry *register_class_Teds_Vector(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_ListInterface, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "Vector", class_Teds_Vector_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 4, class_entry_IteratorAggregate, class_entry_Countable, class_entry_JsonSerializable, class_entry_ArrayAccess);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_ListInterface, class_entry_JsonSerializable);
 
 	return class_entry;
 }

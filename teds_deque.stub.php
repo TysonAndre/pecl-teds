@@ -19,7 +19,7 @@ namespace Teds;
  * Naming is based on https://www.php.net/spldoublylinkedlist
  * and on array_push/pop/unshift/shift.
  */
-final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
+final class Deque implements \IteratorAggregate, ListInterface, \JsonSerializable
 {
     /** Construct the Deque from the values of the Traversable/array, ignoring keys */
     public function __construct(iterable $iterator = []) {}
@@ -72,6 +72,11 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
 
     /** Returns a list of the elements from front to back. */
     public function toArray(): array {}
+    /**
+     * @override
+     * @implementation-alias Teds\Deque::toArray
+     */
+    public function values(): array {}
     /* Get and set are strictly typed, unlike offsetGet/offsetSet. */
     /**
      * Returns the value at offset $offset (relative to the start of the Deque)
@@ -90,9 +95,14 @@ final class Deque implements \IteratorAggregate, \Countable, \JsonSerializable, 
      */
     public function offsetGet(mixed $offset): mixed {}
     /**
-     * Returns true if `0 <= (int)$offset && (int)$offset < $this->count().
+     * Returns true if `0 <= (int)$offset && (int)$offset < $this->count()
+     * AND the value of offsetGet is non-null.
      */
     public function offsetExists(mixed $offset): bool {}
+    /**
+     * Returns true if `is_int($offset) && 0 <= $offset && $offset < $this->count().
+     */
+    public function containsKey(mixed $offset): bool {}
     /**
      * Sets the value at offset $offset (relative to the start of the Deque) to $value
      * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector

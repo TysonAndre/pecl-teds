@@ -26,6 +26,7 @@
 #include "ext/spl/spl_iterators.h"
 #include "ext/json/php_json.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 
 #include <stdbool.h>
 
@@ -729,6 +730,10 @@ PHP_METHOD(Teds_Deque, offsetGet)
 		Z_PARAM_ZVAL(offset_zv)
 	ZEND_PARSE_PARAMETERS_END();
 
+	/**
+	 * NOTE: converting offset to long may have side effects such as emitting notices that mutate the deque.
+	 * Do that before getting the state of the Deque.
+	 */
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
@@ -745,12 +750,25 @@ PHP_METHOD(Teds_Deque, offsetExists)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	const uint32_t len = intern->array.size;
-	if ((zend_ulong) offset >= len) {
+	const teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+
+	if ((zend_ulong) offset >= array->size) {
 		RETURN_FALSE;
 	}
-	RETURN_BOOL(Z_TYPE_P(teds_deque_get_entry_at_offset(&intern->array, offset)) != IS_NULL);
+	RETURN_BOOL(Z_TYPE_P(teds_deque_get_entry_at_offset(array, offset)) != IS_NULL);
+}
+
+PHP_METHOD(Teds_Deque, containsKey)
+{
+	zval *offset_zv;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(offset_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
+	RETURN_LONG(((zend_ulong) offset) < Z_DEQUE_ENTRIES_P(ZEND_THIS)->size);
 }
 
 static zval *teds_deque_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
@@ -1136,7 +1154,7 @@ ZEND_COLD PHP_METHOD(Teds_Deque, offsetUnset)
 PHP_MINIT_FUNCTION(teds_deque)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_Deque = register_class_Teds_Deque(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_Deque = register_class_Teds_Deque(zend_ce_aggregate, teds_ce_ListInterface, php_json_serializable_ce);
 	teds_ce_Deque->create_object = teds_deque_new;
 
 	memcpy(&teds_handler_Deque, &std_object_handlers, sizeof(zend_object_handlers));

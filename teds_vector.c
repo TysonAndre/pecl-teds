@@ -21,6 +21,7 @@
 #include "teds.h"
 #include "teds_vector_arginfo.h"
 #include "teds_vector.h"
+#include "teds_interfaces.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
@@ -800,8 +801,33 @@ PHP_METHOD(Teds_Vector, offsetExists)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	const teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
-	RETURN_BOOL((zend_ulong) offset < intern->array.size);
+	const teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	ZEND_ASSERT(array->size <= TEDS_MAX_ZVAL_COLLECTION_SIZE);
+
+	if ((zend_ulong) offset >= array->size) {
+		RETURN_FALSE;
+	}
+	ZEND_ASSERT(offset >= 0);
+	zval *tmp = &array->entries[(zend_ulong) offset];
+	RETURN_BOOL(Z_TYPE_P(tmp) != IS_NULL);
+}
+
+PHP_METHOD(Teds_Vector, containsKey)
+{
+	zval *offset_zv;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(offset_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (UNEXPECTED(Z_TYPE_P(offset_zv) != IS_LONG)) {
+		RETURN_FALSE;
+	}
+
+	zend_long offset = Z_LVAL_P(offset_zv);
+	const teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	ZEND_ASSERT(array->size <= TEDS_MAX_ZVAL_COLLECTION_SIZE);
+
+	RETURN_BOOL((zend_ulong) offset < array->size);
 }
 
 PHP_METHOD(Teds_Vector, indexOf)
@@ -1254,7 +1280,7 @@ static int teds_vector_has_dimension(zend_object *object, zval *offset_zv, int c
 PHP_MINIT_FUNCTION(teds_vector)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_Vector = register_class_Teds_Vector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_Vector = register_class_Teds_Vector(zend_ce_aggregate, teds_ce_ListInterface, php_json_serializable_ce);
 	teds_ce_Vector->create_object = teds_vector_new;
 
 	memcpy(&teds_handler_Vector, &std_object_handlers, sizeof(zend_object_handlers));

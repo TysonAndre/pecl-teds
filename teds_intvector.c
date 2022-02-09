@@ -21,6 +21,7 @@
 #include "teds.h"
 #include "teds_intvector_arginfo.h"
 #include "teds_intvector.h"
+#include "teds_interfaces.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
@@ -46,13 +47,13 @@ static zend_always_inline zend_long teds_intvector_convert_zval_value_to_long(co
 }
 
 #define TEDS_INTVECTOR_VALUE_TO_LONG_OR_THROW(value, value_zv) do { \
-	if (UNEXPECTED(Z_TYPE_P(value_zv) != IS_LONG)) { \
-		value = teds_intvector_convert_zval_value_to_long(value_zv); \
+	if (UNEXPECTED(Z_TYPE_P((value_zv)) != IS_LONG)) { \
+		value = teds_intvector_convert_zval_value_to_long((value_zv)); \
 		if (UNEXPECTED(EG(exception))) { \
 			return; \
 		} \
 	} else { \
-		value = Z_LVAL_P(value_zv); \
+		value = Z_LVAL_P((value_zv)); \
 	} \
 } while(0)
 
@@ -864,9 +865,22 @@ PHP_METHOD(Teds_IntVector, offsetExists)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	const teds_intvector *intern = Z_INTVECTOR_P(ZEND_THIS);
-	const size_t len = intern->array.size;
-	RETURN_BOOL((zend_ulong) offset < len);
+	RETURN_BOOL((zend_ulong) offset < Z_INTVECTOR_ENTRIES_P(ZEND_THIS)->size);
+}
+
+PHP_METHOD(Teds_IntVector, containsKey)
+{
+	zval *offset_zv;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(offset_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (Z_TYPE_P(offset_zv) != IS_LONG) {
+		RETURN_FALSE;
+	}
+	zend_long offset = Z_LVAL_P(offset_zv);
+
+	RETURN_BOOL((zend_ulong) offset < Z_INTVECTOR_ENTRIES_P(ZEND_THIS)->size);
 }
 
 PHP_METHOD(Teds_IntVector, indexOf)
@@ -1043,6 +1057,22 @@ TEDS_INTVECTOR__GENERATE_INT_CASES()
 
 PHP_METHOD(Teds_IntVector, set)
 {
+	zend_long offset;
+	zval *value_zv;
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_LONG(offset)
+		Z_PARAM_ZVAL(value_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_long value;
+	TEDS_INTVECTOR_VALUE_TO_LONG_OR_THROW(value, value_zv);
+
+	teds_intvector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	TEDS_RETURN_VOID();
+}
+
+PHP_METHOD(Teds_IntVector, setInt)
+{
 	zend_long offset, value;
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_LONG(offset)
@@ -1052,6 +1082,7 @@ PHP_METHOD(Teds_IntVector, set)
 	teds_intvector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 	TEDS_RETURN_VOID();
 }
+
 
 PHP_METHOD(Teds_IntVector, offsetSet)
 {
@@ -1237,6 +1268,36 @@ PHP_METHOD(Teds_IntVector, push)
 	TEDS_RETURN_VOID();
 }
 
+/* Based on array_push */
+PHP_METHOD(Teds_IntVector, pushInts)
+{
+	const zval *args;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(0, -1)
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+	teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->size;
+	const size_t new_size = old_size + argc;
+	/* The compiler will type check but eliminate dead code on platforms where size_t is 32 bits (4 bytes) */
+	if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_size > MAX_VALID_OFFSET + 1 || new_size < old_size)) {
+		teds_error_noreturn_max_intvector_capacity();
+		ZEND_UNREACHABLE();
+	}
+
+	for (uint32_t i = 0; i < argc; i++) {
+		zend_long new_value;
+		TEDS_INTVECTOR_VALUE_TO_LONG_OR_THROW(new_value, (&args[i]));
+		teds_intvector_entries_push(array, new_value, true);
+	}
+	TEDS_RETURN_VOID();
+}
+
 PHP_METHOD(Teds_IntVector, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -1342,7 +1403,7 @@ static int teds_intvector_has_dimension(zend_object *object, zval *offset_zv, in
 PHP_MINIT_FUNCTION(teds_intvector)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_IntVector = register_class_Teds_IntVector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_IntVector = register_class_Teds_IntVector(zend_ce_aggregate, teds_ce_ListInterface, php_json_serializable_ce);
 	teds_ce_IntVector->create_object = teds_intvector_new;
 
 	memcpy(&teds_handler_IntVector, &std_object_handlers, sizeof(zend_object_handlers));

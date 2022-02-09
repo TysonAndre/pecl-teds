@@ -491,6 +491,49 @@ PHP_METHOD(Teds_StableMinHeap, __unserialize)
 	} ZEND_HASH_FOREACH_END();
 }
 
+PHP_METHOD(Teds_StableMaxHeap, __unserialize)
+{
+	HashTable *raw_data;
+	zval *val;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "h", &raw_data) == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	size_t raw_size = zend_hash_num_elements(raw_data);
+	teds_stableheap_entries *array = Z_STABLEHEAP_ENTRIES_P(ZEND_THIS);
+	if (UNEXPECTED(!teds_stableheap_entries_uninitialized(array))) {
+		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
+		RETURN_THROWS();
+	}
+	if (raw_size == 0) {
+		ZEND_ASSERT(array->size == 0);
+		ZEND_ASSERT(array->capacity == 0);
+		array->entries = (teds_stableheap_entry *)empty_entry_list;
+		return;
+	}
+
+	ZEND_ASSERT(array->entries == NULL);
+
+	const size_t capacity = teds_stableheap_next_pow2_capacity(raw_size);
+	teds_stableheap_entry *entries = safe_emalloc(capacity, sizeof(teds_stableheap_entry), 0);
+	array->size = 0;
+	array->capacity = capacity;
+	array->entries = entries;
+
+	zend_string *str;
+
+	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
+		if (UNEXPECTED(str)) {
+			teds_stableheap_entries_clear(array);
+			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StableHeap::__unserialize saw unexpected string key, expected sequence of values", 0);
+			RETURN_THROWS();
+		}
+
+		teds_stableheap_entries_insert(array, val, false);
+	} ZEND_HASH_FOREACH_END();
+}
+
 PHP_METHOD(Teds_StableMinHeap, __set_state)
 {
 	zend_array *array_ht;
@@ -674,6 +717,31 @@ PHP_METHOD(Teds_StableMinHeap, clear)
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stableheap_entries_clear(Z_STABLEHEAP_ENTRIES_P(ZEND_THIS));
 	TEDS_RETURN_VOID();
+}
+
+PHP_METHOD(Teds_StableMinHeap, values)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_stableheap_entries *array = Z_STABLEHEAP_ENTRIES_P(ZEND_THIS);
+	uint32_t len = array->size;
+	if (!len) {
+		RETURN_EMPTY_ARRAY();
+	}
+	/* sizeof(teds_stableheap_entry) === sizeof(zval) */
+	zval *entries = &array->entries[0].key;
+	zend_array *values = zend_new_array(len);
+	/* Initialize return array */
+	zend_hash_real_init_packed(values);
+
+	/* Go through values and add values to the return array */
+	ZEND_HASH_FILL_PACKED(values) {
+		for (uint32_t i = 0; i < len; i++) {
+			zval *tmp = &entries[i];
+			Z_TRY_ADDREF_P(tmp);
+			ZEND_HASH_FILL_ADD(tmp);
+		}
+	} ZEND_HASH_FILL_END();
+	RETURN_ARR(values);
 }
 
 PHP_MINIT_FUNCTION(teds_stableheap)

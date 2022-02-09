@@ -6,16 +6,16 @@
 namespace Teds;
 
 /**
- * Strict set which can contain any value type.
- * **This is a work in progress.** Iteration will not work as expected if elements are removed during iteration, and hash lookups haven't been implemented yet, so this is inefficient for large maps (scans the entire map).
+ * Strict set which can contain any value type, based on a hash table.
+ * **Iteration is a work in progress.** Iteration will not work as expected if elements are removed during iteration.
  *
- * This is a set where values of any type can be inserted if they are `!==` to other keys.
+ * This is a set where values of any type can be inserted if they are `!==` to other keys and have different values of strict_hash.
  * This uses `Teds\strict_hash`.
  *
  * ArrayAccess is not implemented because `$x[$item] = $value` is meaningless
  * and there could be multiple desired meetings of `$value = $x[$item];`
  */
-final class StrictSet implements \IteratorAggregate, \Countable, \JsonSerializable
+final class StrictSet implements \IteratorAggregate, Values, \JsonSerializable
 {
     /** Construct the StrictSet from the values of the Traversable/array, ignoring keys. */
     public function __construct(iterable $iterator = []) {}

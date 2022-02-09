@@ -21,6 +21,7 @@
 #include "teds.h"
 #include "teds_lowmemoryvector_arginfo.h"
 #include "teds_lowmemoryvector.h"
+#include "teds_interfaces.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
@@ -1204,6 +1205,28 @@ PHP_METHOD(Teds_LowMemoryVector, offsetExists)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
+	const teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+	if ((zend_ulong) offset >= array->size) {
+		RETURN_FALSE;
+	}
+	ZEND_ASSERT(offset >= 0);
+	zval tmp;
+	teds_lowmemoryvector_get_value_at_offset(&tmp, ZEND_THIS, offset);
+	RETURN_BOOL(Z_TYPE(tmp) != IS_NULL);
+}
+
+PHP_METHOD(Teds_LowMemoryVector, containsKey)
+{
+	zval *offset_zv;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(offset_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (Z_TYPE_P(offset_zv) != IS_LONG) {
+		RETURN_FALSE;
+	}
+	const zend_long offset = Z_LVAL_P(offset_zv);
+
 	const teds_lowmemoryvector *intern = Z_LOWMEMORYVECTOR_P(ZEND_THIS);
 	RETURN_BOOL(teds_offset_within_size_t(offset, intern->array.size));
 }
@@ -1913,7 +1936,7 @@ static int teds_lowmemoryvector_has_dimension(zend_object *object, zval *offset_
 PHP_MINIT_FUNCTION(teds_lowmemoryvector)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_LowMemoryVector = register_class_Teds_LowMemoryVector(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_LowMemoryVector = register_class_Teds_LowMemoryVector(zend_ce_aggregate, teds_ce_ListInterface, php_json_serializable_ce);
 	teds_ce_LowMemoryVector->create_object = teds_lowmemoryvector_new;
 
 	memcpy(&teds_handler_LowMemoryVector, &std_object_handlers, sizeof(zend_object_handlers));
