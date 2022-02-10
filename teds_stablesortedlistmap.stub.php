@@ -98,14 +98,19 @@ final class StableSortedListMap implements \IteratorAggregate, Collection, \Json
 
     /**
      * Returns true if there exists a value === $value in this StableSortedListMap.
+     * @implementation-alias Teds\StableSortedListMap::contains
      */
     public function containsValue(mixed $value): bool {}
+    /**
+     * Returns true if there exists a value === $value in this StableSortedListMap.
+     */
+    public function contains(mixed $value): bool {}
 
     /**
      * Returns true if there exists a key === $key in this StableSortedListMap.
      * Unlike offsetExists, this returns true even if the corresponding value is null.
      */
-    public function containsKey(mixed $value): bool {}
+    public function containsKey(mixed $key): bool {}
 
     // TODO: Add keyAt/valueAt/indexOfKey
 

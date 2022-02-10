@@ -34,7 +34,7 @@ typedef struct _teds_sortedstrictmap_node {
 
 typedef struct _teds_sortedstrictmap_tree {
 	struct _teds_sortedstrictmap_node *root;
-	size_t nNumOfElements;
+	uint32_t nNumOfElements;
 	bool initialized;
 } teds_sortedstrictmap_tree;
 

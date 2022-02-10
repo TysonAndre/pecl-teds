@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 8fcf4f42e46d1a0bb055039ddb1a31e15c9da9f6 */
+ * Stub hash: b78acbb53e9e33a5c7551e0c802741d7a156fb2a */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -61,7 +61,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictMap_containsVal
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_StrictMap_containsKey arginfo_class_Teds_StrictMap_containsValue
+#define arginfo_class_Teds_StrictMap_contains arginfo_class_Teds_StrictMap_containsValue
+
+#define arginfo_class_Teds_StrictMap_containsKey arginfo_class_Teds_StrictMap_offsetExists
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictMap_get, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
@@ -88,7 +90,7 @@ ZEND_METHOD(Teds_StrictMap, offsetGet);
 ZEND_METHOD(Teds_StrictMap, offsetExists);
 ZEND_METHOD(Teds_StrictMap, offsetSet);
 ZEND_METHOD(Teds_StrictMap, offsetUnset);
-ZEND_METHOD(Teds_StrictMap, containsValue);
+ZEND_METHOD(Teds_StrictMap, contains);
 ZEND_METHOD(Teds_StrictMap, containsKey);
 ZEND_METHOD(Teds_StrictMap, get);
 
@@ -111,7 +113,8 @@ static const zend_function_entry class_Teds_StrictMap_methods[] = {
 	ZEND_ME(Teds_StrictMap, offsetExists, arginfo_class_Teds_StrictMap_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, offsetSet, arginfo_class_Teds_StrictMap_offsetSet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, offsetUnset, arginfo_class_Teds_StrictMap_offsetUnset, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictMap, containsValue, arginfo_class_Teds_StrictMap_containsValue, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMap, containsValue, contains, arginfo_class_Teds_StrictMap_containsValue, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
+	ZEND_ME(Teds_StrictMap, contains, arginfo_class_Teds_StrictMap_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, containsKey, arginfo_class_Teds_StrictMap_containsKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMap, get, arginfo_class_Teds_StrictMap_get, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StrictMap, jsonSerialize, toPairs, arginfo_class_Teds_StrictMap_jsonSerialize, ZEND_ACC_PUBLIC)

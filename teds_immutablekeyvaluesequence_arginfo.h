@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: cf6bad4ba4e53ad24783c44d758801e687830c43 */
+ * Stub hash: 5fcaa0d9b40e4ea52ef312ab91ca3bb9afc019fd */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -57,6 +57,8 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequ
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
+#define arginfo_class_Teds_ImmutableKeyValueSequence_contains arginfo_class_Teds_ImmutableKeyValueSequence_containsValue
+
 #define arginfo_class_Teds_ImmutableKeyValueSequence_jsonSerialize arginfo_class_Teds_ImmutableKeyValueSequence_toPairs
 
 
@@ -76,7 +78,7 @@ ZEND_METHOD(Teds_ImmutableKeyValueSequence, valueAt);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, indexOfKey);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, indexOfValue);
 ZEND_METHOD(Teds_ImmutableKeyValueSequence, containsKey);
-ZEND_METHOD(Teds_ImmutableKeyValueSequence, containsValue);
+ZEND_METHOD(Teds_ImmutableKeyValueSequence, contains);
 
 
 static const zend_function_entry class_Teds_ImmutableKeyValueSequence_methods[] = {
@@ -96,7 +98,8 @@ static const zend_function_entry class_Teds_ImmutableKeyValueSequence_methods[] 
 	ZEND_ME(Teds_ImmutableKeyValueSequence, indexOfKey, arginfo_class_Teds_ImmutableKeyValueSequence_indexOfKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, indexOfValue, arginfo_class_Teds_ImmutableKeyValueSequence_indexOfValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableKeyValueSequence, containsKey, arginfo_class_Teds_ImmutableKeyValueSequence_containsKey, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_ImmutableKeyValueSequence, containsValue, arginfo_class_Teds_ImmutableKeyValueSequence_containsValue, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_ImmutableKeyValueSequence, containsValue, contains, arginfo_class_Teds_ImmutableKeyValueSequence_containsValue, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableKeyValueSequence, contains, arginfo_class_Teds_ImmutableKeyValueSequence_contains, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_ImmutableKeyValueSequence, jsonSerialize, toPairs, arginfo_class_Teds_ImmutableKeyValueSequence_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };

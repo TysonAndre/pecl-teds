@@ -14,6 +14,9 @@ interface Values extends \Traversable, \Countable {
 
     /** Returns true if count() would be 0 */
     public function isEmpty(): bool {}
+
+    /** Returns true if this contains a value identical to $value */
+    public function contains(mixed $value): bool {}
 }
 
 /**

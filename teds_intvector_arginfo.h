@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: e597407fa9d50af1bfbcd13f829e82b9b82dc1ab */
+ * Stub hash: f10152621a02a68e01da118422950c6e0dd032fb */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_IntVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -79,7 +79,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_IntVector_indexOf, 0,
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_IntVector_contains, 0, 1, _IS_BOOL, 0)
-	ZEND_ARG_TYPE_INFO(0, value, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_IntVector_jsonSerialize arginfo_class_Teds_IntVector___serialize

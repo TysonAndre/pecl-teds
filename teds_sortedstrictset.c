@@ -242,6 +242,13 @@ static zend_always_inline bool teds_sortedstrictset_tree_insert(teds_sortedstric
 				}
 finish_insert:
 				tree->nNumOfElements++;
+				if (UNEXPECTED(tree->nNumOfElements >= TEDS_MAX_ZVAL_PAIR_COUNT)) {
+					/* Mainly, the reason to do that is that get_properties returns the array of properties for get_gc, which expects a uint32_t in php-src/Zend/zend_gc.c
+					 * A less severe reason is that this is converted to an array in var_dump/var_export for debugging, but the latter can be avoided */
+					zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\SortedStrictSet capacity");
+					ZEND_UNREACHABLE();
+					return false;
+				}
 				teds_sortedstrictset_entries_rebalance_after_insert(tree, c);
 
 				return true;
@@ -558,7 +565,7 @@ static HashTable* teds_sortedstrictset_get_properties(zend_object *obj)
 
 	ZEND_ASSERT(i == len);
 
-	for (size_t i = len; i < old_length; i++) {
+	for (uint32_t i = len; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
 
@@ -907,7 +914,7 @@ PHP_METHOD(Teds_SortedStrictSet, values)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_sortedstrictset *intern = Z_SORTEDSTRICTSET_P(ZEND_THIS);
-	size_t len = intern->array.nNumOfElements;
+	const uint32_t len = intern->array.nNumOfElements;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}

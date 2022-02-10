@@ -243,6 +243,14 @@ static zend_always_inline bool teds_sortedstrictmap_tree_insert(teds_sortedstric
 				}
 finish_insert:
 				tree->nNumOfElements++;
+				if (UNEXPECTED(tree->nNumOfElements >= TEDS_MAX_ZVAL_PAIR_COUNT)) {
+					/* Mainly, the reason to do that is that get_properties returns the array of properties for get_gc, which expects a uint32_t in php-src/Zend/zend_gc.c
+					 * A less severe reason is that this is converted to an array in var_dump/var_export for debugging, but the latter can be avoided */
+					zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\SortedStrictMap capacity");
+					ZEND_UNREACHABLE();
+					return false;
+				}
+
 				teds_sortedstrictmap_entries_rebalance_after_insert(tree, c);
 
 				return true;
@@ -583,7 +591,7 @@ static HashTable* teds_sortedstrictmap_get_properties(zend_object *obj)
 
 	ZEND_ASSERT(i == len);
 
-	for (size_t i = len; i < old_length; i++) {
+	for (uint32_t i = len; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
 
@@ -919,7 +927,7 @@ static bool teds_sortedstrictmap_tree_insert_from_pair(teds_sortedstrictmap_tree
 
 static void teds_sortedstrictmap_tree_init_from_array_pairs(teds_sortedstrictmap_tree *array, zend_array *raw_data)
 {
-	size_t num_entries = zend_hash_num_elements(raw_data);
+	const uint32_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
 		teds_sortedstrictmap_tree_set_empty_tree(array);
 		return;
@@ -1108,7 +1116,7 @@ PHP_METHOD(Teds_SortedStrictMap, values)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_sortedstrictmap *intern = Z_SORTEDSTRICTMAP_P(ZEND_THIS);
-	size_t len = intern->array.nNumOfElements;
+	const uint32_t len = intern->array.nNumOfElements;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
@@ -1505,7 +1513,7 @@ PHP_METHOD(Teds_SortedStrictMap, offsetUnset)
 	TEDS_RETURN_VOID();
 }
 
-PHP_METHOD(Teds_SortedStrictMap, containsValue)
+PHP_METHOD(Teds_SortedStrictMap, contains)
 {
 	zval *value;
 	ZEND_PARSE_PARAMETERS_START(1, 1)

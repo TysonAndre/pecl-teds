@@ -62,13 +62,19 @@ final class StrictMap implements \IteratorAggregate, Collection, \JsonSerializab
 
     /**
      * Returns true if there exists a value === $value in this StrictMap.
+     * @implementation-alias Teds\StrictMap::contains
+     * @deprecated
      */
     public function containsValue(mixed $value): bool {}
+    /**
+     * Returns true if there exists a value === $value in this StrictMap.
+     */
+    public function contains(mixed $value): bool {}
 
     /**
      * Returns true if there exists a key === $key in this StrictMap.
      */
-    public function containsKey(mixed $value): bool {}
+    public function containsKey(mixed $key): bool {}
 
     /**
      * Returns the value at $key.

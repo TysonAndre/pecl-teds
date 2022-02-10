@@ -30,7 +30,11 @@ final class ImmutableKeyValueSequence implements \IteratorAggregate, Values, \Js
     public function indexOfKey(mixed $key): ?int {}
     public function indexOfValue(mixed $value): ?int {}
     public function containsKey(mixed $key): bool {}
+    /**
+     * @implementation-alias Teds\ImmutableKeyValueSequence::contains
+     */
     public function containsValue(mixed $value): bool {}
+    public function contains(mixed $value): bool {}
 
     /** @implementation-alias Teds\ImmutableKeyValueSequence::toPairs */
     public function jsonSerialize(): array {}

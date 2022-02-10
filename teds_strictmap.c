@@ -49,6 +49,10 @@ const uint32_t teds_strictmap_empty_bucket_list[2] = { TEDS_STRICTMAP_INVALID_IN
 static void teds_strictmap_entries_grow(teds_strictmap_entries *array);
 static void teds_strictmap_entries_set_capacity(teds_strictmap_entries *array, uint32_t new_capacity);
 
+static ZEND_NORETURN ZEND_COLD void teds_error_noreturn_max_strictmap_capacity(void) {
+	zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\StrictMap capacity");
+}
+
 static zend_always_inline teds_strictmap_entry *teds_strictmap_entries_find_bucket(const teds_strictmap_entries *ht, zval *key, const uint32_t h)
 {
 	teds_strictmap_entry *p;
@@ -334,7 +338,7 @@ static void teds_strictmap_entries_grow(teds_strictmap_entries *array)
 	}
 	ZEND_ASSERT(teds_is_pow2(array->nTableSize));
 	if (UNEXPECTED(array->nTableSize >= TEDS_MAX_ZVAL_PAIR_COUNT / 2)) {
-		zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\StrictMap capacity");
+		teds_error_noreturn_max_strictmap_capacity();
 		ZEND_UNREACHABLE();
 	}
 
@@ -603,16 +607,18 @@ static int teds_strictmap_it_valid(zend_object_iterator *iter)
 	}
 }
 
-static teds_strictmap_entry *teds_strictmap_read_offset_helper(teds_strictmap *intern, uint32_t offset)
+static teds_strictmap_entry *teds_strictmap_it_read_offset_helper(const teds_strictmap *intern, teds_strictmap_it *iterator)
 {
-	/* we have to return NULL on error here to avoid memleak because of
-	 * ZE duplicating uninitialized_zval_ptr */
-	if (UNEXPECTED(offset >= intern->array.nNumUsed) || Z_ISUNDEF(intern->array.arData[offset].key)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		return NULL;
-	} else {
-		return &intern->array.arData[offset];
+	teds_strictmap_entry *const arData = intern->array.arData;
+	while (EXPECTED(iterator->current < intern->array.nNumUsed)) {
+		const zval *v = &arData[iterator->current].key;
+		if (EXPECTED(Z_TYPE_P(v) != IS_UNDEF)) {
+			return &arData[iterator->current];
+		}
+		iterator->current++;
 	}
+	zend_throw_exception(spl_ce_OutOfBoundsException, "Attempting to access iterator after the end of the Teds\\StrictMap", 0);
+	return NULL;
 }
 
 static zval *teds_strictmap_it_get_current_data(zend_object_iterator *iter)
@@ -620,7 +626,7 @@ static zval *teds_strictmap_it_get_current_data(zend_object_iterator *iter)
 	teds_strictmap_it     *iterator = (teds_strictmap_it*)iter;
 	teds_strictmap *object   = Z_STRICTMAP_P(&iter->data);
 
-	teds_strictmap_entry *data = teds_strictmap_read_offset_helper(object, iterator->current);
+	teds_strictmap_entry *data = teds_strictmap_it_read_offset_helper(object, iterator);
 
 	if (UNEXPECTED(data == NULL)) {
 		return &EG(uninitialized_zval);
@@ -634,7 +640,7 @@ static void teds_strictmap_it_get_current_key(zend_object_iterator *iter, zval *
 	teds_strictmap_it     *iterator = (teds_strictmap_it*)iter;
 	teds_strictmap *object   = Z_STRICTMAP_P(&iter->data);
 
-	teds_strictmap_entry *data = teds_strictmap_read_offset_helper(object, iterator->current);
+	teds_strictmap_entry *data = teds_strictmap_it_read_offset_helper(object, iterator);
 
 	if (data == NULL) {
 		ZVAL_NULL(key);
@@ -1082,16 +1088,19 @@ PHP_METHOD(Teds_StrictMap, offsetUnset)
 	TEDS_RETURN_VOID();
 }
 
-PHP_METHOD(Teds_StrictMap, containsValue)
+PHP_METHOD(Teds_StrictMap, contains)
 {
 	zval *value;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	teds_strictmap_entry *entry = teds_strictmap_entries_find_value(&intern->array, value);
-	RETURN_BOOL(entry != NULL);
+	const teds_strictmap_entries *array = Z_STRICTMAP_ENTRIES_P(ZEND_THIS);
+	if (array->nTableSize > 0) {
+		teds_strictmap_entry *entry = teds_strictmap_entries_find_value(array, value);
+		RETURN_BOOL(entry != NULL);
+	}
+	RETURN_FALSE;
 }
 
 PHP_METHOD(Teds_StrictMap, containsKey)
@@ -1101,9 +1110,9 @@ PHP_METHOD(Teds_StrictMap, containsKey)
 		Z_PARAM_ZVAL(key)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	if (intern->array.nNumOfElements > 0) {
-		teds_strictmap_entry *entry = teds_strictmap_entries_find_bucket_computing_hash(&intern->array, key);
+	const teds_strictmap_entries *array = Z_STRICTMAP_ENTRIES_P(ZEND_THIS);
+	if (array->nNumOfElements > 0) {
+		teds_strictmap_entry *entry = teds_strictmap_entries_find_bucket_computing_hash(array, key);
 		RETURN_BOOL(entry != NULL);
 	}
 	RETURN_FALSE;

@@ -907,7 +907,7 @@ PHP_METHOD(Teds_ImmutableKeyValueSequence, containsKey)
 	RETURN_FALSE;
 }
 
-PHP_METHOD(Teds_ImmutableKeyValueSequence, containsValue)
+PHP_METHOD(Teds_ImmutableKeyValueSequence, contains)
 {
 	zval *value;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
