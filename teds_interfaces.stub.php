@@ -33,7 +33,7 @@ interface Collection extends Values, \ArrayAccess {
      * When this is impossible for the class in general,
      * this returns an array with representations of key/value entries of the Collection.
      */
-    // public function toArray(): array {}
+    public function toArray(): array {}
 
     // clear will throw UnsupportedException on immutables.
     /**

@@ -40,11 +40,6 @@ final class StableSortedListMap implements \IteratorAggregate, Collection, \Json
     /** Construct the StableSortedListMap from the keys and values of the array ([[key1, value1], [key2, value2]]) */
     public static function __set_state(array $array): StableSortedListMap {}
 
-    // FIXME implement toArray
-    /**
-     * FIXME Returns array created by inserting values corresponding to keys of this map
-     * @implementation-alias Teds\StableSortedListMap::values
-     */
     public function toArray(): array {}
     /** Returns a list of the values in order of insertion. */
     public function values(): array {}
@@ -116,6 +111,7 @@ final class StableSortedListMap implements \IteratorAggregate, Collection, \Json
 
     /**
      * Returns [[key1, value1], [key2, value2]]
+     * @implementation-alias Teds\StableSortedListMap::toPairs
      */
     public function jsonSerialize(): array {}
 }

@@ -28,6 +28,8 @@ final class SortedStrictMap implements \IteratorAggregate, Collection, \JsonSeri
     public function clear(): void {}
     /** Converts this to [[key1, value1], [key2, value2]] */
     public function toPairs(): array {}
+    /** Implementation of Collection::toArray, same result as iterator_to_array($this) */
+    public function toArray(): array {}
     /** Create this from [[key1, value1], [key2, value2]] */
     public static function fromPairs(iterable $pairs): SortedStrictMap {}
 

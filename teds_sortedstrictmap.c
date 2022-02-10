@@ -1564,6 +1564,29 @@ PHP_METHOD(Teds_SortedStrictMap, toPairs)
 	teds_sortedstrictmap_tree_return_pairs(&intern->array, return_value);
 }
 
+PHP_METHOD(Teds_SortedStrictMap, toArray)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_sortedstrictmap_tree *const array = &Z_SORTEDSTRICTMAP_P(ZEND_THIS)->array;
+	uint32_t len = array->nNumOfElements;
+	if (!len) {
+		RETURN_EMPTY_ARRAY();
+	}
+	zend_array *values = zend_new_array(len);
+
+	zval *key, *val;
+	TEDS_SORTEDSTRICTMAP_FOREACH_KEY_VAL(array, key, val) {
+		Z_TRY_ADDREF_P(val);
+		array_set_zval_key(values, key, val);
+		zval_ptr_dtor_nogc(val);
+		if (UNEXPECTED(EG(exception))) {
+			zend_array_destroy(values);
+			RETURN_THROWS();
+		}
+	} TEDS_SORTEDSTRICTMAP_FOREACH_END();
+	RETURN_ARR(values);
+}
+
 static ZEND_COLD void teds_sortedstrictmap_node_debug_representation(zval *return_value, teds_sortedstrictmap_node *node, zend_string *strings[5]) {
 	if (!node) {
 		RETURN_EMPTY_ARRAY();

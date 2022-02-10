@@ -136,6 +136,7 @@ static zend_always_inline teds_strictmap *teds_strictmap_from_obj(zend_object *o
 }
 
 #define Z_STRICTMAP_P(zv)  teds_strictmap_from_obj(Z_OBJ_P((zv)))
+#define Z_STRICTMAP_ENTRIES_P(zv)  (&(Z_STRICTMAP_P((zv)))->array)
 
 static bool teds_strictmap_entries_uninitialized(teds_strictmap_entries *array)
 {
@@ -1136,8 +1137,29 @@ static void teds_strictmap_entries_return_pairs(teds_strictmap_entries *array, z
 PHP_METHOD(Teds_StrictMap, toPairs)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictmap *intern = Z_STRICTMAP_P(ZEND_THIS);
-	teds_strictmap_entries_return_pairs(&intern->array, return_value);
+	teds_strictmap_entries_return_pairs(Z_STRICTMAP_ENTRIES_P(ZEND_THIS), return_value);
+}
+
+PHP_METHOD(Teds_StrictMap, toArray)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_strictmap_entries *const array = Z_STRICTMAP_ENTRIES_P(ZEND_THIS);
+	if (!array->nNumOfElements) {
+		RETURN_EMPTY_ARRAY();
+	}
+
+	zend_array *values = zend_new_array(array->nNumOfElements);
+	zval *key, *val;
+	TEDS_STRICTMAP_FOREACH_KEY_VAL(array, key, val) {
+		Z_TRY_ADDREF_P(val);
+		array_set_zval_key(values, key, val);
+		zval_ptr_dtor_nogc(val);
+		if (UNEXPECTED(EG(exception))) {
+			zend_array_destroy(values);
+			RETURN_THROWS();
+		}
+	} TEDS_STRICTMAP_FOREACH_END();
+	RETURN_ARR(values);
 }
 
 static void teds_strictmap_entries_clear(teds_strictmap_entries *array) {

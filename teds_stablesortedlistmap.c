@@ -45,8 +45,8 @@ typedef struct _teds_stablesortedlistmap_entry {
 static const teds_stablesortedlistmap_entry empty_entry_list[1];
 
 typedef struct _teds_stablesortedlistmap_entries {
-	size_t size;
-	size_t capacity;
+	uint32_t size;
+	uint32_t capacity;
 	teds_stablesortedlistmap_entry *entries;
 } teds_stablesortedlistmap_entries;
 
@@ -113,6 +113,9 @@ static zend_always_inline bool teds_stablesortedlistmap_entries_uninitialized(te
 }
 
 static teds_stablesortedlistmap_entry *teds_stablesortedlistmap_allocate_entries(size_t capacity) {
+	if (UNEXPECTED(capacity >= TEDS_MAX_ZVAL_PAIR_COUNT)) {
+		zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\StableSortedListMap capacity");
+	}
 	return safe_emalloc(capacity, sizeof(teds_stablesortedlistmap_entry), 0);
 }
 
@@ -221,6 +224,9 @@ static void teds_stablesortedlistmap_entries_init_from_traversable(teds_stableso
 static void teds_stablesortedlistmap_entries_raise_capacity(teds_stablesortedlistmap_entries *array, size_t new_capacity)
 {
 	ZEND_ASSERT(new_capacity > array->capacity);
+	if (UNEXPECTED(new_capacity >= TEDS_MAX_ZVAL_PAIR_COUNT)) {
+		zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\StableSortedListMap capacity");
+	}
 	if (teds_stablesortedlistmap_entries_empty_capacity(array)) {
 		array->entries = safe_emalloc(new_capacity, sizeof(teds_stablesortedlistmap_entry), 0);
 	} else {
@@ -232,11 +238,11 @@ static void teds_stablesortedlistmap_entries_raise_capacity(teds_stablesortedlis
 /* Copies the range [begin, end) into the stablesortedlistmap, beginning at `offset`.
  * Does not dtor the existing elements.
  */
-static void teds_stablesortedlistmap_copy_range(teds_stablesortedlistmap_entries *array, size_t offset, teds_stablesortedlistmap_entry *begin, teds_stablesortedlistmap_entry *end)
+static void teds_stablesortedlistmap_copy_range(teds_stablesortedlistmap_entries *array, uint32_t offset, teds_stablesortedlistmap_entry *begin, teds_stablesortedlistmap_entry *end)
 {
 	ZEND_ASSERT(offset <= array->size);
 	ZEND_ASSERT(begin <= end);
-	ZEND_ASSERT(array->size - offset >= (size_t)(end - begin));
+	ZEND_ASSERT(array->size - offset >= (uint32_t)(end - begin));
 
 	teds_stablesortedlistmap_entry *to = &array->entries[offset];
 	while (begin != end) {
@@ -257,7 +263,7 @@ static void teds_stablesortedlistmap_entries_copy_ctor(teds_stablesortedlistmap_
 		return;
 	}
 
-	const size_t capacity = from->capacity;
+	const uint32_t capacity = from->capacity;
 	to->size = 0; /* reset size in case emalloc() fails */
 	to->capacity = 0; /* reset size in case emalloc() fails */
 	to->entries = safe_emalloc(capacity, sizeof(teds_stablesortedlistmap_entry), 0);
@@ -271,7 +277,7 @@ static void teds_stablesortedlistmap_entries_copy_ctor(teds_stablesortedlistmap_
 /* Destructs the entries in the range [from, to).
  * Caller is expected to bounds check.
  */
-static void teds_stablesortedlistmap_entries_dtor_range(teds_stablesortedlistmap_entry *start, size_t from, size_t to)
+static void teds_stablesortedlistmap_entries_dtor_range(teds_stablesortedlistmap_entry *start, uint32_t from, uint32_t to)
 {
 	teds_stablesortedlistmap_entry *begin = start + from, *end = start + to;
 	while (begin < end) {
@@ -307,19 +313,19 @@ static HashTable* teds_stablesortedlistmap_get_gc(zend_object *obj, zval **table
 static HashTable* teds_stablesortedlistmap_get_properties(zend_object *obj)
 {
 	teds_stablesortedlistmap *intern = teds_stablesortedlistmap_from_obj(obj);
-	size_t len = intern->array.size;
+	uint32_t len = intern->array.size;
 	HashTable *ht = zend_std_get_properties(obj);
-	size_t old_length = zend_hash_num_elements(ht);
+	uint32_t old_length = zend_hash_num_elements(ht);
 	teds_stablesortedlistmap_entry *entries = intern->array.entries;
 	/* Initialize properties array */
-	for (size_t i = 0; i < len; i++) {
+	for (uint32_t i = 0; i < len; i++) {
 		zval tmp;
 		Z_TRY_ADDREF_P(&entries[i].key);
 		Z_TRY_ADDREF_P(&entries[i].value);
 		ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
 		zend_hash_index_update(ht, i, &tmp);
 	}
-	for (size_t i = len; i < old_length; i++) {
+	for (uint32_t i = len; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
 
@@ -552,7 +558,7 @@ PHP_METHOD(Teds_StableSortedListMap, __unserialize)
 		RETURN_THROWS();
 	}
 
-	size_t raw_size = zend_hash_num_elements(raw_data);
+	uint32_t raw_size = zend_hash_num_elements(raw_data);
 	if (UNEXPECTED(raw_size % 2 != 0)) {
 		zend_throw_exception(spl_ce_UnexpectedValueException, "Odd number of elements", 0);
 		RETURN_THROWS();
@@ -571,8 +577,8 @@ PHP_METHOD(Teds_StableSortedListMap, __unserialize)
 
 	ZEND_ASSERT(intern->array.entries == NULL);
 
-	size_t i = 0;
-	const size_t capacity = teds_stablesortedlistmap_next_pow2_capacity(raw_size / 2);
+	uint32_t i = 0;
+	const uint32_t capacity = teds_stablesortedlistmap_next_pow2_capacity(raw_size / 2);
 	teds_stablesortedlistmap_entries *array = &intern->array;
 	teds_stablesortedlistmap_entry *entries = safe_emalloc(capacity, sizeof(teds_stablesortedlistmap_entry), 0);
 	intern->array.size = 0;
@@ -626,13 +632,13 @@ static bool teds_stablesortedlistmap_entries_insert_from_pair(teds_stablesortedl
 
 static void teds_stablesortedlistmap_entries_init_from_array_pairs(teds_stablesortedlistmap_entries *array, zend_array *raw_data)
 {
-	size_t num_entries = zend_hash_num_elements(raw_data);
+	const uint32_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
 		array->size = 0;
 		array->entries = (teds_stablesortedlistmap_entry *)empty_entry_list;
 		return;
 	}
-	const size_t capacity = teds_stablesortedlistmap_next_pow2_capacity(num_entries);
+	const uint32_t capacity = teds_stablesortedlistmap_next_pow2_capacity(num_entries);
 	array->entries = teds_stablesortedlistmap_allocate_entries(capacity);
 	array->size = 0;
 	array->capacity = capacity;
@@ -743,13 +749,13 @@ PHP_METHOD(Teds_StableSortedListMap, __serialize)
 		RETURN_EMPTY_ARRAY();
 	}
 	teds_stablesortedlistmap_entry *entries = intern->array.entries;
-	size_t len = intern->array.size;
+	const uint32_t len = intern->array.size;
 	zend_array *flat_entries_array = zend_new_array(len * 2);
 	/* Initialize return array */
 	zend_hash_real_init_packed(flat_entries_array);
 
 	/* Go through entries and add keys and values to the return array */
-	for (size_t i = 0; i < intern->array.size; i++) {
+	for (uint32_t i = 0; i < len; i++) {
 		zval *tmp = &entries[i].key;
 		Z_TRY_ADDREF_P(tmp);
 		zend_hash_next_index_insert(flat_entries_array, tmp);
@@ -767,7 +773,7 @@ PHP_METHOD(Teds_StableSortedListMap, methodName) \
 { \
 	ZEND_PARSE_PARAMETERS_NONE(); \
 	teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS); \
-	size_t len = intern->array.size; \
+	uint32_t len = intern->array.size; \
 	if (!len) { \
 		RETURN_EMPTY_ARRAY(); \
 	} \
@@ -778,7 +784,7 @@ PHP_METHOD(Teds_StableSortedListMap, methodName) \
  \
 	/* Go through arr and add propName to the return array */ \
 	ZEND_HASH_FILL_PACKED(arr) { \
-		for (size_t i = 0; i < len; i++) { \
+		for (uint32_t i = 0; i < len; i++) { \
 			zval *tmp = &entries[i].property; \
 			Z_TRY_ADDREF_P(tmp); \
 			ZEND_HASH_FILL_ADD(tmp); \
@@ -821,7 +827,7 @@ PHP_METHOD(Teds_StableSortedListMap, pop) {
 }
 
 /* Shifts values. Callers should adjust size and handle zval reference counting. */
-static void teds_stablesortedlistmap_remove_entry(teds_stablesortedlistmap_entry *entries, size_t len, teds_stablesortedlistmap_entry *entry)
+static void teds_stablesortedlistmap_remove_entry(teds_stablesortedlistmap_entry *entries, uint32_t len, teds_stablesortedlistmap_entry *entry)
 {
 	teds_stablesortedlistmap_entry *end = entries + len - 1;
 	ZEND_ASSERT(entry <= end);
@@ -836,7 +842,7 @@ static void teds_stablesortedlistmap_remove_entry(teds_stablesortedlistmap_entry
 PHP_METHOD(Teds_StableSortedListMap, shift) {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
-	const size_t len = intern->array.size;
+	const uint32_t len = intern->array.size;
 	if (len == 0) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty StableSortedListMap", 0);
 		RETURN_THROWS();
@@ -856,10 +862,10 @@ static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_entries_s
 {
 	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
 	teds_stablesortedlistmap_entry *const entries = array->entries;
-	size_t start = 0;
-	size_t end = array->size;
+	uint32_t start = 0;
+	uint32_t end = array->size;
 	while (start < end) {
-		size_t mid = start + (end - start)/2;
+		uint32_t mid = start + (end - start)/2;
 		teds_stablesortedlistmap_entry *e = &entries[mid];
 		int comparison = teds_stable_compare(key, &e->key);
 		if (comparison > 0) {
@@ -885,10 +891,10 @@ static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_entries_s
 static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_entries_sorted_search_for_key_probably_largest(const teds_stablesortedlistmap_entries *array, zval *key)
 {
 	teds_stablesortedlistmap_entry *const entries = array->entries;
-	size_t end = array->size;
-	size_t start = 0;
+	uint32_t end = array->size;
+	uint32_t start = 0;
 	if (end > 0) {
-		size_t mid = end - 1;
+		uint32_t mid = end - 1;
 		/* This is written in a way that would be fastest for branch prediction if key is larger than the last value in the array. */
 		while (true) {
 			teds_stablesortedlistmap_entry *e = &entries[mid];
@@ -920,9 +926,9 @@ static teds_stablesortedlistmap_search_result teds_stablesortedlistmap_entries_s
 
 static teds_stablesortedlistmap_entry *teds_stablesortedlistmap_find_value(const teds_stablesortedlistmap *intern, zval *value)
 {
-	const size_t len = intern->array.size;
+	const uint32_t len = intern->array.size;
 	teds_stablesortedlistmap_entry *entries = intern->array.entries;
-	for (size_t i = 0; i < len; i++) {
+	for (uint32_t i = 0; i < len; i++) {
 		if (zend_is_identical(value, &entries[i].value)) {
 			return &entries[i];
 		}
@@ -932,7 +938,7 @@ static teds_stablesortedlistmap_entry *teds_stablesortedlistmap_find_value(const
 
 static void teds_stablesortedlistmap_entries_remove_key(teds_stablesortedlistmap_entries *array, zval *key)
 {
-	const size_t len = array->size;
+	const uint32_t len = array->size;
 	if (len == 0) {
 		return;
 	}
@@ -1026,9 +1032,9 @@ static zend_always_inline bool teds_stablesortedlistmap_entries_insert(teds_stab
 	/* Reallocate and insert (insertion sort) */
 	teds_stablesortedlistmap_entry *entry = result.entry;
 	if (array->size >= array->capacity) {
-		const size_t new_offset = result.entry - array->entries;
+		const uint32_t new_offset = result.entry - array->entries;
 		ZEND_ASSERT(array->size == array->capacity);
-		const size_t new_capacity = teds_stablesortedlistmap_next_pow2_capacity(array->size + 1);
+		const uint32_t new_capacity = teds_stablesortedlistmap_next_pow2_capacity(array->size + 1);
 		teds_stablesortedlistmap_entries_raise_capacity(array, new_capacity);
 		entry = array->entries + new_offset;
 	}
@@ -1088,7 +1094,7 @@ PHP_METHOD(Teds_StableSortedListMap, containsKey)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
-	const size_t len = intern->array.size;
+	const uint32_t len = intern->array.size;
 	if (len > 0) {
 		teds_stablesortedlistmap_search_result result = teds_stablesortedlistmap_entries_sorted_search_for_key(&intern->array, key);
 		RETURN_BOOL(result.found);
@@ -1098,7 +1104,7 @@ PHP_METHOD(Teds_StableSortedListMap, containsKey)
 
 static void teds_stablesortedlistmap_return_pairs(zval *return_value, teds_stablesortedlistmap *intern)
 {
-	size_t len = intern->array.size;
+	const uint32_t len = intern->array.size;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
@@ -1110,7 +1116,7 @@ static void teds_stablesortedlistmap_return_pairs(zval *return_value, teds_stabl
 
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
-		for (size_t i = 0; i < len; i++) {
+		for (uint32_t i = 0; i < len; i++) {
 			zval tmp;
 			Z_TRY_ADDREF_P(&entries[i].key);
 			Z_TRY_ADDREF_P(&entries[i].value);
@@ -1121,7 +1127,7 @@ static void teds_stablesortedlistmap_return_pairs(zval *return_value, teds_stabl
 	RETURN_ARR(values);
 }
 
-PHP_METHOD(Teds_StableSortedListMap, jsonSerialize)
+PHP_METHOD(Teds_StableSortedListMap, toPairs)
 {
 	/* json_encoder.c will always encode objects as {"0":..., "1":...}, and detects recursion if an object returns its internal property array, so we have to return a new array */
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -1129,11 +1135,30 @@ PHP_METHOD(Teds_StableSortedListMap, jsonSerialize)
 	teds_stablesortedlistmap_return_pairs(return_value, intern);
 }
 
-PHP_METHOD(Teds_StableSortedListMap, toPairs)
+PHP_METHOD(Teds_StableSortedListMap, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_stablesortedlistmap *intern = Z_STABLESORTEDLISTMAP_P(ZEND_THIS);
-	teds_stablesortedlistmap_return_pairs(return_value, intern);
+	teds_stablesortedlistmap_entries *const array = Z_STABLESORTEDLISTMAP_ENTRIES_P(ZEND_THIS);
+	if (!array->size) {
+		RETURN_EMPTY_ARRAY();
+	}
+
+	zend_array *values = zend_new_array(array->size);
+	for (uint32_t i = 0; i < array->size; i++) {
+		teds_stablesortedlistmap_entry *entry = &array->entries[i];
+		zval *key = &entry->key;
+		zval *val = &entry->value;
+
+		// Z_TRY_ADDREF_P(key);
+		Z_TRY_ADDREF_P(val);
+		array_set_zval_key(values, key, val);
+		zval_ptr_dtor_nogc(val);
+		if (UNEXPECTED(EG(exception))) {
+			zend_array_destroy(values);
+			RETURN_THROWS();
+		}
+	}
+	RETURN_ARR(values);
 }
 
 static void teds_stablesortedlistmap_clear(teds_stablesortedlistmap *intern) {
@@ -1143,7 +1168,7 @@ static void teds_stablesortedlistmap_clear(teds_stablesortedlistmap *intern) {
 		return;
 	}
 	teds_stablesortedlistmap_entry *entries = intern->array.entries;
-	size_t size = intern->array.size;
+	const uint32_t size = intern->array.size;
 	intern->array.entries = (teds_stablesortedlistmap_entry *)empty_entry_list;
 	intern->array.size = 0;
 	intern->array.capacity = 0;
