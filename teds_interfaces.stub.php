@@ -40,23 +40,20 @@ interface Collection extends Values, \ArrayAccess {
 
     // clear will throw UnsupportedException on immutables.
     /**
-     * Returns true if there exists a key === $key in this Collection.
+     * Returns true if there exists a key identical to $key according to the semantics of the implementing collection.
+     * Typically, this is close to the definition of `===`, but may be stricter or weaker, e.g. for NAN, negative zero, etc.
      */
     public function containsKey(mixed $value): bool {}
 }
 
 /**
- * but not addressed with ArrayAccess (e.g. Sets, Heaps, objects that yield values in an order in their iterators, etc.)
- *
- * Note: JsonSerializable was not included here because
- * 1. Causes issues or inefficiencies with some ways of implementing data structures internally.
- * 2. Forces the result to be represented as []
- * 3. Forces polyfills to implement JsonSerializable as well, even when it would be less efficient
+ * This represents a Collection that can be used like a List.
+ * E.g. get()/set() will work for is_int($offset) && 0 <= $offset and $offset < $list->count().
  *
  * NOTE: List is a reserved keyword in php and cannot be used as an identifier, e.g. `list($x) = [1]`.
  */
 interface ListInterface extends Collection {
-    public function get(int $key): mixed {}
+    public function get(int $offset): mixed {}
     public function set(int $offset, mixed $value): void {}
 
     public function push(mixed ...$values): void {}

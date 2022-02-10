@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-02-09</date>
+ <date>2022-02-10</date>
  <time>16:00:00</time>
  <version>
-  <release>0.12.0dev</release>
-  <api>0.12.0dev</api>
+  <release>0.12.0</release>
+  <api>0.12.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,13 +22,16 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
+* Breaking changes.
 * Fix serialization/unserialization in StableMinHeap/StableMaxHeap.
-* Add interfaces for Values (e.g. Heap/Set), Teds\Collection(e.g. StrictMap, StableSortedMap), ListInterface(Vector, Deque, etc.) (the keyword list is reserved)
-* Implement ->values()
+* Add interfaces for `Teds\Values` (e.g. Heap/Set), Teds\Collection(e.g. StrictMap, StableSortedMap), ListInterface(Vector, Deque, etc.) (the keyword list is reserved)
+* Implement ->values() in classes implementing `Teds\Values`.
 * Make offsetExists consistently return false when the value of the given key is null across all data structures.
 * Add Teds\Collection->containsKey to return true if a key exists without coercing types, and returning true regardless of whether the corresponding key is null.
 * Change signature of IntVector::set() and ::push() to match ListInterface
-* Add Collection::toArray() (like iterator_to_array)
+* Add Collection::toArray() (behaves like iterator_to_array).
+* Check for exceeding 64-bit capacity limits in more collections to avoid hitting gc size limits
+  and to avoid unpredictable behavior (e.g. it'd be surprising to have this throw/fatal error only if var_export/var_dump/json_encode was called and PHP's array size limits(2147483648 elements, or at least 32GB) were hit).
  </notes>
  <contents>
   <dir name="/">
