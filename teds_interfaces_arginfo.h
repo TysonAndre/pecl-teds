@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: cc29c6268943d75d5950f240f5083eaf0e2768c0 */
+ * Stub hash: 513808a4a71346a47ef5d79a3a3904b7b1c72249 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Values_values, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
@@ -16,7 +16,7 @@ ZEND_END_ARG_INFO()
 #define arginfo_class_Teds_Collection_containsKey arginfo_class_Teds_Values_contains
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ListInterface_get, 0, 1, IS_MIXED, 0)
-	ZEND_ARG_TYPE_INFO(0, key, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ListInterface_set, 0, 2, IS_VOID, 0)
