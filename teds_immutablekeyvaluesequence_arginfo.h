@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 8f5543c5ef0eb2de2d99129164aae08911c3c45e */
+ * Stub hash: cf6bad4ba4e53ad24783c44d758801e687830c43 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableKeyValueSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -101,14 +101,14 @@ static const zend_function_entry class_Teds_ImmutableKeyValueSequence_methods[] 
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_ImmutableKeyValueSequence(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Countable, zend_class_entry *class_entry_JsonSerializable)
+static zend_class_entry *register_class_Teds_ImmutableKeyValueSequence(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Values, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "ImmutableKeyValueSequence", class_Teds_ImmutableKeyValueSequence_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Countable, class_entry_JsonSerializable);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Values, class_entry_JsonSerializable);
 
 	return class_entry;
 }

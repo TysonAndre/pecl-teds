@@ -8,7 +8,7 @@ namespace Teds;
 /**
  * An immutable sequence of keys and values, where keys are repeatable and can be any type.
  */
-final class ImmutableKeyValueSequence implements \IteratorAggregate, \Countable, \JsonSerializable
+final class ImmutableKeyValueSequence implements \IteratorAggregate, Values, \JsonSerializable
 {
     public function __construct(iterable $iterator) {}
     public function getIterator(): \InternalIterator {}

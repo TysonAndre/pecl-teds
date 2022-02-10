@@ -21,7 +21,7 @@ namespace Teds;
  *
  * In comparison, in 64-bit builds of PHP, PHP's arrays take at least 16 bytes per value in php 8.2, and at least 32 bytes per value before php 8.1, at the time of writing.
  */
-final class IntVector implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
+final class IntVector implements \IteratorAggregate, ListInterface, \JsonSerializable
 {
     /**
      * Construct a IntVector from an iterable of integers.
@@ -54,7 +54,8 @@ final class IntVector implements \IteratorAggregate, \Countable, \JsonSerializab
     /** Create this from an array */
     public static function __set_state(array $array): IntVector {}
 
-    public function push(int ...$values): void {}
+    public function push(mixed ...$values): void {}
+    public function pushInts(int ...$values): void {}
     /**
      * @throws \RuntimeException if there are no more elements
      */
@@ -62,9 +63,15 @@ final class IntVector implements \IteratorAggregate, \Countable, \JsonSerializab
 
     /** @psalm-return list<int> */
     public function toArray(): array {}
+    /** @implementation-alias Teds\IntVector::toArray */
+    public function values(): array {}
     // Strictly typed, unlike offsetGet/offsetSet
     public function get(int $offset): int {}
-    public function set(int $offset, int $value): void {}
+    /**
+     * Must be mixed $value to implement ListInterface
+     */
+    public function set(int $offset, mixed $value): void {}
+    public function setInt(int $offset, int $value): void {}
 
     /**
      * Returns the value at (int)$offset.
@@ -78,6 +85,10 @@ final class IntVector implements \IteratorAggregate, \Countable, \JsonSerializab
      * @psalm-param int $offset
      */
     public function offsetExists(mixed $offset): bool {}
+    /**
+     * Returns true if `is_int($offset) && 0 <= $offset && $offset < $this->count().
+     */
+    public function containsKey(mixed $offset): bool {}
 
     /**
      * Sets the value at offset (int)$offset to $value

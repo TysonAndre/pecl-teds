@@ -35,6 +35,7 @@
 #include "teds_immutablekeyvaluesequence.h"
 #include "teds_immutablesequence.h"
 #include "teds_intvector.h"
+#include "teds_interfaces.h"
 #include "teds_keyvaluevector.h"
 #include "teds_sortedstrictmap.h"
 #include "teds_sortedstrictset.h"
@@ -1070,6 +1071,8 @@ PHP_FUNCTION(strict_hash)
 /* {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(teds)
 {
+	teds_register_interfaces();
+
 	PHP_MINIT(teds_deque)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);

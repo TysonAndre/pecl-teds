@@ -32,7 +32,7 @@ namespace Teds;
  *
  * In comparison, in 64-bit builds of PHP, PHP's arrays take at least 16 bytes per value in php 8.2, and at least 32 bytes per value before php 8.1, at the time of writing.
  */
-final class LowMemoryVector implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
+final class LowMemoryVector implements \IteratorAggregate, ListInterface, \JsonSerializable
 {
     /**
      * Construct a LowMemoryVector from an iterable.
@@ -70,7 +70,10 @@ final class LowMemoryVector implements \IteratorAggregate, \Countable, \JsonSeri
     public function push(mixed ...$values): void {}
     public function pop(): mixed {}
 
+    /** @psalm-return list<mixed> */
     public function toArray(): array {}
+    /** @implementation-alias Teds\LowMemoryVector::toArray */
+    public function values(): array {}
     // Strictly typed, unlike offsetGet/offsetSet
     public function get(int $offset): mixed {}
     public function set(int $offset, mixed $value): void {}
@@ -82,9 +85,14 @@ final class LowMemoryVector implements \IteratorAggregate, \Countable, \JsonSeri
     public function offsetGet(mixed $offset): mixed {}
 
     /**
-     * Returns true if `0 <= (int)$offset && (int)$offset < $this->count().
+     * Returns true if `0 <= (int)$offset && (int)$offset < $this->count()
+     * AND the value of offsetGet($offset) is not null.
      */
     public function offsetExists(mixed $offset): bool {}
+    /**
+     * Returns true if `is_int($offset) && 0 <= $offset && $offset < $this->count().
+     */
+    public function containsKey(mixed $offset): bool {}
 
     /**
      * Sets the value at offset (int)$offset to $value

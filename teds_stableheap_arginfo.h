@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a80c9a427760d6a066aadce00d57e44073d1db85 */
+ * Stub hash: 6ac8855e1a4bd7ffa81af4da39cdd349678f676f */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StableMinHeap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, values, IS_ITERABLE, 0, "[]")
@@ -37,6 +37,15 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_StableMinHeap___set_st
 	ZEND_ARG_TYPE_INFO(0, state, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StableMinHeap_values, 0, 0, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_StableMinHeap___serialize arginfo_class_Teds_StableMinHeap_values
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StableMinHeap___unserialize, 0, 1, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, data, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_Teds_StableMaxHeap___construct arginfo_class_Teds_StableMinHeap___construct
 
 #define arginfo_class_Teds_StableMaxHeap_add arginfo_class_Teds_StableMinHeap_add
@@ -65,6 +74,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_StableMaxHeap___set_st
 	ZEND_ARG_TYPE_INFO(0, state, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
+#define arginfo_class_Teds_StableMaxHeap_values arginfo_class_Teds_StableMinHeap_values
+
+#define arginfo_class_Teds_StableMaxHeap___serialize arginfo_class_Teds_StableMinHeap_values
+
+#define arginfo_class_Teds_StableMaxHeap___unserialize arginfo_class_Teds_StableMinHeap___unserialize
+
 
 ZEND_METHOD(Teds_StableMinHeap, __construct);
 ZEND_METHOD(Teds_StableMinHeap, add);
@@ -77,11 +92,14 @@ ZEND_METHOD(Teds_StableMinHeap, next);
 ZEND_METHOD(Teds_StableMinHeap, valid);
 ZEND_METHOD(Teds_StableMinHeap, clear);
 ZEND_METHOD(Teds_StableMinHeap, __set_state);
+ZEND_METHOD(Teds_StableMinHeap, values);
+ZEND_METHOD(Teds_StableMinHeap, __unserialize);
 ZEND_METHOD(Teds_StableMaxHeap, __construct);
 ZEND_METHOD(Teds_StableMaxHeap, add);
 ZEND_METHOD(Teds_StableMaxHeap, extract);
 ZEND_METHOD(Teds_StableMaxHeap, next);
 ZEND_METHOD(Teds_StableMaxHeap, __set_state);
+ZEND_METHOD(Teds_StableMaxHeap, __unserialize);
 
 
 static const zend_function_entry class_Teds_StableMinHeap_methods[] = {
@@ -98,6 +116,9 @@ static const zend_function_entry class_Teds_StableMinHeap_methods[] = {
 	ZEND_ME(Teds_StableMinHeap, valid, arginfo_class_Teds_StableMinHeap_valid, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableMinHeap, clear, arginfo_class_Teds_StableMinHeap_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableMinHeap, __set_state, arginfo_class_Teds_StableMinHeap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Teds_StableMinHeap, values, arginfo_class_Teds_StableMinHeap_values, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StableMinHeap, __serialize, values, arginfo_class_Teds_StableMinHeap___serialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StableMinHeap, __unserialize, arginfo_class_Teds_StableMinHeap___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
@@ -116,29 +137,32 @@ static const zend_function_entry class_Teds_StableMaxHeap_methods[] = {
 	ZEND_MALIAS(Teds_StableMinHeap, valid, valid, arginfo_class_Teds_StableMaxHeap_valid, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StableMinHeap, clear, clear, arginfo_class_Teds_StableMaxHeap_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableMaxHeap, __set_state, arginfo_class_Teds_StableMaxHeap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_MALIAS(Teds_StableMinHeap, values, values, arginfo_class_Teds_StableMaxHeap_values, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StableMinHeap, __serialize, values, arginfo_class_Teds_StableMaxHeap___serialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StableMaxHeap, __unserialize, arginfo_class_Teds_StableMaxHeap___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_StableMinHeap(zend_class_entry *class_entry_Teds_Iterator, zend_class_entry *class_entry_Teds_Countable)
+static zend_class_entry *register_class_Teds_StableMinHeap(zend_class_entry *class_entry_Teds_Iterator, zend_class_entry *class_entry_Teds_Values)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "StableMinHeap", class_Teds_StableMinHeap_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 2, class_entry_Teds_Iterator, class_entry_Teds_Countable);
+	zend_class_implements(class_entry, 2, class_entry_Teds_Iterator, class_entry_Teds_Values);
 
 	return class_entry;
 }
 
-static zend_class_entry *register_class_Teds_StableMaxHeap(zend_class_entry *class_entry_Teds_Iterator, zend_class_entry *class_entry_Teds_Countable)
+static zend_class_entry *register_class_Teds_StableMaxHeap(zend_class_entry *class_entry_Teds_Iterator, zend_class_entry *class_entry_Teds_Values)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "StableMaxHeap", class_Teds_StableMaxHeap_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 2, class_entry_Teds_Iterator, class_entry_Teds_Countable);
+	zend_class_implements(class_entry, 2, class_entry_Teds_Iterator, class_entry_Teds_Values);
 
 	return class_entry;
 }

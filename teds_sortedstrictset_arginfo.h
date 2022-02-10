@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: cf1869416076f877c1daea047fc394361bfd77c4 */
+ * Stub hash: 2aa3f63ed94fd4f3827bcbca8c3dc6ee3601ff20 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_SortedStrictSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -96,14 +96,14 @@ static const zend_function_entry class_Teds_SortedStrictSet_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_SortedStrictSet(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Countable, zend_class_entry *class_entry_JsonSerializable)
+static zend_class_entry *register_class_Teds_SortedStrictSet(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Values, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "SortedStrictSet", class_Teds_SortedStrictSet_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Countable, class_entry_JsonSerializable);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Values, class_entry_JsonSerializable);
 
 	return class_entry;
 }

@@ -13,8 +13,8 @@
  <date>2022-02-09</date>
  <time>16:00:00</time>
  <version>
-  <release>0.11.0</release>
-  <api>0.11.0</api>
+  <release>0.12.0dev</release>
+  <api>0.12.0dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -49,6 +49,10 @@
    <file name="teds_immutablesequence.c" role="src" />
    <file name="teds_immutablesequence.h" role="src" />
    <file name="teds_immutablesequence.stub.php" role="src" />
+   <file name="teds_interfaces_arginfo.h" role="src" />
+   <file name="teds_interfaces.c" role="src" />
+   <file name="teds_interfaces.h" role="src" />
+   <file name="teds_interfaces.stub.php" role="src" />
    <file name="teds_intvector_arginfo.h" role="src" />
    <file name="teds_intvector.c" role="src" />
    <file name="teds_intvector.h" role="src" />
@@ -257,6 +261,7 @@
     <file name="StableHeap/StableHeap.phpt" role="test" />
     <file name="StableHeap/extensible.phpt" role="test" />
     <file name="StableHeap/reflection.phpt" role="test" />
+    <file name="StableHeap/serialization.phpt" role="test" />
     <file name="StableSortedListMap/ImmutableKeyValueSequence.phpt" role="test" />
     <file name="StableSortedListMap/SortedStrictMap.phpt" role="test" />
     <file name="StableSortedListMap/aggregate.phpt" role="test" />
@@ -389,6 +394,27 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-02-09</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.11.0</release>
+    <api>0.11.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Fix serialization/unserialization in StableMinHeap/StableMaxHeap.
+* Add interfaces for Values (e.g. Heap/Set), Teds\Collection(e.g. StrictMap, StableSortedMap), ListInterface(Vector, Deque, etc.) (the keyword list is reserved)
+* Implement ->values()
+* Make offsetExists consistently return false when the value of the given key is null across all data structures.
+* Add Teds\Collection->containsKey to return true if a key exists without coercing types, and returning true regardless of whether the corresponding key is null.
+* Change signature of IntVector::set() and ::push() to match ListInterface
+   </notes>
+  </release>
   <release>
    <date>2022-02-06</date>
    <time>16:00:00</time>

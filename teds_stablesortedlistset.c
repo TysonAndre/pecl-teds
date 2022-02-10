@@ -24,6 +24,7 @@
 #include "teds_stablesortedlistset_arginfo.h"
 #include "teds_stablesortedlistset.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -832,7 +833,7 @@ PHP_METHOD(Teds_StableSortedListSet, clear)
 PHP_MINIT_FUNCTION(teds_stablesortedlistset)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_StableSortedListSet = register_class_Teds_StableSortedListSet(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
+	teds_ce_StableSortedListSet = register_class_Teds_StableSortedListSet(zend_ce_aggregate, teds_ce_Values, php_json_serializable_ce);
 	teds_ce_StableSortedListSet->create_object = teds_stablesortedlistset_new;
 
 	memcpy(&teds_handler_StableSortedListSet, &std_object_handlers, sizeof(zend_object_handlers));

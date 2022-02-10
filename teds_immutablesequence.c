@@ -26,6 +26,7 @@
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
 #include "ext/json/php_json.h"
+#include "teds_interfaces.h"
 #include "teds_util.h"
 
 #include <stdbool.h>
@@ -636,8 +637,28 @@ PHP_METHOD(Teds_ImmutableSequence, offsetExists)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	const teds_immutablesequence *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
-	RETURN_BOOL((zend_ulong) offset < intern->array.size);
+	const teds_immutablesequence_entries *array = Z_IMMUTABLESEQUENCE_ENTRIES_P(ZEND_THIS);
+	ZEND_ASSERT(array->size <= TEDS_MAX_ZVAL_COLLECTION_SIZE);
+
+	if ((zend_ulong) offset >= array->size) {
+		RETURN_FALSE;
+	}
+	ZEND_ASSERT(offset >= 0);
+	zval *tmp = &array->entries[(zend_ulong) offset];
+	RETURN_BOOL(Z_TYPE_P(tmp) != IS_NULL);
+}
+
+PHP_METHOD(Teds_ImmutableSequence, containsKey)
+{
+	zval *offset_zv;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(offset_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
+	RETURN_BOOL((zend_ulong) offset < Z_IMMUTABLESEQUENCE_ENTRIES_P(ZEND_THIS)->size);
 }
 
 PHP_METHOD(Teds_ImmutableSequence, indexOf)
@@ -940,7 +961,7 @@ static int teds_immutablesequence_has_dimension(zend_object *object, zval *offse
 PHP_MINIT_FUNCTION(teds_immutablesequence)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_ImmutableSequence = register_class_Teds_ImmutableSequence(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_ImmutableSequence = register_class_Teds_ImmutableSequence(zend_ce_aggregate, teds_ce_Collection, php_json_serializable_ce);
 	teds_ce_ImmutableSequence->create_object = teds_immutablesequence_new;
 
 	memcpy(&teds_handler_ImmutableSequence, &std_object_handlers, sizeof(zend_object_handlers));

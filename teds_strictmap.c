@@ -23,6 +23,7 @@
 #include "teds_strictmap_arginfo.h"
 #include "teds_strictmap.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -1162,7 +1163,7 @@ PHP_METHOD(Teds_StrictMap, clear)
 PHP_MINIT_FUNCTION(teds_strictmap)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_StrictMap = register_class_Teds_StrictMap(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_StrictMap = register_class_Teds_StrictMap(zend_ce_aggregate, teds_ce_Collection, php_json_serializable_ce);
 	teds_ce_StrictMap->create_object = teds_strictmap_new;
 
 	memcpy(&teds_handler_StrictMap, &std_object_handlers, sizeof(zend_object_handlers));

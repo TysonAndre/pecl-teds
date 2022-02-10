@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 8d4403aff629f8794d9014d9172920a73aa4942d */
+ * Stub hash: 1b78708458bb6ec1a524061dbce9cae5134608dc */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_SortedStrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -147,14 +147,14 @@ static const zend_function_entry class_Teds_SortedStrictMap_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_SortedStrictMap(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Countable, zend_class_entry *class_entry_JsonSerializable, zend_class_entry *class_entry_ArrayAccess)
+static zend_class_entry *register_class_Teds_SortedStrictMap(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Collection, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "SortedStrictMap", class_Teds_SortedStrictMap_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 4, class_entry_IteratorAggregate, class_entry_Countable, class_entry_JsonSerializable, class_entry_ArrayAccess);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Collection, class_entry_JsonSerializable);
 
 	return class_entry;
 }

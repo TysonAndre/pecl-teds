@@ -21,6 +21,7 @@
 #include "teds_sortedstrictmap_arginfo.h"
 #include "teds_sortedstrictmap.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -1662,7 +1663,7 @@ PHP_METHOD(Teds_SortedStrictMap, clear)
 PHP_MINIT_FUNCTION(teds_sortedstrictmap)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_SortedStrictMap = register_class_Teds_SortedStrictMap(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce, zend_ce_arrayaccess);
+	teds_ce_SortedStrictMap = register_class_Teds_SortedStrictMap(zend_ce_aggregate, teds_ce_Collection, php_json_serializable_ce);
 	teds_ce_SortedStrictMap->create_object = teds_sortedstrictmap_new;
 
 	memcpy(&teds_handler_SortedStrictMap, &std_object_handlers, sizeof(zend_object_handlers));

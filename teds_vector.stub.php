@@ -14,7 +14,7 @@ namespace Teds;
  *
  * Attempting to read or write values outside of the range of values with `*get`/`*set` methods will throw at runtime.
  */
-final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
+final class Vector implements \IteratorAggregate, ListInterface, \JsonSerializable
 {
     /**
      * Construct a Vector from an iterable.
@@ -69,6 +69,12 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
     public function pop(): mixed {}
 
     public function toArray(): array {}
+
+    /**
+     * @implementation-alias Teds\Vector::toArray
+     * @override for Sequence::values()
+     */
+    public function values(): array {}
     // Strictly typed, unlike offsetGet/offsetSet
     public function get(int $offset): mixed {}
     public function set(int $offset, mixed $value): void {}
@@ -80,9 +86,14 @@ final class Vector implements \IteratorAggregate, \Countable, \JsonSerializable,
     public function offsetGet(mixed $offset): mixed {}
 
     /**
-     * Returns true if `0 <= (int)$offset && (int)$offset < $this->count().
+     * Returns true if `0 <= (int)$offset && (int)$offset < $this->count()
+     * AND the value of offsetGet is non-null.
      */
     public function offsetExists(mixed $offset): bool {}
+    /**
+     * Returns true if `is_int($offset) && 0 <= $offset && $offset < $this->count()
+     */
+    public function containsKey(mixed $offset): bool {}
 
     /**
      * Sets the value at offset (int)$offset to $value

@@ -14,7 +14,7 @@ namespace Teds;
  *
  * This is backed by a balanced red-black tree to ensure that insertions/removals/lookups take logarithmic time in the worst case.
  */
-final class SortedStrictSet implements \IteratorAggregate, \Countable, \JsonSerializable
+final class SortedStrictSet implements \IteratorAggregate, Values, \JsonSerializable
 {
     /** Construct the SortedStrictSet from the keys and values of the Traversable/array. */
     public function __construct(iterable $iterator = []) {}

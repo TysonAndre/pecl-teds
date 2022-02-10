@@ -12,7 +12,7 @@ namespace Teds;
  * This is backed by a memory-efficient representation
  * (raw array of values).
  */
-final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSerializable, \ArrayAccess
+final class ImmutableSequence implements \IteratorAggregate, Collection, \JsonSerializable
 {
     public function __construct(iterable $iterator) {}
     public function getIterator(): \InternalIterator {}
@@ -28,11 +28,17 @@ final class ImmutableSequence implements \IteratorAggregate, \Countable, \JsonSe
     public static function __set_state(array $array): ImmutableSequence {}
 
     public function toArray(): array {}
+    /**
+     * @override
+     * @implementation-alias Teds\ImmutableSequence::toArray
+     */
+    public function values(): array {}
     // Strictly typed, unlike offsetGet
     public function get(int $offset): mixed {}
     // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
     public function offsetExists(mixed $offset): bool {}
+    public function containsKey(mixed $offset): bool {}
     // Throws
     public function offsetSet(mixed $offset, mixed $value): void {}
     // Throws

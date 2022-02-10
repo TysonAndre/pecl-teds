@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: f906b5847f45b84f1e68ffe1fdbcbd83d7185f61 */
+ * Stub hash: 4048ea9420ec8083a06618d08f190695ac7a6b68 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StableSortedListSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -88,14 +88,14 @@ static const zend_function_entry class_Teds_StableSortedListSet_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_StableSortedListSet(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Countable, zend_class_entry *class_entry_JsonSerializable)
+static zend_class_entry *register_class_Teds_StableSortedListSet(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Values, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "StableSortedListSet", class_Teds_StableSortedListSet_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Countable, class_entry_JsonSerializable);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Values, class_entry_JsonSerializable);
 
 	return class_entry;
 }

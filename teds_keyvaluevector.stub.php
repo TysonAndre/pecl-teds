@@ -8,7 +8,7 @@ namespace Teds;
 /**
  * A mutable vector of keys and values, where keys are repeatable and can be any type.
  */
-final class KeyValueVector implements \IteratorAggregate, \Countable, \JsonSerializable
+final class KeyValueVector implements \IteratorAggregate, Values, \JsonSerializable
 {
     public function __construct(iterable $iterator = []) {}
     public function getIterator(): \InternalIterator {}
@@ -30,7 +30,9 @@ final class KeyValueVector implements \IteratorAggregate, \Countable, \JsonSeria
     public function push(mixed $key, mixed $value): void {}
     public function pop(): array {}
 
+    /** @psalm-return list<mixed> */
     public function keys(): array {}
+    /** @psalm-return list<mixed> */
     public function values(): array {}
     public function keyAt(int $offset): mixed {}
     public function valueAt(int $offset): mixed {}
