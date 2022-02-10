@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a5116b0b093840c0049dc2e05b40b8d9a30c40f0 */
+ * Stub hash: cf30ccdf879adbf6923900fcb786b3a65a5fb80f */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StableSortedListMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -94,6 +94,7 @@ ZEND_METHOD(Teds_StableSortedListMap, fromPairs);
 ZEND_METHOD(Teds_StableSortedListMap, __serialize);
 ZEND_METHOD(Teds_StableSortedListMap, __unserialize);
 ZEND_METHOD(Teds_StableSortedListMap, __set_state);
+ZEND_METHOD(Teds_StableSortedListMap, toArray);
 ZEND_METHOD(Teds_StableSortedListMap, values);
 ZEND_METHOD(Teds_StableSortedListMap, keys);
 ZEND_METHOD(Teds_StableSortedListMap, bottom);
@@ -109,7 +110,6 @@ ZEND_METHOD(Teds_StableSortedListMap, offsetUnset);
 ZEND_METHOD(Teds_StableSortedListMap, get);
 ZEND_METHOD(Teds_StableSortedListMap, containsValue);
 ZEND_METHOD(Teds_StableSortedListMap, containsKey);
-ZEND_METHOD(Teds_StableSortedListMap, jsonSerialize);
 
 
 static const zend_function_entry class_Teds_StableSortedListMap_methods[] = {
@@ -123,7 +123,7 @@ static const zend_function_entry class_Teds_StableSortedListMap_methods[] = {
 	ZEND_ME(Teds_StableSortedListMap, __serialize, arginfo_class_Teds_StableSortedListMap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, __unserialize, arginfo_class_Teds_StableSortedListMap___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, __set_state, arginfo_class_Teds_StableSortedListMap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	ZEND_MALIAS(Teds_StableSortedListMap, toArray, values, arginfo_class_Teds_StableSortedListMap_toArray, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StableSortedListMap, toArray, arginfo_class_Teds_StableSortedListMap_toArray, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, values, arginfo_class_Teds_StableSortedListMap_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, keys, arginfo_class_Teds_StableSortedListMap_keys, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, bottom, arginfo_class_Teds_StableSortedListMap_bottom, ZEND_ACC_PUBLIC)
@@ -139,7 +139,7 @@ static const zend_function_entry class_Teds_StableSortedListMap_methods[] = {
 	ZEND_ME(Teds_StableSortedListMap, get, arginfo_class_Teds_StableSortedListMap_get, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, containsValue, arginfo_class_Teds_StableSortedListMap_containsValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableSortedListMap, containsKey, arginfo_class_Teds_StableSortedListMap_containsKey, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StableSortedListMap, jsonSerialize, arginfo_class_Teds_StableSortedListMap_jsonSerialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StableSortedListMap, jsonSerialize, toPairs, arginfo_class_Teds_StableSortedListMap_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

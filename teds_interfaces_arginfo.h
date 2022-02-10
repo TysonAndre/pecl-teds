@@ -1,11 +1,13 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a8ef4e1cf7a8734cd0a20620cdd911aa43808170 */
+ * Stub hash: 97b9a12b92054812d869dae3ed860be833ada9d1 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Values_values, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Values_isEmpty, 0, 0, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_Collection_toArray arginfo_class_Teds_Values_values
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Collection_containsKey, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
@@ -38,6 +40,7 @@ static const zend_function_entry class_Teds_Values_methods[] = {
 
 
 static const zend_function_entry class_Teds_Collection_methods[] = {
+	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Collection, toArray, arginfo_class_Teds_Collection_toArray, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Collection, containsKey, arginfo_class_Teds_Collection_containsKey, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_FE_END
 };

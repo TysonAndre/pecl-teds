@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 1b78708458bb6ec1a524061dbce9cae5134608dc */
+ * Stub hash: b564fbc3758094186ec2278d977eae5ae70cddef */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_SortedStrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -19,6 +19,8 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_SortedStrictMap_toPairs, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_SortedStrictMap_toArray arginfo_class_Teds_SortedStrictMap_toPairs
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_SortedStrictMap_fromPairs, 0, 1, Teds\\SortedStrictMap, 0)
 	ZEND_ARG_TYPE_INFO(0, pairs, IS_ITERABLE, 0)
@@ -92,6 +94,7 @@ ZEND_METHOD(Teds_SortedStrictMap, count);
 ZEND_METHOD(Teds_SortedStrictMap, isEmpty);
 ZEND_METHOD(Teds_SortedStrictMap, clear);
 ZEND_METHOD(Teds_SortedStrictMap, toPairs);
+ZEND_METHOD(Teds_SortedStrictMap, toArray);
 ZEND_METHOD(Teds_SortedStrictMap, fromPairs);
 ZEND_METHOD(Teds_SortedStrictMap, __serialize);
 ZEND_METHOD(Teds_SortedStrictMap, __unserialize);
@@ -122,6 +125,7 @@ static const zend_function_entry class_Teds_SortedStrictMap_methods[] = {
 	ZEND_ME(Teds_SortedStrictMap, isEmpty, arginfo_class_Teds_SortedStrictMap_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, clear, arginfo_class_Teds_SortedStrictMap_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, toPairs, arginfo_class_Teds_SortedStrictMap_toPairs, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_SortedStrictMap, toArray, arginfo_class_Teds_SortedStrictMap_toArray, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, fromPairs, arginfo_class_Teds_SortedStrictMap_fromPairs, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_SortedStrictMap, __serialize, arginfo_class_Teds_SortedStrictMap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, __unserialize, arginfo_class_Teds_SortedStrictMap___unserialize, ZEND_ACC_PUBLIC)

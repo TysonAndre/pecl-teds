@@ -22,12 +22,13 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Breaking change: Make StableMinHeap/StableMaxHeap stop inheriting from SplHeap to be more memory efficient.
-* Properly sort in StableSortedListSet::__construct and __set_state
-* Deduplicate code.
-* Reduce size/capacity limits to the same limits as array for Deque.
-* Add ImmutableSequence::map(), filter()
-* Fix bug in Deque::contains(), Deque::indexOf()
+* Fix serialization/unserialization in StableMinHeap/StableMaxHeap.
+* Add interfaces for Values (e.g. Heap/Set), Teds\Collection(e.g. StrictMap, StableSortedMap), ListInterface(Vector, Deque, etc.) (the keyword list is reserved)
+* Implement ->values()
+* Make offsetExists consistently return false when the value of the given key is null across all data structures.
+* Add Teds\Collection->containsKey to return true if a key exists without coercing types, and returning true regardless of whether the corresponding key is null.
+* Change signature of IntVector::set() and ::push() to match ListInterface
+* Add Collection::toArray() (like iterator_to_array)
  </notes>
  <contents>
   <dir name="/">
@@ -237,6 +238,7 @@
     <file name="SortedStrictMap/serialization.phpt" role="test" />
     <file name="SortedStrictMap/shift.phpt" role="test" />
     <file name="SortedStrictMap/shift_repeated.phpt" role="test" />
+    <file name="SortedStrictMap/toArray.phpt" role="test" />
     <file name="SortedStrictMap/traversable.phpt" role="test" />
     <file name="SortedStrictMap/types.phpt" role="test" />
     <file name="SortedStrictMap/unserialize.phpt" role="test" />
@@ -278,6 +280,7 @@
     <file name="StableSortedListMap/remove.phpt" role="test" />
     <file name="StableSortedListMap/serialization.phpt" role="test" />
     <file name="StableSortedListMap/shift.phpt" role="test" />
+    <file name="StableSortedListMap/toArray.phpt" role="test" />
     <file name="StableSortedListMap/traversable.phpt" role="test" />
     <file name="StableSortedListMap/types.phpt" role="test" />
     <file name="StableSortedListMap/unserialize.phpt" role="test" />
@@ -310,6 +313,7 @@
     <file name="StrictMap/reinit_forbidden.phpt" role="test" />
     <file name="StrictMap/remove.phpt" role="test" />
     <file name="StrictMap/serialization.phpt" role="test" />
+    <file name="StrictMap/toArray.phpt" role="test" />
     <file name="StrictMap/traversable.phpt" role="test" />
     <file name="StrictMap/types.phpt" role="test" />
     <file name="StrictMap/unserialize.phpt" role="test" />
@@ -407,12 +411,12 @@
    </stability>
    <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
    <notes>
-* Fix serialization/unserialization in StableMinHeap/StableMaxHeap.
-* Add interfaces for Values (e.g. Heap/Set), Teds\Collection(e.g. StrictMap, StableSortedMap), ListInterface(Vector, Deque, etc.) (the keyword list is reserved)
-* Implement ->values()
-* Make offsetExists consistently return false when the value of the given key is null across all data structures.
-* Add Teds\Collection->containsKey to return true if a key exists without coercing types, and returning true regardless of whether the corresponding key is null.
-* Change signature of IntVector::set() and ::push() to match ListInterface
+* Breaking change: Make StableMinHeap/StableMaxHeap stop inheriting from SplHeap to be more memory efficient.
+* Properly sort in StableSortedListSet::__construct and __set_state
+* Deduplicate code.
+* Reduce size/capacity limits to the same limits as array for Deque.
+* Add ImmutableSequence::map(), filter()
+* Fix bug in Deque::contains(), Deque::indexOf()
    </notes>
   </release>
   <release>

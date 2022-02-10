@@ -35,11 +35,6 @@ final class StrictMap implements \IteratorAggregate, Collection, \JsonSerializab
     /** Construct the StrictMap from the keys and values of the array ([[key1, value1], [key2, value2]]) */
     public static function __set_state(array $array): StrictMap {}
 
-    // FIXME implement toArray
-    /**
-     * FIXME Returns array created by inserting values corresponding to keys of this map
-     * @implementation-alias Teds\StableSortedListMap::values
-     */
     public function toArray(): array {}
     /** Returns a list of the values in order of insertion. */
     public function values(): array {}
