@@ -1048,7 +1048,7 @@ PHP_METHOD(Teds_KeyValueVector, containsKey)
 	RETURN_FALSE;
 }
 
-PHP_METHOD(Teds_KeyValueVector, containsValue)
+PHP_METHOD(Teds_KeyValueVector, contains)
 {
 	zval *value;
 	ZEND_PARSE_PARAMETERS_START(1, 1)

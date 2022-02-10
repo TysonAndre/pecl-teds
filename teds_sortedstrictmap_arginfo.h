@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: b564fbc3758094186ec2278d977eae5ae70cddef */
+ * Stub hash: 22add806e039b97b6a557f50eea6ffafe8acb046 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_SortedStrictMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -79,7 +79,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_SortedStrictMap_conta
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_SortedStrictMap_containsKey arginfo_class_Teds_SortedStrictMap_containsValue
+#define arginfo_class_Teds_SortedStrictMap_contains arginfo_class_Teds_SortedStrictMap_containsValue
+
+#define arginfo_class_Teds_SortedStrictMap_containsKey arginfo_class_Teds_SortedStrictMap_offsetExists
 
 #define arginfo_class_Teds_SortedStrictMap_jsonSerialize arginfo_class_Teds_SortedStrictMap_toPairs
 
@@ -112,7 +114,7 @@ ZEND_METHOD(Teds_SortedStrictMap, offsetExists);
 ZEND_METHOD(Teds_SortedStrictMap, offsetSet);
 ZEND_METHOD(Teds_SortedStrictMap, offsetUnset);
 ZEND_METHOD(Teds_SortedStrictMap, get);
-ZEND_METHOD(Teds_SortedStrictMap, containsValue);
+ZEND_METHOD(Teds_SortedStrictMap, contains);
 ZEND_METHOD(Teds_SortedStrictMap, containsKey);
 ZEND_METHOD(Teds_SortedStrictMap, debugGetTreeRepresentation);
 ZEND_METHOD(Teds_SortedStrictMap, debugIsBalanced);
@@ -143,7 +145,8 @@ static const zend_function_entry class_Teds_SortedStrictMap_methods[] = {
 	ZEND_ME(Teds_SortedStrictMap, offsetSet, arginfo_class_Teds_SortedStrictMap_offsetSet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, offsetUnset, arginfo_class_Teds_SortedStrictMap_offsetUnset, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, get, arginfo_class_Teds_SortedStrictMap_get, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_SortedStrictMap, containsValue, arginfo_class_Teds_SortedStrictMap_containsValue, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_SortedStrictMap, containsValue, contains, arginfo_class_Teds_SortedStrictMap_containsValue, ZEND_ACC_PUBLIC|ZEND_ACC_DEPRECATED)
+	ZEND_ME(Teds_SortedStrictMap, contains, arginfo_class_Teds_SortedStrictMap_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, containsKey, arginfo_class_Teds_SortedStrictMap_containsKey, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_SortedStrictMap, jsonSerialize, toPairs, arginfo_class_Teds_SortedStrictMap_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedStrictMap, debugGetTreeRepresentation, arginfo_class_Teds_SortedStrictMap_debugGetTreeRepresentation, ZEND_ACC_PUBLIC)

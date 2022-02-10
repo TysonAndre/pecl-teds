@@ -33,7 +33,7 @@ typedef struct _teds_sortedstrictset_node {
 
 typedef struct _teds_sortedstrictset_tree {
 	struct _teds_sortedstrictset_node *root;
-	size_t nNumOfElements;
+	uint32_t nNumOfElements;
 	bool initialized;
 } teds_sortedstrictset_tree;
 

@@ -1074,7 +1074,7 @@ PHP_METHOD(Teds_StableSortedListMap, offsetUnset)
 	TEDS_RETURN_VOID();
 }
 
-PHP_METHOD(Teds_StableSortedListMap, containsValue)
+PHP_METHOD(Teds_StableSortedListMap, contains)
 {
 	zval *value;
 	ZEND_PARSE_PARAMETERS_START(1, 1)

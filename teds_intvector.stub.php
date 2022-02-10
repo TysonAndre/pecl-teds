@@ -99,7 +99,8 @@ final class IntVector implements \IteratorAggregate, ListInterface, \JsonSeriali
     public function offsetSet(mixed $offset, mixed $value): void {}
 
     /**
-     * @throws \RuntimeException unconditionally because unset and null are different things, unlike SplFixedArray
+     * @throws \RuntimeException unconditionally because unset and null are different things.
+     * Also, this can only contain integers.
      */
     public function offsetUnset(mixed $offset): void {}
 
@@ -108,9 +109,9 @@ final class IntVector implements \IteratorAggregate, ListInterface, \JsonSeriali
      */
     public function indexOf(int $value): ?int {}
     /**
-     * Returns true if there exists a value === $value in this vector.
+     * Returns true if there exists an integer === $value in this IntVector.
      */
-    public function contains(int $value): bool {}
+    public function contains(mixed $value): bool {}
 
     /**
      * @implementation-alias Teds\IntVector::toArray

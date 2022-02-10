@@ -42,7 +42,11 @@ final class KeyValueVector implements \IteratorAggregate, Values, \JsonSerializa
     public function indexOfKey(mixed $key): ?int {}
     public function indexOfValue(mixed $value): ?int {}
     public function containsKey(mixed $key): bool {}
+    /**
+     * @implementation-alias Teds\KeyValueVector::contains
+     */
     public function containsValue(mixed $value): bool {}
+    public function contains(mixed $value): bool {}
 
     public function shrinkToFit(): void {}
 

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 434fc6d66ac10c251d7244b8060fd8ca3fe2164d */
+ * Stub hash: e89741ff3480331b71baf353810754c3fe1d9df0 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_KeyValueVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -83,6 +83,8 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_KeyValueVector_contai
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
+#define arginfo_class_Teds_KeyValueVector_contains arginfo_class_Teds_KeyValueVector_containsValue
+
 #define arginfo_class_Teds_KeyValueVector_shrinkToFit arginfo_class_Teds_KeyValueVector_clear
 
 #define arginfo_class_Teds_KeyValueVector_jsonSerialize arginfo_class_Teds_KeyValueVector_toPairs
@@ -111,7 +113,7 @@ ZEND_METHOD(Teds_KeyValueVector, setValueAt);
 ZEND_METHOD(Teds_KeyValueVector, indexOfKey);
 ZEND_METHOD(Teds_KeyValueVector, indexOfValue);
 ZEND_METHOD(Teds_KeyValueVector, containsKey);
-ZEND_METHOD(Teds_KeyValueVector, containsValue);
+ZEND_METHOD(Teds_KeyValueVector, contains);
 ZEND_METHOD(Teds_KeyValueVector, shrinkToFit);
 
 
@@ -139,7 +141,8 @@ static const zend_function_entry class_Teds_KeyValueVector_methods[] = {
 	ZEND_ME(Teds_KeyValueVector, indexOfKey, arginfo_class_Teds_KeyValueVector_indexOfKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, indexOfValue, arginfo_class_Teds_KeyValueVector_indexOfValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, containsKey, arginfo_class_Teds_KeyValueVector_containsKey, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_KeyValueVector, containsValue, arginfo_class_Teds_KeyValueVector_containsValue, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_KeyValueVector, containsValue, contains, arginfo_class_Teds_KeyValueVector_containsValue, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_KeyValueVector, contains, arginfo_class_Teds_KeyValueVector_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_KeyValueVector, shrinkToFit, arginfo_class_Teds_KeyValueVector_shrinkToFit, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_KeyValueVector, jsonSerialize, toPairs, arginfo_class_Teds_KeyValueVector_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END

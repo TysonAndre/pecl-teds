@@ -95,8 +95,14 @@ final class SortedStrictMap implements \IteratorAggregate, Collection, \JsonSeri
 
     /**
      * Returns true if there exists a value === $value in this SortedStrictMap.
+     * @implementation-alias Teds\SortedStrictMap::contains
+     * @deprecated
      */
     public function containsValue(mixed $value): bool {}
+    /**
+     * Returns true if there exists a value === $value in this SortedStrictMap.
+     */
+    public function contains(mixed $value): bool {}
 
     /**
      * Returns true if there exists a key where `stable_compare($key, $other) === 0` in this SortedStrictMap.
@@ -104,7 +110,7 @@ final class SortedStrictMap implements \IteratorAggregate, Collection, \JsonSeri
      *
      * Note that this is not exactly `===` but close: NAN !== NAN but this will return true for NAN.
      */
-    public function containsKey(mixed $value): bool {}
+    public function containsKey(mixed $key): bool {}
 
     /**
      * Returns [[key1, value1], [key2, value2]]
