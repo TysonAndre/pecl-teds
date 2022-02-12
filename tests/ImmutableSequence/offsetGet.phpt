@@ -50,8 +50,8 @@ object(stdClass)#1 (0) {
 }
 object(stdClass)#1 (0) {
 }
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetSet - it is immutable
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetSet - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
 object(stdClass)#1 (0) {
 }
 offsetExists checks
@@ -74,8 +74,8 @@ Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\ImmutableSequence::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetSet - it is immutable
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetSet - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
 object(InternalIterator)#2 (0) {
 }

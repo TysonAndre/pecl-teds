@@ -48,7 +48,7 @@ Caught ReflectionException: Class Teds\IntVector is an internal class marked as 
 int(12345)
 int(12345)
 Caught OutOfBoundsException: Index out of range
-Caught RuntimeException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
 int(12345)
 offsetExists checks
 bool(false)
@@ -70,8 +70,8 @@ Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\IntVector::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught RuntimeException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
 Caught TypeError: Illegal Teds\IntVector value type string
-Caught RuntimeException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
 object(InternalIterator)#1 (0) {
 }

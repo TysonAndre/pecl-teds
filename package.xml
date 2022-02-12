@@ -13,8 +13,8 @@
  <date>2022-02-13</date>
  <time>16:00:00</time>
  <version>
-  <release>0.14.0</release>
-  <api>0.14.0</api>
+  <release>1.0.0dev</release>
+  <api>1.0.0dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,87 +22,94 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Make `strict_hash` deterministic for `NAN`
-* Make `strict_hash` return the same value for signed positive and negative zero. (In php, `0.0 === -0.0`, though var_export/print/var_dump output differ.)
-* Fix StrictMap/StrictSet handling of NAN. Make StrictMap/StrictSet treat positive and negative zero floats as the same key, like SortedStrictSet/stable_compare.
-* Add bitset source files to package.xml
+* BREAKING CHANGES: Rename datastructures and interfaces for consistency. Change definitions of interfaces/remove interfaces.
  </notes>
  <contents>
   <dir name="/">
    <file name="config.m4" role="src" />
    <file name="config.w32" role="src" />
-   <file name="teds.c" role="src" />
-   <file name="teds.h" role="src" />
-   <file name="teds_arginfo.h" role="src" />
-   <file name="teds_bswap.h" role="src" />
-   <file name="teds_bitset_arginfo.h" role="src" />
-   <file name="teds_bitset.c" role="src" />
-   <file name="teds_bitset.h" role="src" />
-   <file name="teds_bitset.stub.php" role="src" />
-   <file name="teds_deque_arginfo.h" role="src" />
-   <file name="teds_deque.c" role="src" />
-   <file name="teds_deque.h" role="src" />
-   <file name="teds_deque.stub.php" role="src" />
-   <file name="teds_immutablekeyvaluesequence_arginfo.h" role="src" />
-   <file name="teds_immutablekeyvaluesequence.c" role="src" />
-   <file name="teds_immutablekeyvaluesequence.h" role="src" />
-   <file name="teds_immutablekeyvaluesequence.stub.php" role="src" />
-   <file name="teds_immutablesequence_arginfo.h" role="src" />
-   <file name="teds_immutablesequence.c" role="src" />
-   <file name="teds_immutablesequence.h" role="src" />
-   <file name="teds_immutablesequence.stub.php" role="src" />
-   <file name="teds_interfaces_arginfo.h" role="src" />
-   <file name="teds_interfaces.c" role="src" />
-   <file name="teds_interfaces.h" role="src" />
-   <file name="teds_interfaces.stub.php" role="src" />
-   <file name="teds_intvector_arginfo.h" role="src" />
-   <file name="teds_intvector.c" role="src" />
-   <file name="teds_intvector.h" role="src" />
-   <file name="teds_intvector.stub.php" role="src" />
-   <file name="teds_keyvaluevector_arginfo.h" role="src" />
-   <file name="teds_keyvaluevector.c" role="src" />
-   <file name="teds_keyvaluevector.h" role="src" />
-   <file name="teds_keyvaluevector.stub.php" role="src" />
-   <file name="teds_lowmemoryvector_arginfo.h" role="src" />
-   <file name="teds_lowmemoryvector.c" role="src" />
-   <file name="teds_lowmemoryvector.h" role="src" />
-   <file name="teds_lowmemoryvector.stub.php" role="src" />
-   <file name="teds_sortedstrictmap_arginfo.h" role="src" />
-   <file name="teds_sortedstrictmap.c" role="src" />
-   <file name="teds_sortedstrictmap.h" role="src" />
-   <file name="teds_sortedstrictmap.stub.php" role="src" />
-   <file name="teds_sortedstrictset_arginfo.h" role="src" />
-   <file name="teds_sortedstrictset.c" role="src" />
-   <file name="teds_sortedstrictset.h" role="src" />
-   <file name="teds_sortedstrictset.stub.php" role="src" />
-   <file name="teds_stablesortedlistmap_arginfo.h" role="src" />
-   <file name="teds_stablesortedlistmap.c" role="src" />
-   <file name="teds_stablesortedlistmap.h" role="src" />
-   <file name="teds_stablesortedlistmap.stub.php" role="src" />
-   <file name="teds_stablesortedlistset_arginfo.h" role="src" />
-   <file name="teds_stablesortedlistset.c" role="src" />
-   <file name="teds_stablesortedlistset.h" role="src" />
-   <file name="teds_stablesortedlistset.stub.php" role="src" />
-   <file name="teds_stableheap_arginfo.h" role="src" />
-   <file name="teds_stableheap.c" role="src" />
-   <file name="teds_stableheap.h" role="src" />
-   <file name="teds_stableheap.stub.php" role="src" />
-   <file name="teds_strictmap_arginfo.h" role="src" />
-   <file name="teds_strictmap.c" role="src" />
-   <file name="teds_strictmap.h" role="src" />
-   <file name="teds_strictmap.stub.php" role="src" />
-   <file name="teds_strictset_arginfo.h" role="src" />
-   <file name="teds_strictset.c" role="src" />
-   <file name="teds_strictset.h" role="src" />
-   <file name="teds_strictset.stub.php" role="src" />
-   <file name="teds_util.h" role="src" />
-   <file name="teds_vector_arginfo.h" role="src" />
-   <file name="teds_vector.c" role="src" />
-   <file name="teds_vector.h" role="src" />
-   <file name="teds_vector.stub.php" role="src" />
    <file name="php_teds.h" role="src" />
+
    <file name="README.md" role="doc" />
    <file name="COPYING" role="doc" />
+
+   <!-- Datastructure implementations. -->
+   <dir name="src">
+    <file name="teds.h" role="src" />
+    <file name="teds.c" role="src" />
+    <file name="teds.stub.php" role="src" />
+    <file name="teds_arginfo.h" role="src" />
+    <file name="teds_bswap.h" role="src" />
+    <file name="teds_bitset_arginfo.h" role="src" />
+    <file name="teds_bitset.c" role="src" />
+    <file name="teds_bitset.h" role="src" />
+    <file name="teds_bitset.stub.php" role="src" />
+    <file name="teds_deque_arginfo.h" role="src" />
+    <file name="teds_deque.c" role="src" />
+    <file name="teds_deque.h" role="src" />
+    <file name="teds_deque.stub.php" role="src" />
+    <file name="teds_exceptions_arginfo.h" role="src" />
+    <file name="teds_exceptions.c" role="src" />
+    <file name="teds_exceptions.h" role="src" />
+    <file name="teds_exceptions.stub.php" role="src" />
+    <file name="teds_immutableiterable_arginfo.h" role="src" />
+    <file name="teds_immutableiterable.c" role="src" />
+    <file name="teds_immutableiterable.h" role="src" />
+    <file name="teds_immutableiterable.stub.php" role="src" />
+    <file name="teds_immutablesequence_arginfo.h" role="src" />
+    <file name="teds_immutablesequence.c" role="src" />
+    <file name="teds_immutablesequence.h" role="src" />
+    <file name="teds_immutablesequence.stub.php" role="src" />
+    <file name="teds_interfaces_arginfo.h" role="src" />
+    <file name="teds_interfaces.c" role="src" />
+    <file name="teds_interfaces.h" role="src" />
+    <file name="teds_interfaces.stub.php" role="src" />
+    <file name="teds_intvector_arginfo.h" role="src" />
+    <file name="teds_intvector.c" role="src" />
+    <file name="teds_intvector.h" role="src" />
+    <file name="teds_intvector.stub.php" role="src" />
+    <file name="teds_mutableiterable_arginfo.h" role="src" />
+    <file name="teds_mutableiterable.c" role="src" />
+    <file name="teds_mutableiterable.h" role="src" />
+    <file name="teds_mutableiterable.stub.php" role="src" />
+    <file name="teds_lowmemoryvector_arginfo.h" role="src" />
+    <file name="teds_lowmemoryvector.c" role="src" />
+    <file name="teds_lowmemoryvector.h" role="src" />
+    <file name="teds_lowmemoryvector.stub.php" role="src" />
+    <file name="teds_sortedstrictmap_arginfo.h" role="src" />
+    <file name="teds_sortedstrictmap.c" role="src" />
+    <file name="teds_sortedstrictmap.h" role="src" />
+    <file name="teds_sortedstrictmap.stub.php" role="src" />
+    <file name="teds_sortedstrictset_arginfo.h" role="src" />
+    <file name="teds_sortedstrictset.c" role="src" />
+    <file name="teds_sortedstrictset.h" role="src" />
+    <file name="teds_sortedstrictset.stub.php" role="src" />
+    <file name="teds_stablesortedlistmap_arginfo.h" role="src" />
+    <file name="teds_stablesortedlistmap.c" role="src" />
+    <file name="teds_stablesortedlistmap.h" role="src" />
+    <file name="teds_stablesortedlistmap.stub.php" role="src" />
+    <file name="teds_stablesortedlistset_arginfo.h" role="src" />
+    <file name="teds_stablesortedlistset.c" role="src" />
+    <file name="teds_stablesortedlistset.h" role="src" />
+    <file name="teds_stablesortedlistset.stub.php" role="src" />
+    <file name="teds_stableheap_arginfo.h" role="src" />
+    <file name="teds_stableheap.c" role="src" />
+    <file name="teds_stableheap.h" role="src" />
+    <file name="teds_stableheap.stub.php" role="src" />
+    <file name="teds_strictmap_arginfo.h" role="src" />
+    <file name="teds_strictmap.c" role="src" />
+    <file name="teds_strictmap.h" role="src" />
+    <file name="teds_strictmap.stub.php" role="src" />
+    <file name="teds_strictset_arginfo.h" role="src" />
+    <file name="teds_strictset.c" role="src" />
+    <file name="teds_strictset.h" role="src" />
+    <file name="teds_strictset.stub.php" role="src" />
+    <file name="teds_util.h" role="src" />
+    <file name="teds_vector_arginfo.h" role="src" />
+    <file name="teds_vector.c" role="src" />
+    <file name="teds_vector.h" role="src" />
+    <file name="teds_vector.stub.php" role="src" />
+   </dir> <!-- src/ -->
    <!-- Generated by: find tests -type f|grep -E '\.(inc|phpt)$' |LC_ALL=C sort|sed 's,^tests/\(.*\),    <file name="\1" role="test" />,' -->
    <dir name="tests">
     <file name="BitSet/Vector.phpt" role="test" />
@@ -148,19 +155,19 @@
     <file name="Deque/traversable.phpt" role="test" />
     <file name="Deque/unserialize.phpt" role="test" />
     <file name="Deque/unshift.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/ImmutableKeyValueSequence.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/aggregate.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/clone.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/contains.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/exceptionhandler.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/from_pairs.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/keyAt_valueAt.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/keys_values.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/reinit_forbidden.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/serialization.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/set_state.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/traversable.phpt" role="test" />
-    <file name="ImmutableKeyValueSequence/unserialize.phpt" role="test" />
+    <file name="ImmutableIterable/ImmutableIterable.phpt" role="test" />
+    <file name="ImmutableIterable/aggregate.phpt" role="test" />
+    <file name="ImmutableIterable/clone.phpt" role="test" />
+    <file name="ImmutableIterable/contains.phpt" role="test" />
+    <file name="ImmutableIterable/exceptionhandler.phpt" role="test" />
+    <file name="ImmutableIterable/from_pairs.phpt" role="test" />
+    <file name="ImmutableIterable/keyAt_valueAt.phpt" role="test" />
+    <file name="ImmutableIterable/keys_values.phpt" role="test" />
+    <file name="ImmutableIterable/reinit_forbidden.phpt" role="test" />
+    <file name="ImmutableIterable/serialization.phpt" role="test" />
+    <file name="ImmutableIterable/set_state.phpt" role="test" />
+    <file name="ImmutableIterable/traversable.phpt" role="test" />
+    <file name="ImmutableIterable/unserialize.phpt" role="test" />
     <file name="ImmutableSequence/ImmutableSequence.phpt" role="test" />
     <file name="ImmutableSequence/aggregate.phpt" role="test" />
     <file name="ImmutableSequence/arrayAccess.phpt" role="test" />
@@ -196,22 +203,6 @@
     <file name="IntVector/toArray.phpt" role="test" />
     <file name="IntVector/traversable.phpt" role="test" />
     <file name="IntVector/unserialize.phpt" role="test" />
-    <file name="KeyValueVector/KeyValueSequence.phpt" role="test" />
-    <file name="KeyValueVector/aggregate.phpt" role="test" />
-    <file name="KeyValueVector/clone.phpt" role="test" />
-    <file name="KeyValueVector/contains.phpt" role="test" />
-    <file name="KeyValueVector/exceptionhandler.phpt" role="test" />
-    <file name="KeyValueVector/from_pairs.phpt" role="test" />
-    <file name="KeyValueVector/keyAt_valueAt.phpt" role="test" />
-    <file name="KeyValueVector/keys_values.phpt" role="test" />
-    <file name="KeyValueVector/push_pop.phpt" role="test" />
-    <file name="KeyValueVector/reinit_forbidden.phpt" role="test" />
-    <file name="KeyValueVector/serialization.phpt" role="test" />
-    <file name="KeyValueVector/setKeyAt.phpt" role="test" />
-    <file name="KeyValueVector/setSize.phpt" role="test" />
-    <file name="KeyValueVector/set_state.phpt" role="test" />
-    <file name="KeyValueVector/traversable.phpt" role="test" />
-    <file name="KeyValueVector/unserialize.phpt" role="test" />
     <file name="LowMemoryVector/Vector.phpt" role="test" />
     <file name="LowMemoryVector/aggregate.phpt" role="test" />
     <file name="LowMemoryVector/arrayCast.phpt" role="test" />
@@ -234,6 +225,22 @@
     <file name="LowMemoryVector/toArray.phpt" role="test" />
     <file name="LowMemoryVector/traversable.phpt" role="test" />
     <file name="LowMemoryVector/unserialize.phpt" role="test" />
+    <file name="MutableIterable/MutableIterable.phpt" role="test" />
+    <file name="MutableIterable/aggregate.phpt" role="test" />
+    <file name="MutableIterable/clone.phpt" role="test" />
+    <file name="MutableIterable/contains.phpt" role="test" />
+    <file name="MutableIterable/exceptionhandler.phpt" role="test" />
+    <file name="MutableIterable/from_pairs.phpt" role="test" />
+    <file name="MutableIterable/keyAt_valueAt.phpt" role="test" />
+    <file name="MutableIterable/keys_values.phpt" role="test" />
+    <file name="MutableIterable/push_pop.phpt" role="test" />
+    <file name="MutableIterable/reinit_forbidden.phpt" role="test" />
+    <file name="MutableIterable/serialization.phpt" role="test" />
+    <file name="MutableIterable/setKeyAt.phpt" role="test" />
+    <file name="MutableIterable/setSize.phpt" role="test" />
+    <file name="MutableIterable/set_state.phpt" role="test" />
+    <file name="MutableIterable/traversable.phpt" role="test" />
+    <file name="MutableIterable/unserialize.phpt" role="test" />
     <file name="SortedStrictMap/ImmutableKeyValueSequence.phpt" role="test" />
     <file name="SortedStrictMap/SortedStrictMap.phpt" role="test" />
     <file name="SortedStrictMap/aggregate.phpt" role="test" />
@@ -267,6 +274,7 @@
     <file name="SortedStrictSet/clone.phpt" role="test" />
     <file name="SortedStrictSet/contains.phpt" role="test" />
     <file name="SortedStrictSet/exceptionhandler.phpt" role="test" />
+    <file name="SortedStrictSet/floatKey.phpt" role="test" />
     <file name="SortedStrictSet/gc.phpt" role="test" />
     <file name="SortedStrictSet/iteration_delete.phpt" role="test" />
     <file name="SortedStrictSet/iteration_insert.phpt" role="test" />
@@ -325,6 +333,7 @@
     <file name="StrictMap/clone.phpt" role="test" />
     <file name="StrictMap/contains.phpt" role="test" />
     <file name="StrictMap/exceptionhandler.phpt" role="test" />
+    <file name="StrictMap/floatKey.phpt" role="test" />
     <file name="StrictMap/from_pairs.phpt" role="test" />
     <file name="StrictMap/gc.phpt" role="test" />
     <file name="StrictMap/keys_values.phpt" role="test" />
@@ -343,6 +352,7 @@
     <file name="StrictSet/contains.phpt" role="test" />
     <file name="StrictSet/exceptionhandler.phpt" role="test" />
     <file name="StrictSet/expand.phpt" role="test" />
+    <file name="StrictSet/floatKey.phpt" role="test" />
     <file name="StrictSet/gc.phpt" role="test" />
     <file name="StrictSet/queue.phpt" role="test" />
     <file name="StrictSet/reinit_forbidden.phpt" role="test" />
@@ -418,6 +428,24 @@
  <extsrcrelease />
  <changelog>
   <release>
+   <date>2022-02-13</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.14.0</release>
+    <api>0.14.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Make `strict_hash` return the same value for signed positive and negative zero. (In php, `0.0 === -0.0`, though var_export/print/var_dump output differ.)
+* Fix StrictMap/StrictSet handling of NAN. Make StrictMap/StrictSet treat positive and negative zero floats as the same key, like SortedStrictSet/stable_compare.
+* Add bitset source files to package.xml
+   </notes>
+  </release>
+  <release>
    <date>2022-02-12</date>
    <time>16:00:00</time>
    <version>
@@ -449,11 +477,11 @@
    <notes>
 * Breaking changes.
 * Fix serialization/unserialization in StableMinHeap/StableMaxHeap.
-* Add interfaces for `Teds\Values` (e.g. Heap/Set), Teds\Collection(e.g. StrictMap, StableSortedMap), ListInterface(Vector, Deque, etc.) (the keyword list is reserved)
+* Add interfaces for `Teds\Values` (e.g. Heap/Set), Teds\Collection(e.g. StrictMap, StableSortedMap), Sequence(Vector, Deque, etc.) (the keyword list is reserved)
 * Implement ->values() in classes implementing `Teds\Values`.
 * Make offsetExists consistently return false when the value of the given key is null across all data structures.
 * Add Teds\Collection->containsKey to return true if a key exists without coercing types, and returning true regardless of whether the corresponding key is null.
-* Change signature of IntVector::set() and ::push() to match ListInterface
+* Change signature of IntVector::set() and ::push() to match Sequence
 * Add Collection::toArray() (behaves like iterator_to_array).
 * Check for exceeding 64-bit capacity limits in more collections to avoid hitting gc size limits
   and to avoid unpredictable behavior (e.g. it'd be surprising to have this throw/fatal error only if var_export/var_dump/json_encode was called and PHP's array size limits(2147483648 elements, or at least 32GB) were hit).
@@ -773,7 +801,7 @@
    </stability>
    <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
    <notes>
-* Add Teds\KeyValueVector
+* Add Teds\MutableIterable
 * Fix edge cases in Teds\Vector setSize
    </notes>
   </release>

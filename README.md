@@ -22,14 +22,14 @@ On Windows, see https://wiki.php.net/internals/windows/stepbystepbuild_sdk_2 ins
 
 ## Functionality
 
-### Teds\ImmutableKeyValueSequence
+### Teds\ImmutableIterable
 
-[`Teds\ImmutableKeyValueSequence` API](./teds_immutablekeyvaluesequence.stub.php)
+[`Teds\ImmutableIterable` API](./teds_immutableiterable.stub.php)
 
 Currently, PHP does not provide a built-in way to store the state of an arbitrary iterable for reuse later (when the iterable has arbitrary keys, or when keys might be repeated). There are use cases for this, such as:
 
-1. Creating a rewindable copy of a non-rewindable `Traversable` (e.g. a `Generator`) before passing that copy to a function that consumes an `iterable`/`Traversable`. (new ImmutableKeyValueSequence(my_generator()))
-2. Generating an `IteratorAggregate` from a class still implementing `Iterator` (e.g. `SplObjectStorage`) so that code can independently iterate over the key-value sequences. (e.g. `foreach ($immutableKeyValueSequence as $k1 => $v1) { foreach ($immutableKeyValueSequence as $k2 => $v2) { /* process pairs */ } }`)
+1. Creating a rewindable copy of a non-rewindable `Traversable` (e.g. a `Generator`) before passing that copy to a function that consumes an `iterable`/`Traversable`. (new ImmutableIterable(my_generator()))
+2. Generating an `IteratorAggregate` from a class still implementing `Iterator` (e.g. `SplObjectStorage`) so that code can independently iterate over the key-value sequences. (e.g. `foreach ($immutableImmutableIterable as $k1 => $v1) { foreach ($immutableImmutableIterable as $k2 => $v2) { /* process pairs */ } }`)
 3. Providing helpers such as `iterable_flip(iterable $iterable)`, `iterable_take(iterable $iterable, int $limit)`, `iterable_chunk(iterable $iterable, int $chunk_size)` that act on iterables with arbitrary key/value sequences and have return values including iterables with arbitrary key/value sequences
 4. Providing constant time access to both keys and values of arbitrary key-value sequences at any offset (for binary searching on keys and/or values, etc.)
 
@@ -108,11 +108,11 @@ It can be appended to with `push()`, and elements can be removed from the end wi
 This is implemented based on SplFixedArray/ImmutableSequence.
 There are plans to add more methods.
 
-### Teds\KeyValueVector
+### Teds\MutableIterable
 
-[`Teds\KeyValueVector` API](./teds_keyvaluevector.stub.php)
+[`Teds\MutableIterable` API](./teds_mutableiterable.stub.php)
 
-Similar to `Teds\Vector` and `Teds\ImmutableKeyValueSequence`.
+Similar to `Teds\Vector` and `Teds\ImmutableIterable`.
 This stores a mutable vector of keys and values with the keys 0, 1, 2...
 It can be resized with `setSize()`.
 
@@ -230,7 +230,7 @@ interface Collection extends Values, \ArrayAccess {
  *
  * NOTE: List is a reserved keyword in php and cannot be used as an identifier, e.g. `list($x) = [1]`.
  */
-interface ListInterface extends Collection {
+interface Sequence extends Collection {
     public function get(int $key): mixed {}
     public function set(int $offset, mixed $value): void {}
 

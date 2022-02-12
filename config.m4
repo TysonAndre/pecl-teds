@@ -110,5 +110,7 @@ if test "$PHP_TEDS" != "no"; then
   dnl In case of no dependencies
   AC_DEFINE(HAVE_TEDS, 1, [ Have teds support ])
 
-  PHP_NEW_EXTENSION(teds, teds.c teds_immutablesequence.c teds_immutablekeyvaluesequence.c teds_keyvaluevector.c teds_vector.c teds_deque.c teds_sortedstrictmap.c teds_sortedstrictset.c teds_stableheap.c teds_strictmap.c teds_strictset.c teds_stablesortedlistset.c teds_stablesortedlistmap.c teds_lowmemoryvector.c teds_intvector.c teds_bitset.c teds_interfaces.c, $ext_shared)
+  PHP_TEDS_SRC_FILES="src/teds.c src/teds_immutablesequence.c src/teds_immutableiterable.c src/teds_mutableiterable.c src/teds_vector.c src/teds_deque.c src/teds_sortedstrictmap.c src/teds_sortedstrictset.c src/teds_stableheap.c src/teds_strictmap.c src/teds_strictset.c src/teds_stablesortedlistset.c src/teds_stablesortedlistmap.c src/teds_lowmemoryvector.c src/teds_intvector.c src/teds_bitset.c src/teds_interfaces.c src/teds_exceptions.c"
+
+  PHP_NEW_EXTENSION(teds, $PHP_TEDS_SRC_FILES, $ext_shared)
 fi
