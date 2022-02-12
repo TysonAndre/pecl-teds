@@ -728,7 +728,7 @@ PHP_METHOD(Teds_StableMinHeap, values)
 		RETURN_EMPTY_ARRAY();
 	}
 	/* sizeof(teds_stableheap_entry) === sizeof(zval) */
-	zval *entries = &array->entries[0].key;
+	teds_stableheap_entry *entries = array->entries;
 	zend_array *values = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);
@@ -736,12 +736,25 @@ PHP_METHOD(Teds_StableMinHeap, values)
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
 		for (uint32_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i];
+			zval *tmp = &entries[i].key;
 			Z_TRY_ADDREF_P(tmp);
 			ZEND_HASH_FILL_ADD(tmp);
 		}
 	} ZEND_HASH_FILL_END();
 	RETURN_ARR(values);
+}
+
+PHP_METHOD(Teds_StableMinHeap, contains)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_stableheap_entries *array = Z_STABLEHEAP_ENTRIES_P(ZEND_THIS);
+
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	RETVAL_BOOL(teds_zval_range_contains(value, (zval*) array->entries, array->size));
 }
 
 PHP_MINIT_FUNCTION(teds_stableheap)

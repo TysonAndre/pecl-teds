@@ -44,7 +44,7 @@ final class Vector implements \IteratorAggregate, ListInterface, \JsonSerializab
     public function shrinkToFit(): void {}
     /**
      * If the current capacity is less than $capacity, raise it to capacity.
-     * @throws UnexpectedValueException if the new capacity is too large
+     * @throws \UnexpectedValueException if the new capacity is too large
      */
     public function reserve(int $capacity): void {}
     /**

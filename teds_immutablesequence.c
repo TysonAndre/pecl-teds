@@ -869,15 +869,8 @@ PHP_METHOD(Teds_ImmutableSequence, contains)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_immutablesequence *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
-	zval *it = intern->array.entries;
-	const zval *const end = it + intern->array.size;
-	for (; it < end; it++) {
-		if (zend_is_identical(value, it)) {
-			RETURN_TRUE;
-		}
-	}
-	RETURN_FALSE;
+	const teds_immutablesequence_entries *array = Z_IMMUTABLESEQUENCE_ENTRIES_P(ZEND_THIS);
+	RETURN_BOOL(teds_zval_range_contains(value, array->entries, array->size));
 }
 
 ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, offsetSet)

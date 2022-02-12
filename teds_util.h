@@ -41,6 +41,26 @@ static inline zval *teds_zval_copy_range(const zval *original, size_t n) {
 	return copy;
 }
 
+static inline bool teds_zval_range_contains(const zval *target, const zval *original, uint32_t n) {
+	for (const zval *const end = original + n; original != end; original++) {
+		if (zend_is_identical((zval *)original, (zval *)target)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static inline void teds_zval_range_zval_indexof(zval *return_value, const zval *target, const zval *const original, uint32_t n) {
+	for (const zval *it = original, *const end = original + n; it != end; it++) {
+		if (zend_is_identical((zval *)it, (zval *)target)) {
+			RETURN_LONG(it - original);
+		}
+	}
+	RETURN_NULL();
+}
+
+#define TEDS_RETURN_ZVAL_LIST_INDEXOF(target, values, n) do { teds_zval_range_zval_indexof(return_value, (target), (values), (n)); return; } while (0)
+
 static inline void teds_zval_dtor_range(zval *it, size_t n) {
 	for (zval *end = it + n; it < end; it++) {
 		zval_ptr_dtor(it);
