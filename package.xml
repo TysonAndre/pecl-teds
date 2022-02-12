@@ -13,8 +13,8 @@
  <date>2022-02-12</date>
  <time>16:00:00</time>
  <version>
-  <release>0.13.0</release>
-  <api>0.13.0</api>
+  <release>0.14.0dev</release>
+  <api>0.14.0dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,8 +22,9 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Add Teds\BitSet providing similar functionality to a Vector of booleans, using a single bit per boolean.
-* Fix stub documentation and qualify `\Iterator` for StableMinHeap/StableMaxHeap in documentation.
+* Make `strict_hash` deterministic for `NAN`
+* Make `strict_hash` return the same value for signed positive and negative zero. (In php, `0.0 === -0.0`, though var_export/print/var_dump output differ.)
+* Fix StrictMap/StrictSet handling of NAN. Make StrictMap/StrictSet treat positive and negative zero floats as the same key, like SortedStrictSet/stable_compare.
  </notes>
  <contents>
   <dir name="/">
@@ -411,6 +412,23 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-02-12</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.13.0</release>
+    <api>0.13.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Add Teds\BitSet providing similar functionality to a Vector of booleans, using a single bit per boolean.
+* Fix stub documentation and qualify `\Iterator` for StableMinHeap/StableMaxHeap in documentation.
+   </notes>
+  </release>
   <release>
    <date>2022-02-10</date>
    <time>16:00:00</time>

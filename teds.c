@@ -954,9 +954,9 @@ zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 			if (n1 == n2) {
 				return 0;
 			}
-			if (UNEXPECTED(n2 != n2)) {
+			if (UNEXPECTED(teds_is_nan(n2))) {
 				/* Treat INF as smaller than NAN */
-				return n1 != n1 ? 0 : -1;
+				return teds_is_nan(n1) ? 0 : -1;
 			}
 			return n1 < n2 ? -1 : 1;
 		}
@@ -1056,7 +1056,18 @@ zend_long teds_strict_hash_array(HashTable *ht, teds_strict_hash_node *node) {
 	return result;
 }
 
-/* {{{ Compare two elements in a stable order. */
+/* This comparison function for zend_hash is expected to return 0 on identity, and non zero otherwise.
+ * teds_is_identical_or_both_nan returns non-zero on identity and 0 otherwise.
+ *
+ * The function signature must match `int (zval *, zval *)`
+ */
+int teds_hash_zval_identical_or_both_nan_function(zval *op1, zval *op2) {
+	ZVAL_DEREF(op1);
+	ZVAL_DEREF(op2);
+	return !teds_is_identical_or_both_nan(op1, op2);
+}
+
+/* {{{ Compute a strict hash that is the same number if $a === $b */
 PHP_FUNCTION(strict_hash)
 {
 	zval *value;
