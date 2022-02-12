@@ -88,6 +88,15 @@ Example benchmarks: [benchmarks/benchmark_vector_bool.php](benchmarks/benchmark_
 
 Similar to `Teds\LowMemoryVector` but throws a TypeError on attempts to add non-integers.
 
+### Teds\BitSet
+
+[`Teds\BitSet` API](./teds_bitset.stub.php)
+
+Similar to `Teds\LowMemoryVector`/`Teds\IntVector` but throws a TypeError on attempts to add non-booleans.
+This can be used as a memory-efficient vector of booleans.
+
+This uses only a single bit per value for large bit sets in memory and when serializing (around 128 times less memory than arrays, for large arrays of booleans)
+
 ### Teds\Vector
 
 [`Teds\Vector` API](./teds_vector.stub.php)
