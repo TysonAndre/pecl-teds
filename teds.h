@@ -96,6 +96,26 @@ typedef struct _teds_strict_hash_node {
 zend_long teds_strict_hash_array(HashTable *ht, teds_strict_hash_node *node);
 
 inline static uint64_t teds_convert_double_to_uint64_t(double *value) {
+	double tmp = *value;
+	if (UNEXPECTED(tmp == 0)) {
+		/* Signed positive and negative 0 have different bits. However, $signedZero === $signedNegativeZero in php and many other languages. */
+		return 0;
+	}
+	if (UNEXPECTED(tmp != tmp)) {
+		/*
+		 * See https://en.wikipedia.org/wiki/NaN
+		 * For nan, the 12 most significant bits are:
+		 * - 1 sign bit (0 or 1)
+		 * - 11 sign bits
+		 * (and at least one of the significand bits must be non-zero)
+		 *
+		 * Here, 0xff is the most significant byte with the sign and part of the exponent,
+		 * and 0xf8 is the second most significant byte with part of the exponent and significand.
+		 *
+		 * Return an arbitrary choice of 0xff f_, with bytes in the reverse order.
+		 */
+		return 0xf8ff;
+	}
 	uint8_t *data = (uint8_t *)value;
 #ifndef WORDS_BIGENDIAN
 	return

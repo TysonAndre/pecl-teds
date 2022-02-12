@@ -5,6 +5,7 @@ Test strict_hash() function
 --FILE--
 <?php
 
+$zero = 0.0;
 $values = [
     null,
     false,
@@ -24,7 +25,9 @@ $values = [
     PHP_INT_MAX,
     PHP_INT_MIN,
     0.0,
-    -0.0,
+    -0.0,  // Deliberately return the same hash as 0.0, because php has 0.0 === -0.0 and it's equivalent in *almost* all ways, apart from 1 / -0.0
+    [0.0],
+    [-0.0],  // Deliberately return the same hash as 0.0, because php has 0.0 === -0.0 and it's equivalent in *almost* all ways, apart from 1 / -0.0
     1.5,
     1.2,
     2.0,
@@ -42,16 +45,22 @@ $values = [
     function () {},
     function () {},
     STDIN,
+    INF,
+    -INF,
+    NAN,
+    -NAN,
+    fdiv($zero, $zero),
 ];
 
 $all = [];
 foreach ($values as $value) {
     var_dump($value);
     $hash = Teds\strict_hash($value);
-    printf("=> 0x%016x\n", $hash);
+    printf("=> 0x%016x", $hash);
     if (isset($all[$hash])) {
-        echo "Unexpected hash collision for $hash\n";
+        echo " (Already saw)";
     }
+    echo "\n";
     $all[$hash] = $value;
 }
 ?>
@@ -93,7 +102,17 @@ int(-9223372036854775808)
 float(0)
 => 0x4300dff895c6e4ea
 float(-0)
-=> 0xc36c53d7ef329101
+=> 0x4300dff895c6e4ea (Already saw)
+array(1) {
+  [0]=>
+  float(0)
+}
+=> 0x8776bedd1ff90617
+array(1) {
+  [0]=>
+  float(-0)
+}
+=> 0x8776bedd1ff90617 (Already saw)
 float(1.5)
 => 0xaa85ee3509921f06
 float(1.2)
@@ -142,3 +161,13 @@ object(Closure)#4 (0) {
 => 0x6aa58db3bc37b4c5
 resource(1) of type (stream)
 => 0x6b4e880bac0e6043
+float(INF)
+=> 0xeaf3e13d9802af26
+float(-INF)
+=> 0x6a60561cf26e5b3d
+float(NAN)
+=> 0x6a289d03903422a8
+float(NAN)
+=> 0x6a289d03903422a8 (Already saw)
+float(NAN)
+=> 0x6a289d03903422a8 (Already saw)

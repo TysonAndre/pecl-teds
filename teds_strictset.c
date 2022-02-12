@@ -72,7 +72,7 @@ static zend_always_inline teds_strictset_entry *teds_strictset_entries_find_buck
 		ZEND_ASSERT(idx < ht->nTableSize);
 		p = arData + idx;
 		//fprintf(stderr, "Lookup %x idx=%d p->h=%x type=%d\n", (int)h, (int)idx, (int)p->h, Z_TYPE(p->key));
-		if ((p->h == h) && zend_is_identical(&p->key, key)) {
+		if ((p->h == h) && teds_is_identical_or_both_nan(&p->key, key)) {
 			return p;
 		}
 		//fprintf(stderr, "Lookup not identical\n");

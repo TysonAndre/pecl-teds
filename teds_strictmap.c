@@ -60,15 +60,12 @@ static zend_always_inline teds_strictmap_entry *teds_strictmap_entries_find_buck
 	teds_strictmap_entry *const arData = ht->arData;
 	const uint32_t nIndex = h | ht->nTableMask;
 	uint32_t idx = HT_HASH_EX(arData, nIndex);
-	//fprintf(stderr, "Lookup %x nIndex=%d idx=%d\n", (int)h, (int)nIndex, (int)idx);
 	while (idx != TEDS_STRICTMAP_INVALID_INDEX) {
 		ZEND_ASSERT(idx < ht->nTableSize);
 		p = arData + idx;
-		//fprintf(stderr, "Lookup %x idx=%d p->h=%x type=%d\n", (int)h, (int)idx, (int)p->h, Z_TYPE(p->key));
-		if (TEDS_STRICTMAP_IT_HASH(p) == h && zend_is_identical(&p->key, key)) {
+		if (TEDS_STRICTMAP_IT_HASH(p) == h && teds_is_identical_or_both_nan(&p->key, key)) {
 			return p;
 		}
-		//fprintf(stderr, "Lookup not identical\n");
 		idx = TEDS_STRICTMAP_IT_NEXT(p);
 	}
 	return NULL;
