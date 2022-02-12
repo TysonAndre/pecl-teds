@@ -85,7 +85,7 @@ final class Deque implements \IteratorAggregate, ListInterface, \JsonSerializabl
     public function get(int $offset): mixed {}
     /**
      * Sets the value at offset $offset (relative to the start of the Deque) to $value
-     * @throws OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
+     * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
      */
     public function set(int $offset, mixed $value): void {}
     // Must be mixed for compatibility with ArrayAccess

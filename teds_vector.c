@@ -837,15 +837,8 @@ PHP_METHOD(Teds_Vector, indexOf)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
-	const uint32_t len = intern->array.size;
-	zval *entries = intern->array.entries;
-	for (uint32_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &entries[i])) {
-			RETURN_LONG(i);
-		}
-	}
-	RETURN_NULL();
+	const teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	TEDS_RETURN_ZVAL_LIST_INDEXOF(value, array->entries, array->size);
 }
 
 PHP_METHOD(Teds_Vector, filter)
@@ -1038,15 +1031,8 @@ PHP_METHOD(Teds_Vector, contains)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
-	zval *it = intern->array.entries;
-	const zval *const end = it + intern->array.size;
-	for (; it < end; it++) {
-		if (zend_is_identical(value, it)) {
-			RETURN_TRUE;
-		}
-	}
-	RETURN_FALSE;
+	const teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	RETURN_BOOL(teds_zval_range_contains(value, array->entries, array->size));
 }
 
 static zend_always_inline void teds_vector_set_value_at_offset(zend_object *object, zend_long offset, zval *value) {

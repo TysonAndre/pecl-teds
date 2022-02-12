@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 6ac8855e1a4bd7ffa81af4da39cdd349678f676f */
+ * Stub hash: 5ea14b7da81d37b3f0fb60414c7a3c3d2ef6aa98 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StableMinHeap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, values, IS_ITERABLE, 0, "[]")
@@ -40,6 +40,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StableMinHeap_values, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StableMinHeap_contains, 0, 1, _IS_BOOL, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_Teds_StableMinHeap___serialize arginfo_class_Teds_StableMinHeap_values
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StableMinHeap___unserialize, 0, 1, IS_VOID, 0)
@@ -76,6 +80,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StableMaxHeap_values arginfo_class_Teds_StableMinHeap_values
 
+#define arginfo_class_Teds_StableMaxHeap_contains arginfo_class_Teds_StableMinHeap_contains
+
 #define arginfo_class_Teds_StableMaxHeap___serialize arginfo_class_Teds_StableMinHeap_values
 
 #define arginfo_class_Teds_StableMaxHeap___unserialize arginfo_class_Teds_StableMinHeap___unserialize
@@ -93,6 +99,7 @@ ZEND_METHOD(Teds_StableMinHeap, valid);
 ZEND_METHOD(Teds_StableMinHeap, clear);
 ZEND_METHOD(Teds_StableMinHeap, __set_state);
 ZEND_METHOD(Teds_StableMinHeap, values);
+ZEND_METHOD(Teds_StableMinHeap, contains);
 ZEND_METHOD(Teds_StableMinHeap, __unserialize);
 ZEND_METHOD(Teds_StableMaxHeap, __construct);
 ZEND_METHOD(Teds_StableMaxHeap, add);
@@ -117,6 +124,7 @@ static const zend_function_entry class_Teds_StableMinHeap_methods[] = {
 	ZEND_ME(Teds_StableMinHeap, clear, arginfo_class_Teds_StableMinHeap_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableMinHeap, __set_state, arginfo_class_Teds_StableMinHeap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_StableMinHeap, values, arginfo_class_Teds_StableMinHeap_values, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StableMinHeap, contains, arginfo_class_Teds_StableMinHeap_contains, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StableMinHeap, __serialize, values, arginfo_class_Teds_StableMinHeap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableMinHeap, __unserialize, arginfo_class_Teds_StableMinHeap___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
@@ -138,31 +146,32 @@ static const zend_function_entry class_Teds_StableMaxHeap_methods[] = {
 	ZEND_MALIAS(Teds_StableMinHeap, clear, clear, arginfo_class_Teds_StableMaxHeap_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableMaxHeap, __set_state, arginfo_class_Teds_StableMaxHeap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_MALIAS(Teds_StableMinHeap, values, values, arginfo_class_Teds_StableMaxHeap_values, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StableMinHeap, contains, contains, arginfo_class_Teds_StableMaxHeap_contains, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StableMinHeap, __serialize, values, arginfo_class_Teds_StableMaxHeap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StableMaxHeap, __unserialize, arginfo_class_Teds_StableMaxHeap___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_StableMinHeap(zend_class_entry *class_entry_Teds_Iterator, zend_class_entry *class_entry_Teds_Values)
+static zend_class_entry *register_class_Teds_StableMinHeap(zend_class_entry *class_entry_Iterator, zend_class_entry *class_entry_Teds_Values)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "StableMinHeap", class_Teds_StableMinHeap_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 2, class_entry_Teds_Iterator, class_entry_Teds_Values);
+	zend_class_implements(class_entry, 2, class_entry_Iterator, class_entry_Teds_Values);
 
 	return class_entry;
 }
 
-static zend_class_entry *register_class_Teds_StableMaxHeap(zend_class_entry *class_entry_Teds_Iterator, zend_class_entry *class_entry_Teds_Values)
+static zend_class_entry *register_class_Teds_StableMaxHeap(zend_class_entry *class_entry_Iterator, zend_class_entry *class_entry_Teds_Values)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "StableMaxHeap", class_Teds_StableMaxHeap_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 2, class_entry_Teds_Iterator, class_entry_Teds_Values);
+	zend_class_implements(class_entry, 2, class_entry_Iterator, class_entry_Teds_Values);
 
 	return class_entry;
 }
