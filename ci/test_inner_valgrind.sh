@@ -10,4 +10,6 @@ REPORT_EXIT_STATUS=1 make test TESTS="-P -q --show-diff -j$(nproc)"
 echo "Run tests in docker"
 REPORT_EXIT_STATUS=1 make test TESTS="-P -q --show-diff -m --show-mem -j$(nproc)"
 echo "Test that package.xml is valid"
+# Ensure package.xml is valid and that the package is not missing any files
 pecl package
+pecl install ./teds*.tgz

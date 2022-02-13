@@ -13,8 +13,8 @@
  <date>2022-02-12</date>
  <time>16:00:00</time>
  <version>
-  <release>0.14.0dev</release>
-  <api>0.14.0dev</api>
+  <release>0.14.0</release>
+  <api>0.14.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -25,6 +25,7 @@
 * Make `strict_hash` deterministic for `NAN`
 * Make `strict_hash` return the same value for signed positive and negative zero. (In php, `0.0 === -0.0`, though var_export/print/var_dump output differ.)
 * Fix StrictMap/StrictSet handling of NAN. Make StrictMap/StrictSet treat positive and negative zero floats as the same key, like SortedStrictSet/stable_compare.
+* Add bitset source files to package.xml
  </notes>
  <contents>
   <dir name="/">
@@ -34,6 +35,10 @@
    <file name="teds.h" role="src" />
    <file name="teds_arginfo.h" role="src" />
    <file name="teds_bswap.h" role="src" />
+   <file name="teds_bitset_arginfo.h" role="src" />
+   <file name="teds_bitset.c" role="src" />
+   <file name="teds_bitset.h" role="src" />
+   <file name="teds_bitset.stub.php" role="src" />
    <file name="teds_deque_arginfo.h" role="src" />
    <file name="teds_deque.c" role="src" />
    <file name="teds_deque.h" role="src" />
@@ -427,6 +432,31 @@
    <notes>
 * Add Teds\BitSet providing similar functionality to a Vector of booleans, using a single bit per boolean.
 * Fix stub documentation and qualify `\Iterator` for StableMinHeap/StableMaxHeap in documentation.
+   </notes>
+  </release>
+  <release>
+   <date>2022-02-10</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.13.0</release>
+    <api>0.13.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Breaking changes.
+* Fix serialization/unserialization in StableMinHeap/StableMaxHeap.
+* Add interfaces for `Teds\Values` (e.g. Heap/Set), Teds\Collection(e.g. StrictMap, StableSortedMap), ListInterface(Vector, Deque, etc.) (the keyword list is reserved)
+* Implement ->values() in classes implementing `Teds\Values`.
+* Make offsetExists consistently return false when the value of the given key is null across all data structures.
+* Add Teds\Collection->containsKey to return true if a key exists without coercing types, and returning true regardless of whether the corresponding key is null.
+* Change signature of IntVector::set() and ::push() to match ListInterface
+* Add Collection::toArray() (behaves like iterator_to_array).
+* Check for exceeding 64-bit capacity limits in more collections to avoid hitting gc size limits
+  and to avoid unpredictable behavior (e.g. it'd be surprising to have this throw/fatal error only if var_export/var_dump/json_encode was called and PHP's array size limits(2147483648 elements, or at least 32GB) were hit).
    </notes>
   </release>
   <release>
