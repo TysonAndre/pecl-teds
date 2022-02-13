@@ -18,8 +18,6 @@ function yields_and_throws() {
     yield 'first' => 'second';
 
     throw new RuntimeException('test');
-
-    echo "Unreachable\n";
 }
 try {
     $it = new Teds\StrictHashSet(yields_and_throws());

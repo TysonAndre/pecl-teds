@@ -2,6 +2,8 @@
 
 use Teds\StrictTreeMap;
 
+// @phan-file-suppress PhanPossiblyUndeclaredVariable
+
 function bench_unserialize_sorted_set(int $n, int $iterations) {
     $original = new StrictTreeMap();
     srand(1234);
@@ -99,8 +101,8 @@ printf(
     PHP_DEBUG ? 'true' : 'false',
     json_encode(function_exists('opcache_get_status') && (opcache_get_status(false)['opcache_enabled'] ?? false))
 );
-printf("Testing steps:\n1. Unserialize an already sorted collection\n2. Read a value from that sorted collection\n3. Add keys to the collections and sort the collections again\n\n");
-printf("(Note that StrictTreeMap unserialization is optimized for the case where inputs are already sorted, but there is still time+memory overhead to creating and destroying the individual nodes)\n");
+echo "Testing steps:\n1. Unserialize an already sorted collection\n2. Read a value from that sorted collection\n3. Add keys to the collections and sort the collections again\n\n";
+echo "(Note that StrictTreeMap unserialization is optimized for the case where inputs are already sorted, but there is still time+memory overhead to creating and destroying the individual nodes)\n";
 
 foreach ($sizes as [$n, $iterations]) {
     bench_unserialize_sorted_set($n, $iterations);

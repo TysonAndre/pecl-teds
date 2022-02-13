@@ -1,6 +1,8 @@
 <?php
 // TODO benchmark serialize+unserialize
 
+// @phan-file-suppress PhanPossiblyUndeclaredVariable
+
 use Teds\BitSet;
 use Teds\Deque;
 use Teds\LowMemoryVector;

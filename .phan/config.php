@@ -1,30 +1,16 @@
 <?php
 
-use \Phan\Issue;
-
 /**
+ * NOTE: Some issues are expected. A phan baseline hasn't yet been set up,
+ * and test cases reuse class/function names.
+ * This also tests error handling of Teds itself.
+ *
  * This configuration will be read and overlayed on top of the
  * default configuration. Command line arguments will be applied
  * after this file is read.
- *
- * @see src/Phan/Config.php
- * See Config for all configurable options.
- *
- * A Note About Paths
- * ==================
- *
- * Files referenced from this file should be defined as
- *
- * ```
- *   Config::projectPath('relative_path/to/file')
- * ```
- *
- * where the relative path is relative to the root of the
- * project which is defined as either the working directory
- * of the phan executable or a path passed in via the CLI
- * '-d' flag.
  */
 return [
+    'use_polyfill_parser' => !extension_loaded('ast'),
 
     // If true, missing properties will be created when
     // they are first seen. If false, we'll report an
@@ -88,17 +74,6 @@ return [
     "quick_mode" => false,
     'simplify_ast' => true,
 
-    // Enable or disable support for generic templated
-    // class types.
-    'generic_types_enabled' => true,
-
-    'check_docblock_signature_return_type_match' => true,
-
-    // The minimum severity level to report on. This can be
-    // set to Issue::SEVERITY_LOW, Issue::SEVERITY_NORMAL or
-    // Issue::SEVERITY_CRITICAL.
-    'minimum_severity' => Issue::SEVERITY_LOW,
-
     // Add any issue types (such as 'PhanUndeclaredMethod')
     // here to inhibit them from being reported
     'suppress_issue_types' => [
@@ -117,6 +92,7 @@ return [
         'PhanRedefineFunctionInternal',
         'PhanPluginAlwaysReturnFunction',
         'PhanRedefinedInheritedInterface',
+        'PhanAccessMethodInternal',
 
         // 'PhanUndeclaredMethod',
     ],
@@ -151,6 +127,8 @@ return [
     // Thus, both first-party and third-party code being used by
     // your application should be included in this list.
     'directory_list' => [
+        '.phan',
+        'benchmarks',
         'src',
         'tests',
     ],
@@ -176,10 +154,6 @@ return [
     //       to `exclude_analysis_directory_list`.
     "exclude_analysis_directory_list" => [
         'exclude',
-    ],
-    'enable_extended_internal_return_type_plugins' => true,
-    'plugin_config' => [
-        'php_native_syntax_check_max_processes' => 5
     ],
     // A list of plugin files to execute
     'plugins' => [

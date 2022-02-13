@@ -84,15 +84,18 @@ function array_value_last(array $array): mixed { }
 /**
  * Stable comparison of values.
  * Like strcmp, this returns a negative value for less than, and positive for greater than, and 0 for equality.
- * This exists because php's `<` operator is not stable. `'10' < '0a' < '1b' < '9' < '10'`.
+ * This exists because php's `<` operator is not stable. E.g. `'10' < '0a' < '1b' < '9' < '10'`, among many other examples.
  * Teds\stable_compare fixes that by strictly ordering:
  *
  * - `null < false < true < int,float < string < array < object < resource`.
  * - objects are compared by class name with strcmp, then by spl_object_id.
  * - resources are compared by id.
- * - arrays are compared recursively. Smaller arrays are less than larger arrays.
+ * - arrays are compared recursively, checking keys in a sorted order. Smaller arrays are less than larger arrays.
  * - int/float are compared numerically. If an int is equal to a float, then the int is first.
- * - strings are compared with strcmp.
+ * - strings are compared with `strcmp`.
+ *
+ * NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) have the same hashes and `stable_compare(0.0, -0.0) === 0`, because `0.0 === -0.0` in php.
+ * NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`, despite having `NAN !== $x` in php for any $x, including NAN. This is done to avoid duplicate or unremovable entries.
  */
 function stable_compare(mixed $v1, mixed $v2): int { }
 
@@ -107,12 +110,16 @@ function stable_compare(mixed $v1, mixed $v2): int { }
  * - Integers are returned
  * - Floats are hashed in a possibly platform-specific way.
  * - Arrays are hashed recursively. If $a1 === $a2 then they will have the same hash.
+ *   Infinite recursion in arrays is detected and the hash of an array currently being hashed depends on the cycle depth.
  *
  * This may vary based on php release, OS, CPU architecture, or Teds release
  * and should not be saved/loaded outside of a given php process.
  * (and spl_object_id/get_resource_id are unpredictable)
  *
  * Future releases of Teds may change the hashing algorithm to improve performance/collision resistance.
+ *
+ * NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) have the same hashes and are treated as the same entries, because `0.0 === -0.0` in php.
+NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`, despite having `NAN !== $x` in php for any $x, including NAN. This is done to avoid duplicate or unremovable entries.
  */
 function strict_hash(mixed $value): int { }
 
