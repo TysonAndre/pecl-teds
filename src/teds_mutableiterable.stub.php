@@ -7,6 +7,8 @@ namespace Teds;
 
 /**
  * A mutable vector of keys and values, where keys are repeatable and can be any type.
+ * @alias Teds\KeyValueSequence
+ * (This alias will be removed in a future major Teds release. Do not use it.)
  */
 final class MutableIterable implements \IteratorAggregate, Collection, \JsonSerializable
 {

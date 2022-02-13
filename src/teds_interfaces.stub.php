@@ -12,6 +12,9 @@ namespace Teds;
  * 1. Causes issues or inefficiencies with some ways of implementing data structures internally.
  * 2. Forces the result to be represented as []
  * 3. Forces polyfills to implement JsonSerializable as well, even when it would be less efficient
+ *
+ * @alias Teds\Values
+ * (This alias will be removed in a future major release. Do not use it.)
  */
 interface Collection extends \Traversable, \Countable {
     /** @psalm-return list<values> the list of values in the collection */

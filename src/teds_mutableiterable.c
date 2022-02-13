@@ -27,6 +27,7 @@
 #include "ext/spl/spl_iterators.h"
 #include "ext/json/php_json.h"
 #include "teds_util.h"
+#include "teds_interfaces.h"
 
 #include <stdbool.h>
 
@@ -1245,7 +1246,7 @@ PHP_METHOD(Teds_MutableIterable, toPairs)
 PHP_MINIT_FUNCTION(teds_mutableiterable)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_MutableIterable = register_class_Teds_MutableIterable(zend_ce_aggregate, zend_ce_countable, php_json_serializable_ce);
+	teds_ce_MutableIterable = register_class_Teds_MutableIterable(zend_ce_aggregate, teds_ce_Collection, php_json_serializable_ce);
 	teds_ce_MutableIterable->create_object = teds_mutableiterable_new;
 
 	memcpy(&teds_handler_MutableIterable, &std_object_handlers, sizeof(zend_object_handlers));

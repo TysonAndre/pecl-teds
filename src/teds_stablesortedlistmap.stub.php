@@ -17,10 +17,6 @@ namespace Teds;
  * - Memory efficient
  * - Efficient at unserialization when entries are in sorted order.
  * - Slow at writes (linear time for each write) due to using insertion sort
- *
- * TODO: Rename to ListBasedStrictTreeMap
- *
- * TODO: Support indexOf methods
  */
 final class StableSortedListMap implements \IteratorAggregate, Map, \JsonSerializable
 {

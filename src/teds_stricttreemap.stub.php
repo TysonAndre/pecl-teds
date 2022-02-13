@@ -13,6 +13,9 @@ namespace Teds;
  * otherwise the value for the previous entry is replaced.
  *
  * This is backed by a balanced red-black tree to ensure that insertions/removals/lookups take logarithmic time in the worst case.
+ *
+ * @alias Teds\StableSortedMap
+ * (This alias will be removed in a future Teds release. Do not use it.)
  */
 final class StrictTreeMap implements \IteratorAggregate, Map, \JsonSerializable
 {

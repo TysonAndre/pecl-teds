@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: b746535a6f829f4f2519e8e5522afc32ee5f3fa0 */
+ * Stub hash: e3c523a20adbd9f35c947ffb09c6345003a678bb */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictTreeMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -162,6 +162,7 @@ static zend_class_entry *register_class_Teds_StrictTreeMap(zend_class_entry *cla
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Map, class_entry_JsonSerializable);
+	zend_register_class_alias("Teds\\StableSortedMap", class_entry);
 
 	return class_entry;
 }

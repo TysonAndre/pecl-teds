@@ -9,6 +9,9 @@ namespace Teds;
  * An immutable iterable containing keys and values, where keys are repeatable and can be any type.
  *
  * This does not change and will either finish constructing or throw.
+ *
+ * @alias Teds\ImmutableKeyValueSequence
+ * (alias exists for compatibility with older teds release)
  */
 final class ImmutableIterable implements \IteratorAggregate, Collection, \JsonSerializable
 {

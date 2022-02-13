@@ -7,6 +7,12 @@ namespace Teds;
 
 /** @generate-class-entries */
 
+/**
+ * Represents a min heap using `Teds\stable_Compare`.
+ *
+ * @alias Teds\StableMinHeap
+ * (This alias will be removed in a future major Teds release. Do not use it)
+ */
 final class StrictMinHeap implements \Iterator, Collection
 {
     public function __construct(iterable $values = []) {}
@@ -57,6 +63,12 @@ final class StrictMinHeap implements \Iterator, Collection
     public function __unserialize(array $data): void {}
 }
 
+/**
+ * Represents a max heap using `Teds\stable_Compare`.
+ *
+ * @alias Teds\StableMaxHeap
+ * (This alias will be removed in a future major Teds release. Do not use it)
+ */
 final class StrictMaxHeap implements \Iterator, Collection
 {
     public function __construct(iterable $values = []) {}

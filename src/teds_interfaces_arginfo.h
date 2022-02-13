@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 36b385eea912330cfb2b9e3dde2cfd41e40f51a4 */
+ * Stub hash: dde83c7819cd395bc1fbdcab792b5f6a9547e255 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Collection_values, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
@@ -75,6 +75,7 @@ static zend_class_entry *register_class_Teds_Collection(zend_class_entry *class_
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "Collection", class_Teds_Collection_methods);
 	class_entry = zend_register_internal_interface(&ce);
 	zend_class_implements(class_entry, 2, class_entry_Traversable, class_entry_Countable);
+	zend_register_class_alias("Teds\\Values", class_entry);
 
 	return class_entry;
 }

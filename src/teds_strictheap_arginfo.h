@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 5a3b7b0ede35ff126cd2c87c2605de5606212be9 */
+ * Stub hash: cd11fceaf1212625636893a1233b46d679a0b10e */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictMinHeap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, values, IS_ITERABLE, 0, "[]")
@@ -167,6 +167,7 @@ static zend_class_entry *register_class_Teds_StrictMinHeap(zend_class_entry *cla
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 	zend_class_implements(class_entry, 2, class_entry_Iterator, class_entry_Teds_Collection);
+	zend_register_class_alias("Teds\\StableMinHeap", class_entry);
 
 	return class_entry;
 }
@@ -179,6 +180,7 @@ static zend_class_entry *register_class_Teds_StrictMaxHeap(zend_class_entry *cla
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 	zend_class_implements(class_entry, 2, class_entry_Iterator, class_entry_Teds_Collection);
+	zend_register_class_alias("Teds\\StableMaxHeap", class_entry);
 
 	return class_entry;
 }

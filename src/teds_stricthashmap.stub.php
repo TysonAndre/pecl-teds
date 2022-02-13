@@ -11,6 +11,9 @@ namespace Teds;
  *
  * This is a map where entries for keys of any type can be inserted if they are `!==` to other keys.
  * This uses `Teds\strict_hash`.
+ *
+ * @alias Teds\StrictMap
+ * (This alias will be removed in a future major Teds release. Do not use it.)
  */
 final class StrictHashMap implements \IteratorAggregate, Map, \JsonSerializable
 {

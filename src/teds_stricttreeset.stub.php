@@ -13,6 +13,9 @@ namespace Teds;
  * otherwise the previous entry is kept.
  *
  * This is backed by a balanced binary tree to ensure that insertions/removals/lookups take logarithmic time in the worst case.
+ *
+ * @alias Teds\StableSortedSet
+ * (This alias will be removed in a future major version. Do not use it.)
  */
 final class StrictTreeSet implements \IteratorAggregate, Set, \JsonSerializable
 {

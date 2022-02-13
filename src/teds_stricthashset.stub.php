@@ -15,6 +15,9 @@ namespace Teds;
  *
  * ArrayAccess is not implemented because `$x[$item] = $value` is meaningless
  * and there could be multiple desired meetings of `$value = $x[$item];`
+ *
+ * @alias Teds\StrictSet
+ * (This alias will be removed in a future major Teds release. Do not use it.)
  */
 final class StrictHashSet implements \IteratorAggregate, Set, \JsonSerializable
 {

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 456638c2b69bb54ff7d3dce1e0ce6d47d31e7a1c */
+ * Stub hash: 2258393e9831a9b85397c7d01ccd2517ab88d388 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictTreeSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -108,6 +108,7 @@ static zend_class_entry *register_class_Teds_StrictTreeSet(zend_class_entry *cla
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Set, class_entry_JsonSerializable);
+	zend_register_class_alias("Teds\\StableSortedSet", class_entry);
 
 	return class_entry;
 }

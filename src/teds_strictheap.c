@@ -22,6 +22,7 @@
 #include "teds_strictheap.h"
 #include "teds_util.h"
 #include "teds.h"
+#include "teds_interfaces.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
 #include "ext/spl/spl_exceptions.h"
@@ -784,7 +785,7 @@ PHP_METHOD(Teds_StrictMinHeap, contains)
 PHP_MINIT_FUNCTION(teds_strictheap)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_StrictMinHeap = register_class_Teds_StrictMinHeap(zend_ce_iterator, zend_ce_countable);
+	teds_ce_StrictMinHeap = register_class_Teds_StrictMinHeap(zend_ce_iterator, teds_ce_Collection);
 	teds_ce_StrictMinHeap->create_object = teds_strictheap_new;
 
 	memcpy(&teds_handler_StrictMinHeap, &std_object_handlers, sizeof(zend_object_handlers));
@@ -799,7 +800,7 @@ PHP_MINIT_FUNCTION(teds_strictheap)
 
 	teds_ce_StrictMinHeap->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 
-	teds_ce_StrictMaxHeap = register_class_Teds_StrictMaxHeap(zend_ce_iterator, zend_ce_countable);
+	teds_ce_StrictMaxHeap = register_class_Teds_StrictMaxHeap(zend_ce_iterator, teds_ce_Collection);
 	teds_ce_StrictMaxHeap->create_object = teds_strictheap_new;
 
 	memcpy(&teds_handler_StrictMaxHeap, &std_object_handlers, sizeof(zend_object_handlers));

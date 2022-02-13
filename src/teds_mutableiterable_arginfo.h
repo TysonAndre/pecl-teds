@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 195ba2af6b554893333d31c53ab61a8ecb2aa69e */
+ * Stub hash: 439896a78a82ce5df776547971519ee465101157 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_MutableIterable___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -160,6 +160,7 @@ static zend_class_entry *register_class_Teds_MutableIterable(zend_class_entry *c
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Collection, class_entry_JsonSerializable);
+	zend_register_class_alias("Teds\\KeyValueSequence", class_entry);
 
 	return class_entry;
 }
