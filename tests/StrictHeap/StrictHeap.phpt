@@ -1,21 +1,21 @@
 --TEST--
-Teds\StableMinHeap and StableMaxHeap
+Teds\StrictMinHeap and StrictMaxHeap
 --FILE--
 <?php
 function create_key(string $suffix) {
     return "k$suffix";
 }
 call_user_func(function () {
-    $minHeap = new Teds\StableMinHeap([1]);
+    $minHeap = new Teds\StrictMinHeap([1]);
     var_dump($minHeap->current());
 });
 call_user_func(function () {
-    $minHeap = new Teds\StableMinHeap([create_key('x')]);
+    $minHeap = new Teds\StrictMinHeap([create_key('x')]);
     var_dump($minHeap->current());
 });
 call_user_func(function () {
-    echo "Test StableMinHeap\n";
-    $minHeap = new Teds\StableMinHeap();
+    echo "Test StrictMinHeap\n";
+    $minHeap = new Teds\StrictMinHeap();
     foreach (['19', '9', '6', '1a', '2b', '3', '2', false, true, null, 1, 1.5, 2, [1], [0], [2]] as $v) {
         $minHeap->add($v);
     }
@@ -26,14 +26,14 @@ call_user_func(function () {
     }
 });
 call_user_func(function () {
-    echo "Test StableMinHeap\n";
-    $minHeap = new Teds\StableMinHeap();
+    echo "Test StrictMinHeap\n";
+    $minHeap = new Teds\StrictMinHeap();
     foreach (['19', '9', '6', '1a', '2b', '3', '2', false, true, null, 1, 1.5, 2, [1], [0], [2]] as $v) {
         $minHeap->add($v);
     }
     foreach ($minHeap as $value) { echo "foreach: "; var_dump($value); }
-    echo "Test StableMaxHeap\n";
-    $maxHeap = new Teds\StableMaxHeap();
+    echo "Test StrictMaxHeap\n";
+    $maxHeap = new Teds\StrictMaxHeap();
     foreach (['19', '9', '6', '1a', '2b', '3', '2', false, true, null, 1, 1.5, 2, [1], [0], [2]] as $v) {
         $maxHeap->add($v);
     }
@@ -45,7 +45,7 @@ call_user_func(function () {
 --EXPECT--
 int(1)
 string(2) "kx"
-Test StableMinHeap
+Test StrictMinHeap
 next: NULL
 next: bool(false)
 next: bool(true)
@@ -71,7 +71,7 @@ next: array(1) {
   [0]=>
   int(2)
 }
-Test StableMinHeap
+Test StrictMinHeap
 foreach: NULL
 foreach: bool(false)
 foreach: bool(true)
@@ -97,8 +97,8 @@ foreach: array(1) {
   [0]=>
   int(2)
 }
-Test StableMaxHeap
-object(Teds\StableMaxHeap)#3 (0) {
+Test StrictMaxHeap
+object(Teds\StrictMaxHeap)#3 (0) {
 }
 array(1) {
   [0]=>
@@ -125,5 +125,5 @@ int(1)
 bool(true)
 bool(false)
 NULL
-object(Teds\StableMaxHeap)#3 (0) {
+object(Teds\StrictMaxHeap)#3 (0) {
 }

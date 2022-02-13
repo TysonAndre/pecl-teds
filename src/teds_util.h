@@ -198,7 +198,7 @@ static zend_always_inline size_t teds_stricthashset_next_pow2_capacity(size_t nS
 /* TODO remove when rewriting as binary tree */
 #define teds_stricttreemap_next_pow2_capacity teds_deque_next_pow2_capacity
 #define teds_stricttreeset_next_pow2_capacity teds_deque_next_pow2_capacity
-#define teds_stableheap_next_pow2_capacity teds_deque_next_pow2_capacity
+#define teds_strictheap_next_pow2_capacity teds_deque_next_pow2_capacity
 /* TODO: Allow arbitrary capacities for stablesortedlistset,
  * this restriction is copied over from StrictHashMap. */
 #define teds_stablesortedlistset_next_pow2_capacity teds_deque_next_pow2_capacity

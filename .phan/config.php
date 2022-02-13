@@ -58,8 +58,6 @@ return [
 
     'ensure_signature_compatibility' => true,
 
-    'max_literal_string_type_length' => 1000,
-
     // Set to true in order to attempt to detect dead
     // (unreferenced) code. Keep in mind that the
     // results will only be a guess given that classes,
@@ -69,9 +67,6 @@ return [
     // to make sense of.
     'dead_code_detection' => false,
 
-    // Run a quick version of checks that takes less
-    // time
-    "quick_mode" => false,
     'simplify_ast' => true,
 
     // Add any issue types (such as 'PhanUndeclaredMethod')

@@ -41,7 +41,7 @@
 #include "teds_mutableiterable.h"
 #include "teds_stricttreemap.h"
 #include "teds_stricttreeset.h"
-#include "teds_stableheap.h"
+#include "teds_strictheap.h"
 #include "teds_stablesortedlistmap.h"
 #include "teds_stablesortedlistset.h"
 #include "teds_stricthashmap.h"
@@ -1096,7 +1096,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_lowmemoryvector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_stricttreemap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_stricttreeset)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(teds_stableheap)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_strictheap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_stablesortedlistmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_stablesortedlistset)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_stricthashmap)(INIT_FUNC_ARGS_PASSTHRU);

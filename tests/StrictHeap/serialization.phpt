@@ -1,12 +1,12 @@
 --TEST--
-Teds\StableMinHeap can be serialized and unserialized
+Teds\StrictMinHeap can be serialized and unserialized
 --FILE--
 <?php
 function create_val(string $k) {
     return "val$k";
 }
 
-$it = new Teds\StableMinHeap(array_map('create_val', ['a', 'c', 'b', 'id', 'ue', 'd']));
+$it = new Teds\StrictMinHeap(array_map('create_val', ['a', 'c', 'b', 'id', 'ue', 'd']));
 try {
     $it->dynamicProp = 123;
 } catch (Throwable $t) {
@@ -25,8 +25,8 @@ foreach (unserialize($ser) as $key => $value) {
 }
 ?>
 --EXPECT--
-Caught Error: Cannot create dynamic property Teds\StableMinHeap::$dynamicProp
-O:18:"Teds\StableMinHeap":6:{i:0;s:4:"vala";i:1;s:4:"valb";i:2;s:4:"valc";i:3;s:5:"valid";i:4;s:5:"value";i:5;s:4:"vald";}
+Caught Error: Cannot create dynamic property Teds\StrictMinHeap::$dynamicProp
+O:18:"Teds\StrictMinHeap":6:{i:0;s:4:"vala";i:1;s:4:"valb";i:2;s:4:"valc";i:3;s:5:"valid";i:4;s:5:"value";i:5;s:4:"vald";}
 Entry:
 string(4) "vala"
 string(4) "vala"
@@ -45,7 +45,7 @@ string(5) "valid"
 Entry:
 string(5) "value"
 string(5) "value"
-object(Teds\StableMinHeap)#3 (6) {
+object(Teds\StrictMinHeap)#3 (6) {
   [0]=>
   string(4) "vala"
   [1]=>

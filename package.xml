@@ -75,10 +75,10 @@
     <file name="teds_mutableiterable.c" role="src" />
     <file name="teds_mutableiterable.h" role="src" />
     <file name="teds_mutableiterable.stub.php" role="src" />
-    <file name="teds_stableheap_arginfo.h" role="src" />
-    <file name="teds_stableheap.c" role="src" />
-    <file name="teds_stableheap.h" role="src" />
-    <file name="teds_stableheap.stub.php" role="src" />
+    <file name="teds_strictheap_arginfo.h" role="src" />
+    <file name="teds_strictheap.c" role="src" />
+    <file name="teds_strictheap.h" role="src" />
+    <file name="teds_strictheap.stub.php" role="src" />
     <file name="teds_stablesortedlistmap_arginfo.h" role="src" />
     <file name="teds_stablesortedlistmap.c" role="src" />
     <file name="teds_stablesortedlistmap.h" role="src" />
@@ -241,10 +241,10 @@
     <file name="MutableIterable/set_state.phpt" role="test" />
     <file name="MutableIterable/traversable.phpt" role="test" />
     <file name="MutableIterable/unserialize.phpt" role="test" />
-    <file name="StableHeap/StableHeap.phpt" role="test" />
-    <file name="StableHeap/extensible.phpt" role="test" />
-    <file name="StableHeap/reflection.phpt" role="test" />
-    <file name="StableHeap/serialization.phpt" role="test" />
+    <file name="StrictHeap/StrictHeap.phpt" role="test" />
+    <file name="StrictHeap/extensible.phpt" role="test" />
+    <file name="StrictHeap/reflection.phpt" role="test" />
+    <file name="StrictHeap/serialization.phpt" role="test" />
     <file name="StableSortedListMap/SortedStrictMap.phpt" role="test" />
     <file name="StableSortedListMap/aggregate.phpt" role="test" />
     <file name="StableSortedListMap/array.phpt" role="test" />
@@ -456,7 +456,7 @@
    <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
    <notes>
 * Add Teds\BitSet providing similar functionality to a Vector of booleans, using a single bit per boolean.
-* Fix stub documentation and qualify `\Iterator` for StableMinHeap/StableMaxHeap in documentation.
+* Fix stub documentation and qualify `\Iterator` for StrictMinHeap/StrictMaxHeap in documentation.
    </notes>
   </release>
   <release>
@@ -473,7 +473,7 @@
    <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
    <notes>
 * Breaking changes.
-* Fix serialization/unserialization in StableMinHeap/StableMaxHeap.
+* Fix serialization/unserialization in StrictMinHeap/StrictMaxHeap.
 * Add interfaces for `Teds\Values` (e.g. Heap/Set), Teds\Collection(e.g. StrictHashMap, StableSortedMap), Sequence(Vector, Deque, etc.) (the keyword list is reserved)
 * Implement ->values() in classes implementing `Teds\Values`.
 * Make offsetExists consistently return false when the value of the given key is null across all data structures.
@@ -498,7 +498,7 @@
    <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
    <notes>
 * Breaking changes.
-* Fix serialization/unserialization in StableMinHeap/StableMaxHeap.
+* Fix serialization/unserialization in StrictMinHeap/StrictMaxHeap.
 * Add interfaces for `Teds\Values` (e.g. Heap/Set), Teds\Collection(e.g. StrictHashMap, StableSortedMap), ListInterface(Vector, Deque, etc.) (the keyword list is reserved)
 * Implement ->values() in classes implementing `Teds\Values`.
 * Make offsetExists consistently return false when the value of the given key is null across all data structures.
@@ -522,7 +522,7 @@
    </stability>
    <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
    <notes>
-* Breaking change: Make StableMinHeap/StableMaxHeap stop inheriting from SplHeap to be more memory efficient.
+* Breaking change: Make StrictMinHeap/StrictMaxHeap stop inheriting from SplHeap to be more memory efficient.
 * Properly sort in StableSortedListSet::__construct and __set_state
 * Deduplicate code.
 * Reduce size/capacity limits to the same limits as array for Deque.
@@ -633,7 +633,7 @@
    <notes>
 * Make `Teds\strict_hash` ignore recursion caused by unrelated functions (e.g. var_dump calling `__debugInfo` calling `strict_hash`)
 * Add `Teds\binary_search(array $values, mixed $target, callable $comparer = null, bool $useKey=false)`
-* Change parent class of `Teds\StableMaxHeap` and `Teds\StableMinHeap` to `SplHeap`.
+* Change parent class of `Teds\StrictMaxHeap` and `Teds\StrictMinHeap` to `SplHeap`.
 * Fix deduplication when constructing `StrictHashSet` from `iterable`, `StrictHashMap` from `Traversable`.
 * Add `Teds\unique_values(iterable): array` using `strict_hash` to check for duplicates.
    </notes>
@@ -658,7 +658,7 @@
 * Add a sorted map `StrictTreeMap` using `Teds\stable_compare` as a comparison function.
   Keys are returned ordered by `Teds\stable_compare` and no two keys have `stable_compare` return 0 (i.e. no two keys are equivalent).
 * Add a sorted set `StrictTreeSet` using `Teds\stable_compare` as a comparison function.
-* Add StableMinHeap/StableMaxHeap extending SplMinHeap/SplMaxHeap, using `Teds\stable_compare` as a comparison function.
+* Add StrictMinHeap/StrictMaxHeap extending SplMinHeap/SplMaxHeap, using `Teds\stable_compare` as a comparison function.
    </notes>
   </release>
   <release>

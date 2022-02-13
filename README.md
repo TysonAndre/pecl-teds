@@ -153,9 +153,9 @@ The [`Teds\StrictHashSet` API](src/teds_stricthashset.stub.php) implementation i
 NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) have the same hashes and are treated as the same entries, because `0.0 === -0.0` in php.
 NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`, despite having `NAN !== $x` in php for any $x, including NAN. This is done to avoid duplicate or unremovable entries.
 
-### Teds\StableMinHeap and Teds\StableMaxHeap
+### Teds\StrictMinHeap and Teds\StrictMaxHeap
 
-[`Teds\Stable*Heap` API/polyfill](src/teds_stableheap.stub.php)
+[`Teds\Stable*Heap` API/polyfill](src/teds_strictheap.stub.php)
 
 This uses `Teds\stable_compare` instead of PHP's unstable default comparisons.
 Sorting logic can be customized by inserting `[$priority, $value]` instead of `$value`.
@@ -167,7 +167,7 @@ php > foreach (['19', '9', '2b', '2'] as $v) { $x->insert($v); }
 php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // unpredictable order
 2,19,2b,9,
 
-php > $x = new Teds\StableMinHeap();
+php > $x = new Teds\StrictMinHeap();
 php > foreach (['19', '9', '2b', '2'] as $v) { $x->insert($v); }
 php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // lexicographically sorted
 19,2,2b,9,

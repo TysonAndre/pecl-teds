@@ -7,12 +7,12 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef TEDS_STABLEHEAP_H
-#define TEDS_STABLEHEAP_H
+#ifndef TEDS_STRICTHEAP_H
+#define TEDS_STRICTHEAP_H
 
-extern zend_class_entry *teds_ce_StableMinHeap;
-extern zend_class_entry *teds_ce_StableMaxHeap;
+extern zend_class_entry *teds_ce_StrictMinHeap;
+extern zend_class_entry *teds_ce_StrictMaxHeap;
 
-PHP_MINIT_FUNCTION(teds_stableheap);
+PHP_MINIT_FUNCTION(teds_strictheap);
 
-#endif	/* TEDS_STABLEHEAP_H */
+#endif	/* TEDS_STRICTHEAP_H */

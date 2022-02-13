@@ -7,7 +7,7 @@ namespace Teds;
 
 /** @generate-class-entries */
 
-final class StableMinHeap implements \Iterator, Collection
+final class StrictMinHeap implements \Iterator, Collection
 {
     public function __construct(iterable $values = []) {}
 
@@ -24,12 +24,12 @@ final class StableMinHeap implements \Iterator, Collection
     public function rewind(): void {}
 
     /**
-     * @implementation-alias Teds\StableMinHeap::top
+     * @implementation-alias Teds\StrictMinHeap::top
      */
     public function current(): mixed {}
 
     /**
-     * @implementation-alias Teds\StableMinHeap::top
+     * @implementation-alias Teds\StrictMinHeap::top
      */
     public function key(): mixed {}
 
@@ -39,7 +39,7 @@ final class StableMinHeap implements \Iterator, Collection
 
     public function clear(): void {}
 
-    public static function __set_state(array $state): StableMinHeap { }
+    public static function __set_state(array $state): StrictMinHeap { }
 
     /** @return list<mixed> */
     public function values(): array {}
@@ -52,66 +52,66 @@ final class StableMinHeap implements \Iterator, Collection
 
     public function contains(mixed $value): bool {}
 
-    /** @implementation-alias Teds\StableMinHeap::values */
+    /** @implementation-alias Teds\StrictMinHeap::values */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
 }
 
-final class StableMaxHeap implements \Iterator, Collection
+final class StrictMaxHeap implements \Iterator, Collection
 {
     public function __construct(iterable $values = []) {}
 
     public function add(mixed $value): void {}
 
-    /** @implementation-alias Teds\StableMinHeap::top */
+    /** @implementation-alias Teds\StrictMinHeap::top */
     public function top(): mixed {}
 
     public function extract(): mixed {}
 
-    /** @implementation-alias Teds\StableMinHeap::count */
+    /** @implementation-alias Teds\StrictMinHeap::count */
     public function count(): int {}
 
-    /** @implementation-alias Teds\StableMinHeap::isEmpty */
+    /** @implementation-alias Teds\StrictMinHeap::isEmpty */
     public function isEmpty(): bool {}
 
-    /** @implementation-alias Teds\StableMinHeap::rewind */
+    /** @implementation-alias Teds\StrictMinHeap::rewind */
     public function rewind(): void {}
 
-    /** @implementation-alias Teds\StableMinHeap::top */
+    /** @implementation-alias Teds\StrictMinHeap::top */
     public function current(): mixed {}
 
-    /** @implementation-alias Teds\StableMinHeap::top */
+    /** @implementation-alias Teds\StrictMinHeap::top */
     public function key(): mixed {}
 
     public function next(): void {}
 
-    /** @implementation-alias Teds\StableMinHeap::valid */
+    /** @implementation-alias Teds\StrictMinHeap::valid */
     public function valid(): bool {}
 
-    /** @implementation-alias Teds\StableMinHeap::clear */
+    /** @implementation-alias Teds\StrictMinHeap::clear */
     public function clear(): void {}
 
-    public static function __set_state(array $state): StableMaxHeap { }
+    public static function __set_state(array $state): StrictMaxHeap { }
 
-    /** @implementation-alias Teds\StableMinHeap::values */
+    /** @implementation-alias Teds\StrictMinHeap::values */
     public function values(): array {}
 
     /**
      * @return array mapping entries to themselves or throwing.
      * @see self::values
-     * @implementation-alias Teds\StableMinHeap::toArray
+     * @implementation-alias Teds\StrictMinHeap::toArray
      */
     public function toArray(): array {}
 
     /**
-     * @implementation-alias Teds\StableMinHeap::toArray
+     * @implementation-alias Teds\StrictMinHeap::toArray
      * @return array mapping entries to themselves or throwing.
      * @see self::values
      */
-    /** @implementation-alias Teds\StableMinHeap::contains */
+    /** @implementation-alias Teds\StrictMinHeap::contains */
     public function contains(mixed $value): bool {}
 
-    /** @implementation-alias Teds\StableMinHeap::values */
+    /** @implementation-alias Teds\StrictMinHeap::values */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
 }
