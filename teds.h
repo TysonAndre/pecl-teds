@@ -191,7 +191,7 @@ static zend_always_inline zend_long teds_strict_hash(zval *value) {
 /* }}} */
 
 static zend_always_inline uint32_t teds_strict_hash_uint32_t(zval *value) {
-       return (uint32_t) (zend_ulong) teds_strict_hash(value);
+	return (uint32_t) (zend_ulong) teds_strict_hash(value);
 }
 
 zend_long teds_stable_compare(const zval *v1, const zval *v2);

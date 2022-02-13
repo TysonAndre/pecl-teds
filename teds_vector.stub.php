@@ -14,7 +14,7 @@ namespace Teds;
  *
  * Attempting to read or write values outside of the range of values with `*get`/`*set` methods will throw at runtime.
  */
-final class Vector implements \IteratorAggregate, ListInterface, \JsonSerializable
+final class Vector implements \IteratorAggregate, Sequence, \JsonSerializable
 {
     /**
      * Construct a Vector from an iterable.

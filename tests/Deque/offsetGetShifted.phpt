@@ -30,6 +30,7 @@ printf("count=%d capacity=%d\n", count($it), $it->capacity());
 
 expect_throws(fn() => $it[-1]);
 expect_throws(fn() => $it[8]);
+?>
 --EXPECT--
 string(2) "x0"
 string(4) "x1_0"

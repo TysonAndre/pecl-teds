@@ -19,20 +19,19 @@ namespace Teds;
  * Naming is based on https://www.php.net/spldoublylinkedlist
  * and on array_push/pop/unshift/shift.
  */
-final class Deque implements \IteratorAggregate, ListInterface, \JsonSerializable
+final class Deque implements \IteratorAggregate, Sequence, \JsonSerializable
 {
     /** Construct the Deque from the values of the Traversable/array, ignoring keys */
     public function __construct(iterable $iterator = []) {}
     /**
-     * The final version of getIterator will iterate over a copy of the Deque's values taken at the time getIterator was called.
-     * The iteration keys will be the offsets of the copy(0, 1, ...), and the values will be the values from front to back.
-     *
-     * i.e. `foreach($deque as $k => $v)` and `foreach($deque->toArray() as $k => $v)` will iterate over the same elements.
-     *
-     * This will be done to avoid surprises in case pushFront/popFront/clear are called.
-     *
-     * To access the current version of the Deque without making a copy,
-     * use `for ($i = 0; $i < count($deque); $i++) { process($deque[$i]); }`.
+     * Returns an iterator that accounts for calls to shift/unshift tracking the position of the start of the Deque.
+     * Calls to shift/unshift will do the following:
+     * - Increase/Decrease the value returned by the iterator's key()
+     *   by the number of elements added/removed to/from the start of the Deque.
+     *   (`$deque[$iteratorKey] === $iteratorValue` at the time the key and value are returned).
+     * - Repeated calls to shift will cause valid() to return false if the iterator's
+     *   position ends up before the start of the Deque at the time iteration resumes.
+     * - They will not cause the remaining values to be iterated over more than once or skipped.
      */
     public function getIterator(): \InternalIterator {}
     /** Returns the number of elements in the Deque. */
@@ -52,7 +51,7 @@ final class Deque implements \IteratorAggregate, ListInterface, \JsonSerializabl
 
     /** Appends value(s) to the end of the Deque, like array_push. */
     public function push(mixed ...$values): void {}
-    /** Prepends value(s) to the start of the Deque, like array_shift. */
+    /** Prepends value(s) to the start of the Deque, like array_unshift. */
     public function unshift(mixed ...$values): void {}
     /**
      * Pops a value from the end of the Deque.
@@ -60,7 +59,7 @@ final class Deque implements \IteratorAggregate, ListInterface, \JsonSerializabl
      */
     public function pop(): mixed {}
     /**
-     * Shifts a value from the front of the Deque.
+     * Shifts a value from the start of the Deque.
      * @throws \UnderflowException if the Deque is empty
      */
     public function shift(): mixed {}

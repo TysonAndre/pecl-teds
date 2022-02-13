@@ -41,6 +41,7 @@ foreach ([
 ] as $args) {
     test_low_memory_vector(...$args);
 }
+?>
 --EXPECTF--
 test_low_memory_vector of 1
 "O:14:\"Teds\\IntVector\":2:{i:0;i:1;i:1;s:2:\"\x01\x01\";}"

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 5aad7c67a13960611bda339dcfc8409b5e9119dc */
+ * Stub hash: 4ef6323a22a6d8e9d3b7f6a1875a76533d7115a6 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -145,14 +145,14 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_Deque(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_ListInterface, zend_class_entry *class_entry_JsonSerializable)
+static zend_class_entry *register_class_Teds_Deque(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Sequence, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "Deque", class_Teds_Deque_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_ListInterface, class_entry_JsonSerializable);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Sequence, class_entry_JsonSerializable);
 
 	return class_entry;
 }

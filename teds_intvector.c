@@ -22,6 +22,7 @@
 #include "teds_intvector_arginfo.h"
 #include "teds_intvector.h"
 #include "teds_interfaces.h"
+#include "teds_exceptions.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
@@ -1328,8 +1329,7 @@ ZEND_COLD PHP_METHOD(Teds_IntVector, offsetUnset)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "Teds\\IntVector does not support offsetUnset - elements must be removed by resizing", 0);
-	RETURN_THROWS();
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\IntVector does not support offsetUnset - elements must be removed by resizing");
 }
 
 static void teds_intvector_write_dimension(zend_object *object, zval *offset_zv, zval *value_zv)
@@ -1403,7 +1403,7 @@ static int teds_intvector_has_dimension(zend_object *object, zval *offset_zv, in
 PHP_MINIT_FUNCTION(teds_intvector)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_IntVector = register_class_Teds_IntVector(zend_ce_aggregate, teds_ce_ListInterface, php_json_serializable_ce);
+	teds_ce_IntVector = register_class_Teds_IntVector(zend_ce_aggregate, teds_ce_Sequence, php_json_serializable_ce);
 	teds_ce_IntVector->create_object = teds_intvector_new;
 
 	memcpy(&teds_handler_IntVector, &std_object_handlers, sizeof(zend_object_handlers));

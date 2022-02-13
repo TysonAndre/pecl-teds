@@ -50,7 +50,7 @@ object(stdClass)#1 (0) {
 object(stdClass)#1 (0) {
 }
 Caught OutOfBoundsException: Index out of range
-Caught RuntimeException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
 object(stdClass)#1 (0) {
 }
 offsetExists checks
@@ -73,8 +73,8 @@ Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\Deque::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught RuntimeException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
 Caught OutOfBoundsException: Index out of range
-Caught RuntimeException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
 object(InternalIterator)#2 (0) {
 }

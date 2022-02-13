@@ -12,7 +12,7 @@ namespace Teds;
  * This is backed by a memory-efficient representation
  * (raw array of values).
  */
-final class ImmutableSequence implements \IteratorAggregate, Collection, \JsonSerializable
+final class ImmutableSequence implements \IteratorAggregate, Sequence, \JsonSerializable
 {
     public function __construct(iterable $iterator) {}
     public function getIterator(): \InternalIterator {}
@@ -35,6 +35,21 @@ final class ImmutableSequence implements \IteratorAggregate, Collection, \JsonSe
     public function values(): array {}
     // Strictly typed, unlike offsetGet
     public function get(int $offset): mixed {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @return never
+     */
+    public function set(int $offset, mixed $value): void {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @return never
+     */
+    public function push(mixed ...$values): void {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @return never
+     */
+    public function pop(): mixed {}
     // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
     public function offsetExists(mixed $offset): bool {}

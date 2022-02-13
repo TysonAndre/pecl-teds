@@ -32,7 +32,7 @@ namespace Teds;
  *
  * In comparison, in 64-bit builds of PHP, PHP's arrays take at least 16 bytes per value in php 8.2, and at least 32 bytes per value before php 8.1, at the time of writing.
  */
-final class LowMemoryVector implements \IteratorAggregate, ListInterface, \JsonSerializable
+final class LowMemoryVector implements \IteratorAggregate, Sequence, \JsonSerializable
 {
     /**
      * Construct a LowMemoryVector from an iterable.

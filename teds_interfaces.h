@@ -12,9 +12,10 @@
 
 #include "Zend/zend_types.h"
 
-extern zend_class_entry *teds_ce_Values;
 extern zend_class_entry *teds_ce_Collection;
-extern zend_class_entry *teds_ce_ListInterface;
+extern zend_class_entry *teds_ce_Sequence;
+extern zend_class_entry *teds_ce_Map;
+extern zend_class_entry *teds_ce_Set;
 
 void teds_register_interfaces(void);
 

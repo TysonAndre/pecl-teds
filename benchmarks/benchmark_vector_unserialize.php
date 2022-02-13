@@ -4,6 +4,8 @@ use Teds\IntVector;
 use Teds\LowMemoryVector;
 use Teds\Vector;
 
+// @phan-file-suppress PhanPossiblyUndeclaredVariable
+
 function bench_array(int $n, int $iterations) {
     $totalSearchTime = 0.0;
     $total = 0;

@@ -5,6 +5,8 @@ use Teds\IntVector;
 use Teds\LowMemoryVector;
 use Teds\Vector;
 
+// @phan-file-suppress PhanPossiblyUndeclaredVariable
+
 function bench_array(int $n, int $iterations) {
     $totalReadTime = 0.0;
     $startTime = hrtime(true);

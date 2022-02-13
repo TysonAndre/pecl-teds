@@ -25,7 +25,7 @@ function bench_teds_sorted_set(int $n, int $iterations) {
     $start = hrtime(true);
     $sum = 0;
     for ($i = 0; $i < $iterations; $i++) {
-        $sum += array_sum((new Teds\SortedStrictSet($values))->values());
+        $sum += array_sum((new Teds\StrictTreeSet($values))->values());
     }
     $end = hrtime(true);
     printf("%25s n=%8d iterations=%8d time=%.3f sum=%d\n", __FUNCTION__, $n, $iterations, ($end - $start)/1e9, $sum);

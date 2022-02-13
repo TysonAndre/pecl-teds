@@ -22,6 +22,7 @@
 #include "teds_lowmemoryvector_arginfo.h"
 #include "teds_lowmemoryvector.h"
 #include "teds_interfaces.h"
+#include "teds_exceptions.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
@@ -1862,8 +1863,7 @@ ZEND_COLD PHP_METHOD(Teds_LowMemoryVector, offsetUnset)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "Teds\\LowMemoryVector does not support offsetUnset - elements must be set to null or removed by resizing", 0);
-	RETURN_THROWS();
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\LowMemoryVector does not support offsetUnset - elements must be set to null or removed by resizing");
 }
 
 static void teds_lowmemoryvector_write_dimension(zend_object *object, zval *offset_zv, zval *value)
@@ -1936,7 +1936,7 @@ static int teds_lowmemoryvector_has_dimension(zend_object *object, zval *offset_
 PHP_MINIT_FUNCTION(teds_lowmemoryvector)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_LowMemoryVector = register_class_Teds_LowMemoryVector(zend_ce_aggregate, teds_ce_ListInterface, php_json_serializable_ce);
+	teds_ce_LowMemoryVector = register_class_Teds_LowMemoryVector(zend_ce_aggregate, teds_ce_Sequence, php_json_serializable_ce);
 	teds_ce_LowMemoryVector->create_object = teds_lowmemoryvector_new;
 
 	memcpy(&teds_handler_LowMemoryVector, &std_object_handlers, sizeof(zend_object_handlers));

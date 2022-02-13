@@ -10,9 +10,9 @@ use function Teds\fold;
     Description: Iterate over iterable and fold
 */
 
-function dump_fold(...$args) {
+function dump_fold(iterable $values, ...$args) {
     try {
-        var_dump(fold(...$args));
+        var_dump(fold($values, ...$args));
     } catch (Error $e) {
         printf("Caught %s: %s\n", $e::class, $e->getMessage());
     }

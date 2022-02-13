@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: f10152621a02a68e01da118422950c6e0dd032fb */
+ * Stub hash: d733f82636e64f704d4df3b97e6b5501fa34809a */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_IntVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -137,14 +137,14 @@ static const zend_function_entry class_Teds_IntVector_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_IntVector(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_ListInterface, zend_class_entry *class_entry_JsonSerializable)
+static zend_class_entry *register_class_Teds_IntVector(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Sequence, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "IntVector", class_Teds_IntVector_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_ListInterface, class_entry_JsonSerializable);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Sequence, class_entry_JsonSerializable);
 
 	return class_entry;
 }

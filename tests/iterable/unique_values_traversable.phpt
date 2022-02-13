@@ -16,7 +16,7 @@ function yield_values(bool $throw) {
     yield 1 => 2;
     yield create_key(1) => create_key(2);
     if ($throw) {
-        yield new ThrowsInDestructor(1) => create_key(3);
+        yield new ThrowsInDestructor() => create_key(3);
     }
     yield create_key(4) => create_key(5);
 }

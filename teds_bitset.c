@@ -22,6 +22,7 @@
 #include "teds_bitset_arginfo.h"
 #include "teds_bitset.h"
 #include "teds_interfaces.h"
+#include "teds_exceptions.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_iterators.h"
@@ -1214,7 +1215,7 @@ static int teds_bitset_has_dimension(zend_object *object, zval *offset_zv, int c
 PHP_MINIT_FUNCTION(teds_bitset)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_BitSet = register_class_Teds_BitSet(zend_ce_aggregate, teds_ce_ListInterface, php_json_serializable_ce);
+	teds_ce_BitSet = register_class_Teds_BitSet(zend_ce_aggregate, teds_ce_Sequence, php_json_serializable_ce);
 	teds_ce_BitSet->create_object = teds_bitset_new;
 
 	memcpy(&teds_handler_BitSet, &std_object_handlers, sizeof(zend_object_handlers));

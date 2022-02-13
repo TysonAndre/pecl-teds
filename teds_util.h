@@ -188,19 +188,19 @@ static zend_always_inline size_t teds_deque_next_pow2_capacity(size_t nSize) {
 	return teds_next_pow2_capacity(nSize, TEDS_DEQUE_MIN_CAPACITY);
 }
 
-#define TEDS_STRICTSET_MIN_CAPACITY 8
-#define TEDS_STRICTMAP_MIN_CAPACITY TEDS_STRICTSET_MIN_CAPACITY
-static zend_always_inline size_t teds_strictset_next_pow2_capacity(size_t nSize) {
-	return teds_next_pow2_capacity(nSize, TEDS_STRICTSET_MIN_CAPACITY);
+#define TEDS_STRICTHASHSET_MIN_CAPACITY 8
+#define TEDS_STRICTHASHMAP_MIN_CAPACITY TEDS_STRICTHASHSET_MIN_CAPACITY
+static zend_always_inline size_t teds_stricthashset_next_pow2_capacity(size_t nSize) {
+	return teds_next_pow2_capacity(nSize, TEDS_STRICTHASHSET_MIN_CAPACITY);
 }
-#define teds_strictmap_next_pow2_capacity teds_strictset_next_pow2_capacity
+#define teds_stricthashmap_next_pow2_capacity teds_stricthashset_next_pow2_capacity
 
 /* TODO remove when rewriting as binary tree */
-#define teds_sortedstrictmap_next_pow2_capacity teds_deque_next_pow2_capacity
-#define teds_sortedstrictset_next_pow2_capacity teds_deque_next_pow2_capacity
-#define teds_stableheap_next_pow2_capacity teds_deque_next_pow2_capacity
+#define teds_stricttreemap_next_pow2_capacity teds_deque_next_pow2_capacity
+#define teds_stricttreeset_next_pow2_capacity teds_deque_next_pow2_capacity
+#define teds_strictheap_next_pow2_capacity teds_deque_next_pow2_capacity
 /* TODO: Allow arbitrary capacities for stablesortedlistset,
- * this restriction is copied over from StrictMap. */
+ * this restriction is copied over from StrictHashMap. */
 #define teds_stablesortedlistset_next_pow2_capacity teds_deque_next_pow2_capacity
 #define teds_stablesortedlistmap_next_pow2_capacity teds_deque_next_pow2_capacity
 

@@ -35,6 +35,7 @@ function test1() {
     var_dump($a);
 }
 test1();
+?>
 --EXPECT--
 In test1
 In compare with side effects

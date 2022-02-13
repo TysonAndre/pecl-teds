@@ -14,6 +14,7 @@ $a = [new Dumper()];
 echo "hash(a)=" . Teds\strict_hash($a), "\n";
 var_dump($a);
 echo "hash(a)=" . Teds\strict_hash($a), "\n";
+?>
 --EXPECT--
 hash(a)=2330696243954719915
 array(1) {

@@ -7,7 +7,7 @@
   +----------------------------------------------------------------------+
 */
 
-/* This is based on teds_immutablekeyvaluesequence.c.
+/* This is based on teds_immutableiterable.c.
  * Instead of a C array of zvals, this is based on a C array of zvals.
  * - TODO: associate StableSortedListSet with linked list of iterators
  */
@@ -631,6 +631,33 @@ PHP_METHOD(Teds_StableSortedListSet, values)
 	RETURN_ARR(teds_stablesortedlistset_create_array_copy(intern));
 }
 
+PHP_METHOD(Teds_StableSortedListSet, toArray)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_stablesortedlistset_entries *const array = Z_STABLESORTEDLISTSET_ENTRIES_P(ZEND_THIS);
+	if (!array->size) {
+		RETURN_EMPTY_ARRAY();
+	}
+	zend_array *const values = zend_new_array(array->size);
+	/* Initialize return array */
+
+	/* Go through values and add values to the return array */
+	for (uint32_t i = 0; i < array->size; i++) {
+		teds_stablesortedlistset_entry *entry = &array->entries[i];
+		zval *key = &entry->key;
+
+		// Z_TRY_ADDREF_P(key);
+		Z_TRY_ADDREF_P(key);
+		array_set_zval_key(values, key, key);
+		zval_ptr_dtor_nogc(key);
+		if (UNEXPECTED(EG(exception))) {
+			zend_array_destroy(values);
+			RETURN_THROWS();
+		}
+	}
+	RETURN_ARR(values);
+}
+
 #define IMPLEMENT_READ_OFFSET_PHP_METHOD(methodName, index) \
 PHP_METHOD(Teds_StableSortedListSet, methodName) \
 { \
@@ -833,7 +860,7 @@ PHP_METHOD(Teds_StableSortedListSet, clear)
 PHP_MINIT_FUNCTION(teds_stablesortedlistset)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_StableSortedListSet = register_class_Teds_StableSortedListSet(zend_ce_aggregate, teds_ce_Values, php_json_serializable_ce);
+	teds_ce_StableSortedListSet = register_class_Teds_StableSortedListSet(zend_ce_aggregate, teds_ce_Set, php_json_serializable_ce);
 	teds_ce_StableSortedListSet->create_object = teds_stablesortedlistset_new;
 
 	memcpy(&teds_handler_StableSortedListSet, &std_object_handlers, sizeof(zend_object_handlers));

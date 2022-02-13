@@ -16,8 +16,12 @@ namespace Teds;
  * - Very fast unserialization when serialized data is sorted
  * - Good performance when writes are infrequent.
  * - Linear time needed for each write due to using insertion sort.
+ *
+ * TODO: Rename to ListBasedStrictTreeSet
+ *
+ * TODO: Support indexOf methods
  */
-final class StableSortedListSet implements \IteratorAggregate, Values, \JsonSerializable
+final class StableSortedListSet implements \IteratorAggregate, Set, \JsonSerializable
 {
     /** Construct the StableSortedListSet from the keys and values of the Traversable/array. */
     public function __construct(iterable $iterator = []) {}
@@ -45,6 +49,9 @@ final class StableSortedListSet implements \IteratorAggregate, Values, \JsonSeri
 
     /** Returns a list of the unique values in order of insertion. */
     public function values(): array {}
+
+    /** Returns keys mapped to themselves, like iterator_to_array would return. */
+    public function toArray(): array {}
 
     /** Returns the first value, throws if empty. */
     public function bottom(): mixed {}

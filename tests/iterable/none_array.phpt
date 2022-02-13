@@ -6,13 +6,13 @@ Test none() function
 use function Teds\none;
 
 /*
-	Prototype: bool none(array $iterable, mixed $callback);
-	Description: Iterate array and stop based on return value of callback
-*/
+Prototype: bool none(array $iterable, mixed $callback);
+Description: Iterate array and stop based on return value of callback
+ */
 
 function is_int_ex($nr)
 {
-	return is_int($nr);
+    return is_int($nr);
 }
 
 echo "\n*** Testing not enough or wrong arguments ***\n";
@@ -37,16 +37,16 @@ dump_none(['hello', 'world'], 'is_int_ex');
 dump_none(['hello', 1, 2, 3], 'is_int_ex');
 $iterations = 0;
 dump_none(['hello', 1, 2, 3], function($item) use (&$iterations) {
-	++$iterations;
-	return is_int($item);
+    ++$iterations;
+    return is_int($item);
 });
 var_dump($iterations);
 
 echo "\n*** Testing second argument to predicate ***\n";
 
 dump_none([1, 2, 3], function($item, $key) {
-	var_dump($key);
-	return false;
+    var_dump($key);
+    return false;
 });
 
 echo "\n*** Testing edge cases ***\n";

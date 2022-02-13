@@ -7,7 +7,7 @@
   +----------------------------------------------------------------------+
 */
 
-/* This is based on spl_fixedarray.c but has lower overhead (when size is known) and is more efficient to endeque and remove elements from the end of the list */
+/* This is based on spl_fixedarray.c but has lower overhead (when size is known) and is more efficient to add and remove elements from the start of the Deque  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -27,6 +27,7 @@
 #include "ext/json/php_json.h"
 #include "teds_util.h"
 #include "teds_interfaces.h"
+#include "teds_exceptions.h"
 
 #include <stdbool.h>
 
@@ -1132,7 +1133,7 @@ PHP_METHOD(Teds_Deque, bottom)
 	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
 	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
 	if (intern->array.size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read bottom of empty Deque", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read bottom of empty Teds\\Deque", 0);
 		RETURN_THROWS();
 	}
 
@@ -1147,14 +1148,14 @@ ZEND_COLD PHP_METHOD(Teds_Deque, offsetUnset)
 		RETURN_THROWS();
 	}
 	// Diverge from SplFixedArray - null isn't the same thing as undefined.
-	zend_throw_exception(spl_ce_RuntimeException, "Teds\\Deque does not support offsetUnset - elements must be set to null or removed by resizing", 0);
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\Deque does not support offsetUnset - elements must be set to null or removed by resizing");
 	RETURN_THROWS();
 }
 
 PHP_MINIT_FUNCTION(teds_deque)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_Deque = register_class_Teds_Deque(zend_ce_aggregate, teds_ce_ListInterface, php_json_serializable_ce);
+	teds_ce_Deque = register_class_Teds_Deque(zend_ce_aggregate, teds_ce_Sequence, php_json_serializable_ce);
 	teds_ce_Deque->create_object = teds_deque_new;
 
 	memcpy(&teds_handler_Deque, &std_object_handlers, sizeof(zend_object_handlers));

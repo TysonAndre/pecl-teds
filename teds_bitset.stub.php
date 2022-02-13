@@ -12,7 +12,7 @@ namespace Teds;
  * - This is guaranteed to use less memory when serialized compared to vectors/arrays.
  * - Prevents using other value types
  */
-final class BitSet implements \IteratorAggregate, ListInterface, \JsonSerializable
+final class BitSet implements \IteratorAggregate, Sequence, \JsonSerializable
 {
     /**
      * Construct a BitSet from an iterable of booleans.
@@ -59,7 +59,7 @@ final class BitSet implements \IteratorAggregate, ListInterface, \JsonSerializab
     // Strictly typed, unlike offsetGet/offsetSet
     public function get(int $offset): bool {}
     /**
-     * Must be mixed $value to implement ListInterface
+     * Must be mixed $value to implement Sequence
      */
     public function set(int $offset, mixed $value): void {}
     public function setBit(int $offset, bool $value): void {}

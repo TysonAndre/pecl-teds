@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 9c890e617949351b288c30e833b8c208c3c43fbe */
+ * Stub hash: 77ea61e5ea97e490f0668234f10a6fc9bc483d85 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -31,6 +31,18 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_get, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_set, 0, 2, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_push, 0, 0, IS_VOID, 0)
+	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_pop, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_offsetGet, 0, 1, IS_MIXED, 0)
@@ -79,6 +91,9 @@ ZEND_METHOD(Teds_ImmutableSequence, toArray);
 ZEND_METHOD(Teds_ImmutableSequence, __unserialize);
 ZEND_METHOD(Teds_ImmutableSequence, __set_state);
 ZEND_METHOD(Teds_ImmutableSequence, get);
+ZEND_METHOD(Teds_ImmutableSequence, set);
+ZEND_METHOD(Teds_ImmutableSequence, push);
+ZEND_METHOD(Teds_ImmutableSequence, pop);
 ZEND_METHOD(Teds_ImmutableSequence, offsetGet);
 ZEND_METHOD(Teds_ImmutableSequence, offsetExists);
 ZEND_METHOD(Teds_ImmutableSequence, containsKey);
@@ -101,6 +116,9 @@ static const zend_function_entry class_Teds_ImmutableSequence_methods[] = {
 	ZEND_ME(Teds_ImmutableSequence, toArray, arginfo_class_Teds_ImmutableSequence_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_ImmutableSequence, values, toArray, arginfo_class_Teds_ImmutableSequence_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, get, arginfo_class_Teds_ImmutableSequence_get, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSequence, set, arginfo_class_Teds_ImmutableSequence_set, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSequence, push, arginfo_class_Teds_ImmutableSequence_push, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSequence, pop, arginfo_class_Teds_ImmutableSequence_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, offsetGet, arginfo_class_Teds_ImmutableSequence_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, offsetExists, arginfo_class_Teds_ImmutableSequence_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, containsKey, arginfo_class_Teds_ImmutableSequence_containsKey, ZEND_ACC_PUBLIC)
@@ -114,14 +132,14 @@ static const zend_function_entry class_Teds_ImmutableSequence_methods[] = {
 	ZEND_FE_END
 };
 
-static zend_class_entry *register_class_Teds_ImmutableSequence(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Collection, zend_class_entry *class_entry_JsonSerializable)
+static zend_class_entry *register_class_Teds_ImmutableSequence(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Sequence, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "ImmutableSequence", class_Teds_ImmutableSequence_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
-	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Collection, class_entry_JsonSerializable);
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Sequence, class_entry_JsonSerializable);
 
 	return class_entry;
 }

@@ -16,6 +16,7 @@
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "zend_exceptions.h"
+#include "zend_types.h"
 
 #include "php_teds.h"
 #include "teds_immutablesequence_arginfo.h"
@@ -27,6 +28,7 @@
 #include "ext/spl/spl_iterators.h"
 #include "ext/json/php_json.h"
 #include "teds_interfaces.h"
+#include "teds_exceptions.h"
 #include "teds_util.h"
 
 #include <stdbool.h>
@@ -614,6 +616,37 @@ PHP_METHOD(Teds_ImmutableSequence, get)
 	teds_immutablesequence_get_value_at_offset(return_value, ZEND_THIS, offset);
 }
 
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, set)
+{
+	zend_long offset;
+	zval *tmp;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "lz", &offset, &tmp) == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support set - it is immutable");
+}
+
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, push)
+{
+	zval *tmp;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &tmp) == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support push - it is immutable");
+}
+
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, pop)
+{
+	zval *tmp;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &tmp) == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support pop - it is immutable");
+}
+
 PHP_METHOD(Teds_ImmutableSequence, offsetGet)
 {
 	zval *offset_zv;
@@ -880,8 +913,7 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, offsetSet)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "zz", &zindex, &value) == FAILURE) {
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "Teds\\ImmutableSequence does not support offsetSet - it is immutable", 0);
-	RETURN_THROWS();
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support offsetSet - it is immutable");
 }
 
 ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, offsetUnset)
@@ -891,8 +923,8 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, offsetUnset)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "Teds\\ImmutableSequence does not support offsetUnset - it is immutable", 0);
-	RETURN_THROWS();
+
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support offsetUnset - it is immutable");
 }
 
 static zval *teds_immutablesequence_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
@@ -904,11 +936,11 @@ static zval *teds_immutablesequence_read_dimension(zend_object *object, zval *of
 	CONVERT_OFFSET_TO_LONG_OR_THROW_RETURN_NULLPTR(offset, offset_zv);
 
 	if (UNEXPECTED(type != BP_VAR_IS || type != BP_VAR_R)) {
-		char *message = type == BP_VAR_W
+		const char *message = type == BP_VAR_W
 			? "Teds\\ImmutableSequence does not support offsetSet - it is immutable"
 			: "Teds\\ImmutableSequence does not support modification - it is immutable";
 
-		zend_throw_exception(spl_ce_RuntimeException, message, 0);
+		teds_throw_unsupportedoperationexception(message);
 		return NULL;
 	}
 
@@ -954,7 +986,7 @@ static int teds_immutablesequence_has_dimension(zend_object *object, zval *offse
 PHP_MINIT_FUNCTION(teds_immutablesequence)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_ImmutableSequence = register_class_Teds_ImmutableSequence(zend_ce_aggregate, teds_ce_Collection, php_json_serializable_ce);
+	teds_ce_ImmutableSequence = register_class_Teds_ImmutableSequence(zend_ce_aggregate, teds_ce_Sequence, php_json_serializable_ce);
 	teds_ce_ImmutableSequence->create_object = teds_immutablesequence_new;
 
 	memcpy(&teds_handler_ImmutableSequence, &std_object_handlers, sizeof(zend_object_handlers));

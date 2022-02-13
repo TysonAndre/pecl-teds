@@ -7,7 +7,7 @@
   +----------------------------------------------------------------------+
 */
 
-/* This is based on teds_immutablekeyvaluesequence.c.
+/* This is based on teds_immutableiterable.c.
  * Instead of a C array of zvals, this is based on a C array of pairs of zvals for key-value entries */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -1189,7 +1189,7 @@ PHP_METHOD(Teds_StableSortedListMap, clear)
 PHP_MINIT_FUNCTION(teds_stablesortedlistmap)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_StableSortedListMap = register_class_Teds_StableSortedListMap(zend_ce_aggregate, teds_ce_Collection, php_json_serializable_ce);
+	teds_ce_StableSortedListMap = register_class_Teds_StableSortedListMap(zend_ce_aggregate, teds_ce_Map, php_json_serializable_ce);
 	teds_ce_StableSortedListMap->create_object = teds_stablesortedlistmap_new;
 
 	memcpy(&teds_handler_StableSortedListMap, &std_object_handlers, sizeof(zend_object_handlers));

@@ -31,6 +31,7 @@ function test1() {
     var_dump($result);
 }
 test1();
+?>
 --EXPECT--
 In test1
 In compare with side effects replacing original reference

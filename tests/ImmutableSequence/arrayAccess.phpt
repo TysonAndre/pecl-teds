@@ -32,13 +32,13 @@ object(stdClass)#3 (0) {
 }
 object(stdClass)#3 (0) {
 }
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetSet - it is immutable
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
-Caught RuntimeException: Teds\ImmutableSequence does not support modification - it is immutable
-Caught RuntimeException: Teds\ImmutableSequence does not support modification - it is immutable
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetSet - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support modification - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support modification - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
 Test array modification
-Caught RuntimeException: Teds\ImmutableSequence does not support offsetSet - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetSet - it is immutable
 object(Teds\ImmutableSequence)#2 (3) {
   [0]=>
   object(stdClass)#3 (0) {

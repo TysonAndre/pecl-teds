@@ -21,7 +21,7 @@ namespace Teds;
  *
  * In comparison, in 64-bit builds of PHP, PHP's arrays take at least 16 bytes per value in php 8.2, and at least 32 bytes per value before php 8.1, at the time of writing.
  */
-final class IntVector implements \IteratorAggregate, ListInterface, \JsonSerializable
+final class IntVector implements \IteratorAggregate, Sequence, \JsonSerializable
 {
     /**
      * Construct a IntVector from an iterable of integers.
@@ -68,7 +68,7 @@ final class IntVector implements \IteratorAggregate, ListInterface, \JsonSeriali
     // Strictly typed, unlike offsetGet/offsetSet
     public function get(int $offset): int {}
     /**
-     * Must be mixed $value to implement ListInterface
+     * Must be mixed $value to implement Sequence
      */
     public function set(int $offset, mixed $value): void {}
     public function setInt(int $offset, int $value): void {}

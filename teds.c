@@ -32,19 +32,20 @@
 
 #include "teds_bitset.h"
 #include "teds_deque.h"
+#include "teds_exceptions.h"
 #include "teds_lowmemoryvector.h"
-#include "teds_immutablekeyvaluesequence.h"
+#include "teds_immutableiterable.h"
 #include "teds_immutablesequence.h"
 #include "teds_intvector.h"
 #include "teds_interfaces.h"
-#include "teds_keyvaluevector.h"
-#include "teds_sortedstrictmap.h"
-#include "teds_sortedstrictset.h"
-#include "teds_stableheap.h"
+#include "teds_mutableiterable.h"
+#include "teds_stricttreemap.h"
+#include "teds_stricttreeset.h"
+#include "teds_strictheap.h"
 #include "teds_stablesortedlistmap.h"
 #include "teds_stablesortedlistset.h"
-#include "teds_strictmap.h"
-#include "teds_strictset.h"
+#include "teds_stricthashmap.h"
+#include "teds_stricthashset.h"
 #include "teds_vector.h"
 #include "teds.h"
 
@@ -412,7 +413,7 @@ PHP_FUNCTION(fold)
 }
 /* }}} */
 
-static inline zend_array* teds_move_zend_array_from_entries(teds_strictset_entries *array) {
+static inline zend_array* teds_move_zend_array_from_entries(teds_stricthashset_entries *array) {
 	const size_t size = array->nNumOfElements;
 	ZEND_ASSERT(size > 0);
 
@@ -424,14 +425,14 @@ static inline zend_array* teds_move_zend_array_from_entries(teds_strictset_entri
 		zval *val;
 		ZEND_ASSERT(array->nNumOfElements == array->nNumUsed);
 		/* Because there are no removals, we can guarantee there are no gaps (IS_UNDEF) to skip over.
-		 * Surprisingly, this is faster enough than TEDS_STRICTSET_FOREACH_VAL to notice.
+		 * Surprisingly, this is faster enough than TEDS_STRICTHASHSET_FOREACH_VAL to notice.
 		 * See benchmarks/unique_values.php */
-		TEDS_STRICTSET_FOREACH_VAL_ASSERT_NO_GAPS(array, val) {
+		TEDS_STRICTHASHSET_FOREACH_VAL_ASSERT_NO_GAPS(array, val) {
 			ZEND_HASH_FILL_ADD(val);
-		} TEDS_STRICTSET_FOREACH_END();
+		} TEDS_STRICTHASHSET_FOREACH_END();
 	} ZEND_HASH_FILL_END();
 
-	teds_strictset_entries_release(array);
+	teds_stricthashset_entries_release(array);
 
 	return result;
 }
@@ -450,8 +451,8 @@ static inline void teds_array_unique_values(HashTable *ht, zval *return_value)
 		zend_hash_next_index_insert(result, value);
 		RETURN_ARR(result);
 	}
-	teds_strictset_entries array;
-	teds_strictset_entries_init_from_array(&array, ht);
+	teds_stricthashset_entries array;
+	teds_stricthashset_entries_init_from_array(&array, ht);
 	if (UNEXPECTED(EG(exception))) {
 		RETURN_THROWS();
 	}
@@ -460,12 +461,12 @@ static inline void teds_array_unique_values(HashTable *ht, zval *return_value)
 
 static inline void teds_traversable_unique_values(zend_object *obj, zval *return_value)
 {
-	teds_strictset_entries array;
-	teds_strictset_entries_init_from_traversable(&array, obj);
+	teds_stricthashset_entries array;
+	teds_stricthashset_entries_init_from_traversable(&array, obj);
 	if (UNEXPECTED(EG(exception))) {
 		RETURN_THROWS();
 	}
-	if (teds_strictset_entries_empty_capacity(&array)) {
+	if (teds_stricthashset_entries_empty_capacity(&array)) {
 		RETURN_EMPTY_ARRAY();
 	}
 	RETVAL_ARR(teds_move_zend_array_from_entries(&array));
@@ -1084,21 +1085,22 @@ PHP_FUNCTION(strict_hash)
 PHP_MINIT_FUNCTION(teds)
 {
 	teds_register_interfaces();
+	teds_register_exceptions();
 
 	PHP_MINIT(teds_bitset)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_deque)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(teds_immutablekeyvaluesequence)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_immutableiterable)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_intvector)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(teds_keyvaluevector)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_mutableiterable)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_lowmemoryvector)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(teds_sortedstrictmap)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(teds_sortedstrictset)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(teds_stableheap)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_stricttreemap)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_stricttreeset)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_strictheap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_stablesortedlistmap)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_stablesortedlistset)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(teds_strictmap)(INIT_FUNC_ARGS_PASSTHRU);
-	PHP_MINIT(teds_strictset)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_stricthashmap)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_stricthashset)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_vector)(INIT_FUNC_ARGS_PASSTHRU);
 #define X(str) \
 	TEDS_STR(str) = zend_new_interned_string( \
