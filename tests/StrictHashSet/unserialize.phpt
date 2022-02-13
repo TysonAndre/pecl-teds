@@ -1,0 +1,17 @@
+--TEST--
+Teds\StrictHashSet unserialize error handling
+--FILE--
+<?php
+
+call_user_func(function () {
+    $it = new Teds\StrictHashSet(['first' => 'second']);
+    $ser = 'O:18:"Teds\StrictHashSet":2:{i:0;s:5:"first";s:5:"unexp";s:6:"second";}';
+    try {
+        unserialize($ser);
+    } catch (Throwable $e) {
+        printf("Caught %s: %s\n", $e::class, $e->getMessage());
+    }
+});
+?>
+--EXPECT--
+Caught UnexpectedValueException: Teds\StrictHashSet::__unserialize saw unexpected string key, expected sequence of values

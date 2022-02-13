@@ -19,6 +19,7 @@ test_low_memory_vector(true,  false, true,  true,  false, true,  false);
 test_low_memory_vector(true,  false, true,  true,  false, true,  false, true,  true);
 test_low_memory_vector(true,  false, true,  true,  false, true,  false, true,  true,  null);
 test_low_memory_vector(null, null, null, null, true, false, null, true);
+?>
 --EXPECTF--
 Original: [true,true,true,true,true,true,true,true]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:2:\"\x00\xff\";}"

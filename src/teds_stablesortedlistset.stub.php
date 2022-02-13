@@ -17,7 +17,7 @@ namespace Teds;
  * - Good performance when writes are infrequent.
  * - Linear time needed for each write due to using insertion sort.
  *
- * TODO: Rename to ListBasedSortedStrictSet
+ * TODO: Rename to ListBasedStrictTreeSet
  *
  * TODO: Support indexOf methods
  */

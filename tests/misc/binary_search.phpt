@@ -72,7 +72,7 @@ foreach ([-1, 0, 3, 6, 12, 13] as $i) {
 foreach ([-1, 0, 3, 6, 12, 13] as $i) {
     echo json_encode($i) . ' packed key gaps: ' . json_encode(Teds\binary_search($values, $i, null, true)) . "\n";
 }
-
+?>
 --EXPECT--
 [0,1,2,5]
 -1: {"found":false,"key":null,"value":null}

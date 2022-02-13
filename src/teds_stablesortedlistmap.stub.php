@@ -18,7 +18,7 @@ namespace Teds;
  * - Efficient at unserialization when entries are in sorted order.
  * - Slow at writes (linear time for each write) due to using insertion sort
  *
- * TODO: Rename to ListBasedSortedStrictMap
+ * TODO: Rename to ListBasedStrictTreeMap
  *
  * TODO: Support indexOf methods
  */
@@ -66,18 +66,18 @@ final class StableSortedListMap implements \IteratorAggregate, Map, \JsonSeriali
     public function topKey(): mixed {}
 
     /**
-     * Pops the [key, value] entry from the end of the SortedStrictSet.
-     * @throws \UnderflowException if the SortedStrictSet is empty
+     * Pops the [key, value] entry from the end of the StrictTreeSet.
+     * @throws \UnderflowException if the StrictTreeSet is empty
      */
     public function pop(): array {}
     /**
-     * Shifts the [key, value] entry from the front of the SortedStrictSet
-     * @throws \UnderflowException if the SortedStrictSet is empty
+     * Shifts the [key, value] entry from the front of the StrictTreeSet
+     * @throws \UnderflowException if the StrictTreeSet is empty
      */
     public function shift(): mixed {}
     /**
      * Returns the value for the given key.
-     * @throws \UnderflowException if the SortedStrictSet is empty
+     * @throws \UnderflowException if the StrictTreeSet is empty
      * @see StableSortedListMap::get
      */
     public function offsetGet(mixed $key): mixed {}

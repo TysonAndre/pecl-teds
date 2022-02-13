@@ -12,10 +12,10 @@ show_memory_usage(Teds\ImmutableSequence::class, [1], 'single-element Teds\Immut
 show_memory_usage(Teds\Deque::class, [1], 'single-element Teds\Deque');
 show_memory_usage(Teds\MutableIterable::class, [1], 'single-element Teds\MutableIterable');
 show_memory_usage(Teds\StableMinHeap::class, [1], 'single-element Teds\StableMinHeap');
-show_memory_usage(Teds\StrictSet::class, [1], 'single-element Teds\StrictSet');
+show_memory_usage(Teds\StrictHashSet::class, [1], 'single-element Teds\StrictHashSet');
 show_memory_usage(Teds\ImmutableIterable::class, [1], 'single-element Teds\ImmutableIterable');
-show_memory_usage(Teds\StrictMap::class, [1], 'single-element Teds\ImmutableIterable');
-show_memory_usage(Teds\SortedStrictMap::class, [1], 'single-element Teds\ImmutableIterable');
+show_memory_usage(Teds\StrictHashMap::class, [1], 'single-element Teds\ImmutableIterable');
+show_memory_usage(Teds\StrictTreeMap::class, [1], 'single-element Teds\ImmutableIterable');
 echo "\n";
 $values = range(0, 7);
 show_memory_usage(Teds\IntVector::class, $values, '8 element Teds\IntVector (1-byte int)');
@@ -25,10 +25,10 @@ show_memory_usage(Teds\ImmutableSequence::class, $values, '8 element Teds\Immuta
 show_memory_usage(Teds\Deque::class, $values, '8 element Teds\Deque');
 show_memory_usage(Teds\MutableIterable::class, $values, '8 element Teds\MutableIterable');
 show_memory_usage(Teds\StableMinHeap::class, $values, '8 element Teds\StableMinHeap');
-show_memory_usage(Teds\StrictSet::class, $values, '8 element Teds\StrictSet');
+show_memory_usage(Teds\StrictHashSet::class, $values, '8 element Teds\StrictHashSet');
 show_memory_usage(Teds\ImmutableIterable::class, $values, '8 element Teds\ImmutableIterable');
-show_memory_usage(Teds\StrictMap::class, $values, '8 element Teds\StrictMap');
-show_memory_usage(Teds\SortedStrictMap::class, $values, '8 element Teds\SortedStrictMap');
+show_memory_usage(Teds\StrictHashMap::class, $values, '8 element Teds\StrictHashMap');
+show_memory_usage(Teds\StrictTreeMap::class, $values, '8 element Teds\StrictTreeMap');
 
 echo "\n";
 $values = range(0, 1023);
@@ -39,7 +39,7 @@ show_memory_usage(Teds\ImmutableSequence::class, $values, '1024 element Teds\Imm
 show_memory_usage(Teds\Deque::class, $values, '1024 element Teds\Deque');
 show_memory_usage(Teds\MutableIterable::class, $values, '1024 element Teds\MutableIterable');
 show_memory_usage(Teds\StableMinHeap::class, $values, '1024 Teds\StableMinHeap');
-show_memory_usage(Teds\StrictSet::class, $values, '1024 element Teds\StrictSet');
+show_memory_usage(Teds\StrictHashSet::class, $values, '1024 element Teds\StrictHashSet');
 show_memory_usage(Teds\ImmutableIterable::class, $values, '1024 element Teds\ImmutableIterable');
-show_memory_usage(Teds\StrictMap::class, $values, '1024 element Teds\StrictMap');
-show_memory_usage(Teds\SortedStrictMap::class, $values, '1024 element Teds\SortedStrictMap');
+show_memory_usage(Teds\StrictHashMap::class, $values, '1024 element Teds\StrictHashMap');
+show_memory_usage(Teds\StrictTreeMap::class, $values, '1024 element Teds\StrictTreeMap');

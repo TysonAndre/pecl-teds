@@ -125,9 +125,9 @@ Much more efficient in memory usage and random access than SplDoublyLinkedList.
 
 (Also similar to `Ds\Deque`)
 
-### Teds\SortedStrictMap
+### Teds\StrictTreeMap
 
-[`Teds\SortedStrictMap` API](./teds_strictmap.stub.php)
+[`Teds\StrictTreeMap` API](./teds_stricthashmap.stub.php)
 
 This is a map where entries for keys of any type can be inserted if `Teds\stable_compare !== 0`.
 
@@ -137,18 +137,18 @@ Iteration will stop if the current key of an iterator is removed.
 
 This uses [`Teds\stable_compare`](#stable-comparison) internally.
 
-The [`Teds\SortedStrictSet` API](./teds_sortedstrictset.stub.php) implementation is similar, but does not associate values with keys. Also, `SortedStrictSet` does not implement ArrayAccess and uses different method names.
+The [`Teds\StrictTreeSet` API](./teds_stricttreeset.stub.php) implementation is similar, but does not associate values with keys. Also, `StrictTreeSet` does not implement ArrayAccess and uses different method names.
 
-### Teds\StrictMap and Teds\StrictSet
+### Teds\StrictHashMap and Teds\StrictHashSet
 
-[`Teds\StrictMap` API](./teds_strictmap.stub.php)
+[`Teds\StrictHashMap` API](./teds_stricthashmap.stub.php)
 
 **This is a work in progress.** Iteration will not work as expected if the hash table is rehashed due to insertions/removals during iteration.
 
 This is a map where entries for keys of any type can be inserted if they are `!==` to other keys.
 This uses [`Teds\strict_hash`](#strict-hashing) internally.
 
-The [`Teds\StrictSet` API](./teds_strictset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
+The [`Teds\StrictHashSet` API](./teds_stricthashset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
 
 NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) currently have distinct hashes and are treated as distinct entries.
 
