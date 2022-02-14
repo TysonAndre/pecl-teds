@@ -57,9 +57,14 @@ final class IntVector implements \IteratorAggregate, Sequence, \JsonSerializable
     public function push(mixed ...$values): void {}
     public function pushInts(int ...$values): void {}
     /**
-     * @throws \RuntimeException if there are no more elements
+     * @throws \UnderflowException if there are no more elements
      */
     public function pop(): int {}
+    public function unshift(mixed ...$values): void {}
+    /**
+     * @throws \UnderflowException if there are no more elements
+     */
+    public function shift(): int {}
 
     /** @psalm-return list<int> */
     public function toArray(): array {}

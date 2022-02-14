@@ -637,14 +637,32 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, push)
 	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support push - it is immutable");
 }
 
-ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, pop)
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, unshift)
 {
 	zval *tmp;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &tmp) == FAILURE) {
 		RETURN_THROWS();
 	}
 
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support unshift - it is immutable");
+}
+
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, pop)
+{
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
 	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support pop - it is immutable");
+}
+
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, shift)
+{
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support shift - it is immutable");
 }
 
 PHP_METHOD(Teds_ImmutableSequence, offsetGet)

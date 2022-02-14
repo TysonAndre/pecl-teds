@@ -46,11 +46,21 @@ final class BitSet implements \IteratorAggregate, Sequence, \JsonSerializable
     public static function __set_state(array $array): BitSet {}
 
     public function push(mixed ...$values): void {}
+    /**
+     * @throws \RuntimeException not implemented yet
+     * @return never
+     */
+    public function unshift(mixed ...$values): void {}
     public function pushBits(bool ...$values): void {}
     /**
      * @throws \RuntimeException if there are no more elements
      */
     public function pop(): bool {}
+    /**
+     * @throws \RuntimeException not implemented yet
+     * @return never
+     */
+    public function shift(): bool {}
 
     /** @psalm-return list<int> */
     public function toArray(): array {}

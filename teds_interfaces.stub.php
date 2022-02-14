@@ -50,6 +50,8 @@ interface Sequence extends Collection, \ArrayAccess {
 
     public function push(mixed ...$values): void {}
     public function pop(): mixed {}
+    public function unshift(mixed ...$values): void {}
+    public function shift(): mixed {}
 }
 
 /**
