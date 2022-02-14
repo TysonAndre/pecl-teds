@@ -1481,9 +1481,10 @@ PHP_METHOD(Teds_LowMemoryVector, contains)
 	RETURN_FALSE;
 }
 
-static zend_always_inline void teds_lowmemoryvector_set_value_at_offset(zend_object *object, zend_long offset, zval *value) {
-	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(object)->array;
-	teds_lowmemoryvector_entries_update_type_tag(array, value);
+static zend_always_inline void teds_lowmemoryvector_entries_set_value_at_offset(teds_lowmemoryvector_entries *array, zend_long offset, const zval *value, bool is_update) {
+	if (is_update) {
+		teds_lowmemoryvector_entries_update_type_tag(array, value);
+	}
 
 	if (UNEXPECTED(!teds_offset_within_size_t(offset, array->size))) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
@@ -1507,12 +1508,16 @@ LMV_GENERATE_INT_CASES()
 			array->entries_double[offset] = Z_DVAL_P(value); \
 			break;
 		case LMV_TYPE_ZVAL: {
-			zval tmp;
 			zval *dst = &array->entries_zval[offset];
-			ZVAL_COPY_VALUE(&tmp, dst);
-			ZVAL_COPY(dst, value);
-			/* Garbage collect original value after modifying to avoid writing to invalid location due to side effects of destructor */
-			zval_ptr_dtor(&tmp);
+			if (is_update) {
+				zval tmp;
+				ZVAL_COPY_VALUE(&tmp, dst);
+				ZVAL_COPY(dst, value);
+				/* Garbage collect original value after modifying to avoid writing to invalid location due to side effects of destructor */
+				zval_ptr_dtor(&tmp);
+			} else {
+				ZVAL_COPY(dst, value);
+			}
 			break;
 		}
 		default:
@@ -1529,7 +1534,7 @@ PHP_METHOD(Teds_LowMemoryVector, set)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_lowmemoryvector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	teds_lowmemoryvector_entries_set_value_at_offset(Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS), offset, value, true);
 	TEDS_RETURN_VOID();
 }
 
@@ -1545,14 +1550,14 @@ PHP_METHOD(Teds_LowMemoryVector, offsetSet)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	teds_lowmemoryvector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	teds_lowmemoryvector_entries_set_value_at_offset(Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS), offset, value, true);
 	TEDS_RETURN_VOID();
 }
 
-static zend_always_inline void teds_lowmemoryvector_entries_copy_offset(const teds_lowmemoryvector_entries *array, const size_t offset, zval *dst, bool increase_refcount, bool pop)
+static zend_always_inline void teds_lowmemoryvector_entries_copy_offset(const teds_lowmemoryvector_entries *array, const size_t offset, zval *dst, const bool increase_refcount, const bool remove)
 {
-	ZEND_ASSERT(pop ? array->size < array->capacity : array->size <= array->capacity);
-	ZEND_ASSERT(pop ? offset == array->size : offset < array->size);
+	ZEND_ASSERT(remove ? array->size < array->capacity : array->size <= array->capacity);
+	ZEND_ASSERT(remove ? offset <= array->size : offset < array->size);
 	ZEND_ASSERT(dst != NULL);
 
 	switch (array->type_tag) {
@@ -1845,6 +1850,43 @@ PHP_METHOD(Teds_LowMemoryVector, push)
 	TEDS_RETURN_VOID();
 }
 
+PHP_METHOD(Teds_LowMemoryVector, unshift)
+{
+	const zval *args;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(0, -1)
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+	teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+
+	for (uint32_t i = 0; i < argc && array->type_tag != LMV_TYPE_ZVAL; i++) {
+		teds_lowmemoryvector_entries_update_type_tag(array, &args[i]);
+	}
+	const uint8_t memory_per_element = teds_lowmemoryvector_entries_compute_memory_per_element(array);
+	const size_t old_size = array->size;
+	const size_t new_size = ((size_t) array->size) + argc;
+	if (new_size >= array->capacity) {
+		teds_lowmemoryvector_entries_raise_capacity(array, new_size > 3 ? new_size + (new_size >> 1) : 4);
+	}
+
+	for (uint32_t i = 0; i < argc && array->type_tag != LMV_TYPE_ZVAL; i++) {
+		teds_lowmemoryvector_entries_update_type_tag(array, &args[i]);
+	}
+	uint8_t *const raw_bytes = array->entries_uint8;
+	memcpy(raw_bytes + argc * (size_t) memory_per_element, raw_bytes, memory_per_element * old_size);
+	array->size = new_size;
+	for (uint32_t i = 0; i < argc; i++) {
+		teds_lowmemoryvector_entries_set_value_at_offset(array, argc - i - 1, &args[i], false);
+	}
+
+	TEDS_RETURN_VOID();
+}
+
 PHP_METHOD(Teds_LowMemoryVector, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -1868,6 +1910,32 @@ PHP_METHOD(Teds_LowMemoryVector, pop)
 	}
 }
 
+PHP_METHOD(Teds_LowMemoryVector, shift)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty Teds\\LowMemoryVector", 0);
+		RETURN_THROWS();
+	}
+	const size_t old_capacity = array->capacity;
+	uint8_t *const entries_uint8 = array->entries_uint8;
+	const uint8_t bytes_per_element = teds_lowmemoryvector_entries_compute_memory_per_element(array);
+	teds_lowmemoryvector_entries_copy_offset(array, 0, return_value, false, true);
+	array->size--;
+	memmove(entries_uint8, entries_uint8 + bytes_per_element, bytes_per_element * (old_size - 1));
+	if (old_size * 4 < old_capacity) {
+		/* Shrink the storage if only a quarter of the capacity is used  */
+		const size_t size = old_size - 1;
+		const size_t capacity = size > 2 ? size * 2 : 4;
+		if (capacity < old_capacity) {
+			teds_lowmemoryvector_entries_shrink_capacity(array, size, capacity, entries_uint8);
+		}
+	}
+}
+
 ZEND_COLD PHP_METHOD(Teds_LowMemoryVector, offsetUnset)
 {
 	zval                  *offset_zv;
@@ -1880,21 +1948,21 @@ ZEND_COLD PHP_METHOD(Teds_LowMemoryVector, offsetUnset)
 
 static void teds_lowmemoryvector_write_dimension(zend_object *object, zval *offset_zv, zval *value)
 {
-	teds_lowmemoryvector *intern = teds_lowmemoryvector_from_object(object);
+	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(object)->array;
 	if (!offset_zv) {
-		teds_lowmemoryvector_entries_push(&intern->array, value, true);
+		teds_lowmemoryvector_entries_push(array, value, true);
 		return;
 	}
 
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	if (offset < 0 || (zend_ulong) offset >= intern->array.size) {
+	if (offset < 0 || (zend_ulong) offset >= array->size) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index invalid or out of range", 0);
 		return;
 	}
 	ZVAL_DEREF(value);
-	teds_lowmemoryvector_set_value_at_offset(object, offset, value);
+	teds_lowmemoryvector_entries_set_value_at_offset(array, offset, value, true);
 }
 
 static zval *teds_lowmemoryvector_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)

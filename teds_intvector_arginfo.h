@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: d733f82636e64f704d4df3b97e6b5501fa34809a */
+ * Stub hash: e949c1dcc6291540c74b6bec0b837e666a34f092 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_IntVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -36,6 +36,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_IntVector_pushInts, 0
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_IntVector_pop arginfo_class_Teds_IntVector_count
+
+#define arginfo_class_Teds_IntVector_unshift arginfo_class_Teds_IntVector_push
+
+#define arginfo_class_Teds_IntVector_shift arginfo_class_Teds_IntVector_count
 
 #define arginfo_class_Teds_IntVector_toArray arginfo_class_Teds_IntVector___serialize
 
@@ -96,6 +100,8 @@ ZEND_METHOD(Teds_IntVector, __set_state);
 ZEND_METHOD(Teds_IntVector, push);
 ZEND_METHOD(Teds_IntVector, pushInts);
 ZEND_METHOD(Teds_IntVector, pop);
+ZEND_METHOD(Teds_IntVector, unshift);
+ZEND_METHOD(Teds_IntVector, shift);
 ZEND_METHOD(Teds_IntVector, toArray);
 ZEND_METHOD(Teds_IntVector, get);
 ZEND_METHOD(Teds_IntVector, set);
@@ -121,6 +127,8 @@ static const zend_function_entry class_Teds_IntVector_methods[] = {
 	ZEND_ME(Teds_IntVector, push, arginfo_class_Teds_IntVector_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, pushInts, arginfo_class_Teds_IntVector_pushInts, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, pop, arginfo_class_Teds_IntVector_pop, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_IntVector, unshift, arginfo_class_Teds_IntVector_unshift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_IntVector, shift, arginfo_class_Teds_IntVector_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, toArray, arginfo_class_Teds_IntVector_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, values, toArray, arginfo_class_Teds_IntVector_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, get, arginfo_class_Teds_IntVector_get, ZEND_ACC_PUBLIC)

@@ -256,6 +256,7 @@
     <file name="MutableIterable/set_state.phpt" role="test" />
     <file name="MutableIterable/traversable.phpt" role="test" />
     <file name="MutableIterable/unserialize.phpt" role="test" />
+    <file name="Sequence/shift.phpt" role="test" />
     <file name="StrictHashMap/StrictMap.phpt" role="test" />
     <file name="StrictHashMap/aggregate.phpt" role="test" />
     <file name="StrictHashMap/array.phpt" role="test" />

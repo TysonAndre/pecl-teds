@@ -1124,29 +1124,87 @@ PHP_METHOD(Teds_Vector, push)
 	TEDS_RETURN_VOID();
 }
 
+PHP_METHOD(Teds_Vector, unshift)
+{
+	const zval *args;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(0, -1)
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	const uint32_t old_size = intern->array.size;
+	const size_t new_size = ((size_t) old_size) + argc;
+	const uint32_t old_capacity = intern->array.capacity;
+	/* TODO: Adjust iterator positions */
+	if (new_size > old_capacity) {
+		const size_t new_capacity = new_size >= 3 ? (new_size - 1) * 2 : 4;
+		ZEND_ASSERT(new_capacity >= new_size);
+		teds_vector_raise_capacity(intern, new_capacity);
+	}
+	zval *entries = intern->array.entries;
+
+	memmove(entries + argc, entries, sizeof(zval) * old_size);
+	for (uint32_t i = 0; i < argc; i++) {
+		ZVAL_COPY(&entries[argc - i - 1], &args[i]);
+	}
+	intern->array.size = new_size;
+	TEDS_RETURN_VOID();
+}
+
 PHP_METHOD(Teds_Vector, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
-	const uint32_t old_size = intern->array.size;
+	teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	const uint32_t old_size = array->size;
 	if (old_size == 0) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\Vector", 0);
 		RETURN_THROWS();
 	}
-	const uint32_t old_capacity = intern->array.capacity;
-	intern->array.size--;
-	RETVAL_COPY_VALUE(&intern->array.entries[intern->array.size]);
+	const uint32_t old_capacity = array->capacity;
+	array->size--;
+	RETVAL_COPY_VALUE(&array->entries[array->size]);
 	if (old_size < (old_capacity >> 2)) {
 		/* Shrink the storage if only a quarter of the capacity is used  */
 		const uint32_t size = old_size - 1;
 		const uint32_t capacity = size > 2 ? size * 2 : 4;
 		if (capacity < old_capacity) {
-			teds_vector_shrink_capacity(&intern->array, size, capacity, intern->array.entries);
+			teds_vector_shrink_capacity(array, size, capacity, array->entries);
 		}
 	}
 }
 
+PHP_METHOD(Teds_Vector, shift)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	const uint32_t old_size = array->size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty Teds\\Vector", 0);
+		RETURN_THROWS();
+	}
+	const uint32_t old_capacity = array->capacity;
+	zval *const entries = array->entries;
+	RETVAL_COPY_VALUE(&entries[0]);
+	array->size--;
+	memmove(entries, entries + 1, sizeof(zval) * array->size);
+	/* TODO: Adjust iterator positions */
+
+	if (old_size < (old_capacity >> 2)) {
+		/* Shrink the storage if only a quarter of the capacity is used  */
+		const uint32_t size = old_size - 1;
+		const uint32_t capacity = size > 2 ? size * 2 : 4;
+		if (capacity < old_capacity) {
+			teds_vector_shrink_capacity(array, size, capacity, entries);
+		}
+	}
+}
 PHP_METHOD(Teds_Vector, shrinkToFit)
 {
 	ZEND_PARSE_PARAMETERS_NONE();

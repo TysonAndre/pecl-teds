@@ -1077,6 +1077,22 @@ PHP_METHOD(Teds_BitSet, push)
 	TEDS_RETURN_VOID();
 }
 
+PHP_METHOD(Teds_BitSet, unshift)
+{
+	const zval *args;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(0, -1)
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	(void)args;
+	(void)argc;
+
+	zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet::unshift not implemented yet", 0);
+	RETURN_THROWS();
+}
+
 /* Based on array_push */
 PHP_METHOD(Teds_BitSet, pushBits)
 {
@@ -1131,6 +1147,14 @@ PHP_METHOD(Teds_BitSet, pop)
 	if (UNEXPECTED(capacity < array->bit_capacity)) {
 		teds_bitset_entries_shrink_capacity(array, old_size - 1, capacity, array->entries_bits);
 	}
+}
+
+PHP_METHOD(Teds_BitSet, shift)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet::shift not implemented yet", 0);
+	RETURN_THROWS();
 }
 
 ZEND_COLD PHP_METHOD(Teds_BitSet, offsetUnset)
