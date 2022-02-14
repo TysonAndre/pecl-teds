@@ -24,7 +24,7 @@ On Windows, see https://wiki.php.net/internals/windows/stepbystepbuild_sdk_2 ins
 
 ### Teds\ImmutableIterable
 
-[`Teds\ImmutableIterable` API](src/teds_immutableiterable.stub.php)
+[`Teds\ImmutableIterable` API](./teds_immutableiterable.stub.php)
 
 Currently, PHP does not provide a built-in way to store the state of an arbitrary iterable for reuse later (when the iterable has arbitrary keys, or when keys might be repeated). There are use cases for this, such as:
 
@@ -41,14 +41,14 @@ Traversables are eagerly iterated over in the constructor.
 
 ### Teds\ImmutableSequence
 
-[`Teds\ImmutableSequence` API](src/teds_immutablesequence.stub.php)
+[`Teds\ImmutableSequence` API](./teds_immutablesequence.stub.php)
 
 Similar to SplFixedArray or Ds\Sequence, but immutable.
 This stores a sequence of values with the keys 0, 1, 2....
 
 ### Teds\LowMemoryVector
 
-[`Teds\LowMemoryVector` API](src/teds_lowmemoryvector.stub.php)
+[`Teds\LowMemoryVector` API](./teds_lowmemoryvector.stub.php)
 
 This exposes the same API as a Vector, but with a more memory-efficient representation if the LowMemoryVector has only ever included a type that it could optimize.
 
@@ -84,13 +84,13 @@ Example benchmarks: [benchmarks/benchmark_vector_bool.php](benchmarks/benchmark_
 
 ### Teds\IntVector
 
-[`Teds\IntVector` API](src/teds_intvector.stub.php)
+[`Teds\IntVector` API](./teds_intvector.stub.php)
 
 Similar to `Teds\LowMemoryVector` but throws a TypeError on attempts to add non-integers.
 
 ### Teds\BitSet
 
-[`Teds\BitSet` API](src/teds_bitset.stub.php)
+[`Teds\BitSet` API](./teds_bitset.stub.php)
 
 Similar to `Teds\LowMemoryVector`/`Teds\IntVector` but throws a TypeError on attempts to add non-booleans.
 This can be used as a memory-efficient vector of booleans.
@@ -99,7 +99,7 @@ This uses only a single bit per value for large bit sets in memory and when seri
 
 ### Teds\Vector
 
-[`Teds\Vector` API](src/teds_vector.stub.php)
+[`Teds\Vector` API](./teds_vector.stub.php)
 
 Similar to SplFixedArray or Ds\Vector.
 This stores a mutable sequence of values with the keys 0, 1, 2...
@@ -110,7 +110,7 @@ There are plans to add more methods.
 
 ### Teds\MutableIterable
 
-[`Teds\MutableIterable` API](src/teds_mutableiterable.stub.php)
+[`Teds\MutableIterable` API](./teds_mutableiterable.stub.php)
 
 Similar to `Teds\Vector` and `Teds\ImmutableIterable`.
 This stores a mutable vector of keys and values with the keys 0, 1, 2...
@@ -118,7 +118,7 @@ It can be resized with `setSize()`.
 
 ### Teds\Deque
 
-[`Teds\Deque` API](src/teds_deque.stub.php)
+[`Teds\Deque` API](./teds_deque.stub.php)
 
 Similar to SplDoublyLinkedList but backed by an array instead of a linked list.
 Much more efficient in memory usage and random access than SplDoublyLinkedList.
@@ -127,7 +127,7 @@ Much more efficient in memory usage and random access than SplDoublyLinkedList.
 
 ### Teds\StrictTreeMap
 
-[`Teds\StrictTreeMap` API](src/teds_stricthashmap.stub.php)
+[`Teds\StrictTreeMap` API](./teds_stricthashmap.stub.php)
 
 This is a map where entries for keys of any type can be inserted if `Teds\stable_compare !== 0`.
 
@@ -137,25 +137,25 @@ Iteration will stop if the current key of an iterator is removed.
 
 This uses [`Teds\stable_compare`](#stable-comparison) internally.
 
-The [`Teds\StrictTreeSet` API](src/teds_stricttreeset.stub.php) implementation is similar, but does not associate values with keys. Also, `StrictTreeSet` does not implement ArrayAccess and uses different method names.
+The [`Teds\StrictTreeSet` API](./teds_stricttreeset.stub.php) implementation is similar, but does not associate values with keys. Also, `StrictTreeSet` does not implement ArrayAccess and uses different method names.
 
 ### Teds\StrictHashMap and Teds\StrictHashSet
 
-[`Teds\StrictHashMap` API](src/teds_stricthashmap.stub.php)
+[`Teds\StrictHashMap` API](./teds_stricthashmap.stub.php)
 
 **This is a work in progress.** Iteration will not work as expected if the hash table is rehashed due to insertions/removals during iteration.
 
 This is a map where entries for keys of any type can be inserted if they are `!==` to other keys.
 This uses [`Teds\strict_hash`](#strict-hashing) internally.
 
-The [`Teds\StrictHashSet` API](src/teds_stricthashset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
+The [`Teds\StrictHashSet` API](./teds_stricthashset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
 
 NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) have the same hashes and are treated as the same entries, because `0.0 === -0.0` in php.
 NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`, despite having `NAN !== $x` in php for any $x, including NAN. This is done to avoid duplicate or unremovable entries.
 
 ### Teds\StrictMinHeap and Teds\StrictMaxHeap
 
-[`Teds\Stable*Heap` API/polyfill](src/teds_strictheap.stub.php)
+[`Teds\Stable*Heap` API/polyfill](./teds_strictheap.stub.php)
 
 This uses `Teds\stable_compare` instead of PHP's unstable default comparisons.
 Sorting logic can be customized by inserting `[$priority, $value]` instead of `$value`.
@@ -175,7 +175,7 @@ php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // lexicographically
 
 ### Common interfaces
 
-[teds_interfaces.stub.php](src/teds_interfaces.stub.php)
+[teds_interfaces.stub.php](./teds_interfaces.stub.php)
 
 **NOTE: This is currently being revised, and new methods may be added to these interfaces in 0.x releases or new major releases.** More methods are currently being added.
 
