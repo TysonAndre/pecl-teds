@@ -54,7 +54,7 @@ Unserialized: object(Teds\LowMemoryVector)#3 (1) {
   int(0)
 }
 [null]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:1;i:1;s:2:\"\x01\x01\";}"
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:1;i:1;s:2:\"\x01\x03\";}"
 
 Unserialized: object(Teds\LowMemoryVector)#3 (1) {
   [0]=>

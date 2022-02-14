@@ -664,35 +664,20 @@ static void teds_lowmemoryvector_entries_unserialize_from_mixed_zval_array(teds_
 	array->entries_zval = entries;
 }
 
-static void teds_lowmemoryvector_entries_unserialize_from_bitset(teds_lowmemoryvector_entries *array, const uint8_t *bitset_val, size_t bytes) {
-	uint8_t start_len;
+static void teds_lowmemoryvector_entries_unserialize_from_bitset(teds_lowmemoryvector_entries *array, const uint8_t *bitset_val, const size_t bytes) {
+	uint8_t wasted_bytes;
 	/* overflow check */
-	if (UNEXPECTED(bytes <= 1 || (start_len = ((uint8_t*)bitset_val)[0]) >= 8) || bytes >= TEDS_MAX_ZVAL_COLLECTION_SIZE / 8 - 1) {
+	if (UNEXPECTED(bytes <= 1 || (wasted_bytes = ((uint8_t*)bitset_val)[bytes - 1]) >= 8) || bytes >= TEDS_MAX_ZVAL_COLLECTION_SIZE / 8 - 1) {
 		zend_throw_exception(spl_ce_RuntimeException, "Unserializing from invalid bitset data", 0);
 		return;
 	}
-	bytes--;
 	/* bytes > 0 */
-	const uint8_t *const end = bitset_val + bytes;
-	const uint32_t num_entries = bytes * 8 + (start_len ? start_len - 8 : 0);
+	const uint32_t num_entries = (bytes - 1) * 8 - wasted_bytes;
 	ZEND_ASSERT(num_entries <= TEDS_MAX_ZVAL_COLLECTION_SIZE);
 	uint8_t *const entries = emalloc(num_entries);
 	uint8_t *dst = entries;
 
-	if (start_len > 0) {
-		/* There are 1 to 7 padding bits to decode */
-		uint8_t val = *bitset_val;
-		do {
-			*dst++ = IS_FALSE + (val & 1);
-			val >>= 1;
-			start_len--;
-		} while (start_len > 0);
-
-		bitset_val++;
-		bytes--;
-	}
-
-	for (;bitset_val < end; bitset_val++, dst += 8) {
+	for (const uint8_t *const last = dst + num_entries; dst + 8 <= last; bitset_val++, dst += 8) {
 		const uint8_t orig = *bitset_val;
 		/* TODO sse may be faster? */
 		dst[0] = IS_FALSE + ((orig >> 0) & 1);
@@ -704,6 +689,19 @@ static void teds_lowmemoryvector_entries_unserialize_from_bitset(teds_lowmemoryv
 		dst[6] = IS_FALSE + ((orig >> 6) & 1);
 		dst[7] = IS_FALSE + ((orig >> 7) & 1);
 	}
+
+	if (wasted_bytes > 0) {
+		uint32_t remaining = 8 - wasted_bytes;
+		ZEND_ASSERT(remaining > 0);
+		/* There are 1 to 7 padding bits to decode */
+		uint8_t val = *bitset_val;
+		do {
+			*dst++ = IS_FALSE + (val & 1);
+			val >>= 1;
+			remaining--;
+		} while (remaining > 0);
+	}
+	//fprintf(stderr, "dst-entries=%d num_entries=%d\n", (int)(dst-entries), (int)num_entries);
 	ZEND_ASSERT(dst == entries + num_entries);
 	array->size = num_entries;
 	array->capacity = num_entries;
@@ -715,42 +713,40 @@ static zend_always_inline uint8_t teds_lowmemoryvector_entries_compute_type_from
 	return input == 0 ? IS_NULL : (IS_NULL - 1) + input;
 }
 
-static void teds_lowmemoryvector_entries_unserialize_from_bool_or_null_set(teds_lowmemoryvector_entries *array, const uint8_t *bitset_val, size_t bytes) {
-	uint8_t start_len;
+static void teds_lowmemoryvector_entries_unserialize_from_bool_or_null_set(teds_lowmemoryvector_entries *const array, const uint8_t *bitset_val, const size_t bytes) {
+	uint8_t wasted_bit_pairs;
 	/* overflow check */
-	if (UNEXPECTED(bytes <= 1 || (start_len = ((uint8_t*)bitset_val)[0]) >= 4) || bytes >= TEDS_MAX_ZVAL_COLLECTION_SIZE / 4 - 1) {
+	if (UNEXPECTED(bytes <= 1 || (wasted_bit_pairs = ((uint8_t*)bitset_val)[bytes - 1]) >= 4) || bytes >= TEDS_MAX_ZVAL_COLLECTION_SIZE / 4 - 1) {
 		zend_throw_exception(spl_ce_RuntimeException, "Unserializing from invalid nullable boolset data", 0);
 		return;
 	}
 	/* bytes > 0 */
-	const uint8_t *const end = bitset_val + bytes;
-	bytes--;
-	bitset_val++;
-	const uint32_t num_entries = bytes * 4 + (start_len ? start_len - 4 : 0);
+	const uint32_t num_entries = (bytes - 1) * 4 - wasted_bit_pairs;
 	uint8_t *const entries = emalloc(num_entries);
 	uint8_t *dst = entries;
 
-	if (start_len > 0) {
-		/* There are 1 to 3 padding bit pairs to decode */
-		uint8_t val = *bitset_val;
-		do {
-			uint8_t tmp = val & 3;
-			*dst++ = teds_lowmemoryvector_entries_compute_type_from_2bit(tmp);
-			val >>= 2;
-			start_len--;
-		} while (start_len > 0);
-
-		bitset_val++;
-		bytes--;
-	}
-
-	for (;bitset_val < end; bitset_val++, dst += 4) {
+	for (const uint8_t *const dst_end = dst + num_entries; dst + 4 <= dst_end; bitset_val++, dst += 4) {
 		const uint8_t orig = *bitset_val;
 		dst[0] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 0) & 3);
 		dst[1] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 2) & 3);
 		dst[2] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 4) & 3);
 		dst[3] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 6) & 3);
 	}
+	if (wasted_bit_pairs > 0) {
+		uint8_t remaining = 4 - wasted_bit_pairs;
+		ZEND_ASSERT(remaining > 0 && remaining < 4);
+		/* There are 1 to 3 padding bit pairs to decode */
+		uint8_t val = *bitset_val;
+		do {
+			uint8_t tmp = val & 3;
+			//fprintf(stderr, "tmp=%d bitset-val=%d\n", (int)tmp, (int)*bitset_val);
+			*dst++ = teds_lowmemoryvector_entries_compute_type_from_2bit(tmp);
+			val >>= 2;
+			remaining--;
+		} while (remaining > 0);
+	}
+	//fprintf(stderr, "dst-entries=%d num_entries=%d\n", (int)(dst-entries), num_entries);
+
 	ZEND_ASSERT(dst == entries + num_entries);
 	array->size = num_entries;
 	array->capacity = num_entries;
@@ -946,65 +942,81 @@ static zend_always_inline zend_string *teds_create_string_from_entries_double(co
 	return teds_create_string_from_entries_int64(raw, len);
 }
 
-static zend_string *teds_convert_bool_types_to_bitset(const uint8_t *src, size_t len)
+static zend_string *teds_convert_bool_types_to_bitset(const uint8_t *src, const size_t len)
 {
 	ZEND_ASSERT(len > 0);
 	const size_t num_bytes_for_bits = ((len + 15) >> 3);
+	const uint8_t wasted_bits = (8 - len) & 7;
 	zend_string *const result = zend_string_alloc(num_bytes_for_bits, 0);
-	ZSTR_VAL(result)[0] = len % 8;
-	uint8_t *dst = (uint8_t *)(ZSTR_VAL(result) + 1);
+	uint8_t *dst = (uint8_t *)ZSTR_VAL(result);
 
-	if (len % 8 > 0) {
+	for (const uint8_t *const end = src + len; src + 8 <= end; dst++, src += 8) {
+		//fprintf(stderr, "Incrementing dst\n");
+		*dst = ((src[0] == IS_TRUE ? 1 : 0) << 0)
+		     + ((src[1] == IS_TRUE ? 1 : 0) << 1)
+		     + ((src[2] == IS_TRUE ? 1 : 0) << 2)
+		     + ((src[3] == IS_TRUE ? 1 : 0) << 3)
+		     + ((src[4] == IS_TRUE ? 1 : 0) << 4)
+		     + ((src[5] == IS_TRUE ? 1 : 0) << 5)
+		     + ((src[6] == IS_TRUE ? 1 : 0) << 6)
+		     + ((src[7] == IS_TRUE ? 1 : 0) << 7);
+	}
+	uint8_t remaining = len & 7;
+	//fprintf(stderr, "In bitset len=%d remaining=%d num_bytes_for_bits=%d wasted_bits=%d\n", (int)len, (int)remaining, (int)num_bytes_for_bits, (int)wasted_bits);
+	if (remaining > 0) {
+		ZEND_ASSERT((size_t)(dst + 2 - (uint8_t *)ZSTR_VAL(result)) == num_bytes_for_bits);
 		uint8_t v = 0;
-		for (uint8_t shift = 1; len % 8 > 0; len--, shift <<= 1, src++) {
-			if (*src == IS_TRUE) {
-				v |= shift;
-			}
+		for (uint8_t shift = 0; remaining > 0; remaining--, shift++, src++) {
+			v += ((*src == IS_TRUE ? 1 : 0) << shift);
 		}
-		*dst++ = v;
+		//fprintf(stderr, "In bitset len=%d v=%d wasted_bits=%d\n", (int)len, (int)v, (int)wasted_bits);
+		dst[0] = v; /* Last bits */
+		dst[1] = wasted_bits; /* Number of wasted bit pairs */
+		dst[2] = '\0'; /* Trailing null byte */
+	} else {
+		ZEND_ASSERT((size_t)(dst + 1 - (uint8_t *)ZSTR_VAL(result)) == num_bytes_for_bits);
+		dst[0] = '\0'; /* Number of wasted bit pairs */
+		dst[1] = '\0'; /* Trailing null byte */
 	}
-	ZEND_ASSERT(len % 8 == 0);
-
-	for (const uint8_t *const end = src + len; src < end; dst++, src += 8) {
-		*dst = (((src[0] == IS_TRUE) ? (1<<0) : 0)
-			  + ((src[1] == IS_TRUE) ? (1<<1) : 0)
-			  + ((src[2] == IS_TRUE) ? (1<<2) : 0)
-			  + ((src[3] == IS_TRUE) ? (1<<3) : 0)
-			  + ((src[4] == IS_TRUE) ? (1<<4) : 0)
-			  + ((src[5] == IS_TRUE) ? (1<<5) : 0)
-			  + ((src[6] == IS_TRUE) ? (1<<6) : 0)
-			  + ((src[7] == IS_TRUE) ? (1<<7) : 0));
-	}
-	*dst = '\0'; /* zend_string must end in null byte */
 
 	return result;
 }
 
-static zend_string *teds_convert_bool_or_null_types_to_bitset(const uint8_t *src, uint32_t len)
+static zend_string *teds_convert_bool_or_null_types_to_bitset(const uint8_t *src, const uint32_t len)
 {
+	/*
+	 * Layout:
+	 * 1. ciel(len/4) bytes of bit pairs (4 bit pairs per byte)
+	 * 2. The number of unused bit pairs - (4 - len) & 3, i.e. ((ciel(len/4) * 4) - len)
+	 * 3. Trailing null byte required by zend_string after end.
+	 */
 	ZEND_ASSERT(len > 0);
-	const uint32_t num_bytes_for_bit_pairs = ((len + 7) >> 2);
+	const uint32_t num_bytes_for_bit_pairs = ((len + 7) >> 2); /* 4 bit pairs per byte, plus an extra byte. ciel(len/4) + 1 */
 	zend_string *const result = zend_string_alloc(num_bytes_for_bit_pairs, 0);
-	ZSTR_VAL(result)[0] = len % 4;
-	uint8_t *dst = (uint8_t *)(ZSTR_VAL(result) + 1);
+	uint8_t *dst = (uint8_t *)ZSTR_VAL(result);
 
-	if (len % 4 > 0) {
-		uint8_t v = 0;
-		for (uint8_t shift = 0; len % 4 > 0; len--, shift += 2, src++) {
-			uint8_t value = (*src - IS_NULL + 1) & 3;
-			v += value << shift;
-		}
-		*dst++ = v;
-	}
-	ZEND_ASSERT(len % 4 == 0);
-
-	for (const uint8_t *const end = src + len; src < end; dst++, src += 4) {
+	for (const uint8_t *const end = src + len; src + 4 <= end; dst++, src += 4) {
 		*dst = (((src[0] - IS_NULL + 1) & 3) << 0) |
 		       (((src[1] - IS_NULL + 1) & 3) << 2) |
 		       (((src[2] - IS_NULL + 1) & 3) << 4) |
 		       (((src[3] - IS_NULL + 1) & 3) << 6);
 	}
-	*dst = '\0'; /* zend_string must end in null byte */
+	uint8_t remaining = len & 3;
+	if (remaining > 0) {
+		uint8_t v = 0;
+		for (uint8_t shift = 0; remaining > 0; remaining--, shift += 2, src++) {
+			uint8_t value = (*src - IS_NULL + 1) & 3;
+			v += value << shift;
+		}
+		dst[0] = v; /* Last bit pairs */
+		dst[1] = (4 - len) & 3; /* Number of wasted bit pairs */
+		dst[2] = '\0'; /* Trailing null byte */
+		ZEND_ASSERT((size_t)(dst + 2 - (uint8_t *)ZSTR_VAL(result)) == num_bytes_for_bit_pairs);
+	} else {
+		dst[0] = '\0'; /* Number of wasted bit pairs */
+		dst[1] = '\0'; /* Trailing null byte */
+		ZEND_ASSERT((size_t)(dst + 1 - (uint8_t *)ZSTR_VAL(result)) == num_bytes_for_bit_pairs);
+	}
 
 	return result;
 }
@@ -1131,7 +1143,7 @@ LMV_GENERATE_INT_CASES()
 			case LMV_TYPE_DOUBLE: {
 				const double *const entries = array->entries_double;
 				for (uint32_t i = 0; i < len; i++) {
-					ZEND_HASH_FILL_SET_LONG(entries[i]);
+					ZEND_HASH_FILL_SET_DOUBLE(entries[i]);
 					ZEND_HASH_FILL_NEXT();
 				}
 				break;

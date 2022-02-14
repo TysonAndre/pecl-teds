@@ -1,7 +1,7 @@
 --TEST--
 Teds\LowMemoryVector can be serialized and unserialized
 --SKIPIF--
-<?php if (PHP_INT_SIZE < 8) echo "skip 64-bit only\n"; ?>
+<?php if (PHP_INT_SIZE >= 8) echo "skip 32-bit only\n"; ?>
 --FILE--
 <?php
 require_once __DIR__ . '/../encode_raw_string.inc';
@@ -20,15 +20,15 @@ test_serialize_values(1.5);
 test_serialize_values(true, false, false, true, true);
 test_serialize_values(true, false, null, null, true);
 test_serialize_values(0x7fff_ffff);
-test_serialize_values(0x8000_0000);
-test_serialize_values(-0x8000_0000, -1);
+test_serialize_values(0x8000_0000);  // due to the lack of strict_types this float is converted to an int and overflows in php. https://wiki.php.net/rfc/implicit-float-int-deprecate does not affect this.
+test_serialize_values(-0x8000_0000, -1);  // this is serialized as a float
 test_serialize_values(-0x8000_0001, 1);
 test_serialize_values(0x0102030405060708, 0x7ffefdfcfbfaf0f9, 0);
 ?>
 --EXPECT--
-[0,9223372036854775807,-9223372036854775808]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:5;i:1;s:24:\"\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\x7f\x00\x00\x00\x00\x00\x00\x00\x80\";}"
-Unserialize: [0,9223372036854775807,-9223372036854775808]
+[0,2147483647,-2147483648]
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:4;i:1;s:12:\"\x00\x00\x00\x00\xff\xff\xff\x7f\x00\x00\x00\x80\";}"
+Unserialize: [0,2147483647,-2147483648]
 
 [1.5]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:6;i:1;s:8:\"\x00\x00\x00\x00\x00\x00\xf8?\";}"
@@ -47,17 +47,17 @@ Unserialize: [true,false,null,null,true]
 Unserialize: [2147483647]
 
 [2147483648]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:5;i:1;s:8:\"\x00\x00\x00\x80\x00\x00\x00\x00\";}"
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:6;i:1;s:8:\"\x00\x00\x00\x00\x00\x00\xe0A\";}"
 Unserialize: [2147483648]
 
 [-2147483648,-1]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:4;i:1;s:8:\"\x00\x00\x00\x80\xff\xff\xff\xff\";}"
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:7;i:1;a:2:{i:0;d:-2147483648;i:1;i:-1;}}"
 Unserialize: [-2147483648,-1]
 
 [-2147483649,1]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:5;i:1;s:16:\"\xff\xff\xff\x7f\xff\xff\xff\xff\x01\x00\x00\x00\x00\x00\x00\x00\";}"
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:7;i:1;a:2:{i:0;d:-2147483649;i:1;i:1;}}"
 Unserialize: [-2147483649,1]
 
-[72623859790382856,9223088349902467321,0]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:5;i:1;s:24:\"\x08\x07\x06\x05\x04\x03\x02\x01\xf9\xf0\xfa\xfb\xfc\xfd\xfe\x7f\x00\x00\x00\x00\x00\x00\x00\x00\";}"
-Unserialize: [72623859790382856,9223088349902467321,0]
+[72623859790382850,9.223088349902467e+18,0]
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:7;i:1;a:3:{i:0;d:72623859790382850;i:1;d:9.223088349902467E+18;i:2;i:0;}}"
+Unserialize: [72623859790382850,9.223088349902467e+18,0]
