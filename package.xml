@@ -23,6 +23,8 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * BREAKING CHANGES: Rename datastructures and interfaces for consistency. Change definitions of interfaces/remove interfaces.
+* BREAKING CHANGES: Fix incorrect serialization/unserialization result of LowMemoryVector for boolean/null. Incompatible with older releases.
+* BUGFIX: Fix converting LowMemoryVector of floats to an array (they were unintentionally converted to integers).
  </notes>
  <contents>
   <dir name="/">

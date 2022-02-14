@@ -20,31 +20,31 @@ test_low_memory_vector(true,  false, true,  true,  false, true,  false, true,  t
 test_low_memory_vector(true,  false, true,  true,  false, true,  false, true,  true,  null);
 test_low_memory_vector(null, null, null, null, true, false, null, true);
 ?>
---EXPECTF--
+--EXPECT--
 Original: [true,true,true,true,true,true,true,true]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:2:\"\x00\xff\";}"
-[false,false,false,false,false,false,false,false]
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:2:\"\xff\x00\";}"
+[true,true,true,true,true,true,true,true]
 
 Original: [false,false,false,false,false,false,false,false]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:2:\"\x00\x00\";}"
 [false,false,false,false,false,false,false,false]
 
 Original: [true,false,true,true,false,true,false,true]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:2:\"\x00\xad\";}"
-[false,false,false,false,false,false,false,false]
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:2:\"\xad\x00\";}"
+[true,false,true,true,false,true,false,true]
 
 Original: [true,false,true,true,false,true,false]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:2:\"\x07-\";}"
-[true,true,true,false,false,false,false]
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:2:\"-\x01\";}"
+[true,false,true,true,false,true,false]
 
 Original: [true,false,true,true,false,true,false,true,true]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:3:\"\x01\x01\xd6\";}"
-[true,true,false,false,false,false,false,false,false]
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:0;i:1;s:3:\"\xad\x01\x07\";}"
+[true,false,true,true,false,true,false,true,true]
 
 Original: [true,false,true,true,false,true,false,true,true,null]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:1;i:1;s:4:\"\x02\x0b\xef~\";}"
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:1;i:1;s:4:\"\xfb\xee\x07\x02\";}"
 [true,false,true,true,false,true,false,true,true,null]
 
 Original: [null,null,null,null,true,false,null,true]
-"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:1;i:1;s:3:\"\x00U\xdb\";}"
+"O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:1;i:1;s:3:\"U\xdb\x00\";}"
 [null,null,null,null,true,false,null,true]
