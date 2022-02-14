@@ -7,7 +7,7 @@
   +----------------------------------------------------------------------+
 */
 
-/* This is based on teds_stablesortedlistset.c */
+/* This is based on teds_strictsortedvectorset.c */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -22,9 +22,20 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* BREAKING CHANGES: Rename datastructures and interfaces for consistency. Change definitions of interfaces/remove interfaces.
 * BREAKING CHANGES: Fix incorrect serialization/unserialization result of LowMemoryVector for boolean/null. Incompatible with older releases.
 * BUGFIX: Fix converting LowMemoryVector of floats to an array (they were unintentionally converted to integers).
+* BREAKING CHANGES: Rename datastructures and interfaces for consistency. Change definitions of interfaces/remove interfaces.
+  Rename Teds\ImmutableKeyValueSequence to Teds\ImmutableIterable and add an alias for the old name. Aliases will be removed in a future release.
+  Rename Teds\KeyValueSequence to Teds\MutableIterable and add an alias.
+  Rename Teds\SortedStrictMap to Teds\StrictTreeMap and add an alias.
+  Rename Teds\StrictMap to Teds\StrictHashMap and add an alias.
+  Rename Teds\SortedStrictSet to Teds\StrictTreeSet and add an alias.
+  Rename Teds\StrictSet to Teds\StrictHashSet and add an alias.
+  Rename Teds\StableMinHeap to Teds\StrictMinHeap and add an alias.
+  Rename Teds\StableMaxHeap to Teds\StrictMaxHeap and add an alias.
+  Change the definition of Teds\Collection to be just a Collection of **values**. Make Teds\Values an alias of Teds\Collection.
+  Add the interfaces `Teds\Sequence`, `Teds\Map`, `Teds\Set`.
+
  </notes>
  <contents>
   <dir name="/">
@@ -80,14 +91,14 @@
    <file name="teds_strictheap.c" role="src" />
    <file name="teds_strictheap.h" role="src" />
    <file name="teds_strictheap.stub.php" role="src" />
-   <file name="teds_stablesortedlistmap_arginfo.h" role="src" />
-   <file name="teds_stablesortedlistmap.c" role="src" />
-   <file name="teds_stablesortedlistmap.h" role="src" />
-   <file name="teds_stablesortedlistmap.stub.php" role="src" />
-   <file name="teds_stablesortedlistset_arginfo.h" role="src" />
-   <file name="teds_stablesortedlistset.c" role="src" />
-   <file name="teds_stablesortedlistset.h" role="src" />
-   <file name="teds_stablesortedlistset.stub.php" role="src" />
+   <file name="teds_strictsortedvectormap_arginfo.h" role="src" />
+   <file name="teds_strictsortedvectormap.c" role="src" />
+   <file name="teds_strictsortedvectormap.h" role="src" />
+   <file name="teds_strictsortedvectormap.stub.php" role="src" />
+   <file name="teds_strictsortedvectorset_arginfo.h" role="src" />
+   <file name="teds_strictsortedvectorset.c" role="src" />
+   <file name="teds_strictsortedvectorset.h" role="src" />
+   <file name="teds_strictsortedvectorset.stub.php" role="src" />
    <file name="teds_stricthashmap_arginfo.h" role="src" />
    <file name="teds_stricthashmap.c" role="src" />
    <file name="teds_stricthashmap.h" role="src" />
@@ -193,10 +204,12 @@
     <file name="IntVector/isset.phpt" role="test" />
     <file name="IntVector/offsetGet.phpt" role="test" />
     <file name="IntVector/promote.phpt" role="test" />
+    <file name="IntVector/promote_32bit.phpt" role="test" />
     <file name="IntVector/push_pop.phpt" role="test" />
     <file name="IntVector/reinit_forbidden.phpt" role="test" />
     <file name="IntVector/serialization.phpt" role="test" />
     <file name="IntVector/serialization_64.phpt" role="test" />
+    <file name="IntVector/serialization_64_32bit.phpt" role="test" />
     <file name="IntVector/setValueAt.phpt" role="test" />
     <file name="IntVector/set_state.phpt" role="test" />
     <file name="IntVector/specializations.phpt" role="test" />
@@ -215,10 +228,12 @@
     <file name="LowMemoryVector/jsonEncodeRecursive.phpt" role="test" />
     <file name="LowMemoryVector/offsetGet.phpt" role="test" />
     <file name="LowMemoryVector/promote.phpt" role="test" />
+    <file name="LowMemoryVector/promote_32bit.phpt" role="test" />
     <file name="LowMemoryVector/push_pop.phpt" role="test" />
     <file name="LowMemoryVector/reinit_forbidden.phpt" role="test" />
     <file name="LowMemoryVector/serialization.phpt" role="test" />
     <file name="LowMemoryVector/serialization_64.phpt" role="test" />
+    <file name="LowMemoryVector/serialization_64_32bit.phpt" role="test" />
     <file name="LowMemoryVector/setValueAt.phpt" role="test" />
     <file name="LowMemoryVector/set_state.phpt" role="test" />
     <file name="LowMemoryVector/specializations.phpt" role="test" />
@@ -241,43 +256,6 @@
     <file name="MutableIterable/set_state.phpt" role="test" />
     <file name="MutableIterable/traversable.phpt" role="test" />
     <file name="MutableIterable/unserialize.phpt" role="test" />
-    <file name="StrictHeap/StrictHeap.phpt" role="test" />
-    <file name="StrictHeap/extensible.phpt" role="test" />
-    <file name="StrictHeap/reflection.phpt" role="test" />
-    <file name="StrictHeap/serialization.phpt" role="test" />
-    <file name="StableSortedListMap/SortedStrictMap.phpt" role="test" />
-    <file name="StableSortedListMap/aggregate.phpt" role="test" />
-    <file name="StableSortedListMap/array.phpt" role="test" />
-    <file name="StableSortedListMap/clear.phpt" role="test" />
-    <file name="StableSortedListMap/clone.phpt" role="test" />
-    <file name="StableSortedListMap/contains.phpt" role="test" />
-    <file name="StableSortedListMap/exceptionhandler.phpt" role="test" />
-    <file name="StableSortedListMap/from_pairs.phpt" role="test" />
-    <file name="StableSortedListMap/gc.phpt" role="test" />
-    <file name="StableSortedListMap/keys_values.phpt" role="test" />
-    <file name="StableSortedListMap/offsetExists.phpt" role="test" />
-    <file name="StableSortedListMap/reinit_forbidden.phpt" role="test" />
-    <file name="StableSortedListMap/remove.phpt" role="test" />
-    <file name="StableSortedListMap/serialization.phpt" role="test" />
-    <file name="StableSortedListMap/shift.phpt" role="test" />
-    <file name="StableSortedListMap/toArray.phpt" role="test" />
-    <file name="StableSortedListMap/traversable.phpt" role="test" />
-    <file name="StableSortedListMap/types.phpt" role="test" />
-    <file name="StableSortedListMap/unserialize.phpt" role="test" />
-    <file name="StableSortedListSet/StrictSet.phpt" role="test" />
-    <file name="StableSortedListSet/add.phpt" role="test" />
-    <file name="StableSortedListSet/aggregate.phpt" role="test" />
-    <file name="StableSortedListSet/clone.phpt" role="test" />
-    <file name="StableSortedListSet/contains.phpt" role="test" />
-    <file name="StableSortedListSet/exceptionhandler.phpt" role="test" />
-    <file name="StableSortedListSet/gc.phpt" role="test" />
-    <file name="StableSortedListSet/reinit_forbidden.phpt" role="test" />
-    <file name="StableSortedListSet/serialization.phpt" role="test" />
-    <file name="StableSortedListSet/set_state.phpt" role="test" />
-    <file name="StableSortedListSet/shift.phpt" role="test" />
-    <file name="StableSortedListSet/traversable.phpt" role="test" />
-    <file name="StableSortedListSet/unserialize.phpt" role="test" />
-    <file name="StableSortedListSet/unserialize_sorted.phpt" role="test" />
     <file name="StrictHashMap/StrictMap.phpt" role="test" />
     <file name="StrictHashMap/aggregate.phpt" role="test" />
     <file name="StrictHashMap/array.phpt" role="test" />
@@ -313,6 +291,43 @@
     <file name="StrictHashSet/single.phpt" role="test" />
     <file name="StrictHashSet/traversable.phpt" role="test" />
     <file name="StrictHashSet/unserialize.phpt" role="test" />
+    <file name="StrictHeap/StrictHeap.phpt" role="test" />
+    <file name="StrictHeap/extensible.phpt" role="test" />
+    <file name="StrictHeap/reflection.phpt" role="test" />
+    <file name="StrictHeap/serialization.phpt" role="test" />
+    <file name="StrictSortedVectorMap/SortedStrictMap.phpt" role="test" />
+    <file name="StrictSortedVectorMap/aggregate.phpt" role="test" />
+    <file name="StrictSortedVectorMap/array.phpt" role="test" />
+    <file name="StrictSortedVectorMap/clear.phpt" role="test" />
+    <file name="StrictSortedVectorMap/clone.phpt" role="test" />
+    <file name="StrictSortedVectorMap/contains.phpt" role="test" />
+    <file name="StrictSortedVectorMap/exceptionhandler.phpt" role="test" />
+    <file name="StrictSortedVectorMap/from_pairs.phpt" role="test" />
+    <file name="StrictSortedVectorMap/gc.phpt" role="test" />
+    <file name="StrictSortedVectorMap/keys_values.phpt" role="test" />
+    <file name="StrictSortedVectorMap/offsetExists.phpt" role="test" />
+    <file name="StrictSortedVectorMap/reinit_forbidden.phpt" role="test" />
+    <file name="StrictSortedVectorMap/remove.phpt" role="test" />
+    <file name="StrictSortedVectorMap/serialization.phpt" role="test" />
+    <file name="StrictSortedVectorMap/shift.phpt" role="test" />
+    <file name="StrictSortedVectorMap/toArray.phpt" role="test" />
+    <file name="StrictSortedVectorMap/traversable.phpt" role="test" />
+    <file name="StrictSortedVectorMap/types.phpt" role="test" />
+    <file name="StrictSortedVectorMap/unserialize.phpt" role="test" />
+    <file name="StrictSortedVectorSet/StrictSet.phpt" role="test" />
+    <file name="StrictSortedVectorSet/add.phpt" role="test" />
+    <file name="StrictSortedVectorSet/aggregate.phpt" role="test" />
+    <file name="StrictSortedVectorSet/clone.phpt" role="test" />
+    <file name="StrictSortedVectorSet/contains.phpt" role="test" />
+    <file name="StrictSortedVectorSet/exceptionhandler.phpt" role="test" />
+    <file name="StrictSortedVectorSet/gc.phpt" role="test" />
+    <file name="StrictSortedVectorSet/reinit_forbidden.phpt" role="test" />
+    <file name="StrictSortedVectorSet/serialization.phpt" role="test" />
+    <file name="StrictSortedVectorSet/set_state.phpt" role="test" />
+    <file name="StrictSortedVectorSet/shift.phpt" role="test" />
+    <file name="StrictSortedVectorSet/traversable.phpt" role="test" />
+    <file name="StrictSortedVectorSet/unserialize.phpt" role="test" />
+    <file name="StrictSortedVectorSet/unserialize_sorted.phpt" role="test" />
     <file name="StrictTreeMap/SortedStrictMap.phpt" role="test" />
     <file name="StrictTreeMap/aggregate.phpt" role="test" />
     <file name="StrictTreeMap/array.phpt" role="test" />
@@ -404,10 +419,15 @@
     <file name="misc/stable_compare_2.phpt" role="test" />
     <file name="misc/stable_compare_3.phpt" role="test" />
     <file name="misc/strict_hash.phpt" role="test" />
+    <file name="misc/strict_hash_32bit.phpt" role="test" />
     <file name="misc/strict_hash_array_recursion.phpt" role="test" />
+    <file name="misc/strict_hash_array_recursion_32bit.phpt" role="test" />
     <file name="misc/strict_hash_array_references.phpt" role="test" />
+    <file name="misc/strict_hash_array_references_32bit.phpt" role="test" />
     <file name="misc/strict_hash_recursion.phpt" role="test" />
+    <file name="misc/strict_hash_recursion_32bit.phpt" role="test" />
     <file name="misc/strict_hash_typed_property.phpt" role="test" />
+    <file name="reflection.phpt" role="test" />
    </dir>
   </dir>
  </contents>
@@ -523,7 +543,7 @@
    <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
    <notes>
 * Breaking change: Make StrictMinHeap/StrictMaxHeap stop inheriting from SplHeap to be more memory efficient.
-* Properly sort in StableSortedListSet::__construct and __set_state
+* Properly sort in StrictSortedVectorSet::__construct and __set_state
 * Deduplicate code.
 * Reduce size/capacity limits to the same limits as array for Deque.
 * Add ImmutableSequence::map(), filter()
@@ -581,7 +601,7 @@
 * Make StrictTreeSet/StrictTreeMap use a binary search tree (not yet a balanced tree).
 * Associate iterators on StrictTreeSet/StrictTreeMap with nodes of the tree.
   Invalidate iterators pointing to a node when that node of the set/map is removed.
-* Fix sorting order when instantiating StableSortedListSet/StrictTreeSet/StrictTreeMap from unsorted arrays.
+* Fix sorting order when instantiating StrictSortedVectorSet/StrictTreeSet/StrictTreeMap from unsorted arrays.
    </notes>
   </release>
   <release>
@@ -613,7 +633,7 @@
    </stability>
    <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
    <notes>
-* Add `StableSortedListSet` and `StableSortedListMap` as memory-efficient alternatives to `StrictTreeSet`/`StrictTreeMap`.
+* Add `StrictSortedVectorSet` and `StrictSortedVectorMap` as memory-efficient alternatives to `StrictTreeSet`/`StrictTreeMap`.
 * Speed up `StrictTreeSet::__unserialize` and `StrictTreeMap::__unserialize` when data is already sorted.
 * Fix crash in `StrictHashSet` and `StrictTreeSet` during cyclic garbage collection.
    </notes>
