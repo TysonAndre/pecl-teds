@@ -139,8 +139,10 @@
     <file name="BitSet/serialization.phpt" role="test" />
     <file name="BitSet/setValueAt.phpt" role="test" />
     <file name="BitSet/set_state.phpt" role="test" />
+    <file name="BitSet/shift.phpt" role="test" />
     <file name="BitSet/traversable.phpt" role="test" />
     <file name="BitSet/unserialize.phpt" role="test" />
+    <file name="BitSet/unshift.phpt" role="test" />
     <file name="Deque/Deque.phpt" role="test" />
     <file name="Deque/aggregate.phpt" role="test" />
     <file name="Deque/arrayCast.phpt" role="test" />

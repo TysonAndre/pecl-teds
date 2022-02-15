@@ -1077,6 +1077,29 @@ PHP_METHOD(Teds_BitSet, push)
 	TEDS_RETURN_VOID();
 }
 
+static zend_always_inline void teds_bitset_entries_unshift_single(teds_bitset_entries *array, const bool value)
+{
+	const size_t old_size = array->bit_size;
+	const size_t old_capacity = array->bit_capacity;
+
+	ZEND_ASSERT((old_capacity & 7) == 0);
+
+	if (UNEXPECTED(old_size >= old_capacity)) {
+		ZEND_ASSERT(old_size == old_capacity);
+		const size_t new_capacity = teds_bitset_compute_next_valid_capacity(old_size + (old_size >> 1));
+		ZEND_ASSERT(new_capacity > old_capacity);
+		teds_bitset_entries_raise_capacity(array, new_capacity);
+	}
+
+	array->bit_size++;
+	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
+	uint8_t *const entries_bits = array->entries_bits;
+	for (size_t n = old_size >> 3; n > 0; n--) {
+		entries_bits[n] = (entries_bits[n] << 1) | (entries_bits[n - 1] >> 7);
+	}
+	entries_bits[0] = (entries_bits[0] << 1) | (value ? 1 : 0);
+}
+
 PHP_METHOD(Teds_BitSet, unshift)
 {
 	const zval *args;
@@ -1086,11 +1109,25 @@ PHP_METHOD(Teds_BitSet, unshift)
 		Z_PARAM_VARIADIC('+', args, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
-	(void)args;
-	(void)argc;
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->bit_size;
+	const size_t new_size = old_size + argc;
+	/* The compiler will type check but eliminate dead code on platforms where size_t is 32 bits (4 bytes) */
+	if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_size > MAX_VALID_OFFSET + 1 || new_size < old_size)) {
+		teds_error_noreturn_max_bitset_capacity();
+		ZEND_UNREACHABLE();
+	}
 
-	zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet::unshift not implemented yet", 0);
-	RETURN_THROWS();
+	/* TODO: Optimize this for large varargs case */
+	for (uint32_t i = 0; i < argc; i++) {
+		zend_long new_value;
+		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
+		teds_bitset_entries_unshift_single(array, new_value);
+	}
+	TEDS_RETURN_VOID();
 }
 
 /* Based on array_push */
@@ -1149,12 +1186,44 @@ PHP_METHOD(Teds_BitSet, pop)
 	}
 }
 
+static zend_always_inline void teds_bitset_entries_shift(teds_bitset_entries *array) {
+	uint8_t *const entries_bits = array->entries_bits;
+	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
+	array->bit_size--;
+	/* Number of bytes *after* removing the last byte */
+	const size_t bytes = array->bit_size >> 3;
+	/* Remove the least significant bit and replace it */
+	/* TODO: Optimize */
+	size_t i = 0;
+#ifndef WORDS_BIGENDIAN
+	for (; i + 8 <= bytes; i += 8) {
+		*((uint64_t *)(&entries_bits[i])) = (*((uint64_t *)(&entries_bits[i])) >> 1) | (((uint64_t)entries_bits[i + 8]) << 63);
+	}
+#endif
+	for (; i < bytes; i++) {
+		entries_bits[i] = (entries_bits[i] >> 1) | (entries_bits[i + 1] << 7);
+	}
+	entries_bits[i] = (entries_bits[i] >> 1);
+}
+
 PHP_METHOD(Teds_BitSet, shift)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet::shift not implemented yet", 0);
-	RETURN_THROWS();
+	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->bit_size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\BitSet", 0);
+		RETURN_THROWS();
+	}
+	/* Remove the least significant bit and replace it */
+	ZVAL_BOOL(return_value, array->entries_bits[0] & 1);
+	teds_bitset_entries_shift(array);
+
+	const size_t capacity = teds_bitset_compute_next_valid_capacity(old_size);
+	if (UNEXPECTED(capacity < array->bit_capacity)) {
+		teds_bitset_entries_shrink_capacity(array, old_size - 1, capacity, array->entries_bits);
+	}
 }
 
 ZEND_COLD PHP_METHOD(Teds_BitSet, offsetUnset)
