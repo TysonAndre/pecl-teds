@@ -1093,10 +1093,27 @@ static zend_always_inline void teds_bitset_entries_unshift_single(teds_bitset_en
 
 	array->bit_size++;
 	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
+	size_t n = old_size >> 3;
 	uint8_t *const entries_bits = array->entries_bits;
-	for (size_t n = old_size >> 3; n > 0; n--) {
+#if WORDS_BIGENDIAN
+	for (; n > 0; n--) {
 		entries_bits[n] = (entries_bits[n] << 1) | (entries_bits[n - 1] >> 7);
 	}
+#else
+	for (; n & 7; n--) {
+		entries_bits[n] = (entries_bits[n] << 1) | (entries_bits[n - 1] >> 7);
+	}
+	if (n >= 8) {
+		entries_bits[n] = (entries_bits[n] << 1) | (entries_bits[n - 1] >> 7);
+		while (n > 8) {
+			n -= 8;
+			*((uint64_t *)(&entries_bits[n])) = (*((uint64_t *)(&entries_bits[n])) << 1) | (entries_bits[n - 1] >> 7);
+		}
+		*((uint64_t *)(&entries_bits[0])) = (*((uint64_t *)(&entries_bits[0])) << 1) | (value ? 1 : 0);
+		return;
+	}
+	ZEND_ASSERT(n == 0);
+#endif
 	entries_bits[0] = (entries_bits[0] << 1) | (value ? 1 : 0);
 }
 
