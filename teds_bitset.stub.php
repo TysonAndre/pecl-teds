@@ -47,8 +47,7 @@ final class BitSet implements \IteratorAggregate, Sequence, \JsonSerializable
 
     public function push(mixed ...$values): void {}
     /**
-     * @throws \RuntimeException not implemented yet
-     * @return never
+     * TODO: optimize unshift(), this is currently inefficient.
      */
     public function unshift(mixed ...$values): void {}
     public function pushBits(bool ...$values): void {}
@@ -56,10 +55,6 @@ final class BitSet implements \IteratorAggregate, Sequence, \JsonSerializable
      * @throws \RuntimeException if there are no more elements
      */
     public function pop(): bool {}
-    /**
-     * @throws \RuntimeException not implemented yet
-     * @return never
-     */
     public function shift(): bool {}
 
     /** @psalm-return list<int> */
