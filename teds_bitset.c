@@ -506,6 +506,18 @@ PHP_METHOD(Teds_BitSet, __construct)
 	}
 }
 
+PHP_METHOD(Teds_BitSet, clear)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+
+	if (!teds_bitset_entries_empty_capacity(array)) {
+		efree(array->entries_bits);
+	}
+	teds_bitset_entries_set_empty_list(array);
+}
+
 PHP_METHOD(Teds_BitSet, getIterator)
 {
 	ZEND_PARSE_PARAMETERS_NONE();

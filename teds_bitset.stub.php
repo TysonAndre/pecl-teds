@@ -61,6 +61,7 @@ final class BitSet implements \IteratorAggregate, Sequence, \JsonSerializable
     public function toArray(): array {}
     /** @implementation-alias Teds\BitSet::toArray */
     public function values(): array {}
+    public function clear(): void {}
     // Strictly typed, unlike offsetGet/offsetSet
     public function get(int $offset): bool {}
     /**

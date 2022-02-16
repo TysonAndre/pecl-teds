@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 736a9d8d7cfd78f2ebcbee39433c42b6a040b795 */
+ * Stub hash: 7ce66569b652ddb181bebf7b7ffb6800f93ed93e */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_BitSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -44,6 +44,9 @@ ZEND_END_ARG_INFO()
 #define arginfo_class_Teds_BitSet_toArray arginfo_class_Teds_BitSet___serialize
 
 #define arginfo_class_Teds_BitSet_values arginfo_class_Teds_BitSet___serialize
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitSet_clear, 0, 0, IS_VOID, 0)
+ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitSet_get, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
@@ -108,6 +111,7 @@ ZEND_METHOD(Teds_BitSet, pushBits);
 ZEND_METHOD(Teds_BitSet, pop);
 ZEND_METHOD(Teds_BitSet, shift);
 ZEND_METHOD(Teds_BitSet, toArray);
+ZEND_METHOD(Teds_BitSet, clear);
 ZEND_METHOD(Teds_BitSet, get);
 ZEND_METHOD(Teds_BitSet, set);
 ZEND_METHOD(Teds_BitSet, setBit);
@@ -137,6 +141,7 @@ static const zend_function_entry class_Teds_BitSet_methods[] = {
 	ZEND_ME(Teds_BitSet, shift, arginfo_class_Teds_BitSet_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, toArray, arginfo_class_Teds_BitSet_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_BitSet, values, toArray, arginfo_class_Teds_BitSet_values, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, clear, arginfo_class_Teds_BitSet_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, get, arginfo_class_Teds_BitSet_get, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, set, arginfo_class_Teds_BitSet_set, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, setBit, arginfo_class_Teds_BitSet_setBit, ZEND_ACC_PUBLIC)

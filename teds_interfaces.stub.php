@@ -36,6 +36,9 @@ interface Collection extends \Traversable, \Countable {
 
     /** Returns true if this contains a value identical to $value */
     public function contains(mixed $value): bool {}
+
+    /** Removes all elements from this Collection or throws. */
+    public function clear(): void {}
 }
 
 /**

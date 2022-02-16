@@ -36,6 +36,11 @@ final class ImmutableIterable implements \IteratorAggregate, Collection, \JsonSe
     public function values(): array {}
     public function keyAt(int $offset): mixed {}
     public function valueAt(int $offset): mixed {}
+    /**
+     * @throws \Teds\UnsupportedOperationException
+     * @return never
+     */
+    public function clear(): void {}
 
     public function indexOfKey(mixed $key): ?int {}
     public function indexOfValue(mixed $value): ?int {}

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 2d99125e7a4ddd27ce581205c262b7c687995a95 */
+ * Stub hash: b99c5b20cb6f949354376325c4bfba6667fe8480 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableIterable___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -43,6 +43,9 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_ImmutableIterable_valueAt arginfo_class_Teds_ImmutableIterable_keyAt
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableIterable_clear, 0, 0, IS_VOID, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableIterable_indexOfKey, 0, 1, IS_LONG, 1)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
@@ -78,6 +81,7 @@ ZEND_METHOD(Teds_ImmutableIterable, keys);
 ZEND_METHOD(Teds_ImmutableIterable, values);
 ZEND_METHOD(Teds_ImmutableIterable, keyAt);
 ZEND_METHOD(Teds_ImmutableIterable, valueAt);
+ZEND_METHOD(Teds_ImmutableIterable, clear);
 ZEND_METHOD(Teds_ImmutableIterable, indexOfKey);
 ZEND_METHOD(Teds_ImmutableIterable, indexOfValue);
 ZEND_METHOD(Teds_ImmutableIterable, containsKey);
@@ -99,6 +103,7 @@ static const zend_function_entry class_Teds_ImmutableIterable_methods[] = {
 	ZEND_ME(Teds_ImmutableIterable, values, arginfo_class_Teds_ImmutableIterable_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableIterable, keyAt, arginfo_class_Teds_ImmutableIterable_keyAt, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableIterable, valueAt, arginfo_class_Teds_ImmutableIterable_valueAt, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableIterable, clear, arginfo_class_Teds_ImmutableIterable_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableIterable, indexOfKey, arginfo_class_Teds_ImmutableIterable_indexOfKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableIterable, indexOfValue, arginfo_class_Teds_ImmutableIterable_indexOfValue, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableIterable, containsKey, arginfo_class_Teds_ImmutableIterable_containsKey, ZEND_ACC_PUBLIC)
