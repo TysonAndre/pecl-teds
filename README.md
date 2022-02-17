@@ -431,6 +431,13 @@ php > echo json_encode(Teds\binary_search($values, 1, useKey: true));
 {"found":true,"key":1,"value":100}
 ```
 
+## Array functionality
+
+[teds.stub.php](./teds.stub.php)
+
+- `Teds\is_same_array_handle(array $array1, array $array2)` - check if two arrays have the same handle, for [infinite recursion detection](tests/array/is_same_array_handle.phpt).
+- `Teds\array_value_first(array $array)`, `Teds\array_value_last(array $array)` - Return the first/last value of an array without creating references or moving the internal array pointer. Similar to `$array[array_key_first($array)] ?? null`.
+
 ## Motivation
 
 This contains functionality and data structures that may be proposed for inclusion into PHP itself (under a different namespace) at a future date, reimplemented using [SPL's source code](https://github.com/php/php-src/tree/master/ext/spl) as a starting point.

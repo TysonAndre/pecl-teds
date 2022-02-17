@@ -1081,6 +1081,20 @@ PHP_FUNCTION(strict_hash)
 }
 /* }}} */
 
+/* {{{ Check if two arrays have the same array handle (pointer) */
+PHP_FUNCTION(is_same_array_handle)
+{
+	HashTable *array1, *array2;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ARRAY_HT(array1)
+		Z_PARAM_ARRAY_HT(array2)
+	ZEND_PARSE_PARAMETERS_END();
+
+	RETURN_BOOL(array1 == array2); /* Check for having the same pointer */
+}
+/* }}} */
+
 /* {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(teds)
 {

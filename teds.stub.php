@@ -140,3 +140,27 @@ function strict_hash(mixed $value): int { }
  * - `['found' => false, 'value' => null, 'key' => null]` if there is no value smaller or equal to $target.
  */
 function binary_search(array $array, mixed $target, ?callable $comparer = null, bool $useKey = false): array { }
+
+/**
+ * Check if two arrays have the same array handle/pointer.
+ *
+ * This is useful for implementing infinite recursion detection in pure php.
+ * (Similar to what var_export, json_encode, etc. do)
+ *
+ * If this returns true, this implies $array1 === $array2, but not vice versa.
+ *
+ * Note that two arrays created in different places will likely be equivalent(`===`) while this returns false,
+ * and whether or not this returns true may depend on opcache optimization levels and the choice of unserializer
+ * and php version used.
+ * (e.g. the empty array is usually but not always the same instance)
+ *
+ * Note that arrays are copy on write, so when modifying an array it will cease to be the same as
+ * other unmodified copies of the original array value.
+ *
+ * Design considerations:
+ * - This avoids exposing raw pointer addresses or values which can be used to compute raw pointer addresses.
+ * - This works even on platforms with 32-bit zend_long and 64-bit pointer sizes.
+ * - This is as simple as is needed to build other functionality.
+ */
+function is_same_array_handle(array $array1, array $array2): bool {
+}
