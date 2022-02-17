@@ -333,12 +333,21 @@ static void teds_lowmemoryvector_entries_copy_ctor(teds_lowmemoryvector_entries 
 static void teds_lowmemoryvector_entries_dtor(teds_lowmemoryvector_entries *array)
 {
 	if (!teds_lowmemoryvector_entries_empty_capacity(array)) {
-		zval *entries = array->entries_zval;
-		if (array->type_tag > LMV_TYPE_LAST_NONREFCOUNTED) {
-			ZEND_ASSERT(array->type_tag == LMV_TYPE_ZVAL);
+		/* Get state before replacing entries with empty entry list in case of side effects of destructors */
+		zval *const entries = array->entries_zval;
+		const uint8_t type_tag = array->type_tag;
+		const size_t size = array->size;
+
+		/* Replace entries with empty entry list */
+		teds_lowmemoryvector_entries_set_empty_list(array);
+
+		/* Free the elements */
+		if (type_tag > LMV_TYPE_LAST_NONREFCOUNTED) {
+			ZEND_ASSERT(type_tag == LMV_TYPE_ZVAL);
+
 			zval *it = entries;
 			array->entries_zval = NULL;
-			for (zval *end = it + array->size; it < end; it++) {
+			for (zval *const end = it + size; it < end; it++) {
 				zval_ptr_dtor(it);
 			}
 		}
@@ -554,6 +563,16 @@ PHP_METHOD(Teds_LowMemoryVector, __construct)
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
+}
+
+/* Clear this */
+PHP_METHOD(Teds_LowMemoryVector, clear)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+
+	teds_lowmemoryvector_entries_dtor(array);
 }
 
 PHP_METHOD(Teds_LowMemoryVector, getIterator)

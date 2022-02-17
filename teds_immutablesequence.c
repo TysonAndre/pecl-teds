@@ -656,6 +656,15 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, pop)
 	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support pop - it is immutable");
 }
 
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, clear)
+{
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support clear - it is immutable");
+}
+
 ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, shift)
 {
 	if (zend_parse_parameters_none() == FAILURE) {

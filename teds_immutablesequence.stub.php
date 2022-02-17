@@ -53,15 +53,18 @@ final class ImmutableSequence implements \IteratorAggregate, Sequence, \JsonSeri
     /**
      * @throws \Teds\UnsupportedOperationException unconditionally
      * @return never
-     * @implementation-alias Teds\ImmutableSequence::push
      */
     public function unshift(mixed ...$values): void {}
     /**
      * @throws \Teds\UnsupportedOperationException unconditionally
      * @return never
-     * @implementation-alias Teds\ImmutableSequence::pop
      */
     public function shift(): mixed {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @return never
+     */
+    public function clear(): void {}
     // Must be mixed for compatibility with ArrayAccess
     public function offsetGet(mixed $offset): mixed {}
     public function offsetExists(mixed $offset): bool {}

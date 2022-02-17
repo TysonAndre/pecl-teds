@@ -71,6 +71,7 @@ final class LowMemoryVector implements \IteratorAggregate, Sequence, \JsonSerial
     public function pop(): mixed {}
     public function unshift(mixed ...$values): void {}
     public function shift(): mixed {}
+    public function clear(): void {}
 
     /** @psalm-return list<mixed> */
     public function toArray(): array {}

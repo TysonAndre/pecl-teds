@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a2829b8d9fae55c7afb2553f5eaeadf516fcd2f1 */
+ * Stub hash: d6d00bfb4b38ec143aed9296dfd7a439a3f92564 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Collection_values, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
@@ -11,6 +11,9 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Collection_contains, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Collection_clear, 0, 0, IS_VOID, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Sequence_get, 0, 1, IS_MIXED, 0)
@@ -47,6 +50,7 @@ static const zend_function_entry class_Teds_Collection_methods[] = {
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Collection, toArray, arginfo_class_Teds_Collection_toArray, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Collection, isEmpty, arginfo_class_Teds_Collection_isEmpty, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Collection, contains, arginfo_class_Teds_Collection_contains, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
+	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Collection, clear, arginfo_class_Teds_Collection_clear, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_FE_END
 };
 

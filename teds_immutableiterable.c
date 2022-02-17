@@ -23,6 +23,7 @@
 #include "teds_interfaces.h"
 #include "teds_immutableiterable_arginfo.h"
 #include "teds_immutableiterable.h"
+#include "teds_exceptions.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
 #include "ext/spl/spl_exceptions.h"
@@ -430,6 +431,16 @@ PHP_METHOD(Teds_ImmutableIterable, __construct)
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
 }
+
+ZEND_COLD PHP_METHOD(Teds_ImmutableIterable, clear)
+{
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableIterable does not support clear - it is immutable");
+}
+
 
 PHP_METHOD(Teds_ImmutableIterable, getIterator)
 {

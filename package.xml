@@ -143,6 +143,8 @@
     <file name="BitSet/traversable.phpt" role="test" />
     <file name="BitSet/unserialize.phpt" role="test" />
     <file name="BitSet/unshift.phpt" role="test" />
+    <file name="Collection/clear_nonempty.phpt" role="test" />
+    <file name="Collection/empty.phpt" role="test" />
     <file name="Deque/Deque.phpt" role="test" />
     <file name="Deque/aggregate.phpt" role="test" />
     <file name="Deque/arrayCast.phpt" role="test" />

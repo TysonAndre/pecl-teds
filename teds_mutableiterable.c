@@ -463,10 +463,10 @@ PHP_METHOD(Teds_MutableIterable, clear)
 		return;
 	}
 	/* Immediately make the original storage inaccessible and set count/capacity to 0 in case destructors modify the vector */
-	const uint32_t old_size = intern->array.size;
+	const uint32_t entries_to_remove = intern->array.size;
 	zval *const old_entries = (zval *)intern->array.entries;
 	teds_mutableiterable_entries_set_empty_list(&intern->array);
-	teds_zval_dtor_range(old_entries, old_size * 2);
+	teds_zval_dtor_range(old_entries, entries_to_remove * 2);
 	efree(old_entries);
 
 	TEDS_RETURN_VOID();

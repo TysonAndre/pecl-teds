@@ -351,12 +351,17 @@ static HashTable* teds_intvector_get_properties_for(zend_object *obj, zend_prop_
 	return teds_intvector_entries_to_refcounted_array(array);
 }
 
+static void teds_intvector_entries_clear(teds_intvector_entries *array)
+{
+	if (!teds_intvector_entries_empty_capacity(array)) {
+		efree(array->entries_raw);
+	}
+}
+
 static void teds_intvector_free_storage(zend_object *object)
 {
 	teds_intvector *intern = teds_intvector_from_object(object);
-	if (!teds_intvector_entries_empty_capacity(&intern->array)) {
-		efree(intern->array.entries_raw);
-	}
+	teds_intvector_entries_clear(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
 
@@ -470,6 +475,19 @@ PHP_METHOD(Teds_IntVector, __construct)
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
+}
+
+/* Clear this */
+PHP_METHOD(Teds_IntVector, clear)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+
+	if (!teds_intvector_entries_empty_capacity(array)) {
+		efree(array->entries_raw);
+	}
+	teds_intvector_entries_set_empty_list(array);
 }
 
 PHP_METHOD(Teds_IntVector, getIterator)
