@@ -23,6 +23,8 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Fix ImmutableSequence throwing for ArrayAccess shorthand read syntax.
+* Change exception type to `Teds\UnsupportedOperationException` in a few places.
+* Add `Teds\is_same_array_handle(array $array1, array $array2): bool` for infinite recursion detection when processing arrays.
  </notes>
  <contents>
   <dir name="/">
@@ -392,6 +394,7 @@
     <file name="Vector/traversable.phpt" role="test" />
     <file name="Vector/unserialize.phpt" role="test" />
     <file name="array/array_value_first.phpt" role="test" />
+    <file name="array/is_same_array_handle.phpt" role="test" />
     <file name="encode_raw_string.inc" role="test" />
     <file name="iterable/all_array.phpt" role="test" />
     <file name="iterable/all_traversable.phpt" role="test" />

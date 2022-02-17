@@ -91,6 +91,7 @@ Teds\binary_search
 Teds\find
 Teds\fold
 Teds\includes_value
+Teds\is_same_array_handle
 Teds\none
 Teds\stable_compare
 Teds\strict_hash
