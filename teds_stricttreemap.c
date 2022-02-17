@@ -218,8 +218,6 @@ static zend_always_inline bool teds_stricttreemap_tree_insert(teds_stricttreemap
 		tree->root = it;
 		it->left = NULL;
 		it->right = NULL;
-		it->prev = NULL;
-		it->next = NULL;
 		tree->nNumOfElements++;
 		return true;
 	}
@@ -230,17 +228,10 @@ static zend_always_inline bool teds_stricttreemap_tree_insert(teds_stricttreemap
 		if (comparison > 0) {
 			if (it->right == NULL) {
 				c = teds_stricttreemap_node_alloc(key, value, it);
-				teds_stricttreemap_node *const next = it->next;
 
 				c->left = NULL;
 				c->right = NULL;
-				c->prev = it;
-				c->next = next;
-				it->next = c;
 				it->right = c;
-				if (next) {
-					next->prev = c;
-				}
 finish_insert:
 				tree->nNumOfElements++;
 				if (UNEXPECTED(tree->nNumOfElements >= TEDS_MAX_ZVAL_PAIR_COUNT)) {
@@ -259,17 +250,10 @@ finish_insert:
 		} else if ((add_new && !ZEND_DEBUG) || comparison < 0) {
 			if (it->left == NULL) {
 				c = teds_stricttreemap_node_alloc(key, value, it);
-				teds_stricttreemap_node *const prev = it->prev;
 
 				c->left = NULL;
 				c->right = NULL;
-				c->prev = prev;
-				c->next = it;
-				it->prev = c;
 				it->left = c;
-				if (prev) {
-					prev->next = c;
-				}
 				goto finish_insert;
 			}
 			it = it->left;
@@ -333,11 +317,6 @@ static teds_stricttreemap_node *teds_stricttreemap_node_build_tree_from_sorted_n
 			ZEND_ASSERT(root != left);
 		} else {
 			root->left = NULL;
-			/* This is the first node after left_parent */
-			root->prev = left_parent;
-			if (left_parent) {
-				left_parent->next = root;
-			}
 		}
 	}
 
@@ -350,11 +329,6 @@ static teds_stricttreemap_node *teds_stricttreemap_node_build_tree_from_sorted_n
 			right->parent = root;
 		} else {
 			root->right = NULL;
-			/* This is the last node before right_parent */
-			root->next = right_parent;
-			if (right_parent) {
-				right_parent->prev = root;
-			}
 		}
 	}
 	return root;
@@ -491,21 +465,11 @@ static teds_stricttreemap_node *teds_stricttreemap_node_copy_ctor_recursive(cons
 		copy->left = teds_stricttreemap_node_copy_ctor_recursive(from->left, copy, left_parent_node, copy);
 	} else {
 		copy->left = NULL;
-		/* This is the first node after left_parent_node */
-		copy->prev = left_parent_node;
-		if (left_parent_node) {
-			left_parent_node->next = copy;
-		}
 	}
 	if (from->right) {
 		copy->right = teds_stricttreemap_node_copy_ctor_recursive(from->right, copy, copy, right_parent_node);
 	} else {
 		copy->right = NULL;
-		/* This is the last node before right_parent_node */
-		copy->next = right_parent_node;
-		if (right_parent_node) {
-			right_parent_node->prev = copy;
-		}
 	}
 	return copy;
 }
@@ -778,7 +742,7 @@ static void teds_stricttreemap_it_move_forward(zend_object_iterator *iter)
 	if (!teds_stricttreemap_node_valid(node)) {
 		return;
 	}
-	teds_stricttreemap_node *const next = node->next;
+	teds_stricttreemap_node *const next = teds_stricttreemap_node_get_next(node);
 	((teds_stricttreemap_it*)iter)->node = next;
 	if (next) {
 		TEDS_STRICTTREEMAP_NODE_REFCOUNT(next)++;
@@ -1359,17 +1323,6 @@ static zend_always_inline void teds_stricttreemap_tree_replace_node_with_descend
 }
 
 static zend_always_inline void teds_stricttreemap_tree_remove_node(teds_stricttreemap_tree *tree, teds_stricttreemap_node *const node, bool free_zvals) {
-	teds_stricttreemap_node *const prev = node->prev;
-	teds_stricttreemap_node *const next = node->next;
-	if (prev) {
-		prev->next = next;
-	}
-	if (next) {
-		next->prev = prev;
-	}
-	node->prev = NULL;
-	node->next = NULL;
-
 	if (!node->left) {
 		/* If a valid red-black tree has only 1 child,
 		 * then that child is guaranteed to be red, so that the number of black nodes on paths on both sides are equal. */

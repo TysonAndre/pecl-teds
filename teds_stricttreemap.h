@@ -24,8 +24,6 @@ typedef struct _teds_stricttreemap_node {
 		struct _teds_stricttreemap_node *children[2];
 	};
 	struct _teds_stricttreemap_node *parent;
-	struct _teds_stricttreemap_node *prev;
-	struct _teds_stricttreemap_node *next;
 } teds_stricttreemap_node;
 
 #define TEDS_STRICTTREEMAP_NODE_REFCOUNT(node) Z_EXTRA((node)->key)
@@ -51,18 +49,77 @@ void teds_stricttreemap_tree_dtor(teds_stricttreemap_tree *array);
 
 void teds_stricttreemap_tree_dtor_range(teds_stricttreemap_node *start, size_t from, size_t to);
 
+static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_leftmost(teds_stricttreemap_node *node)
+{
+	ZEND_ASSERT(node != NULL);
+	while (node->left) {
+		node = node->left;
+	}
+	return node;
+}
+
+static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_rightmost(teds_stricttreemap_node *node)
+{
+	ZEND_ASSERT(node != NULL);
+	while (node->right) {
+		node = node->right;
+	}
+	return node;
+}
+
+static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_next(teds_stricttreemap_node *node)
+{
+	/**
+	 * The next node of "a" is "b".  The next node of "b" is "c".
+	 *   b
+	 *  / \_
+	 * a    d
+	 *     /
+	 *    c
+	 */
+	if (node->right) {
+		return teds_stricttreemap_node_get_leftmost(node->right);
+	}
+	while (true) {
+		teds_stricttreemap_node *parent = node->parent;
+		if (!parent) {
+			return NULL;
+		}
+		ZEND_ASSERT(node != parent);
+		if (parent->right != node) {
+			ZEND_ASSERT(parent->left == node);
+			return parent;
+		}
+		node = parent;
+	}
+}
+
+static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_prev(teds_stricttreemap_node *node)
+{
+	if (node->left) {
+		return teds_stricttreemap_node_get_rightmost(node->left);
+	}
+	while (true) {
+		teds_stricttreemap_node *parent = node->parent;
+		if (!parent) {
+			return NULL;
+		}
+		ZEND_ASSERT(node != parent);
+		if (parent->left != node) {
+			ZEND_ASSERT(parent->right == node);
+			return parent;
+		}
+		node = parent;
+	}
+}
+
 static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_tree_get_first(const teds_stricttreemap_tree *tree)
 {
 	teds_stricttreemap_node *it = tree->root;
 	if (it == NULL) {
 		return NULL;
 	}
-	while (true) {
-		if (!it->left) {
-			return it;
-		}
-		it = it->left;
-	}
+	return teds_stricttreemap_node_get_leftmost(it);
 }
 
 static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_tree_get_last(const teds_stricttreemap_tree *tree)
@@ -71,12 +128,7 @@ static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_tree_get_l
 	if (it == NULL) {
 		return NULL;
 	}
-	while (true) {
-		if (!it->right) {
-			return it;
-		}
-		it = it->right;
-	}
+	return teds_stricttreemap_node_get_rightmost(it);
 }
 
 #define TEDS_STRICTTREEMAP_FOREACH(_stricttreemap) do { \
@@ -86,7 +138,7 @@ static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_tree_get_l
 	while (_p != NULL) {
 
 #define TEDS_STRICTTREEMAP_FOREACH_END() \
-		_p = _p->next; \
+		_p = teds_stricttreemap_node_get_next(_p); \
 	} \
 } while (0)
 

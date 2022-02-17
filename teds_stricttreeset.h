@@ -22,8 +22,6 @@ typedef struct _teds_stricttreeset_node {
 		struct _teds_stricttreeset_node *children[2];
 	};
 	struct _teds_stricttreeset_node *parent;
-	struct _teds_stricttreeset_node *prev;
-	struct _teds_stricttreeset_node *next;
 	uint8_t color;
 } teds_stricttreeset_node;
 
@@ -50,18 +48,31 @@ void teds_stricttreeset_tree_dtor(teds_stricttreeset_tree *array);
 
 void teds_stricttreeset_tree_dtor_range(teds_stricttreeset_node *start, size_t from, size_t to);
 
+static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_leftmost(teds_stricttreeset_node *node)
+{
+	ZEND_ASSERT(node != NULL);
+	while (node->left) {
+		node = node->left;
+	}
+	return node;
+}
+
+static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_rightmost(teds_stricttreeset_node *node)
+{
+	ZEND_ASSERT(node != NULL);
+	while (node->right) {
+		node = node->right;
+	}
+	return node;
+}
+
 static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_tree_get_first(const teds_stricttreeset_tree *tree)
 {
 	teds_stricttreeset_node *it = tree->root;
 	if (it == NULL) {
 		return NULL;
 	}
-	while (true) {
-		if (!it->left) {
-			return it;
-		}
-		it = it->left;
-	}
+	return teds_stricttreeset_node_get_leftmost(it);
 }
 
 static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_tree_get_last(const teds_stricttreeset_tree *tree)
@@ -70,11 +81,52 @@ static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_tree_get_l
 	if (it == NULL) {
 		return NULL;
 	}
+	return teds_stricttreeset_node_get_rightmost(it);
+}
+
+static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_next(teds_stricttreeset_node *node)
+{
+	/**
+	 * The next node of "a" is "b".  The next node of "b" is "c".
+	 *   b
+	 *  / \_
+	 * a    d
+	 *     /
+	 *    c
+	 */
+	if (node->right) {
+		return teds_stricttreeset_node_get_leftmost(node->right);
+	}
 	while (true) {
-		if (!it->right) {
-			return it;
+		teds_stricttreeset_node *parent = node->parent;
+		if (!parent) {
+			return NULL;
 		}
-		it = it->right;
+		ZEND_ASSERT(node != parent);
+		if (parent->right != node) {
+			ZEND_ASSERT(parent->left == node);
+			return parent;
+		}
+		node = parent;
+	}
+}
+
+static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_prev(teds_stricttreeset_node *node)
+{
+	if (node->left) {
+		return teds_stricttreeset_node_get_rightmost(node->left);
+	}
+	while (true) {
+		teds_stricttreeset_node *parent = node->parent;
+		if (!parent) {
+			return NULL;
+		}
+		ZEND_ASSERT(node != parent);
+		if (parent->left != node) {
+			ZEND_ASSERT(parent->right == node);
+			return parent;
+		}
+		node = parent;
 	}
 }
 
@@ -85,7 +137,7 @@ static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_tree_get_l
 	while (_p != NULL) {
 
 #define TEDS_STRICTTREESET_FOREACH_END() \
-		_p = _p->next; \
+		_p = teds_stricttreeset_node_get_next(_p); \
 	} \
 } while (0)
 

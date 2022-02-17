@@ -362,7 +362,6 @@ PHP_METHOD(Teds_BitSet, count)
 /* Get number of entries in this bitset */
 PHP_METHOD(Teds_BitSet, capacity)
 {
-	zval *object = ZEND_THIS;
 	ZEND_PARSE_PARAMETERS_NONE();
 	RETURN_LONG(Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_capacity);
 }
@@ -478,6 +477,7 @@ PHP_METHOD(Teds_BitSet, clear)
 		efree(array->entries_bits);
 	}
 	teds_bitset_entries_set_empty_list(array);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_BitSet, getIterator)
