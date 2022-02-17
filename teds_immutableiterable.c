@@ -103,20 +103,6 @@ static zend_always_inline bool teds_immutableiterable_entries_uninitialized(cons
 	return false;
 }
 
-/* Initializes the range [from, to) to null. Does not dtor existing entries. */
-/* TODO: Delete if this isn't used in the final version
-static void teds_immutableiterable_entries_init_elems(teds_immutableiterable_entries *array, zend_long from, zend_long to)
-{
-	ZEND_ASSERT(from <= to);
-	zval *begin = &array->entries[from].key;
-	zval *end = &array->entries[to].key;
-
-	while (begin != end) {
-		ZVAL_NULL(begin++);
-	}
-}
-*/
-
 static zend_always_inline void teds_immutableiterable_entries_set_empty_list(teds_immutableiterable_entries *array) {
 	array->size = 0;
 	array->entries = (zval_pair *)empty_entry_list;
@@ -130,7 +116,7 @@ static void teds_immutableiterable_entries_init_from_array(teds_immutableiterabl
 		zend_string *skey;
 		zval *val;
 		zval_pair *entries;
-		int i = 0;
+		uint32_t i = 0;
 
 		array->size = 0; /* reset size in case emalloc() fails */
 		array->entries = entries = safe_emalloc(size, sizeof(zval_pair), 0);

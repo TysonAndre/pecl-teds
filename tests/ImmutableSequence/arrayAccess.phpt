@@ -18,8 +18,9 @@ call_user_func(function () {
     var_dump($it->get(0));
     expect_throws(fn() => $it->offsetSet(0,new stdClass()));
     expect_throws(fn() => $it->offsetUnset(0));
-    expect_throws(fn() => $it[0] ??= 'other');
     expect_throws(fn() => $it[1] ??= 'other');
+    expect_throws(fn() => $it[3] ??= 'other');
+    var_dump($it[0] ??= 'not modified');
     expect_throws(function () use ($it) { unset($it[1]); });
     echo "Test array modification\n";
     expect_throws(function () use ($it) { $it[2][0] = 123; });
@@ -34,8 +35,10 @@ object(stdClass)#3 (0) {
 }
 Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetSet - it is immutable
 Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
-Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support modification - it is immutable
-Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support modification - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetSet - it is immutable
+Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetSet - it is immutable
+object(stdClass)#3 (0) {
+}
 Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetUnset - it is immutable
 Test array modification
 Caught Teds\UnsupportedOperationException: Teds\ImmutableSequence does not support offsetSet - it is immutable

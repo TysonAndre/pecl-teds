@@ -260,6 +260,7 @@ static HashTable* teds_immutablesequence_get_gc(zend_object *obj, zval **table, 
 	return NULL;
 }
 
+/* TODO get_properties_for */
 static HashTable* teds_immutablesequence_get_properties(zend_object *obj)
 {
 	teds_immutablesequence *intern = teds_immutablesequence_from_object(obj);
@@ -728,15 +729,8 @@ PHP_METHOD(Teds_ImmutableSequence, indexOf)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_immutablesequence *intern = Z_IMMUTABLESEQUENCE_P(ZEND_THIS);
-	const uint32_t len = intern->array.size;
-	zval *entries = intern->array.entries;
-	for (uint32_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &entries[i])) {
-			RETURN_LONG(i);
-		}
-	}
-	RETURN_NULL();
+	const teds_immutablesequence_entries *array = Z_IMMUTABLESEQUENCE_ENTRIES_P(ZEND_THIS);
+	teds_zval_range_zval_indexof(return_value, value, array->entries, array->size);
 }
 
 PHP_METHOD(Teds_ImmutableSequence, filter)
@@ -962,7 +956,7 @@ static zval *teds_immutablesequence_read_dimension(zend_object *object, zval *of
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW_RETURN_NULLPTR(offset, offset_zv);
 
-	if (UNEXPECTED(type != BP_VAR_IS || type != BP_VAR_R)) {
+	if (UNEXPECTED(type != BP_VAR_IS && type != BP_VAR_R)) {
 		const char *message = type == BP_VAR_W
 			? "Teds\\ImmutableSequence does not support offsetSet - it is immutable"
 			: "Teds\\ImmutableSequence does not support modification - it is immutable";

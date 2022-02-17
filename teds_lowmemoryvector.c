@@ -28,6 +28,7 @@
 #include "ext/spl/spl_iterators.h"
 #include "ext/json/php_json.h"
 #include "teds_util.h"
+#include "teds_serialize_util.h"
 
 #include <stdbool.h>
 
@@ -223,20 +224,6 @@ static inline void teds_lowmemoryvector_entries_shrink_capacity(teds_lowmemoryve
 	array->entries_raw = erealloc2(old_entries_raw, capacity * memory_per_element, size * memory_per_element);
 	ZEND_ASSERT(array->entries_raw != NULL);
 }
-
-/* Initializes the range [from, to) to null. Does not dtor existing entries. */
-/* TODO: Delete if this isn't used in the final version
-static void teds_lowmemoryvector_entries_init_elems(teds_lowmemoryvector_entries *array, zend_long from, zend_long to)
-{
-	ZEND_ASSERT(from <= to);
-	zval *begin = &array->entries[from];
-	zval *end = &array->entries[to];
-
-	while (begin != end) {
-		ZVAL_NULL(begin++);
-	}
-}
-*/
 
 static zend_always_inline void teds_lowmemoryvector_entries_set_empty_list(teds_lowmemoryvector_entries *array) {
 	array->size = 0;
@@ -481,7 +468,6 @@ static zend_object *teds_lowmemoryvector_new(zend_class_entry *class_type)
 	return teds_lowmemoryvector_new_ex(class_type, NULL, 0);
 }
 
-
 static zend_object *teds_lowmemoryvector_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_lowmemoryvector_new_ex(old_object->ce, old_object, 1);
@@ -498,37 +484,25 @@ static int teds_lowmemoryvector_count_elements(zend_object *object, zend_long *c
 	return SUCCESS;
 }
 
-/* Get number of entries in this lowmemoryvector */
+/* Get number of entries in this LowMemoryVector */
 PHP_METHOD(Teds_LowMemoryVector, count)
 {
-	zval *object = ZEND_THIS;
-
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_lowmemoryvector *intern = Z_LOWMEMORYVECTOR_P(object);
-	RETURN_LONG(intern->array.size);
+	RETURN_LONG(Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS)->size);
 }
 
-/* Get number of entries in this lowmemoryvector */
+/* Check if this LowMemoryVector is empty */
 PHP_METHOD(Teds_LowMemoryVector, isEmpty)
 {
-	zval *object = ZEND_THIS;
-
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_lowmemoryvector *intern = Z_LOWMEMORYVECTOR_P(object);
-	RETURN_BOOL(intern->array.size == 0);
+	RETURN_BOOL(!Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS)->size);
 }
 
 /* Get capacity of this lowmemoryvector */
 PHP_METHOD(Teds_LowMemoryVector, capacity)
 {
-	zval *object = ZEND_THIS;
-
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_lowmemoryvector *intern = Z_LOWMEMORYVECTOR_P(object);
-	RETURN_LONG(intern->array.capacity);
+	RETURN_LONG(Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS)->capacity);
 }
 
 /* Create this from an optional iterable */
@@ -569,10 +543,7 @@ PHP_METHOD(Teds_LowMemoryVector, __construct)
 PHP_METHOD(Teds_LowMemoryVector, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
-
-	teds_lowmemoryvector_entries_dtor(array);
+	teds_lowmemoryvector_entries_dtor(Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS));
 }
 
 PHP_METHOD(Teds_LowMemoryVector, getIterator)
@@ -594,14 +565,9 @@ static void teds_lowmemoryvector_it_rewind(zend_object_iterator *iter)
 
 static int teds_lowmemoryvector_it_valid(zend_object_iterator *iter)
 {
-	teds_lowmemoryvector_it     *iterator = (teds_lowmemoryvector_it*)iter;
-	teds_lowmemoryvector *object   = Z_LOWMEMORYVECTOR_P(&iter->data);
+	teds_lowmemoryvector_it *iterator = (teds_lowmemoryvector_it*)iter;
 
-	if (iterator->current < object->array.size) {
-		return SUCCESS;
-	}
-
-	return FAILURE;
+	return iterator->current < Z_LOWMEMORYVECTOR_ENTRIES_P(&iter->data)->size ? SUCCESS : FAILURE;
 }
 
 
@@ -728,7 +694,7 @@ static void teds_lowmemoryvector_entries_unserialize_from_bitset(teds_lowmemoryv
 	array->type_tag = LMV_TYPE_BOOL_OR_NULL;
 }
 
-static zend_always_inline uint8_t teds_lowmemoryvector_entries_compute_type_from_2bit(const uint8_t input) {
+static zend_always_inline uint8_t teds_lowmemoryvector_entries_compute_type_from_bit_pair(const uint8_t input) {
 	return input == 0 ? IS_NULL : (IS_NULL - 1) + input;
 }
 
@@ -746,10 +712,10 @@ static void teds_lowmemoryvector_entries_unserialize_from_bool_or_null_set(teds_
 
 	for (const uint8_t *const dst_end = dst + num_entries; dst + 4 <= dst_end; bitset_val++, dst += 4) {
 		const uint8_t orig = *bitset_val;
-		dst[0] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 0) & 3);
-		dst[1] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 2) & 3);
-		dst[2] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 4) & 3);
-		dst[3] = teds_lowmemoryvector_entries_compute_type_from_2bit((orig >> 6) & 3);
+		dst[0] = teds_lowmemoryvector_entries_compute_type_from_bit_pair((orig >> 0) & 3);
+		dst[1] = teds_lowmemoryvector_entries_compute_type_from_bit_pair((orig >> 2) & 3);
+		dst[2] = teds_lowmemoryvector_entries_compute_type_from_bit_pair((orig >> 4) & 3);
+		dst[3] = teds_lowmemoryvector_entries_compute_type_from_bit_pair((orig >> 6) & 3);
 	}
 	if (wasted_bit_pairs > 0) {
 		uint8_t remaining = 4 - wasted_bit_pairs;
@@ -759,7 +725,7 @@ static void teds_lowmemoryvector_entries_unserialize_from_bool_or_null_set(teds_
 		do {
 			uint8_t tmp = val & 3;
 			//fprintf(stderr, "tmp=%d bitset-val=%d\n", (int)tmp, (int)*bitset_val);
-			*dst++ = teds_lowmemoryvector_entries_compute_type_from_2bit(tmp);
+			*dst++ = teds_lowmemoryvector_entries_compute_type_from_bit_pair(tmp);
 			val >>= 2;
 			remaining--;
 		} while (remaining > 0);
@@ -896,12 +862,6 @@ PHP_METHOD(Teds_LowMemoryVector, __unserialize)
 	}
 }
 
-static zend_always_inline HashTable *teds_create_serialize_pair(const uint8_t type, zval *data) {
-	zval type_zv;
-	ZVAL_LONG(&type_zv, type);
-	return zend_new_pair(&type_zv, data);
-}
-
 static zend_always_inline zend_string *teds_create_string_from_entries_int8(const char *raw, const size_t len) {
 	return zend_string_init(raw, len, 0);
 }
@@ -970,7 +930,6 @@ static zend_string *teds_convert_bool_types_to_bitset(const uint8_t *src, const 
 	uint8_t *dst = (uint8_t *)ZSTR_VAL(result);
 
 	for (const uint8_t *const end = src + len; src + 8 <= end; dst++, src += 8) {
-		//fprintf(stderr, "Incrementing dst\n");
 		*dst = ((src[0] == IS_TRUE ? 1 : 0) << 0)
 		     + ((src[1] == IS_TRUE ? 1 : 0) << 1)
 		     + ((src[2] == IS_TRUE ? 1 : 0) << 2)
@@ -1282,11 +1241,10 @@ PHP_METHOD(Teds_LowMemoryVector, indexOf)
 				RETURN_NULL();
 			}
 			const uint8_t *start = array->entries_uint8;
-			const uint8_t *it = start;
-			for (const uint8_t *end = it + len; it < end; it++) {
-				if (type == *it) {
-					RETURN_LONG(it - start);
-				}
+			const uint8_t *offset = memchr(start, type, len);
+
+			if (offset) {
+				RETURN_LONG(offset - start);
 			}
 			break;
 		}
@@ -1296,13 +1254,10 @@ PHP_METHOD(Teds_LowMemoryVector, indexOf)
 			}
 			const int8_t v = (int8_t) Z_LVAL_P(value);
 			if (v != Z_LVAL_P(value)) { RETURN_NULL(); }
-			const int8_t *start = array->entries_int8;
-			const int8_t *it = start;
-			/* TODO is memchr faster? */
-			for (const int8_t *end = it + len; it < end; it++) {
-				if (v == *it) {
-					RETURN_LONG(it - start);
-				}
+			const uint8_t *start = array->entries_uint8;
+			const uint8_t *offset = memchr(start, (uint8_t)v, len);
+			if (offset) {
+				RETURN_LONG(offset - start);
 			}
 			break;
 		}
@@ -1368,16 +1323,9 @@ PHP_METHOD(Teds_LowMemoryVector, indexOf)
 			}
 			break;
 		}
-		case LMV_TYPE_ZVAL: {
-			zval *start = array->entries_zval;
-			zval *it = start;
-			for (zval *end = it + len; it < end; it++) {
-				if (zend_is_identical(value, it)) {
-					RETURN_LONG(it - start);
-				}
-			}
-			break;
-		}
+		case LMV_TYPE_ZVAL:
+			teds_zval_range_zval_indexof(return_value, value, array->entries_zval, len);
+			return;
 		default:
 			ZEND_UNREACHABLE();
 	}
@@ -1401,12 +1349,7 @@ PHP_METHOD(Teds_LowMemoryVector, contains)
 			const uint8_t type = Z_TYPE_P(value);
 			if (type <= IS_TRUE) {
 				const uint8_t *start = array->entries_uint8;
-				const uint8_t *it = start;
-				for (const uint8_t *end = it + len; it < end; it++) {
-					if (type == *it) {
-						RETURN_TRUE;
-					}
-				}
+				RETURN_BOOL(memchr((uint8_t *)start, type, len));
 			}
 			break;
 		}
@@ -1417,13 +1360,7 @@ PHP_METHOD(Teds_LowMemoryVector, contains)
 			const int8_t v = (int8_t) Z_LVAL_P(value);
 			if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
 			const int8_t *start = array->entries_int8;
-			const int8_t *it = start;
-			for (const int8_t *end = it + len; it < end; it++) {
-				if (v == *it) {
-					RETURN_TRUE;
-				}
-			}
-			break;
+			RETURN_BOOL(memchr((uint8_t *)start, (uint8_t)v, len));
 		}
 		case LMV_TYPE_INT16: {
 			if (Z_TYPE_P(value) != IS_LONG) {
@@ -1485,15 +1422,8 @@ PHP_METHOD(Teds_LowMemoryVector, contains)
 			}
 			break;
 		}
-		case LMV_TYPE_ZVAL: {
-			zval *it = array->entries_zval;
-			for (zval *end = it + len; it < end; it++) {
-				if (zend_is_identical(value, it)) {
-					RETURN_TRUE;
-				}
-			}
-			break;
-		}
+		case LMV_TYPE_ZVAL:
+			RETURN_BOOL(teds_zval_range_contains(value, array->entries_zval, len));
 		default:
 			ZEND_UNREACHABLE();
 	}
@@ -2023,7 +1953,7 @@ static int teds_lowmemoryvector_has_dimension(zend_object *object, zval *offset_
 		return 0;
 	}
 
-	/* TODO can optimize */
+	/* TODO can optimize based on type tag, probably not necessary */
 	zval tmp;
 	zval *val = teds_lowmemoryvector_entries_read_offset(array, offset, &tmp);
 	if (check_empty) {

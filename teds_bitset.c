@@ -28,6 +28,7 @@
 #include "ext/spl/spl_iterators.h"
 #include "ext/json/php_json.h"
 #include "teds_util.h"
+#include "teds_serialize_util.h"
 
 #include <stdbool.h>
 
@@ -182,20 +183,6 @@ static inline void teds_bitset_entries_shrink_capacity(teds_bitset_entries *arra
 	ZEND_ASSERT(array->entries_bits != NULL);
 }
 
-/* Initializes the range [from, to) to null. Does not dtor existing entries. */
-/* TODO: Delete if this isn't used in the final version
-static void teds_bitset_entries_init_elems(teds_bitset_entries *array, zend_long from, zend_long to)
-{
-	ZEND_ASSERT(from <= to);
-	zval *begin = &array->entries[from];
-	zval *end = &array->entries[to];
-
-	while (begin != end) {
-		ZVAL_NULL(begin++);
-	}
-}
-*/
-
 static zend_always_inline void teds_bitset_entries_set_empty_list(teds_bitset_entries *array) {
 	array->bit_size = 0;
 	array->bit_capacity = 0;
@@ -249,7 +236,6 @@ static void teds_bitset_entries_init_from_traversable(teds_bitset_entries *array
 			value = Z_TYPE_P(value_zv) != IS_FALSE;
 		}
 
-		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(value, value_zv);
 		teds_bitset_entries_push(array, value, true);
 
 		iter->index++;
@@ -319,7 +305,7 @@ static void teds_bitset_free_storage(zend_object *object)
 	if (!teds_bitset_entries_empty_capacity(&intern->array)) {
 		efree(intern->array.entries_bits);
 	}
-	zend_object_std_dtor(&intern->std);
+	zend_object_std_dtor(object);
 }
 
 static zend_object *teds_bitset_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
@@ -369,45 +355,23 @@ static int teds_bitset_count_elements(zend_object *object, zend_long *count)
 /* Get number of entries in this bitset */
 PHP_METHOD(Teds_BitSet, count)
 {
-	zval *object = ZEND_THIS;
-
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_bitset *intern = Z_BITSET_P(object);
-	RETURN_LONG(intern->array.bit_size);
+	RETURN_LONG(Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_size);
 }
 
 /* Get number of entries in this bitset */
 PHP_METHOD(Teds_BitSet, capacity)
 {
 	zval *object = ZEND_THIS;
-
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_bitset *intern = Z_BITSET_P(object);
-	RETURN_LONG(intern->array.bit_capacity);
+	RETURN_LONG(Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_capacity);
 }
 
-/* Get number of bits in this bitset */
+/* Check if the bitset is empty. */
 PHP_METHOD(Teds_BitSet, isEmpty)
 {
-	zval *object = ZEND_THIS;
-
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_bitset *intern = Z_BITSET_P(object);
-	RETURN_BOOL(intern->array.bit_size == 0);
-}
-
-/* Get bit_capacity of this bitset */
-PHP_METHOD(Teds_BitSet, bit_capacity)
-{
-	zval *object = ZEND_THIS;
-
-	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_bitset *intern = Z_BITSET_P(object);
-	RETURN_LONG(intern->array.bit_capacity);
+	RETURN_BOOL(Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_size == 0);
 }
 
 static void teds_bitset_set_range(teds_bitset_entries *const array, const size_t start_bit, const size_t end_bit, const bool value_bool) {
@@ -433,7 +397,6 @@ static void teds_bitset_set_range(teds_bitset_entries *const array, const size_t
 	if (start_byte < end_byte) {
 		memset(&entries_bits[start_byte], value_bool ? -1 : 0, end_byte - start_byte);
 	}
-
 }
 
 /* Set size in bits of this BitSet */
@@ -487,7 +450,6 @@ PHP_METHOD(Teds_BitSet, __construct)
 
 	if (UNEXPECTED(!teds_bitset_entries_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\BitSet::__construct twice", 0);
-		/* called __construct() twice, bail out */
 		RETURN_THROWS();
 	}
 	if (!iterable) {
@@ -546,7 +508,6 @@ static int teds_bitset_it_valid(zend_object_iterator *iter)
 
 	return FAILURE;
 }
-
 
 static zval *teds_bitset_it_get_current_data(zend_object_iterator *iter)
 {
@@ -650,7 +611,7 @@ PHP_METHOD(Teds_BitSet, __unserialize)
 	const size_t byte_count = ZSTR_LEN(zstr) - 1;
 	const uint8_t modulo_bit_len = (uint8_t) bytes[byte_count];
 	if (modulo_bit_len >= 8) {
-		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet expected binary data to end with 8 - (len % 8)", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet expected binary data to end with number of wasted bits", 0);
 		RETURN_THROWS();
 	}
 	const size_t bit_size = byte_count * 8 - modulo_bit_len;
@@ -663,12 +624,6 @@ PHP_METHOD(Teds_BitSet, __unserialize)
 	array->bit_size = bit_size;
 	array->bit_capacity = bit_capacity;
 	TEDS_RETURN_VOID();
-}
-
-static zend_always_inline HashTable *teds_create_serialize_pair(const uint8_t type, zval *data) {
-	zval type_zv;
-	ZVAL_LONG(&type_zv, type);
-	return zend_new_pair(&type_zv, data);
 }
 
 static zend_always_inline zend_string *teds_create_string_from_entries_int8(const char *raw, const size_t len) {
@@ -754,17 +709,21 @@ PHP_METHOD(Teds_BitSet, __serialize)
 
 static void teds_bitset_entries_init_from_array_values(teds_bitset_entries *array, zend_array *raw_data)
 {
-	size_t num_entries = zend_hash_num_elements(raw_data);
+	const size_t num_entries = zend_hash_num_elements(raw_data);
 	teds_bitset_entries_set_empty_list(array);
 	if (num_entries == 0) {
 		return;
 	}
-	/* TODO: Can probably precompute bit_capacity to avoid reallocations */
+	/* Precompute bit_capacity to avoid reallocations/branches */
+	const size_t bytes_needed = BYTES_FOR_BIT_SIZE(num_entries);
+	array->entries_bits = emalloc(bytes_needed);
+	array->bit_capacity = bytes_needed * 8;
+
 	zval *val_zv;
 	ZEND_HASH_FOREACH_VAL(raw_data, val_zv) {
 		zend_long val;
 		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(val, val_zv);
-		teds_bitset_entries_push(array, val, 1);
+		teds_bitset_entries_push(array, val, 0);
 	} ZEND_HASH_FOREACH_END();
 }
 
@@ -858,6 +817,7 @@ PHP_METHOD(Teds_BitSet, offsetExists)
 	RETURN_BOOL((zend_ulong) offset < Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_size);
 }
 
+/* containsKey is similar to offsetExists but rejects non-integers */
 PHP_METHOD(Teds_BitSet, containsKey)
 {
 	zval *offset_zv;
@@ -1262,7 +1222,7 @@ ZEND_COLD PHP_METHOD(Teds_BitSet, offsetUnset)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
 		RETURN_THROWS();
 	}
-	zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet does not support offsetUnset - elements must be removed by resizing", 0);
+	zend_throw_exception(teds_ce_UnsupportedOperationException, "Teds\\BitSet does not support offsetUnset - elements must be removed by resizing", 0);
 	RETURN_THROWS();
 }
 
