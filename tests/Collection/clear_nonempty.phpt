@@ -112,7 +112,7 @@ toArray: array(1) {
   [0]=>
   string(24) "v_Teds\ImmutableSequence"
 }
-clear: Caught Teds\ImmutableSequence does not support pop - it is immutable
+clear: Caught Teds\ImmutableSequence does not support clear - it is immutable
 object(Teds\ImmutableSequence)#2 (1) {
   [0]=>
   string(24) "v_Teds\ImmutableSequence"

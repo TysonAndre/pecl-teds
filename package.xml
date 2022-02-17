@@ -13,8 +13,8 @@
  <date>2022-02-16</date>
  <time>16:00:00</time>
  <version>
-  <release>1.0.0</release>
-  <api>1.0.0</api>
+  <release>1.0.1</release>
+  <api>1.0.1</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,20 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* BREAKING CHANGES: Fix incorrect serialization/unserialization result of LowMemoryVector for boolean/null. Incompatible with older releases.
-* BUGFIX: Fix converting LowMemoryVector of floats to an array (they were unintentionally converted to integers).
-* BREAKING CHANGES: Rename datastructures and interfaces for consistency. Change definitions of interfaces/remove interfaces.
-  Rename Teds\ImmutableKeyValueSequence to Teds\ImmutableIterable and add an alias for the old name. Aliases will be removed in a future release.
-  Rename Teds\KeyValueSequence to Teds\MutableIterable and add an alias.
-  Rename Teds\SortedStrictMap to Teds\StrictTreeMap and add an alias.
-  Rename Teds\StrictMap to Teds\StrictHashMap and add an alias.
-  Rename Teds\SortedStrictSet to Teds\StrictTreeSet and add an alias.
-  Rename Teds\StrictSet to Teds\StrictHashSet and add an alias.
-  Rename Teds\StableMinHeap to Teds\StrictMinHeap and add an alias.
-  Rename Teds\StableMaxHeap to Teds\StrictMaxHeap and add an alias.
-  Change the definition of Teds\Collection to be just a Collection of **values**. Make Teds\Values an alias of Teds\Collection.
-  Add the interfaces `Teds\Sequence`, `Teds\Map`, `Teds\Set`.
-
+* Regenerate arginfo for method aliases, update test expectations
  </notes>
  <contents>
   <dir name="/">
@@ -449,6 +436,34 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-02-16</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.0.0</release>
+    <api>1.0.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* BREAKING CHANGES: Fix incorrect serialization/unserialization result of LowMemoryVector for boolean/null. Incompatible with older releases.
+* BUGFIX: Fix converting LowMemoryVector of floats to an array (they were unintentionally converted to integers).
+* BREAKING CHANGES: Rename datastructures and interfaces for consistency. Change definitions of interfaces/remove interfaces.
+  Rename Teds\ImmutableKeyValueSequence to Teds\ImmutableIterable and add an alias for the old name. Aliases will be removed in a future release.
+  Rename Teds\KeyValueSequence to Teds\MutableIterable and add an alias.
+  Rename Teds\SortedStrictMap to Teds\StrictTreeMap and add an alias.
+  Rename Teds\StrictMap to Teds\StrictHashMap and add an alias.
+  Rename Teds\SortedStrictSet to Teds\StrictTreeSet and add an alias.
+  Rename Teds\StrictSet to Teds\StrictHashSet and add an alias.
+  Rename Teds\StableMinHeap to Teds\StrictMinHeap and add an alias.
+  Rename Teds\StableMaxHeap to Teds\StrictMaxHeap and add an alias.
+  Change the definition of Teds\Collection to be just a Collection of **values**. Make Teds\Values an alias of Teds\Collection.
+  Add the interfaces `Teds\Sequence`, `Teds\Map`, `Teds\Set`.
+   </notes>
+  </release>
   <release>
    <date>2022-02-13</date>
    <time>16:00:00</time>

@@ -77,7 +77,7 @@ values: array(0) {
 }
 toArray: array(0) {
 }
-clear: Caught Teds\ImmutableSequence does not support pop - it is immutable
+clear: Caught Teds\ImmutableSequence does not support clear - it is immutable
 object(Teds\ImmutableSequence)#2 (0) {
 }
 Testing Teds\IntVector
