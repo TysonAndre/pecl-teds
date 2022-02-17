@@ -189,7 +189,7 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 		}
 
 		if (size >= capacity) {
-			/* TODO: Could use countable and get_count handler to estimate the size of the array to allocate */
+			/* TODO: Could use countable and get_count handler to estimate the size of the array to allocate but there's no guarantee count is supported */
 			if (circular_buffer) {
 				capacity *= 2;
 				circular_buffer = safe_erealloc(circular_buffer, capacity, sizeof(zval), 0);
@@ -288,8 +288,9 @@ static HashTable* teds_deque_get_gc(zend_object *obj, zval **table, int *n)
 	teds_deque *intern = teds_deque_from_object(obj);
 
 	if (!intern->array.mask) {
+		ZEND_ASSERT(intern->array.size == 0);
 		*n = 0;
-		return NULL;
+		return obj->properties;
 	}
 	const uint32_t size = intern->array.size;
 	const uint32_t capacity = intern->array.mask + 1;
@@ -298,7 +299,7 @@ static HashTable* teds_deque_get_gc(zend_object *obj, zval **table, int *n)
 	if (capacity - offset >= size) {
 		*table = &circular_buffer[offset];
 		*n = (int)size;
-		return NULL;
+		return obj->properties;
 	}
 
 	// Based on spl_dllist.c
@@ -313,9 +314,7 @@ static HashTable* teds_deque_get_gc(zend_object *obj, zval **table, int *n)
 
 	/* This replaces table and n. */
 	zend_get_gc_buffer_use(gc_buffer, table, n);
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
+	return obj->properties;
 }
 
 static HashTable* teds_deque_get_properties(zend_object *obj)
@@ -382,7 +381,6 @@ static zend_object *teds_deque_new(zend_class_entry *class_type)
 	return teds_deque_new_ex(class_type, NULL, 0);
 }
 
-
 static zend_object *teds_deque_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_deque_new_ex(old_object->ce, old_object, 1);
@@ -412,18 +410,14 @@ PHP_METHOD(Teds_Deque, count)
 PHP_METHOD(Teds_Deque, isEmpty)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	RETURN_BOOL(intern->array.size == 0);
+	RETURN_BOOL(!Z_DEQUE_ENTRIES_P(ZEND_THIS)->size);
 }
 
 /* Get the capacity of this deque. Internal api meant for unit tests of Teds\Deque itself.. */
 PHP_METHOD(Teds_Deque, capacity)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-
-	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	RETURN_LONG(teds_deque_entries_get_capacity(&intern->array));
+	RETURN_LONG(teds_deque_entries_get_capacity(Z_DEQUE_ENTRIES_P(ZEND_THIS)));
 }
 
 /* Free elements and backing storage of this deque */

@@ -48,7 +48,7 @@ Caught ReflectionException: Class Teds\BitSet is an internal class marked as fin
 bool(true)
 bool(true)
 Caught OutOfBoundsException: Index out of range
-Caught RuntimeException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
 bool(true)
 offsetExists checks
 bool(false)
@@ -70,8 +70,8 @@ Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\BitSet::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught RuntimeException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
 Caught TypeError: Illegal Teds\BitSet value type string
-Caught RuntimeException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
 object(InternalIterator)#1 (0) {
 }

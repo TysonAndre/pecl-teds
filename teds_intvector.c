@@ -28,6 +28,7 @@
 #include "ext/spl/spl_iterators.h"
 #include "ext/json/php_json.h"
 #include "teds_util.h"
+#include "teds_serialize_util.h"
 
 #include <stdbool.h>
 
@@ -686,12 +687,6 @@ PHP_METHOD(Teds_IntVector, __unserialize)
 	}
 }
 
-static zend_always_inline HashTable *teds_create_serialize_pair(const uint8_t type, zval *data) {
-	zval type_zv;
-	ZVAL_LONG(&type_zv, type);
-	return zend_new_pair(&type_zv, data);
-}
-
 static zend_always_inline zend_string *teds_create_string_from_entries_int8(const char *raw, const size_t len) {
 	return zend_string_init(raw, len, 0);
 }
@@ -918,13 +913,10 @@ PHP_METHOD(Teds_IntVector, indexOf)
 		case TEDS_INTVECTOR_TYPE_INT8: {
 			const int8_t v = (int8_t) value;
 			if (v != value) { RETURN_NULL(); }
-			const int8_t *start = array->entries_int8;
-			const int8_t *it = start;
-			/* TODO is memchr faster? */
-			for (const int8_t *end = it + len; it < end; it++) {
-				if (v == *it) {
-					RETURN_LONG(it - start);
-				}
+			const uint8_t *start = array->entries_uint8;
+			const uint8_t *offset = memchr(start, (uint8_t)v, len);
+			if (offset) {
+				RETURN_LONG(offset - start);
 			}
 			break;
 		}
@@ -992,13 +984,7 @@ PHP_METHOD(Teds_IntVector, contains)
 			const int8_t v = (int8_t) Z_LVAL_P(value);
 			if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
 			const int8_t *start = array->entries_int8;
-			const int8_t *it = start;
-			for (const int8_t *end = it + len; it < end; it++) {
-				if (v == *it) {
-					RETURN_TRUE;
-				}
-			}
-			break;
+			RETURN_BOOL(memchr((uint8_t *)start, (uint8_t)v, len));
 		}
 		case TEDS_INTVECTOR_TYPE_INT16: {
 			if (Z_TYPE_P(value) != IS_LONG) {
