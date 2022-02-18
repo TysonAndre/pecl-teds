@@ -7,11 +7,11 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef TEDS_IMMUTABLEITERABLE_H
-#define TEDS_IMMUTABLEITERABLE_H
+#ifndef TEDS_CACHEDITERABLE_H
+#define TEDS_CACHEDITERABLE_H
 
-extern zend_class_entry *teds_ce_ImmutableIterable;
+extern zend_class_entry *teds_ce_CachedIterable;
 
-PHP_MINIT_FUNCTION(teds_immutableiterable);
+PHP_MINIT_FUNCTION(teds_cachediterable);
 
-#endif	/* TEDS_IMMUTABLEITERABLE_H */
+#endif /* TEDS_CACHEDITERABLE_H */

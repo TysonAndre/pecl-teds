@@ -30,6 +30,7 @@ foreach ([
     Teds\StrictHashMap::class,
     Teds\ImmutableIterable::class,
     Teds\MutableIterable::class,
+    // Teds\CachedIterable::class, // not implemented for Traversable yet
 ] as $class) {
     test_collection_from_pairs($class);
 }

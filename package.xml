@@ -13,8 +13,8 @@
  <date>2022-02-16</date>
  <time>16:00:00</time>
  <version>
-  <release>1.0.2dev</release>
-  <api>1.0.2dev</api>
+  <release>1.1.0dev</release>
+  <api>1.1.0dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -23,6 +23,7 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Fix ImmutableSequence throwing for ArrayAccess shorthand read syntax.
+* Add CachedIterable as an alternative to ImmutableIterable that lazily evaluates Traversable objects passed into the constructor. (e.g. only runs Generators up to the most recently requested offset)
 * Change exception type to `Teds\UnsupportedOperationException` in a few places.
 * Add `Teds\is_same_array_handle(array $array1, array $array2): bool` for infinite recursion detection when processing arrays.
 * Fix memory leak when initializing `Teds\StrictMinHeap`/`Teds\StrictMaxHeap` from Traversables.
@@ -44,6 +45,10 @@
    <file name="teds_bitset.h" role="src" />
    <file name="teds_bitset.stub.php" role="src" />
    <file name="teds_bswap.h" role="src" />
+   <file name="teds_cachediterable_arginfo.h" role="src" />
+   <file name="teds_cachediterable.c" role="src" />
+   <file name="teds_cachediterable.h" role="src" />
+   <file name="teds_cachediterable.stub.php" role="src" />
    <file name="teds.c" role="src" />
    <file name="teds_deque_arginfo.h" role="src" />
    <file name="teds_deque.c" role="src" />
@@ -136,6 +141,16 @@
     <file name="BitSet/traversable.phpt" role="test" />
     <file name="BitSet/unserialize.phpt" role="test" />
     <file name="BitSet/unshift.phpt" role="test" />
+    <file name="CachedIterable/clone.phpt" role="test" />
+    <file name="CachedIterable/contains.phpt" role="test" />
+    <file name="CachedIterable/keyAt_valueAt.phpt" role="test" />
+    <file name="CachedIterable/keys_values.phpt" role="test" />
+    <file name="CachedIterable/lazy.phpt" role="test" />
+    <file name="CachedIterable/selfReferential.phpt" role="test" />
+    <file name="CachedIterable/selfReferentialMisuseDetection.phpt" role="test" />
+    <file name="CachedIterable/serialization.phpt" role="test" />
+    <file name="CachedIterable/set_state.phpt" role="test" />
+    <file name="CachedIterable/unserialize.phpt" role="test" />
     <file name="Collection/aggregate.phpt" role="test" />
     <file name="Collection/clear_nonempty.phpt" role="test" />
     <file name="Collection/empty.phpt" role="test" />

@@ -37,7 +37,7 @@ final class MutableIterable implements \IteratorAggregate, Collection, \JsonSeri
     /** @psalm-return list<mixed> */
     public function values(): array {}
     /**
-     * @return array created by inserting values for keys, like iterator_to_array()
+     * Returns an array created by inserting values for the corresponding keys, like iterator_to_array()
      */
     public function toArray(): array {}
     public function keyAt(int $offset): mixed {}
