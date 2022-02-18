@@ -181,20 +181,20 @@ static void teds_strictheap_entries_init_from_traversable(teds_strictheap_entrie
 	}
 
 	while (funcs->valid(iter) == SUCCESS) {
-		if (EG(exception)) {
+		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
 		zval *value = funcs->get_current_data(iter);
 		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
+		ZVAL_DEREF(value);
 
-		Z_TRY_ADDREF_P(value);
 		teds_strictheap_entries_insert(array, value, is_min_heap);
 
 		iter->index++;
 		funcs->move_forward(iter);
-		if (EG(exception)) {
+		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
 	}
