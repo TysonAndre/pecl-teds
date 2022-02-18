@@ -489,6 +489,7 @@ PHP_METHOD(Teds_IntVector, clear)
 		efree(array->entries_raw);
 	}
 	teds_intvector_entries_set_empty_list(array);
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_IntVector, getIterator)

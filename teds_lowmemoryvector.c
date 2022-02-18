@@ -544,6 +544,7 @@ PHP_METHOD(Teds_LowMemoryVector, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_lowmemoryvector_entries_dtor(Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS));
+	TEDS_RETURN_VOID();
 }
 
 PHP_METHOD(Teds_LowMemoryVector, getIterator)
