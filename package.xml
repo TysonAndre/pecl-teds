@@ -25,6 +25,7 @@
 * Fix ImmutableSequence throwing for ArrayAccess shorthand read syntax.
 * Change exception type to `Teds\UnsupportedOperationException` in a few places.
 * Add `Teds\is_same_array_handle(array $array1, array $array2): bool` for infinite recursion detection when processing arrays.
+* Fix memory leak when initializing `Teds\StrictMinHeap`/`Teds\StrictMaxHeap` from Traversables.
  </notes>
  <contents>
   <dir name="/">
@@ -118,7 +119,6 @@
     <file name="BitSet/aggregate.phpt" role="test" />
     <file name="BitSet/arrayCast.phpt" role="test" />
     <file name="BitSet/clone.phpt" role="test" />
-    <file name="BitSet/exceptionhandler.phpt" role="test" />
     <file name="BitSet/gc.phpt" role="test" />
     <file name="BitSet/indexOf.phpt" role="test" />
     <file name="BitSet/isEmpty.phpt" role="test" />
@@ -126,7 +126,6 @@
     <file name="BitSet/large.phpt" role="test" />
     <file name="BitSet/offsetGet.phpt" role="test" />
     <file name="BitSet/push_pop.phpt" role="test" />
-    <file name="BitSet/reinit_forbidden.phpt" role="test" />
     <file name="BitSet/serialization.phpt" role="test" />
     <file name="BitSet/setValueAt.phpt" role="test" />
     <file name="BitSet/set_state.phpt" role="test" />
@@ -134,15 +133,17 @@
     <file name="BitSet/traversable.phpt" role="test" />
     <file name="BitSet/unserialize.phpt" role="test" />
     <file name="BitSet/unshift.phpt" role="test" />
+    <file name="Collection/aggregate.phpt" role="test" />
     <file name="Collection/clear_nonempty.phpt" role="test" />
     <file name="Collection/empty.phpt" role="test" />
+    <file name="Collection/exceptionhandler.phpt" role="test" />
+    <file name="Collection/fromArray.phpt" role="test" />
+    <file name="Collection/reinit_forbidden.phpt" role="test" />
+    <file name="Collection/traversable.phpt" role="test" />
     <file name="Deque/Deque.phpt" role="test" />
-    <file name="Deque/aggregate.phpt" role="test" />
     <file name="Deque/arrayCast.phpt" role="test" />
-    <file name="Deque/clear.phpt" role="test" />
     <file name="Deque/clone.phpt" role="test" />
     <file name="Deque/contains.phpt" role="test" />
-    <file name="Deque/exceptionhandler.phpt" role="test" />
     <file name="Deque/foreach.phpt" role="test" />
     <file name="Deque/isEmpty.phpt" role="test" />
     <file name="Deque/iterator.phpt" role="test" />
@@ -152,48 +153,34 @@
     <file name="Deque/push_multiple.phpt" role="test" />
     <file name="Deque/push_pop.phpt" role="test" />
     <file name="Deque/push_pop_both.phpt" role="test" />
-    <file name="Deque/reinit_forbidden.phpt" role="test" />
     <file name="Deque/serialization.phpt" role="test" />
     <file name="Deque/setValueAt.phpt" role="test" />
     <file name="Deque/set_state.phpt" role="test" />
     <file name="Deque/shift.phpt" role="test" />
     <file name="Deque/toArray.phpt" role="test" />
-    <file name="Deque/traversable.phpt" role="test" />
     <file name="Deque/unserialize.phpt" role="test" />
     <file name="Deque/unshift.phpt" role="test" />
-    <file name="ImmutableIterable/ImmutableIterable.phpt" role="test" />
-    <file name="ImmutableIterable/aggregate.phpt" role="test" />
     <file name="ImmutableIterable/clone.phpt" role="test" />
     <file name="ImmutableIterable/contains.phpt" role="test" />
-    <file name="ImmutableIterable/exceptionhandler.phpt" role="test" />
-    <file name="ImmutableIterable/from_pairs.phpt" role="test" />
     <file name="ImmutableIterable/keyAt_valueAt.phpt" role="test" />
     <file name="ImmutableIterable/keys_values.phpt" role="test" />
-    <file name="ImmutableIterable/reinit_forbidden.phpt" role="test" />
     <file name="ImmutableIterable/serialization.phpt" role="test" />
     <file name="ImmutableIterable/set_state.phpt" role="test" />
-    <file name="ImmutableIterable/traversable.phpt" role="test" />
     <file name="ImmutableIterable/unserialize.phpt" role="test" />
-    <file name="ImmutableSequence/ImmutableSequence.phpt" role="test" />
-    <file name="ImmutableSequence/aggregate.phpt" role="test" />
     <file name="ImmutableSequence/arrayAccess.phpt" role="test" />
     <file name="ImmutableSequence/clone.phpt" role="test" />
     <file name="ImmutableSequence/contains.phpt" role="test" />
-    <file name="ImmutableSequence/exceptionhandler.phpt" role="test" />
     <file name="ImmutableSequence/filter.phpt" role="test" />
     <file name="ImmutableSequence/map.phpt" role="test" />
     <file name="ImmutableSequence/offsetGet.phpt" role="test" />
-    <file name="ImmutableSequence/reinit_forbidden.phpt" role="test" />
     <file name="ImmutableSequence/serialization.phpt" role="test" />
     <file name="ImmutableSequence/set_state.phpt" role="test" />
     <file name="ImmutableSequence/toArray.phpt" role="test" />
-    <file name="ImmutableSequence/traversable.phpt" role="test" />
     <file name="ImmutableSequence/unserialize.phpt" role="test" />
     <file name="IntVector/IntVector.phpt" role="test" />
     <file name="IntVector/aggregate.phpt" role="test" />
     <file name="IntVector/arrayCast.phpt" role="test" />
     <file name="IntVector/clone.phpt" role="test" />
-    <file name="IntVector/exceptionhandler.phpt" role="test" />
     <file name="IntVector/gc.phpt" role="test" />
     <file name="IntVector/isEmpty.phpt" role="test" />
     <file name="IntVector/isset.phpt" role="test" />
@@ -201,7 +188,6 @@
     <file name="IntVector/promote.phpt" role="test" />
     <file name="IntVector/promote_32bit.phpt" role="test" />
     <file name="IntVector/push_pop.phpt" role="test" />
-    <file name="IntVector/reinit_forbidden.phpt" role="test" />
     <file name="IntVector/serialization.phpt" role="test" />
     <file name="IntVector/serialization_64.phpt" role="test" />
     <file name="IntVector/serialization_64_32bit.phpt" role="test" />
@@ -209,15 +195,11 @@
     <file name="IntVector/set_state.phpt" role="test" />
     <file name="IntVector/specializations.phpt" role="test" />
     <file name="IntVector/toArray.phpt" role="test" />
-    <file name="IntVector/traversable.phpt" role="test" />
     <file name="IntVector/unserialize.phpt" role="test" />
-    <file name="LowMemoryVector/LowMemoryVector.phpt" role="test" />
-    <file name="LowMemoryVector/aggregate.phpt" role="test" />
     <file name="LowMemoryVector/arrayCast.phpt" role="test" />
     <file name="LowMemoryVector/bitsetSerialization.phpt" role="test" />
     <file name="LowMemoryVector/clone.phpt" role="test" />
     <file name="LowMemoryVector/contains.phpt" role="test" />
-    <file name="LowMemoryVector/exceptionhandler.phpt" role="test" />
     <file name="LowMemoryVector/isEmpty.phpt" role="test" />
     <file name="LowMemoryVector/isset.phpt" role="test" />
     <file name="LowMemoryVector/jsonEncodeRecursive.phpt" role="test" />
@@ -225,7 +207,6 @@
     <file name="LowMemoryVector/promote.phpt" role="test" />
     <file name="LowMemoryVector/promote_32bit.phpt" role="test" />
     <file name="LowMemoryVector/push_pop.phpt" role="test" />
-    <file name="LowMemoryVector/reinit_forbidden.phpt" role="test" />
     <file name="LowMemoryVector/serialization.phpt" role="test" />
     <file name="LowMemoryVector/serialization_64.phpt" role="test" />
     <file name="LowMemoryVector/serialization_64_32bit.phpt" role="test" />
@@ -233,156 +214,101 @@
     <file name="LowMemoryVector/set_state.phpt" role="test" />
     <file name="LowMemoryVector/specializations.phpt" role="test" />
     <file name="LowMemoryVector/toArray.phpt" role="test" />
-    <file name="LowMemoryVector/traversable.phpt" role="test" />
     <file name="LowMemoryVector/unserialize.phpt" role="test" />
-    <file name="MutableIterable/MutableIterable.phpt" role="test" />
-    <file name="MutableIterable/aggregate.phpt" role="test" />
+    <file name="Map/array.phpt" role="test" />
+    <file name="Map/clear.phpt" role="test" />
+    <file name="Map/contains.phpt" role="test" />
+    <file name="Map/from_pairs.phpt" role="test" />
+    <file name="Map/gc.phpt" role="test" />
+    <file name="Map/remove.phpt" role="test" />
+    <file name="Map/toArray.phpt" role="test" />
     <file name="MutableIterable/clone.phpt" role="test" />
     <file name="MutableIterable/contains.phpt" role="test" />
-    <file name="MutableIterable/exceptionhandler.phpt" role="test" />
-    <file name="MutableIterable/from_pairs.phpt" role="test" />
     <file name="MutableIterable/keyAt_valueAt.phpt" role="test" />
     <file name="MutableIterable/keys_values.phpt" role="test" />
     <file name="MutableIterable/push_pop.phpt" role="test" />
-    <file name="MutableIterable/reinit_forbidden.phpt" role="test" />
     <file name="MutableIterable/serialization.phpt" role="test" />
     <file name="MutableIterable/setKeyAt.phpt" role="test" />
     <file name="MutableIterable/setSize.phpt" role="test" />
     <file name="MutableIterable/set_state.phpt" role="test" />
-    <file name="MutableIterable/traversable.phpt" role="test" />
     <file name="MutableIterable/unserialize.phpt" role="test" />
+    <file name="Sequence/clear.phpt" role="test" />
     <file name="Sequence/shift.phpt" role="test" />
-    <file name="StrictHashMap/StrictMap.phpt" role="test" />
-    <file name="StrictHashMap/aggregate.phpt" role="test" />
-    <file name="StrictHashMap/array.phpt" role="test" />
-    <file name="StrictHashMap/clear.phpt" role="test" />
     <file name="StrictHashMap/clone.phpt" role="test" />
-    <file name="StrictHashMap/contains.phpt" role="test" />
-    <file name="StrictHashMap/exceptionhandler.phpt" role="test" />
     <file name="StrictHashMap/floatKey.phpt" role="test" />
-    <file name="StrictHashMap/from_pairs.phpt" role="test" />
-    <file name="StrictHashMap/gc.phpt" role="test" />
     <file name="StrictHashMap/keys_values.phpt" role="test" />
     <file name="StrictHashMap/offsetExists.phpt" role="test" />
-    <file name="StrictHashMap/reinit_forbidden.phpt" role="test" />
-    <file name="StrictHashMap/remove.phpt" role="test" />
     <file name="StrictHashMap/serialization.phpt" role="test" />
-    <file name="StrictHashMap/toArray.phpt" role="test" />
-    <file name="StrictHashMap/traversable.phpt" role="test" />
     <file name="StrictHashMap/types.phpt" role="test" />
     <file name="StrictHashMap/unserialize.phpt" role="test" />
-    <file name="StrictHashSet/StrictSet.phpt" role="test" />
     <file name="StrictHashSet/add.phpt" role="test" />
-    <file name="StrictHashSet/aggregate.phpt" role="test" />
     <file name="StrictHashSet/clone.phpt" role="test" />
     <file name="StrictHashSet/contains.phpt" role="test" />
-    <file name="StrictHashSet/exceptionhandler.phpt" role="test" />
     <file name="StrictHashSet/expand.phpt" role="test" />
     <file name="StrictHashSet/floatKey.phpt" role="test" />
     <file name="StrictHashSet/gc.phpt" role="test" />
     <file name="StrictHashSet/queue.phpt" role="test" />
-    <file name="StrictHashSet/reinit_forbidden.phpt" role="test" />
     <file name="StrictHashSet/serialization.phpt" role="test" />
     <file name="StrictHashSet/set_state.phpt" role="test" />
     <file name="StrictHashSet/single.phpt" role="test" />
-    <file name="StrictHashSet/traversable.phpt" role="test" />
     <file name="StrictHashSet/unserialize.phpt" role="test" />
     <file name="StrictHeap/StrictHeap.phpt" role="test" />
     <file name="StrictHeap/extensible.phpt" role="test" />
     <file name="StrictHeap/reflection.phpt" role="test" />
     <file name="StrictHeap/serialization.phpt" role="test" />
-    <file name="StrictSortedVectorMap/SortedStrictMap.phpt" role="test" />
-    <file name="StrictSortedVectorMap/aggregate.phpt" role="test" />
-    <file name="StrictSortedVectorMap/array.phpt" role="test" />
-    <file name="StrictSortedVectorMap/clear.phpt" role="test" />
     <file name="StrictSortedVectorMap/clone.phpt" role="test" />
-    <file name="StrictSortedVectorMap/contains.phpt" role="test" />
-    <file name="StrictSortedVectorMap/exceptionhandler.phpt" role="test" />
-    <file name="StrictSortedVectorMap/from_pairs.phpt" role="test" />
-    <file name="StrictSortedVectorMap/gc.phpt" role="test" />
     <file name="StrictSortedVectorMap/keys_values.phpt" role="test" />
     <file name="StrictSortedVectorMap/offsetExists.phpt" role="test" />
-    <file name="StrictSortedVectorMap/reinit_forbidden.phpt" role="test" />
-    <file name="StrictSortedVectorMap/remove.phpt" role="test" />
     <file name="StrictSortedVectorMap/serialization.phpt" role="test" />
     <file name="StrictSortedVectorMap/shift.phpt" role="test" />
-    <file name="StrictSortedVectorMap/toArray.phpt" role="test" />
-    <file name="StrictSortedVectorMap/traversable.phpt" role="test" />
     <file name="StrictSortedVectorMap/types.phpt" role="test" />
     <file name="StrictSortedVectorMap/unserialize.phpt" role="test" />
-    <file name="StrictSortedVectorSet/StrictSet.phpt" role="test" />
     <file name="StrictSortedVectorSet/add.phpt" role="test" />
-    <file name="StrictSortedVectorSet/aggregate.phpt" role="test" />
     <file name="StrictSortedVectorSet/clone.phpt" role="test" />
     <file name="StrictSortedVectorSet/contains.phpt" role="test" />
-    <file name="StrictSortedVectorSet/exceptionhandler.phpt" role="test" />
     <file name="StrictSortedVectorSet/gc.phpt" role="test" />
-    <file name="StrictSortedVectorSet/reinit_forbidden.phpt" role="test" />
     <file name="StrictSortedVectorSet/serialization.phpt" role="test" />
     <file name="StrictSortedVectorSet/set_state.phpt" role="test" />
     <file name="StrictSortedVectorSet/shift.phpt" role="test" />
-    <file name="StrictSortedVectorSet/traversable.phpt" role="test" />
     <file name="StrictSortedVectorSet/unserialize.phpt" role="test" />
     <file name="StrictSortedVectorSet/unserialize_sorted.phpt" role="test" />
-    <file name="StrictTreeMap/SortedStrictMap.phpt" role="test" />
-    <file name="StrictTreeMap/aggregate.phpt" role="test" />
-    <file name="StrictTreeMap/array.phpt" role="test" />
-    <file name="StrictTreeMap/clear.phpt" role="test" />
     <file name="StrictTreeMap/clone.phpt" role="test" />
-    <file name="StrictTreeMap/contains.phpt" role="test" />
-    <file name="StrictTreeMap/exceptionhandler.phpt" role="test" />
     <file name="StrictTreeMap/fast_balanced_creation.phpt" role="test" />
-    <file name="StrictTreeMap/from_pairs.phpt" role="test" />
-    <file name="StrictTreeMap/gc.phpt" role="test" />
     <file name="StrictTreeMap/iteration_delete.phpt" role="test" />
     <file name="StrictTreeMap/iteration_insert.phpt" role="test" />
     <file name="StrictTreeMap/keys_values.phpt" role="test" />
     <file name="StrictTreeMap/large.phpt" role="test" />
     <file name="StrictTreeMap/offsetExists.phpt" role="test" />
     <file name="StrictTreeMap/rebalance_insert.phpt" role="test" />
-    <file name="StrictTreeMap/reinit_forbidden.phpt" role="test" />
-    <file name="StrictTreeMap/remove.phpt" role="test" />
     <file name="StrictTreeMap/remove_single.phpt" role="test" />
     <file name="StrictTreeMap/serialization.phpt" role="test" />
     <file name="StrictTreeMap/shift.phpt" role="test" />
     <file name="StrictTreeMap/shift_repeated.phpt" role="test" />
-    <file name="StrictTreeMap/toArray.phpt" role="test" />
-    <file name="StrictTreeMap/traversable.phpt" role="test" />
     <file name="StrictTreeMap/types.phpt" role="test" />
     <file name="StrictTreeMap/unserialize.phpt" role="test" />
-    <file name="StrictTreeSet/StrictSet.phpt" role="test" />
     <file name="StrictTreeSet/add.phpt" role="test" />
-    <file name="StrictTreeSet/aggregate.phpt" role="test" />
     <file name="StrictTreeSet/clone.phpt" role="test" />
     <file name="StrictTreeSet/contains.phpt" role="test" />
-    <file name="StrictTreeSet/exceptionhandler.phpt" role="test" />
     <file name="StrictTreeSet/floatKey.phpt" role="test" />
     <file name="StrictTreeSet/gc.phpt" role="test" />
     <file name="StrictTreeSet/iteration_delete.phpt" role="test" />
     <file name="StrictTreeSet/iteration_insert.phpt" role="test" />
     <file name="StrictTreeSet/rebalance_add.phpt" role="test" />
-    <file name="StrictTreeSet/reinit_forbidden.phpt" role="test" />
     <file name="StrictTreeSet/serialization.phpt" role="test" />
     <file name="StrictTreeSet/set_state.phpt" role="test" />
     <file name="StrictTreeSet/shift.phpt" role="test" />
     <file name="StrictTreeSet/shift_repeated.phpt" role="test" />
-    <file name="StrictTreeSet/traversable.phpt" role="test" />
     <file name="StrictTreeSet/unserialize.phpt" role="test" />
     <file name="StrictTreeSet/unserialize_sorted.phpt" role="test" />
-    <file name="Vector/Vector.phpt" role="test" />
-    <file name="Vector/aggregate.phpt" role="test" />
     <file name="Vector/arrayCast.phpt" role="test" />
-    <file name="Vector/clear.phpt" role="test" />
     <file name="Vector/clone.phpt" role="test" />
     <file name="Vector/contains.phpt" role="test" />
-    <file name="Vector/exceptionhandler.phpt" role="test" />
     <file name="Vector/filter.phpt" role="test" />
     <file name="Vector/isEmpty.phpt" role="test" />
     <file name="Vector/isset.phpt" role="test" />
     <file name="Vector/map.phpt" role="test" />
     <file name="Vector/offsetGet.phpt" role="test" />
     <file name="Vector/push_pop.phpt" role="test" />
-    <file name="Vector/reinit_forbidden.phpt" role="test" />
     <file name="Vector/reserve.phpt" role="test" />
     <file name="Vector/serialization.phpt" role="test" />
     <file name="Vector/setSize.phpt" role="test" />
@@ -391,7 +317,6 @@
     <file name="Vector/set_state.phpt" role="test" />
     <file name="Vector/shrink_capacity.phpt" role="test" />
     <file name="Vector/toArray.phpt" role="test" />
-    <file name="Vector/traversable.phpt" role="test" />
     <file name="Vector/unserialize.phpt" role="test" />
     <file name="array/array_value_first.phpt" role="test" />
     <file name="array/is_same_array_handle.phpt" role="test" />
