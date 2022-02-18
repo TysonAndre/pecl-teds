@@ -401,7 +401,7 @@ void teds_stricttreeset_tree_init_from_traversable(teds_stricttreeset_tree *arra
 	if (funcs->rewind) {
 		funcs->rewind(iter);
 		if (UNEXPECTED(EG(exception))) {
-			return;
+			goto cleanup_iter;
 		}
 	}
 
@@ -429,6 +429,7 @@ void teds_stricttreeset_tree_init_from_traversable(teds_stricttreeset_tree *arra
 		}
 	}
 
+cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}

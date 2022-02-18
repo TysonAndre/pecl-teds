@@ -147,7 +147,7 @@ static void teds_immutablesequence_entries_init_from_traversable(teds_immutables
 	if (funcs->rewind) {
 		funcs->rewind(iter);
 		if (UNEXPECTED(EG(exception))) {
-			return;
+			goto cleanup_iter;
 		}
 	}
 
@@ -186,6 +186,7 @@ static void teds_immutablesequence_entries_init_from_traversable(teds_immutables
 
 	array->size = size;
 	array->entries = entries;
+cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}

@@ -175,7 +175,7 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 	if (funcs->rewind) {
 		funcs->rewind(iter);
 		if (UNEXPECTED(EG(exception))) {
-			return;
+			goto cleanup_iter;
 		}
 	}
 
@@ -211,6 +211,7 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 	array->size = size;
 	array->mask = capacity > 0 ? capacity - 1 : 0;
 	array->circular_buffer = circular_buffer;
+cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}

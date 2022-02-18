@@ -182,7 +182,7 @@ static void teds_strictsortedvectorset_entries_init_from_traversable(teds_strict
 	if (funcs->rewind) {
 		funcs->rewind(iter);
 		if (UNEXPECTED(EG(exception))) {
-			return;
+			goto cleanup_iter;
 		}
 	}
 
@@ -218,6 +218,7 @@ static void teds_strictsortedvectorset_entries_init_from_traversable(teds_strict
 	array->size = size;
 	array->capacity = capacity;
 	array->entries = entries;
+cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}
