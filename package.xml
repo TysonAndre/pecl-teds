@@ -119,6 +119,7 @@
     <file name="BitSet/aggregate.phpt" role="test" />
     <file name="BitSet/arrayCast.phpt" role="test" />
     <file name="BitSet/clone.phpt" role="test" />
+    <file name="BitSet/exceptionhandler.phpt" role="test" />
     <file name="BitSet/gc.phpt" role="test" />
     <file name="BitSet/indexOf.phpt" role="test" />
     <file name="BitSet/isEmpty.phpt" role="test" />
@@ -126,6 +127,7 @@
     <file name="BitSet/large.phpt" role="test" />
     <file name="BitSet/offsetGet.phpt" role="test" />
     <file name="BitSet/push_pop.phpt" role="test" />
+    <file name="BitSet/reinit_forbidden.phpt" role="test" />
     <file name="BitSet/serialization.phpt" role="test" />
     <file name="BitSet/setValueAt.phpt" role="test" />
     <file name="BitSet/set_state.phpt" role="test" />
@@ -141,11 +143,8 @@
     <file name="Collection/reinit_forbidden.phpt" role="test" />
     <file name="Collection/traversable.phpt" role="test" />
     <file name="Deque/Deque.phpt" role="test" />
-    <file name="Deque/arrayCast.phpt" role="test" />
     <file name="Deque/clone.phpt" role="test" />
-    <file name="Deque/contains.phpt" role="test" />
     <file name="Deque/foreach.phpt" role="test" />
-    <file name="Deque/isEmpty.phpt" role="test" />
     <file name="Deque/iterator.phpt" role="test" />
     <file name="Deque/offsetGet.phpt" role="test" />
     <file name="Deque/offsetGetShifted.phpt" role="test" />
@@ -154,8 +153,6 @@
     <file name="Deque/push_pop.phpt" role="test" />
     <file name="Deque/push_pop_both.phpt" role="test" />
     <file name="Deque/serialization.phpt" role="test" />
-    <file name="Deque/setValueAt.phpt" role="test" />
-    <file name="Deque/set_state.phpt" role="test" />
     <file name="Deque/shift.phpt" role="test" />
     <file name="Deque/toArray.phpt" role="test" />
     <file name="Deque/unserialize.phpt" role="test" />
@@ -169,7 +166,6 @@
     <file name="ImmutableIterable/unserialize.phpt" role="test" />
     <file name="ImmutableSequence/arrayAccess.phpt" role="test" />
     <file name="ImmutableSequence/clone.phpt" role="test" />
-    <file name="ImmutableSequence/contains.phpt" role="test" />
     <file name="ImmutableSequence/filter.phpt" role="test" />
     <file name="ImmutableSequence/map.phpt" role="test" />
     <file name="ImmutableSequence/offsetGet.phpt" role="test" />
@@ -182,7 +178,6 @@
     <file name="IntVector/arrayCast.phpt" role="test" />
     <file name="IntVector/clone.phpt" role="test" />
     <file name="IntVector/gc.phpt" role="test" />
-    <file name="IntVector/isEmpty.phpt" role="test" />
     <file name="IntVector/isset.phpt" role="test" />
     <file name="IntVector/offsetGet.phpt" role="test" />
     <file name="IntVector/promote.phpt" role="test" />
@@ -196,11 +191,8 @@
     <file name="IntVector/specializations.phpt" role="test" />
     <file name="IntVector/toArray.phpt" role="test" />
     <file name="IntVector/unserialize.phpt" role="test" />
-    <file name="LowMemoryVector/arrayCast.phpt" role="test" />
     <file name="LowMemoryVector/bitsetSerialization.phpt" role="test" />
     <file name="LowMemoryVector/clone.phpt" role="test" />
-    <file name="LowMemoryVector/contains.phpt" role="test" />
-    <file name="LowMemoryVector/isEmpty.phpt" role="test" />
     <file name="LowMemoryVector/isset.phpt" role="test" />
     <file name="LowMemoryVector/jsonEncodeRecursive.phpt" role="test" />
     <file name="LowMemoryVector/offsetGet.phpt" role="test" />
@@ -210,7 +202,6 @@
     <file name="LowMemoryVector/serialization.phpt" role="test" />
     <file name="LowMemoryVector/serialization_64.phpt" role="test" />
     <file name="LowMemoryVector/serialization_64_32bit.phpt" role="test" />
-    <file name="LowMemoryVector/setValueAt.phpt" role="test" />
     <file name="LowMemoryVector/set_state.phpt" role="test" />
     <file name="LowMemoryVector/specializations.phpt" role="test" />
     <file name="LowMemoryVector/toArray.phpt" role="test" />
@@ -232,8 +223,17 @@
     <file name="MutableIterable/setSize.phpt" role="test" />
     <file name="MutableIterable/set_state.phpt" role="test" />
     <file name="MutableIterable/unserialize.phpt" role="test" />
+    <file name="Sequence/arrayCast.phpt" role="test" />
     <file name="Sequence/clear.phpt" role="test" />
+    <file name="Sequence/contains.phpt" role="test" />
+    <file name="Sequence/set.phpt" role="test" />
+    <file name="Sequence/set_state.phpt" role="test" />
     <file name="Sequence/shift.phpt" role="test" />
+    <file name="Set/contains.phpt" role="test" />
+    <file name="Set/floatKey.phpt" role="test" />
+    <file name="Set/gc.phpt" role="test" />
+    <file name="Set/serialization.phpt" role="test" />
+    <file name="Set/set_state.phpt" role="test" />
     <file name="StrictHashMap/clone.phpt" role="test" />
     <file name="StrictHashMap/floatKey.phpt" role="test" />
     <file name="StrictHashMap/keys_values.phpt" role="test" />
@@ -243,13 +243,8 @@
     <file name="StrictHashMap/unserialize.phpt" role="test" />
     <file name="StrictHashSet/add.phpt" role="test" />
     <file name="StrictHashSet/clone.phpt" role="test" />
-    <file name="StrictHashSet/contains.phpt" role="test" />
     <file name="StrictHashSet/expand.phpt" role="test" />
-    <file name="StrictHashSet/floatKey.phpt" role="test" />
-    <file name="StrictHashSet/gc.phpt" role="test" />
     <file name="StrictHashSet/queue.phpt" role="test" />
-    <file name="StrictHashSet/serialization.phpt" role="test" />
-    <file name="StrictHashSet/set_state.phpt" role="test" />
     <file name="StrictHashSet/single.phpt" role="test" />
     <file name="StrictHashSet/unserialize.phpt" role="test" />
     <file name="StrictHeap/StrictHeap.phpt" role="test" />
@@ -265,10 +260,6 @@
     <file name="StrictSortedVectorMap/unserialize.phpt" role="test" />
     <file name="StrictSortedVectorSet/add.phpt" role="test" />
     <file name="StrictSortedVectorSet/clone.phpt" role="test" />
-    <file name="StrictSortedVectorSet/contains.phpt" role="test" />
-    <file name="StrictSortedVectorSet/gc.phpt" role="test" />
-    <file name="StrictSortedVectorSet/serialization.phpt" role="test" />
-    <file name="StrictSortedVectorSet/set_state.phpt" role="test" />
     <file name="StrictSortedVectorSet/shift.phpt" role="test" />
     <file name="StrictSortedVectorSet/unserialize.phpt" role="test" />
     <file name="StrictSortedVectorSet/unserialize_sorted.phpt" role="test" />
@@ -288,23 +279,16 @@
     <file name="StrictTreeMap/unserialize.phpt" role="test" />
     <file name="StrictTreeSet/add.phpt" role="test" />
     <file name="StrictTreeSet/clone.phpt" role="test" />
-    <file name="StrictTreeSet/contains.phpt" role="test" />
     <file name="StrictTreeSet/floatKey.phpt" role="test" />
-    <file name="StrictTreeSet/gc.phpt" role="test" />
     <file name="StrictTreeSet/iteration_delete.phpt" role="test" />
     <file name="StrictTreeSet/iteration_insert.phpt" role="test" />
     <file name="StrictTreeSet/rebalance_add.phpt" role="test" />
-    <file name="StrictTreeSet/serialization.phpt" role="test" />
-    <file name="StrictTreeSet/set_state.phpt" role="test" />
     <file name="StrictTreeSet/shift.phpt" role="test" />
     <file name="StrictTreeSet/shift_repeated.phpt" role="test" />
     <file name="StrictTreeSet/unserialize.phpt" role="test" />
     <file name="StrictTreeSet/unserialize_sorted.phpt" role="test" />
-    <file name="Vector/arrayCast.phpt" role="test" />
     <file name="Vector/clone.phpt" role="test" />
-    <file name="Vector/contains.phpt" role="test" />
     <file name="Vector/filter.phpt" role="test" />
-    <file name="Vector/isEmpty.phpt" role="test" />
     <file name="Vector/isset.phpt" role="test" />
     <file name="Vector/map.phpt" role="test" />
     <file name="Vector/offsetGet.phpt" role="test" />
@@ -313,7 +297,6 @@
     <file name="Vector/serialization.phpt" role="test" />
     <file name="Vector/setSize.phpt" role="test" />
     <file name="Vector/setSize_default.phpt" role="test" />
-    <file name="Vector/setValueAt.phpt" role="test" />
     <file name="Vector/set_state.phpt" role="test" />
     <file name="Vector/shrink_capacity.phpt" role="test" />
     <file name="Vector/toArray.phpt" role="test" />
