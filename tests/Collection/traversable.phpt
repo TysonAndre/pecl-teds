@@ -14,7 +14,6 @@ function yields_values() {
     echo "Done evaluating the generator\n";
 }
 
-// Teds\Deque eagerly evaluates the passed in Traversable
 function test_traversable(string $class_name) {
     echo "Test $class_name\n";
     $it = new $class_name(yields_values());

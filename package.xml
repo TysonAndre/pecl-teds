@@ -26,6 +26,7 @@
 * Change exception type to `Teds\UnsupportedOperationException` in a few places.
 * Add `Teds\is_same_array_handle(array $array1, array $array2): bool` for infinite recursion detection when processing arrays.
 * Fix memory leak when initializing `Teds\StrictMinHeap`/`Teds\StrictMaxHeap` from Traversables.
+* Fix memory leak when constructing collections from Traversable where rewind throws
  </notes>
  <contents>
   <dir name="/">
@@ -142,6 +143,7 @@
     <file name="Collection/fromArray.phpt" role="test" />
     <file name="Collection/reinit_forbidden.phpt" role="test" />
     <file name="Collection/traversable.phpt" role="test" />
+    <file name="Collection/traversable_rewind_error.phpt" role="test" />
     <file name="Deque/Deque.phpt" role="test" />
     <file name="Deque/clone.phpt" role="test" />
     <file name="Deque/foreach.phpt" role="test" />

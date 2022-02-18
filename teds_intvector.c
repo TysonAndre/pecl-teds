@@ -264,7 +264,7 @@ static void teds_intvector_entries_init_from_traversable(teds_intvector_entries 
 	if (funcs->rewind) {
 		funcs->rewind(iter);
 		if (UNEXPECTED(EG(exception))) {
-			return;
+			goto cleanup_iter;
 		}
 	}
 
@@ -297,6 +297,7 @@ static void teds_intvector_entries_init_from_traversable(teds_intvector_entries 
 		}
 	}
 
+cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}

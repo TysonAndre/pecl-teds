@@ -221,7 +221,7 @@ void teds_stricthashset_entries_init_from_traversable(teds_stricthashset_entries
 	if (funcs->rewind) {
 		funcs->rewind(iter);
 		if (UNEXPECTED(EG(exception))) {
-			return;
+			goto cleanup_iter;
 		}
 	}
 
@@ -244,6 +244,7 @@ void teds_stricthashset_entries_init_from_traversable(teds_stricthashset_entries
 		}
 	}
 
+cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}

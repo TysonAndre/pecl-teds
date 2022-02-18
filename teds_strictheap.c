@@ -176,7 +176,7 @@ static void teds_strictheap_entries_init_from_traversable(teds_strictheap_entrie
 	if (funcs->rewind) {
 		funcs->rewind(iter);
 		if (UNEXPECTED(EG(exception))) {
-			return;
+			goto cleanup_iter;
 		}
 	}
 
@@ -199,6 +199,7 @@ static void teds_strictheap_entries_init_from_traversable(teds_strictheap_entrie
 		}
 	}
 
+cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}

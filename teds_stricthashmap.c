@@ -234,7 +234,7 @@ void teds_stricthashmap_entries_init_from_traversable(teds_stricthashmap_entries
 	if (funcs->rewind) {
 		funcs->rewind(iter);
 		if (UNEXPECTED(EG(exception))) {
-			return;
+			goto cleanup_iter;
 		}
 	}
 
@@ -249,6 +249,9 @@ void teds_stricthashmap_entries_init_from_traversable(teds_stricthashmap_entries
 		zval key;
 		if (funcs->get_current_key) {
 			funcs->get_current_key(iter, &key);
+			if (UNEXPECTED(EG(exception))) {
+				break;
+			}
 		} else {
 			ZVAL_NULL(&key);
 		}
@@ -270,6 +273,7 @@ void teds_stricthashmap_entries_init_from_traversable(teds_stricthashmap_entries
 		}
 	}
 
+cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}
