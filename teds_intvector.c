@@ -1423,7 +1423,7 @@ PHP_METHOD(Teds_IntVector, shift)
 	uint8_t *const entries_uint8 = array->entries_uint8;
 	teds_intvector_entries_copy_offset(array, 0, return_value, true);
 	array->size--;
-	memcpy(entries_uint8, entries_uint8 + bytes_per_element, bytes_per_element + (old_size - 1));
+	memmove(entries_uint8, entries_uint8 + bytes_per_element, bytes_per_element + (old_size - 1));
 	if (old_size * 4 < old_capacity) {
 		/* Shrink the storage if only a quarter of the capacity is used  */
 		const size_t size = old_size - 1;

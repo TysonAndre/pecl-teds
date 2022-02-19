@@ -311,9 +311,7 @@ static void teds_bitset_free_storage(zend_object *object)
 
 static zend_object *teds_bitset_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
 {
-	teds_bitset *intern;
-
-	intern = zend_object_alloc(sizeof(teds_bitset), class_type);
+	teds_bitset *intern = zend_object_alloc(sizeof(teds_bitset), class_type);
 	/* This is a final class */
 	ZEND_ASSERT(class_type == teds_ce_BitSet);
 
@@ -335,7 +333,6 @@ static zend_object *teds_bitset_new(zend_class_entry *class_type)
 {
 	return teds_bitset_new_ex(class_type, NULL, 0);
 }
-
 
 static zend_object *teds_bitset_clone(zend_object *old_object)
 {
@@ -415,8 +412,7 @@ PHP_METHOD(Teds_BitSet, setSize)
 		RETURN_THROWS();
 	}
 	const zend_ulong size = size_signed;
-	teds_bitset *const intern = Z_BITSET_P(ZEND_THIS);
-	teds_bitset_entries *const array = &intern->array;
+	teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	if (size <= old_size) {
 		array->bit_size = size;
@@ -573,6 +569,19 @@ zend_object_iterator *teds_bitset_get_iterator(zend_class_entry *ce, zval *objec
 	return &iterator->intern;
 }
 
+static void teds_bitset_initialize_from_bytes(teds_bitset_entries *array, const uint8_t *bytes, const size_t byte_count, const uint8_t modulo_bit_len)
+{
+	const size_t bit_size = byte_count * 8 - modulo_bit_len;
+	ZEND_ASSERT(bit_size > 0);
+	const size_t bit_capacity = teds_bitset_compute_next_valid_capacity(bit_size);
+	// fprintf(stderr, "byte_count=%d modulo_bit_len=%d bit_size=%d bit_capacity=%d\n", (int)byte_count, (int)modulo_bit_len, (int)bit_size, (int)bit_capacity);
+	uint8_t *const bytes_copy = emalloc(bit_capacity >> 3);
+	memcpy(bytes_copy, bytes, byte_count);
+	array->entries_bits = bytes_copy;
+	array->bit_size = bit_size;
+	array->bit_capacity = bit_capacity;
+}
+
 PHP_METHOD(Teds_BitSet, __unserialize)
 {
 	HashTable *raw_data;
@@ -615,15 +624,7 @@ PHP_METHOD(Teds_BitSet, __unserialize)
 		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet expected binary data to end with number of wasted bits", 0);
 		RETURN_THROWS();
 	}
-	const size_t bit_size = byte_count * 8 - modulo_bit_len;
-	ZEND_ASSERT(bit_size > 0);
-	const size_t bit_capacity = teds_bitset_compute_next_valid_capacity(bit_size);
-	// fprintf(stderr, "byte_count=%d modulo_bit_len=%d bit_size=%d bit_capacity=%d\n", (int)byte_count, (int)modulo_bit_len, (int)bit_size, (int)bit_capacity);
-	uint8_t *const bytes_copy = emalloc(bit_capacity >> 3);
-	memcpy(bytes_copy, bytes, byte_count);
-	array->entries_bits = bytes_copy;
-	array->bit_size = bit_size;
-	array->bit_capacity = bit_capacity;
+	teds_bitset_initialize_from_bytes(array, bytes, byte_count, modulo_bit_len);
 	TEDS_RETURN_VOID();
 }
 
@@ -682,6 +683,34 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int64(con
 #endif
 }
 
+static zend_string *teds_bitset_create_serialized_string(const teds_bitset_entries *const array)
+{
+	const size_t len = array->bit_size;
+	const uint8_t removed_bits = ((8 - len) & 7);
+	const size_t str_len = BYTES_FOR_BIT_SIZE(len);
+	const uint8_t mask = ((1 << (8 - removed_bits)) - 1);
+	// fprintf(stderr, "serialize mask=%d str_len=%d len=%d removed=%d\n", (int)mask, (int)str_len, (int)len, (int)removed_bits);
+	zend_string *const ret = zend_string_alloc(str_len + 1, 0);
+	memcpy(ZSTR_VAL(ret), array->entries_bits, str_len);
+	ZSTR_VAL(ret)[str_len - 1] &= mask;
+	ZSTR_VAL(ret)[str_len] = removed_bits;
+	ZSTR_VAL(ret)[str_len + 1] = '\0';
+	return ret;
+}
+
+static zend_string *teds_bitset_create_serialized_string_no_padding(const teds_bitset_entries *const array)
+{
+	const size_t len = array->bit_size;
+	const uint8_t removed_bits = ((8 - len) & 7);
+	const size_t str_len = BYTES_FOR_BIT_SIZE(len);
+	const uint8_t mask = ((1 << (8 - removed_bits)) - 1);
+	zend_string *const ret = zend_string_alloc(str_len, 0);
+	memcpy(ZSTR_VAL(ret), array->entries_bits, str_len);
+	ZSTR_VAL(ret)[str_len - 1] &= mask;
+	ZSTR_VAL(ret)[str_len] = '\0';
+	return ret;
+}
+
 PHP_METHOD(Teds_BitSet, __serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -692,20 +721,78 @@ PHP_METHOD(Teds_BitSet, __serialize)
 		RETURN_EMPTY_ARRAY();
 	}
 	/* Represent the bitset as the bytes, followed by the number of bits % 8 */
-	const uint8_t removed_bits = ((8 - len) & 7);
-	const size_t str_len = BYTES_FOR_BIT_SIZE(len);
-	const uint8_t mask = ((1 << (8 - removed_bits)) - 1);
-	// fprintf(stderr, "serialize mask=%d str_len=%d len=%d removed=%d\n", (int)mask, (int)str_len, (int)len, (int)removed_bits);
-	zend_string *const ret = zend_string_alloc(str_len + 1, 0);
-	memcpy(ZSTR_VAL(ret), array->entries_bits, str_len);
-	ZSTR_VAL(ret)[str_len - 1] &= mask;
-	ZSTR_VAL(ret)[str_len] = removed_bits;
-	ZSTR_VAL(ret)[str_len + 1] = '\0';
 	zval tmp;
-	ZVAL_STR(&tmp, ret);
+	ZVAL_STR(&tmp, teds_bitset_create_serialized_string(array));
 	zend_array *result = zend_new_array(1);
 	zend_hash_next_index_insert(result, &tmp);
 	RETURN_ARR(result);
+}
+
+PHP_METHOD(Teds_BitSet, serialize)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	const teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const size_t len = array->bit_size;
+	if (len == 0) {
+		RETURN_EMPTY_STRING();
+	}
+	RETURN_STR(teds_bitset_create_serialized_string(array));
+}
+
+PHP_METHOD(Teds_BitSet, unserialize)
+{
+	zend_string *zstr;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_STR(zstr)
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_object *new_object = teds_bitset_new(teds_ce_BitSet);
+	teds_bitset *bitset = teds_bitset_from_object(new_object);
+	if (ZSTR_LEN(zstr) == 0) {
+		teds_bitset_entries_set_empty_list(&bitset->array);
+	} else {
+		const uint8_t *bytes = (const uint8_t *)ZSTR_VAL(zstr);
+		const size_t byte_count = ZSTR_LEN(zstr) - 1;
+		const uint8_t modulo_bit_len = (uint8_t) bytes[byte_count];
+		if (modulo_bit_len >= 8) {
+			zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet expected binary data to end with number of wasted bits", 0);
+			RETURN_THROWS();
+		}
+
+		teds_bitset_initialize_from_bytes(&bitset->array, bytes, byte_count, modulo_bit_len);
+	}
+	RETURN_OBJ(new_object);
+}
+
+PHP_METHOD(Teds_BitSet, toBinaryString)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	const teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const size_t len = array->bit_size;
+	if (len == 0) {
+		RETURN_EMPTY_STRING();
+	}
+	RETURN_STR(teds_bitset_create_serialized_string_no_padding(array));
+}
+
+PHP_METHOD(Teds_BitSet, fromBinaryString)
+{
+	zend_string *zstr;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_STR(zstr)
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_object *new_object = teds_bitset_new(teds_ce_BitSet);
+	teds_bitset *bitset = teds_bitset_from_object(new_object);
+	if (ZSTR_LEN(zstr) == 0) {
+		teds_bitset_entries_set_empty_list(&bitset->array);
+	} else {
+		const uint8_t *bytes = (const uint8_t *)ZSTR_VAL(zstr);
+		const size_t byte_count = ZSTR_LEN(zstr);
+
+		teds_bitset_initialize_from_bytes(&bitset->array, bytes, byte_count, 0);
+	}
+	RETURN_OBJ(new_object);
 }
 
 static void teds_bitset_entries_init_from_array_values(teds_bitset_entries *array, zend_array *raw_data)
@@ -968,6 +1055,85 @@ PHP_METHOD(Teds_BitSet, offsetSet)
 	teds_bitset_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 	TEDS_RETURN_VOID();
 }
+
+#define teds_bitset_convert_8(x) (x)
+#if WORDS_BIGENDIAN
+#define teds_bitset_convert_16(x) teds_bswap_16((x))
+#define teds_bitset_convert_32(x) teds_bswap_32((x))
+#define teds_bitset_convert_64(x) teds_bswap_64((x))
+#else
+#define teds_bitset_convert_16(x) (x)
+#define teds_bitset_convert_32(x) (x)
+#define teds_bitset_convert_64(x) (x)
+#endif
+
+#define TEDS_BITSET_DECLARE_INT_GETTER(methodName, cTypeName, cTypeNameUnsigned, errorTypeName, convertName) \
+PHP_METHOD(Teds_BitSet, methodName) \
+{ \
+	zend_long offset_int; \
+	ZEND_PARSE_PARAMETERS_START(1, 1) \
+		Z_PARAM_LONG(offset_int) \
+	ZEND_PARSE_PARAMETERS_END(); \
+	teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS); \
+	if (UNEXPECTED(((zend_ulong)offset_int) >= (array->bit_size / (sizeof(cTypeNameUnsigned) * 8)) || offset_int < 0)) { \
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Teds\\BitSet " # errorTypeName " index invalid or out of range", 0); \
+		RETURN_THROWS(); \
+	} \
+	cTypeName result = ((cTypeName)(cTypeNameUnsigned)convertName(((cTypeNameUnsigned *)array->entries_bits)[offset_int])); \
+	RETURN_LONG(result); \
+}
+
+#define TEDS_BITSET_DECLARE_INT_SETTER(methodName, cTypeName, cTypeNameUnsigned, errorTypeName, convertName) \
+PHP_METHOD(Teds_BitSet, methodName) \
+{ \
+	zend_long offset_int; \
+	zend_long offset_value; \
+	ZEND_PARSE_PARAMETERS_START(2, 2) \
+		Z_PARAM_LONG(offset_int) \
+		Z_PARAM_LONG(offset_value) \
+	ZEND_PARSE_PARAMETERS_END(); \
+	teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS); \
+	if (UNEXPECTED(((zend_ulong)offset_int) >= (array->bit_size / (sizeof(cTypeNameUnsigned) * 8)) || offset_int < 0)) { \
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Teds\\BitSet " # errorTypeName " index invalid or out of range", 0); \
+		RETURN_THROWS(); \
+	} \
+	((cTypeNameUnsigned *)array->entries_bits)[offset_int] = convertName(offset_value); \
+	TEDS_RETURN_VOID(); \
+}
+
+
+TEDS_BITSET_DECLARE_INT_GETTER(getInt8,   int8_t,   uint8_t,  int8, teds_bitset_convert_8)
+TEDS_BITSET_DECLARE_INT_GETTER(getInt16,  int16_t,  uint16_t, int16, teds_bitset_convert_16)
+TEDS_BITSET_DECLARE_INT_GETTER(getInt32,  int32_t,  uint32_t, int32, teds_bitset_convert_32)
+TEDS_BITSET_DECLARE_INT_GETTER(getUInt8,  uint8_t,  uint8_t,  int8, teds_bitset_convert_8)
+TEDS_BITSET_DECLARE_INT_GETTER(getUInt16, uint16_t, uint16_t, int16, teds_bitset_convert_16)
+TEDS_BITSET_DECLARE_INT_GETTER(getUInt32, uint32_t, uint32_t, int32, teds_bitset_convert_32)
+TEDS_BITSET_DECLARE_INT_SETTER(setInt8,   int8_t,   uint8_t,  int8, teds_bitset_convert_8)
+TEDS_BITSET_DECLARE_INT_SETTER(setInt16,  int16_t,  uint16_t, int16, teds_bitset_convert_16)
+TEDS_BITSET_DECLARE_INT_SETTER(setInt32,  int32_t,  uint32_t, int32, teds_bitset_convert_32)
+#if SIZEOF_ZEND_LONG > 4
+TEDS_BITSET_DECLARE_INT_GETTER(getInt64,  int64_t,  uint64_t, int64, teds_bitset_convert_64)
+TEDS_BITSET_DECLARE_INT_SETTER(setInt64,  int64_t,  uint64_t, int64, teds_bitset_convert_64)
+#else
+ZEND_COLD PHP_METHOD(Teds_BitSet, getInt64)
+{
+	zend_long offset_int;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_LONG(offset_int)
+	ZEND_PARSE_PARAMETERS_END();
+	teds_throw_unsupportedoperationexception("Teds\\BitSet 64-bit method not supported on 32-bit builds");
+}
+ZEND_COLD PHP_METHOD(Teds_BitSet, setInt64)
+{
+	zend_long offset_int;
+	zend_long offset_value;
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_LONG(offset_int)
+		Z_PARAM_LONG(offset_value)
+	ZEND_PARSE_PARAMETERS_END();
+	teds_throw_unsupportedoperationexception("Teds\\BitSet 64-bit method not supported on 32-bit builds");
+}
+#endif
 
 static zend_always_inline bool teds_bitset_entries_read_offset_as_bool(const teds_bitset_entries *const array, const size_t offset)
 {
