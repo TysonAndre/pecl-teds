@@ -67,10 +67,18 @@
 
 #include <byteswap.h>
 
+#endif
+
+#define teds_bswap_64 bswap_64
+#define teds_bswap_32 bswap_32
+
 static zend_always_inline uint16_t teds_bswap_16(uint16_t v) {
 	/* Compiles to single instruction such as rol 8 (rotate left by 8 bits) in optimized builds */
 	return (v >> 8) | (v << 8);
 }
 
-#endif
+static zend_always_inline uint8_t teds_bswap_8(uint8_t v) {
+	return v;
+}
+
 #endif

@@ -1829,7 +1829,7 @@ PHP_METHOD(Teds_LowMemoryVector, unshift)
 		teds_lowmemoryvector_entries_update_type_tag(array, &args[i]);
 	}
 	uint8_t *const raw_bytes = array->entries_uint8;
-	memcpy(raw_bytes + argc * (size_t) memory_per_element, raw_bytes, memory_per_element * old_size);
+	memmove(raw_bytes + argc * (size_t) memory_per_element, raw_bytes, memory_per_element * old_size);
 	array->size = new_size;
 	for (uint32_t i = 0; i < argc; i++) {
 		teds_lowmemoryvector_entries_set_value_at_offset(array, argc - i - 1, &args[i], false);

@@ -32,6 +32,8 @@
 * Add first/last helper methods to more collection types
 * Optimize implementations of `$map[$x]` array access shorthand in `Teds\Map` implementations.
 * Throw for `$map[] = $value` instead of setting the key for null in `Teds\Map` implementations.
+* Fix Teds\IntVector and Teds\LowMemoryVector shift implementation for integers
+* Add more methods to Teds\BitSet to read/write bytes/integers, convert to/from strings.
  </notes>
  <contents>
   <dir name="/">
@@ -132,6 +134,7 @@
     <file name="BitSet/exceptionhandler.phpt" role="test" />
     <file name="BitSet/gc.phpt" role="test" />
     <file name="BitSet/indexOf.phpt" role="test" />
+    <file name="BitSet/intAccess.phpt" role="test" />
     <file name="BitSet/isEmpty.phpt" role="test" />
     <file name="BitSet/isset.phpt" role="test" />
     <file name="BitSet/large.phpt" role="test" />
@@ -139,6 +142,7 @@
     <file name="BitSet/push_pop.phpt" role="test" />
     <file name="BitSet/reinit_forbidden.phpt" role="test" />
     <file name="BitSet/serialization.phpt" role="test" />
+    <file name="BitSet/serializeString.phpt" role="test" />
     <file name="BitSet/setValueAt.phpt" role="test" />
     <file name="BitSet/set_state.phpt" role="test" />
     <file name="BitSet/shift.phpt" role="test" />

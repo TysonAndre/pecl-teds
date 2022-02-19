@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 988a8f55ccb7da73c3ad41aa35293efec0eb5b06 */
+ * Stub hash: 416787fd41813310375ab3c905ff18bec1b4b6a8 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_BitSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -22,6 +22,17 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitSet___unserialize, 0, 1, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, data, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitSet_serialize, 0, 0, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_BitSet_unserialize, 0, 1, Teds\\BitSet, 0)
+	ZEND_ARG_TYPE_INFO(0, data, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_BitSet_toBinaryString arginfo_class_Teds_BitSet_serialize
+
+#define arginfo_class_Teds_BitSet_fromBinaryString arginfo_class_Teds_BitSet_unserialize
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_BitSet___set_state, 0, 1, Teds\\BitSet, 0)
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
@@ -66,6 +77,33 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitSet_setBit, 0, 2, 
 	ZEND_ARG_TYPE_INFO(0, value, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitSet_getInt8, 0, 1, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_BitSet_getUInt8 arginfo_class_Teds_BitSet_getInt8
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitSet_setInt8, 0, 2, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, value, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_BitSet_getInt16 arginfo_class_Teds_BitSet_getInt8
+
+#define arginfo_class_Teds_BitSet_getUInt16 arginfo_class_Teds_BitSet_getInt8
+
+#define arginfo_class_Teds_BitSet_setInt16 arginfo_class_Teds_BitSet_setInt8
+
+#define arginfo_class_Teds_BitSet_getInt32 arginfo_class_Teds_BitSet_getInt8
+
+#define arginfo_class_Teds_BitSet_getUInt32 arginfo_class_Teds_BitSet_getInt8
+
+#define arginfo_class_Teds_BitSet_setInt32 arginfo_class_Teds_BitSet_setInt8
+
+#define arginfo_class_Teds_BitSet_getInt64 arginfo_class_Teds_BitSet_getInt8
+
+#define arginfo_class_Teds_BitSet_setInt64 arginfo_class_Teds_BitSet_setInt8
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitSet_offsetGet, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
@@ -108,6 +146,10 @@ ZEND_METHOD(Teds_BitSet, isEmpty);
 ZEND_METHOD(Teds_BitSet, capacity);
 ZEND_METHOD(Teds_BitSet, __serialize);
 ZEND_METHOD(Teds_BitSet, __unserialize);
+ZEND_METHOD(Teds_BitSet, serialize);
+ZEND_METHOD(Teds_BitSet, unserialize);
+ZEND_METHOD(Teds_BitSet, toBinaryString);
+ZEND_METHOD(Teds_BitSet, fromBinaryString);
 ZEND_METHOD(Teds_BitSet, __set_state);
 ZEND_METHOD(Teds_BitSet, push);
 ZEND_METHOD(Teds_BitSet, unshift);
@@ -121,6 +163,17 @@ ZEND_METHOD(Teds_BitSet, clear);
 ZEND_METHOD(Teds_BitSet, get);
 ZEND_METHOD(Teds_BitSet, set);
 ZEND_METHOD(Teds_BitSet, setBit);
+ZEND_METHOD(Teds_BitSet, getInt8);
+ZEND_METHOD(Teds_BitSet, getUInt8);
+ZEND_METHOD(Teds_BitSet, setInt8);
+ZEND_METHOD(Teds_BitSet, getInt16);
+ZEND_METHOD(Teds_BitSet, getUInt16);
+ZEND_METHOD(Teds_BitSet, setInt16);
+ZEND_METHOD(Teds_BitSet, getInt32);
+ZEND_METHOD(Teds_BitSet, getUInt32);
+ZEND_METHOD(Teds_BitSet, setInt32);
+ZEND_METHOD(Teds_BitSet, getInt64);
+ZEND_METHOD(Teds_BitSet, setInt64);
 ZEND_METHOD(Teds_BitSet, offsetGet);
 ZEND_METHOD(Teds_BitSet, offsetExists);
 ZEND_METHOD(Teds_BitSet, containsKey);
@@ -139,6 +192,10 @@ static const zend_function_entry class_Teds_BitSet_methods[] = {
 	ZEND_ME(Teds_BitSet, capacity, arginfo_class_Teds_BitSet_capacity, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, __serialize, arginfo_class_Teds_BitSet___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, __unserialize, arginfo_class_Teds_BitSet___unserialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, serialize, arginfo_class_Teds_BitSet_serialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, unserialize, arginfo_class_Teds_BitSet_unserialize, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Teds_BitSet, toBinaryString, arginfo_class_Teds_BitSet_toBinaryString, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, fromBinaryString, arginfo_class_Teds_BitSet_fromBinaryString, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_BitSet, __set_state, arginfo_class_Teds_BitSet___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_BitSet, push, arginfo_class_Teds_BitSet_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, unshift, arginfo_class_Teds_BitSet_unshift, ZEND_ACC_PUBLIC)
@@ -153,6 +210,17 @@ static const zend_function_entry class_Teds_BitSet_methods[] = {
 	ZEND_ME(Teds_BitSet, get, arginfo_class_Teds_BitSet_get, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, set, arginfo_class_Teds_BitSet_set, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, setBit, arginfo_class_Teds_BitSet_setBit, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, getInt8, arginfo_class_Teds_BitSet_getInt8, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, getUInt8, arginfo_class_Teds_BitSet_getUInt8, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, setInt8, arginfo_class_Teds_BitSet_setInt8, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, getInt16, arginfo_class_Teds_BitSet_getInt16, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, getUInt16, arginfo_class_Teds_BitSet_getUInt16, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, setInt16, arginfo_class_Teds_BitSet_setInt16, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, getInt32, arginfo_class_Teds_BitSet_getInt32, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, getUInt32, arginfo_class_Teds_BitSet_getUInt32, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, setInt32, arginfo_class_Teds_BitSet_setInt32, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, getInt64, arginfo_class_Teds_BitSet_getInt64, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitSet, setInt64, arginfo_class_Teds_BitSet_setInt64, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, offsetGet, arginfo_class_Teds_BitSet_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, offsetExists, arginfo_class_Teds_BitSet_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitSet, containsKey, arginfo_class_Teds_BitSet_containsKey, ZEND_ACC_PUBLIC)
