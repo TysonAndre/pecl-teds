@@ -65,7 +65,9 @@ static zend_always_inline zend_long teds_intvector_convert_zval_value_to_long(co
 #define MAX_VALID_OFFSET ((size_t)(MAX_ZVAL_COUNT > ZEND_LONG_MAX ? ZEND_LONG_MAX : MAX_ZVAL_COUNT))
 
 zend_object_handlers teds_handler_IntVector;
+zend_object_handlers teds_handler_SortedIntVectorSet;
 zend_class_entry *teds_ce_IntVector;
+zend_class_entry *teds_ce_SortedIntVectorSet;
 
 /* This is a placeholder value to distinguish between empty and uninitialized IntVector instances.
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
@@ -169,6 +171,7 @@ static zend_always_inline teds_intvector *teds_intvector_from_object(zend_object
 {
 	return (teds_intvector*)((char*)(obj) - XtOffsetOf(teds_intvector, std));
 }
+#define teds_intvector_entries_from_object(obj) (&teds_intvector_from_object((obj))->array)
 
 #define Z_INTVECTOR_P(zv)  (teds_intvector_from_object(Z_OBJ_P((zv))))
 #define Z_INTVECTOR_ENTRIES_P(zv)  (&(Z_INTVECTOR_P((zv))->array))
@@ -390,15 +393,51 @@ static zend_object *teds_intvector_new_ex(zend_class_entry *class_type, zend_obj
 	return &intern->std;
 }
 
+static zend_object *teds_sortedintvectorset_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
+{
+	teds_intvector *intern;
+
+	intern = zend_object_alloc(sizeof(teds_intvector), class_type);
+	/* This is a final class */
+	ZEND_ASSERT(class_type == teds_ce_SortedIntVectorSet);
+
+	zend_object_std_init(&intern->std, class_type);
+	object_properties_init(&intern->std, class_type);
+	intern->std.handlers = &teds_handler_SortedIntVectorSet;
+
+	if (orig && clone_orig) {
+		teds_intvector *other = teds_intvector_from_object(orig);
+		teds_intvector_entries_copy_ctor(&intern->array, &other->array);
+	} else {
+		intern->array.entries_raw = NULL;
+		intern->array.type_tag = TEDS_INTVECTOR_TYPE_UNINITIALIZED;
+	}
+
+	return &intern->std;
+}
+
 static zend_object *teds_intvector_new(zend_class_entry *class_type)
 {
 	return teds_intvector_new_ex(class_type, NULL, 0);
 }
 
+static zend_object *teds_sortedintvectorset_new(zend_class_entry *class_type)
+{
+	return teds_sortedintvectorset_new_ex(class_type, NULL, 0);
+}
 
 static zend_object *teds_intvector_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_intvector_new_ex(old_object->ce, old_object, 1);
+
+	teds_assert_object_has_empty_member_list(new_object);
+
+	return new_object;
+}
+
+static zend_object *teds_sortedintvectorset_clone(zend_object *old_object)
+{
+	zend_object *new_object = teds_sortedintvectorset_new_ex(old_object->ce, old_object, 1);
 
 	teds_assert_object_has_empty_member_list(new_object);
 
@@ -477,6 +516,105 @@ PHP_METHOD(Teds_IntVector, __construct)
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
+}
+
+#define TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_X, intx_t, entries_intx) \
+static int teds_compare_ ## intx_t(const void *a, const void *b) { \
+	const intx_t ai = *(const intx_t *)a; \
+	const intx_t bi = *(const intx_t *)b; \
+	if (ai < bi) { return -1; } \
+	if (ai > bi) { return 1; } \
+	return 0; \
+}
+TEDS_INTVECTOR__GENERATE_INT_CASES()
+#undef TEDS_INTVECTOR__INT_CODEGEN
+
+#define TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_X, intx_t, entries_intx) \
+static int teds_intvector_is_sorted_ ## intx_t(const intx_t *entries, const size_t len) { \
+	for (size_t i = 1; i < len; i++) { \
+		if (entries[i] <= entries[i - 1]) { \
+			return false; \
+		} \
+	} \
+	return true; \
+}
+TEDS_INTVECTOR__GENERATE_INT_CASES()
+#undef TEDS_INTVECTOR__INT_CODEGEN
+
+static void teds_intvector_entries_sort_and_deduplicate(teds_intvector_entries *array)
+{
+	const size_t len = array->size;
+	ZEND_ASSERT(array->size <= array->capacity);
+	if (len <= 1) {
+		/* Already sorted and unique */
+		return;
+	}
+	switch (array->type_tag) {
+		/* TODO qsort is slow due to function pointer being opaque in C? */
+#define TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_X, intx_t, entries_intx) \
+		case TEDS_INTVECTOR_TYPE_X: { \
+			intx_t *const entries = array->entries_intx; \
+			if (teds_intvector_is_sorted_##intx_t(entries, len)) { \
+				return; /* Already sorted */ \
+			} \
+			qsort(entries, len, sizeof(intx_t), teds_compare_ ## intx_t); \
+			for (size_t i = 1; i < len; i++) { \
+				if (entries[i] == entries[i - 1]) { \
+					size_t j = i - 1; \
+					i++; \
+					for (; i < len; i++) { \
+						if (entries[i] != entries[j]) { \
+							entries[++j] = entries[i]; \
+						} \
+					} \
+					array->size = j + 1; \
+					return; \
+				} \
+			} \
+			return; /* Already sorted */ \
+		}
+TEDS_INTVECTOR__GENERATE_INT_CASES()
+#undef TEDS_INTVECTOR__INT_CODEGEN
+
+		default:
+			ZEND_UNREACHABLE();
+	}
+
+	(void)array;
+}
+
+PHP_METHOD(Teds_SortedIntVectorSet, __construct)
+{
+	zval *object = ZEND_THIS;
+	zval* iterable = NULL;
+
+	ZEND_PARSE_PARAMETERS_START(0, 1)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_ITERABLE(iterable)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(object);
+
+	if (UNEXPECTED(!teds_intvector_entries_uninitialized(array))) {
+		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\SortedIntVectorSet::__construct twice", 0);
+		/* called __construct() twice, bail out */
+		RETURN_THROWS();
+	}
+	if (!iterable) {
+		teds_intvector_entries_set_empty_list(array);
+		return;
+	}
+
+	switch (Z_TYPE_P(iterable)) {
+		case IS_ARRAY:
+			teds_intvector_entries_init_from_array_values(array, Z_ARRVAL_P(iterable));
+			break;
+		case IS_OBJECT:
+			teds_intvector_entries_init_from_traversable(array, Z_OBJ_P(iterable));
+			break;
+		EMPTY_SWITCH_DEFAULT_CASE();
+	}
+	teds_intvector_entries_sort_and_deduplicate(array);
 }
 
 /* Clear this */
@@ -689,61 +827,6 @@ PHP_METHOD(Teds_IntVector, __unserialize)
 	}
 }
 
-static zend_always_inline zend_string *teds_create_string_from_entries_int8(const char *raw, const size_t len) {
-	return zend_string_init(raw, len, 0);
-}
-
-static zend_always_inline zend_string *teds_create_string_from_entries_int16(const char *raw, const size_t len) {
-#ifdef WORDS_BIGENDIAN
-	zend_string *const result = zend_string_alloc(len * sizeof(int16_t), 0);
-	uint16_t *dst = (uint16_t *)ZSTR_VAL(result);
-	const uint16_t *src = (const uint16_t *)raw;
-	const uint16_t *const end = src + len;
-	for (;src < end; src++, dst++) {
-		const uint16_t v = *src;
-		*dst = teds_bswap_16(*src);
-	}
-	*(char *)dst = '\0';
-	return result;
-#else
-	return zend_string_init(raw, len * sizeof(int16_t), 0);
-#endif
-}
-
-static zend_always_inline zend_string *teds_create_string_from_entries_int32(const char *raw, const size_t len) {
-#ifdef WORDS_BIGENDIAN
-	zend_string *const result = zend_string_alloc(len * sizeof(int32_t), 0);
-	uint32_t *dst = (uint32_t *)ZSTR_VAL(result);
-	const uint32_t *src = (const uint32_t *)raw;
-	const uint32_t *const end = src + len;
-	for (;src < end; src++, dst++) {
-		/* This compiles down to a bswap assembly instruction in optimized builds */
-		*dst = bswap_32(*src);
-	}
-	*(char *)dst = '\0';
-	return result;
-#else
-	return zend_string_init(raw, len * sizeof(int32_t), 0);
-#endif
-}
-
-static zend_always_inline zend_string *teds_create_string_from_entries_int64(const char *raw, const size_t len) {
-#ifdef WORDS_BIGENDIAN
-	zend_string *const result = zend_string_alloc(len * sizeof(int64_t), 0);
-	uint64_t *dst = (uint64_t *)ZSTR_VAL(result);
-	const uint64_t *src = (const uint64_t *)raw;
-	const uint64_t *const end = src + len;
-	for (;src < end; src++, dst++) {
-		/* This compiles down to a bswap assembly instruction in optimized builds */
-		*dst = bswap_64(*src);
-	}
-	*(char *)dst = '\0';
-	return result;
-#else
-	return zend_string_init(raw, len * sizeof(int64_t), 0);
-#endif
-}
-
 PHP_METHOD(Teds_IntVector, __serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -793,8 +876,24 @@ PHP_METHOD(Teds_IntVector, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_intvector_new(teds_ce_IntVector);
-	teds_intvector *intern = teds_intvector_from_object(object);
-	teds_intvector_entries_init_from_array_values(&intern->array, array_ht);
+	teds_intvector_entries *array = teds_intvector_entries_from_object(object);
+	teds_intvector_entries_init_from_array_values(array, array_ht);
+
+	RETURN_OBJ(object);
+}
+
+PHP_METHOD(Teds_SortedIntVectorSet, __set_state)
+{
+	zend_array *array_ht;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ARRAY_HT(array_ht)
+	ZEND_PARSE_PARAMETERS_END();
+	zend_object *object = teds_sortedintvectorset_new(teds_ce_IntVector);
+	teds_intvector_entries *array = teds_intvector_entries_from_object(object);
+	teds_intvector_entries_init_from_array_values(array, array_ht);
+
+	teds_intvector_entries_sort_and_deduplicate(array);
 
 	RETURN_OBJ(object);
 }
@@ -978,20 +1077,17 @@ PHP_METHOD(Teds_IntVector, contains)
 	if (len == 0) {
 		RETURN_FALSE;
 	}
+	if (Z_TYPE_P(value) != IS_LONG) {
+		RETURN_FALSE;
+	}
 	switch (array->type_tag) {
 		case TEDS_INTVECTOR_TYPE_INT8: {
-			if (Z_TYPE_P(value) != IS_LONG) {
-				RETURN_FALSE;
-			}
 			const int8_t v = (int8_t) Z_LVAL_P(value);
 			if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
 			const int8_t *start = array->entries_int8;
 			RETURN_BOOL(memchr((uint8_t *)start, (uint8_t)v, len));
 		}
 		case TEDS_INTVECTOR_TYPE_INT16: {
-			if (Z_TYPE_P(value) != IS_LONG) {
-				RETURN_FALSE;
-			}
 			const int16_t v = (int16_t) Z_LVAL_P(value);
 			if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
 			const int16_t *start = array->entries_int16;
@@ -1004,9 +1100,6 @@ PHP_METHOD(Teds_IntVector, contains)
 			break;
 		}
 		case TEDS_INTVECTOR_TYPE_INT32: {
-			if (Z_TYPE_P(value) != IS_LONG) {
-				RETURN_FALSE;
-			}
 			const int32_t v = (int32_t) Z_LVAL_P(value);
 #if SIZEOF_ZEND_LONG > 4
 			if (v != Z_LVAL_P(value)) { RETURN_FALSE; }
@@ -1022,9 +1115,6 @@ PHP_METHOD(Teds_IntVector, contains)
 		}
 #ifdef TEDS_INTVECTOR_TYPE_INT64
 		case TEDS_INTVECTOR_TYPE_INT64: {
-			if (Z_TYPE_P(value) != IS_LONG) {
-				RETURN_FALSE;
-			}
 			const zend_long v = Z_LVAL_P(value);
 			const int64_t *it = array->entries_int64;
 			for (const int64_t *end = it + len; it < end; it++) {
@@ -1035,6 +1125,90 @@ PHP_METHOD(Teds_IntVector, contains)
 			break;
 		}
 #endif
+		default:
+			ZEND_UNREACHABLE();
+	}
+	RETURN_FALSE;
+}
+
+PHP_METHOD(Teds_SortedIntVectorSet, indexOf)
+{
+	zend_long value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_LONG(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t len = array->size;
+	if (len == 0) {
+		RETURN_NULL();
+	}
+	switch (array->type_tag) {
+#define TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_X, intx_t, entries_intx) \
+		case TEDS_INTVECTOR_TYPE_X: { \
+			const intx_t target = value; \
+			if (target != value) { RETURN_FALSE; } \
+			const intx_t *const entries = array->entries_intx; \
+			const intx_t *start = entries; \
+			const intx_t *end = start + len; \
+			do { \
+				const intx_t *mid = start + (end - start) / 2; \
+				const intx_t v = *mid; \
+				if (target < v) { \
+					end = mid; \
+				} else if (target > v) { \
+					start = mid + 1; \
+				} else { \
+					RETURN_LONG(mid - entries); \
+				} \
+			} while (start < end); \
+			break; \
+		}
+TEDS_INTVECTOR__GENERATE_INT_CASES()
+#undef TEDS_INTVECTOR__INT_CODEGEN
+		default:
+			ZEND_UNREACHABLE();
+	}
+	RETURN_NULL();
+}
+
+PHP_METHOD(Teds_SortedIntVectorSet, contains)
+{
+	zval *value;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value)
+	ZEND_PARSE_PARAMETERS_END();
+
+	const teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t len = array->size;
+	if (len == 0) {
+		RETURN_FALSE;
+	}
+	if (Z_TYPE_P(value) != IS_LONG) {
+		RETURN_FALSE;
+	}
+	switch (array->type_tag) {
+#define TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_X, intx_t, entries_intx) \
+		case TEDS_INTVECTOR_TYPE_X: { \
+			const intx_t target = (intx_t) Z_LVAL_P(value); \
+			if (target != Z_LVAL_P(value)) { RETURN_FALSE; } \
+			const intx_t *start = array->entries_intx; \
+			const intx_t *end = start + len; \
+			do { \
+				const intx_t *mid = start + (end - start) / 2; \
+				const intx_t v = *mid; \
+				if (target < v) { \
+					end = mid; \
+				} else if (target > v) { \
+					start = mid + 1; \
+				} else { \
+					RETURN_TRUE; \
+				} \
+			} while (start < end); \
+			break; \
+		}
+TEDS_INTVECTOR__GENERATE_INT_CASES()
+#undef TEDS_INTVECTOR__INT_CODEGEN
 		default:
 			ZEND_UNREACHABLE();
 	}
@@ -1246,6 +1420,88 @@ TEDS_INTVECTOR__GENERATE_INT_CASES()
 	array->size++;
 }
 
+static zend_always_inline bool teds_sortedintvectorset_entries_add(teds_intvector_entries *array, const zend_long value)
+{
+	const size_t old_size = array->size;
+	teds_intvector_entries_update_type_tag(array, value);
+	/* update_type_tag may raise the capacity */
+	const size_t old_capacity = array->capacity;
+
+	if (old_size >= old_capacity) {
+		ZEND_ASSERT(old_size == old_capacity);
+		teds_intvector_entries_raise_capacity(array, old_size > 2 ? old_size * 2 : 4);
+	}
+	switch (array->type_tag) {
+#define TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_X, intx_t, entries_intx) \
+		case TEDS_INTVECTOR_TYPE_X: { \
+			intx_t *const entries = array->entries_intx; \
+			intx_t *start = entries, *end = entries + old_size; \
+			const intx_t target = value; \
+			ZEND_ASSERT(target == value); /* update_type_tag ensures this */ \
+			while (start < end) { \
+				intx_t *mid = start + (end - start) / 2; \
+				if (target < *mid) { end = mid; }  \
+				else if (target > *mid) { start = mid + 1; }  \
+				else { return false; /* Already exists */ } \
+			} \
+			/* The value at *start is > target */ \
+			memmove(start + 1, start, (entries + old_size - start) * sizeof(intx_t)); \
+			*start = target; \
+			break; \
+		}
+TEDS_INTVECTOR__GENERATE_INT_CASES()
+#undef TEDS_INTVECTOR__INT_CODEGEN
+		default:
+			ZEND_UNREACHABLE();
+	}
+	array->size++;
+	return true;
+}
+
+static zend_always_inline bool teds_sortedintvectorset_entries_remove(teds_intvector_entries *array, const zend_long value)
+{
+	const size_t old_size = array->size;
+	if (old_size == 0) {
+		return false;
+	}
+	switch (array->type_tag) {
+#define TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_X, intx_t, entries_intx) \
+		case TEDS_INTVECTOR_TYPE_X: { \
+			const intx_t target = value; \
+			if (target != value) { return false; } \
+			intx_t *const entries = array->entries_intx; \
+			intx_t *start = entries, *end = entries + old_size; \
+			while (start < end) { \
+				intx_t *mid = start + (end - start) / 2; \
+				if (target < *mid) { end = mid; }  \
+				else if (target > *mid) { start = mid + 1; }  \
+				else { \
+					memmove(mid, mid + 1, (entries + old_size - (mid + 1)) * sizeof(intx_t)); \
+					goto after_remove; \
+				} \
+			} \
+			return false; /* Not found to remove */ \
+		}
+TEDS_INTVECTOR__GENERATE_INT_CASES()
+#undef TEDS_INTVECTOR__INT_CODEGEN
+		default:
+			ZEND_UNREACHABLE();
+	}
+after_remove:
+	;
+	const size_t old_capacity = array->capacity;
+	array->size--;
+	if (old_size * 4 < old_capacity) {
+		/* Shrink the storage if only a quarter of the capacity is used  */
+		const size_t size = old_size - 1;
+		const size_t capacity = size > 2 ? size * 2 : 4;
+		if (capacity < old_capacity) {
+			teds_intvector_entries_shrink_capacity(array, size, capacity, array->entries_raw);
+		}
+	}
+	return true;
+}
+
 /* Based on array_push */
 PHP_METHOD(Teds_IntVector, push)
 {
@@ -1274,6 +1530,39 @@ PHP_METHOD(Teds_IntVector, push)
 		teds_intvector_entries_push(array, new_value, true);
 	}
 	TEDS_RETURN_VOID();
+}
+
+PHP_METHOD(Teds_SortedIntVectorSet, add)
+{
+	zval *value;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value);
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_long new_value;
+	TEDS_INTVECTOR_VALUE_TO_LONG_OR_THROW(new_value, value);
+
+	teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+	//const uint32_t old_size = array->size;
+	/* TODO sort, check for existence */
+	RETURN_BOOL(teds_sortedintvectorset_entries_add(array, new_value));
+}
+
+PHP_METHOD(Teds_SortedIntVectorSet, remove)
+{
+	zval *value;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(value);
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_long new_value;
+	TEDS_INTVECTOR_VALUE_TO_LONG_OR_THROW(new_value, value);
+
+	teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+	teds_sortedintvectorset_entries_remove(array, new_value);
+	RETURN_FALSE;
 }
 
 PHP_METHOD(Teds_IntVector, unshift)
@@ -1536,6 +1825,28 @@ PHP_MINIT_FUNCTION(teds_intvector)
 
 	teds_ce_IntVector->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 	teds_ce_IntVector->get_iterator = teds_intvector_get_iterator;
+
+	teds_ce_SortedIntVectorSet = register_class_Teds_SortedIntVectorSet(zend_ce_aggregate, teds_ce_Set, php_json_serializable_ce);
+	teds_ce_SortedIntVectorSet->create_object = teds_sortedintvectorset_new;
+
+	memcpy(&teds_handler_SortedIntVectorSet, &std_object_handlers, sizeof(zend_object_handlers));
+
+	teds_handler_SortedIntVectorSet.offset          = XtOffsetOf(teds_intvector, std);
+	teds_handler_SortedIntVectorSet.clone_obj       = teds_sortedintvectorset_clone;
+	teds_handler_SortedIntVectorSet.count_elements  = teds_intvector_count_elements;
+	teds_handler_SortedIntVectorSet.get_properties  = teds_intvector_get_properties;
+	teds_handler_SortedIntVectorSet.get_properties_for = teds_intvector_get_properties_for;
+	teds_handler_SortedIntVectorSet.get_gc          = teds_intvector_get_gc;
+	teds_handler_SortedIntVectorSet.free_obj        = teds_intvector_free_storage;
+
+	/*
+	teds_handler_SortedIntVectorSet.read_dimension  = teds_intvector_read_dimension;
+	teds_handler_SortedIntVectorSet.write_dimension = teds_intvector_write_dimension;
+	teds_handler_SortedIntVectorSet.has_dimension   = teds_intvector_has_dimension;
+	*/
+
+	teds_ce_SortedIntVectorSet->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_SortedIntVectorSet->get_iterator = teds_intvector_get_iterator;
 
 	return SUCCESS;
 }

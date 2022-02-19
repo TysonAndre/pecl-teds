@@ -62,6 +62,7 @@ interface Teds\Map extends ArrayAccess, Countable, Teds\Collection, Traversable
 final class Teds\MutableIterable implements Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Traversable
 interface Teds\Sequence extends ArrayAccess, Countable, Teds\Collection, Traversable
 interface Teds\Set extends Countable, Teds\Collection, Traversable
+final class Teds\SortedIntVectorSet implements Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Set, Traversable
 final class Teds\StrictHashMap implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Map, Traversable
 final class Teds\StrictHashSet implements Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Set, Traversable
 final class Teds\StrictMaxHeap implements Countable, Iterator, Teds\Collection, Traversable
