@@ -52,18 +52,26 @@ final class StrictSortedVectorMap implements \IteratorAggregate, Map, \JsonSeria
     /** Returns a list of the keys in order of insertion. */
     public function keys(): array {}
 
-    // bottom/top matches use for SplDoublyLinkedList.
+    // first/last matches array_key_first/last, bottom/top matches use for SplDoublyLinkedList.
 
     /** Returns the first value, throws if empty. */
+    public function first(): mixed {}
+    /** @implementation-alias Teds\StrictSortedVectorMap::first */
     public function bottom(): mixed {}
 
     /** Returns the first key, throws if empty. */
+    public function firstKey(): mixed {}
+    /** @implementation-alias Teds\StrictSortedVectorMap::firstKey */
     public function bottomKey(): mixed {}
 
     /** Returns the last value, throws if empty */
+    public function last(): mixed {}
+    /** @implementation-alias Teds\StrictSortedVectorMap::last */
     public function top(): mixed {}
 
     /** Returns the last key, throws if empty */
+    public function lastKey(): mixed {}
+    /** @implementation-alias Teds\StrictSortedVectorMap::lastKey */
     public function topKey(): mixed {}
 
     /**

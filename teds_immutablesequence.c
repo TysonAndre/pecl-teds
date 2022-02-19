@@ -658,6 +658,34 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, pop)
 	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support pop - it is immutable");
 }
 
+PHP_METHOD(Teds_ImmutableSequence, first)
+{
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	teds_immutablesequence_entries *array = Z_IMMUTABLESEQUENCE_ENTRIES_P(ZEND_THIS);
+	if (array->size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot get first element of empty Teds\\ImmutableSequence", 0);
+		RETURN_THROWS();
+	}
+	RETURN_COPY(&array->entries[0]);
+}
+
+PHP_METHOD(Teds_ImmutableSequence, last)
+{
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
+	teds_immutablesequence_entries *array = Z_IMMUTABLESEQUENCE_ENTRIES_P(ZEND_THIS);
+	if (array->size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot get last element of empty Teds\\ImmutableSequence", 0);
+		RETURN_THROWS();
+	}
+	RETURN_COPY(&array->entries[array->size - 1]);
+}
+
 ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, clear)
 {
 	if (zend_parse_parameters_none() == FAILURE) {

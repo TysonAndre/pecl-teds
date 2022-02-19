@@ -60,6 +60,17 @@ final class ImmutableSequence implements \IteratorAggregate, Sequence, \JsonSeri
      * @return never
      */
     public function shift(): mixed {}
+
+    /**
+     * Returns the first value
+     * @throws \UnderflowException for empty ImmutableSequence instances
+     */
+    public function first(): mixed {}
+    /**
+     * Returns the last value
+     * @throws \UnderflowException for empty ImmutableSequence instances
+     */
+    public function last(): mixed {}
     /**
      * @throws \Teds\UnsupportedOperationException unconditionally
      * @return never

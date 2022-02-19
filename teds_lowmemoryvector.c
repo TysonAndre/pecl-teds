@@ -1861,6 +1861,32 @@ PHP_METHOD(Teds_LowMemoryVector, pop)
 	}
 }
 
+PHP_METHOD(Teds_LowMemoryVector, first)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first value of empty Teds\\LowMemoryVector", 0);
+		RETURN_THROWS();
+	}
+	teds_lowmemoryvector_entries_copy_offset(array, 0, return_value, true, false);
+}
+
+PHP_METHOD(Teds_LowMemoryVector, last)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read last value of empty Teds\\LowMemoryVector", 0);
+		RETURN_THROWS();
+	}
+	teds_lowmemoryvector_entries_copy_offset(array, array->size - 1, return_value, true, false);
+}
+
 PHP_METHOD(Teds_LowMemoryVector, shift)
 {
 	ZEND_PARSE_PARAMETERS_NONE();

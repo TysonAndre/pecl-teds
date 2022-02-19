@@ -44,6 +44,7 @@ final class StrictHashMap implements \IteratorAggregate, Map, \JsonSerializable
 
     /** Returns a list of the keys in order of insertion. */
     public function keys(): array {}
+    // TODO first/firstKey/last/lastKey
 
     /**
      * Returns the value for the given key.

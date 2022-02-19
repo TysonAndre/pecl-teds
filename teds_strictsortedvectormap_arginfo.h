@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: f57b6bb41d1186554667a621b22c817e8b2c3ab1 */
+ * Stub hash: 091e8a081cd12ea0d9eb756c4b349c42b8a01082 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -40,18 +40,26 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictSortedVectorMap_keys arginfo_class_Teds_StrictSortedVectorMap_toPairs
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap_bottom, 0, 0, IS_MIXED, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap_first, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_StrictSortedVectorMap_bottomKey arginfo_class_Teds_StrictSortedVectorMap_bottom
+#define arginfo_class_Teds_StrictSortedVectorMap_bottom arginfo_class_Teds_StrictSortedVectorMap_first
 
-#define arginfo_class_Teds_StrictSortedVectorMap_top arginfo_class_Teds_StrictSortedVectorMap_bottom
+#define arginfo_class_Teds_StrictSortedVectorMap_firstKey arginfo_class_Teds_StrictSortedVectorMap_first
 
-#define arginfo_class_Teds_StrictSortedVectorMap_topKey arginfo_class_Teds_StrictSortedVectorMap_bottom
+#define arginfo_class_Teds_StrictSortedVectorMap_bottomKey arginfo_class_Teds_StrictSortedVectorMap_first
+
+#define arginfo_class_Teds_StrictSortedVectorMap_last arginfo_class_Teds_StrictSortedVectorMap_first
+
+#define arginfo_class_Teds_StrictSortedVectorMap_top arginfo_class_Teds_StrictSortedVectorMap_first
+
+#define arginfo_class_Teds_StrictSortedVectorMap_lastKey arginfo_class_Teds_StrictSortedVectorMap_first
+
+#define arginfo_class_Teds_StrictSortedVectorMap_topKey arginfo_class_Teds_StrictSortedVectorMap_first
 
 #define arginfo_class_Teds_StrictSortedVectorMap_pop arginfo_class_Teds_StrictSortedVectorMap_toPairs
 
-#define arginfo_class_Teds_StrictSortedVectorMap_shift arginfo_class_Teds_StrictSortedVectorMap_bottom
+#define arginfo_class_Teds_StrictSortedVectorMap_shift arginfo_class_Teds_StrictSortedVectorMap_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap_offsetGet, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
@@ -99,10 +107,10 @@ ZEND_METHOD(Teds_StrictSortedVectorMap, __set_state);
 ZEND_METHOD(Teds_StrictSortedVectorMap, toArray);
 ZEND_METHOD(Teds_StrictSortedVectorMap, values);
 ZEND_METHOD(Teds_StrictSortedVectorMap, keys);
-ZEND_METHOD(Teds_StrictSortedVectorMap, bottom);
-ZEND_METHOD(Teds_StrictSortedVectorMap, bottomKey);
-ZEND_METHOD(Teds_StrictSortedVectorMap, top);
-ZEND_METHOD(Teds_StrictSortedVectorMap, topKey);
+ZEND_METHOD(Teds_StrictSortedVectorMap, first);
+ZEND_METHOD(Teds_StrictSortedVectorMap, firstKey);
+ZEND_METHOD(Teds_StrictSortedVectorMap, last);
+ZEND_METHOD(Teds_StrictSortedVectorMap, lastKey);
 ZEND_METHOD(Teds_StrictSortedVectorMap, pop);
 ZEND_METHOD(Teds_StrictSortedVectorMap, shift);
 ZEND_METHOD(Teds_StrictSortedVectorMap, offsetGet);
@@ -128,10 +136,14 @@ static const zend_function_entry class_Teds_StrictSortedVectorMap_methods[] = {
 	ZEND_ME(Teds_StrictSortedVectorMap, toArray, arginfo_class_Teds_StrictSortedVectorMap_toArray, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, values, arginfo_class_Teds_StrictSortedVectorMap_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, keys, arginfo_class_Teds_StrictSortedVectorMap_keys, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, bottom, arginfo_class_Teds_StrictSortedVectorMap_bottom, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, bottomKey, arginfo_class_Teds_StrictSortedVectorMap_bottomKey, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, top, arginfo_class_Teds_StrictSortedVectorMap_top, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, topKey, arginfo_class_Teds_StrictSortedVectorMap_topKey, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictSortedVectorMap, first, arginfo_class_Teds_StrictSortedVectorMap_first, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorMap, bottom, first, arginfo_class_Teds_StrictSortedVectorMap_bottom, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictSortedVectorMap, firstKey, arginfo_class_Teds_StrictSortedVectorMap_firstKey, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorMap, bottomKey, firstKey, arginfo_class_Teds_StrictSortedVectorMap_bottomKey, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictSortedVectorMap, last, arginfo_class_Teds_StrictSortedVectorMap_last, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorMap, top, last, arginfo_class_Teds_StrictSortedVectorMap_top, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictSortedVectorMap, lastKey, arginfo_class_Teds_StrictSortedVectorMap_lastKey, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorMap, topKey, lastKey, arginfo_class_Teds_StrictSortedVectorMap_topKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, pop, arginfo_class_Teds_StrictSortedVectorMap_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, shift, arginfo_class_Teds_StrictSortedVectorMap_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, offsetGet, arginfo_class_Teds_StrictSortedVectorMap_offsetGet, ZEND_ACC_PUBLIC)

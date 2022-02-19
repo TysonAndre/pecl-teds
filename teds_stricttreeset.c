@@ -842,21 +842,21 @@ PHP_METHOD(Teds_StrictTreeSet, __set_state)
 	RETURN_OBJ(object);
 }
 
-#define IMPLEMENT_READ_POSITION_PHP_METHOD(methodName, pos) \
-PHP_METHOD(Teds_StrictTreeSet, methodName) \
+#define IMPLEMENT_READ_POSITION_PHP_METHOD(pos) \
+PHP_METHOD(Teds_StrictTreeSet, pos) \
 { \
        ZEND_PARSE_PARAMETERS_NONE(); \
        const teds_stricttreeset *intern = Z_STRICTTREESET_P(ZEND_THIS); \
        if (teds_stricttreeset_tree_empty_size(&intern->array)) { \
-               zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty StrictTreeSet", 0); \
+               zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # pos " value of empty StrictTreeSet", 0); \
                RETURN_THROWS(); \
        } \
        teds_stricttreeset_node *node = teds_stricttreeset_tree_get_ ## pos(&intern->array); \
        RETVAL_COPY(&node->key); \
 }
 
-IMPLEMENT_READ_POSITION_PHP_METHOD(bottom, first)
-IMPLEMENT_READ_POSITION_PHP_METHOD(top, last)
+IMPLEMENT_READ_POSITION_PHP_METHOD(first)
+IMPLEMENT_READ_POSITION_PHP_METHOD(last)
 
 #define IMPLEMENT_REMOVE_POSITION_PHP_METHOD(methodName, pos) \
 PHP_METHOD(Teds_StrictTreeSet, methodName) \

@@ -67,6 +67,11 @@ final class LowMemoryVector implements \IteratorAggregate, Sequence, \JsonSerial
     /** Create this from an array */
     public static function __set_state(array $array): LowMemoryVector {}
 
+    /** Read the first value of the Teds\LowMemoryVector */
+    public function first(): mixed {}
+    /** Read the last value of the Teds\LowMemoryVector */
+    public function last(): mixed {}
+
     public function push(mixed ...$values): void {}
     public function pop(): mixed {}
     public function unshift(mixed ...$values): void {}

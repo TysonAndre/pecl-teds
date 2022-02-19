@@ -672,8 +672,8 @@ PHP_METHOD(Teds_StrictSortedVectorSet, methodName) \
 	RETVAL_COPY(&entries[(index)].key); \
 }
 
-IMPLEMENT_READ_OFFSET_PHP_METHOD(bottom, 0)
-IMPLEMENT_READ_OFFSET_PHP_METHOD(top, intern->array.size - 1)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(first, 0)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(last, intern->array.size - 1)
 
 PHP_METHOD(Teds_StrictSortedVectorSet, pop) {
 	ZEND_PARSE_PARAMETERS_NONE();

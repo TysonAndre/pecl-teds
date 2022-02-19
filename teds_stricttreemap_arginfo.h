@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: e3c523a20adbd9f35c947ffb09c6345003a678bb */
+ * Stub hash: d1bef3adc48598684a70bee5613088b1feea1c6b */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictTreeMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -40,18 +40,26 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictTreeMap_keys arginfo_class_Teds_StrictTreeMap_toPairs
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictTreeMap_bottom, 0, 0, IS_MIXED, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictTreeMap_first, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_StrictTreeMap_bottomKey arginfo_class_Teds_StrictTreeMap_bottom
+#define arginfo_class_Teds_StrictTreeMap_bottom arginfo_class_Teds_StrictTreeMap_first
 
-#define arginfo_class_Teds_StrictTreeMap_top arginfo_class_Teds_StrictTreeMap_bottom
+#define arginfo_class_Teds_StrictTreeMap_firstKey arginfo_class_Teds_StrictTreeMap_first
 
-#define arginfo_class_Teds_StrictTreeMap_topKey arginfo_class_Teds_StrictTreeMap_bottom
+#define arginfo_class_Teds_StrictTreeMap_bottomKey arginfo_class_Teds_StrictTreeMap_first
+
+#define arginfo_class_Teds_StrictTreeMap_last arginfo_class_Teds_StrictTreeMap_first
+
+#define arginfo_class_Teds_StrictTreeMap_top arginfo_class_Teds_StrictTreeMap_first
+
+#define arginfo_class_Teds_StrictTreeMap_lastKey arginfo_class_Teds_StrictTreeMap_first
+
+#define arginfo_class_Teds_StrictTreeMap_topKey arginfo_class_Teds_StrictTreeMap_first
 
 #define arginfo_class_Teds_StrictTreeMap_pop arginfo_class_Teds_StrictTreeMap_toPairs
 
-#define arginfo_class_Teds_StrictTreeMap_shift arginfo_class_Teds_StrictTreeMap_bottom
+#define arginfo_class_Teds_StrictTreeMap_shift arginfo_class_Teds_StrictTreeMap_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictTreeMap_offsetGet, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
@@ -103,10 +111,10 @@ ZEND_METHOD(Teds_StrictTreeMap, __unserialize);
 ZEND_METHOD(Teds_StrictTreeMap, __set_state);
 ZEND_METHOD(Teds_StrictTreeMap, values);
 ZEND_METHOD(Teds_StrictTreeMap, keys);
-ZEND_METHOD(Teds_StrictTreeMap, bottom);
-ZEND_METHOD(Teds_StrictTreeMap, bottomKey);
-ZEND_METHOD(Teds_StrictTreeMap, top);
-ZEND_METHOD(Teds_StrictTreeMap, topKey);
+ZEND_METHOD(Teds_StrictTreeMap, first);
+ZEND_METHOD(Teds_StrictTreeMap, firstKey);
+ZEND_METHOD(Teds_StrictTreeMap, last);
+ZEND_METHOD(Teds_StrictTreeMap, lastKey);
 ZEND_METHOD(Teds_StrictTreeMap, pop);
 ZEND_METHOD(Teds_StrictTreeMap, shift);
 ZEND_METHOD(Teds_StrictTreeMap, offsetGet);
@@ -134,10 +142,14 @@ static const zend_function_entry class_Teds_StrictTreeMap_methods[] = {
 	ZEND_ME(Teds_StrictTreeMap, __set_state, arginfo_class_Teds_StrictTreeMap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_StrictTreeMap, values, arginfo_class_Teds_StrictTreeMap_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeMap, keys, arginfo_class_Teds_StrictTreeMap_keys, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictTreeMap, bottom, arginfo_class_Teds_StrictTreeMap_bottom, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictTreeMap, bottomKey, arginfo_class_Teds_StrictTreeMap_bottomKey, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictTreeMap, top, arginfo_class_Teds_StrictTreeMap_top, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictTreeMap, topKey, arginfo_class_Teds_StrictTreeMap_topKey, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictTreeMap, first, arginfo_class_Teds_StrictTreeMap_first, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictTreeMap, bottom, first, arginfo_class_Teds_StrictTreeMap_bottom, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictTreeMap, firstKey, arginfo_class_Teds_StrictTreeMap_firstKey, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictTreeMap, bottomKey, firstKey, arginfo_class_Teds_StrictTreeMap_bottomKey, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictTreeMap, last, arginfo_class_Teds_StrictTreeMap_last, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictTreeMap, top, last, arginfo_class_Teds_StrictTreeMap_top, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictTreeMap, lastKey, arginfo_class_Teds_StrictTreeMap_lastKey, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictTreeMap, topKey, lastKey, arginfo_class_Teds_StrictTreeMap_topKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeMap, pop, arginfo_class_Teds_StrictTreeMap_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeMap, shift, arginfo_class_Teds_StrictTreeMap_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeMap, offsetGet, arginfo_class_Teds_StrictTreeMap_offsetGet, ZEND_ACC_PUBLIC)

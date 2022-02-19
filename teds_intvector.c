@@ -1382,6 +1382,32 @@ PHP_METHOD(Teds_IntVector, pop)
 	}
 }
 
+PHP_METHOD(Teds_IntVector, last)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read last value of empty Teds\\IntVector", 0);
+		RETURN_THROWS();
+	}
+	teds_intvector_entries_copy_offset(array, old_size - 1, return_value, false);
+}
+
+PHP_METHOD(Teds_IntVector, first)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first value of empty Teds\\IntVector", 0);
+		RETURN_THROWS();
+	}
+	teds_intvector_entries_copy_offset(array, 0, return_value, false);
+}
+
 PHP_METHOD(Teds_IntVector, shift)
 {
 	ZEND_PARSE_PARAMETERS_NONE();

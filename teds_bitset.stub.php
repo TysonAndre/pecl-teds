@@ -51,8 +51,20 @@ final class BitSet implements \IteratorAggregate, Sequence, \JsonSerializable
      */
     public function unshift(mixed ...$values): void {}
     public function pushBits(bool ...$values): void {}
+
     /**
-     * @throws \RuntimeException if there are no more elements
+     * Returns the first bit of this bitset.
+     * @throws \UnderflowException if there are no elements
+     */
+    public function first(): bool {}
+    /**
+     * Returns the last bit of this bitset.
+     * @throws \UnderflowException if there are no elements
+     */
+    public function last(): bool {}
+
+    /**
+     * @throws \UnderflowException if there are no more elements
      */
     public function pop(): bool {}
     public function shift(): bool {}

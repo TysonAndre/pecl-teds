@@ -10,18 +10,18 @@ for ($i = 0; $i < 7; $i++) {
 }
 echo "shift\n";
 echo json_encode($it->shift()), "\n";
-echo json_encode($it->bottom()), "\n";
+echo json_encode($it->first()), "\n";
 echo json_encode($it->shift()), "\n";
 echo "pop\n";
 echo json_encode($it->pop()), "\n";
-echo json_encode($it->top()), "\n";
+echo json_encode($it->last()), "\n";
 echo json_encode($it->pop()), "\n";
 echo implode(',', $it->values()) . "\n";
 echo json_encode($it->pop()), "\n";
 echo json_encode($it->pop()), "\n";
 echo json_encode($it->pop()), "\n";
 echo "Empty\n";
-foreach (['shift', 'pop', 'bottom', 'top'] as $method) {
+foreach (['shift', 'pop', 'first', 'last'] as $method) {
     try {
         echo "$method: ";
         var_dump($it->{$method}());
@@ -48,7 +48,7 @@ v2,v3,v4
 Empty
 shift: Caught: Cannot shift from empty StrictSortedVectorMap
 pop: Caught: Cannot pop from empty StrictSortedVectorMap
-bottom: Caught: Cannot read bottom of empty StrictSortedVectorMap
-top: Caught: Cannot read top of empty StrictSortedVectorMap
+first: Caught: Cannot read first of empty StrictSortedVectorMap
+last: Caught: Cannot read last of empty StrictSortedVectorMap
 object(Teds\StrictSortedVectorMap)#1 (0) {
 }
