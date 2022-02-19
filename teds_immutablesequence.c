@@ -980,6 +980,11 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, offsetUnset)
 static zval *teds_immutablesequence_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
+handle_missing_key:
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			return NULL;
+		}
 		return &EG(uninitialized_zval);
 	}
 	zend_long offset;
@@ -999,10 +1004,7 @@ static zval *teds_immutablesequence_read_dimension(zend_object *object, zval *of
 	(void)rv;
 
 	if (UNEXPECTED(offset < 0 || (zend_ulong) offset >= intern->array.size)) {
-		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		}
-		return NULL;
+		goto handle_missing_key;
 	} else {
 		return &intern->array.entries[offset];
 	}
@@ -1027,10 +1029,7 @@ static int teds_immutablesequence_has_dimension(zend_object *object, zval *offse
 	}
 
 	zval *val = &intern->array.entries[offset];
-	if (check_empty) {
-		return zend_is_true(val);
-	}
-	return Z_TYPE_P(val) != IS_NULL;
+	return teds_has_dimension_helper(val, check_empty);
 }
 
 PHP_MINIT_FUNCTION(teds_immutablesequence)

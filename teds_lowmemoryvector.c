@@ -1945,6 +1945,11 @@ static void teds_lowmemoryvector_write_dimension(zend_object *object, zval *offs
 static zval *teds_lowmemoryvector_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
+handle_missing_key:
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			return NULL;
+		}
 		return &EG(uninitialized_zval);
 	}
 
@@ -1953,11 +1958,8 @@ static zval *teds_lowmemoryvector_read_dimension(zend_object *object, zval *offs
 
 	const teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(object)->array;
 
-	if (UNEXPECTED(offset < 0 || (zend_ulong) offset >= array->size)) {
-		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		}
-		return NULL;
+	if (UNEXPECTED((zend_ulong) offset >= array->size || offset < 0)) {
+		goto handle_missing_key;
 	} else {
 		return teds_lowmemoryvector_entries_read_offset(array, offset, rv);
 	}
@@ -1984,10 +1986,7 @@ static int teds_lowmemoryvector_has_dimension(zend_object *object, zval *offset_
 	/* TODO can optimize based on type tag, probably not necessary */
 	zval tmp;
 	zval *val = teds_lowmemoryvector_entries_read_offset(array, offset, &tmp);
-	if (check_empty) {
-		return zend_is_true(val);
-	}
-	return Z_TYPE_P(val) != IS_NULL;
+	return teds_has_dimension_helper(val, check_empty);
 }
 
 PHP_MINIT_FUNCTION(teds_lowmemoryvector)

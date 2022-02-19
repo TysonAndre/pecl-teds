@@ -1683,7 +1683,11 @@ static void teds_stricttreemap_unset_dimension(zend_object *object, zval *offset
 static zval *teds_stricttreemap_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+handle_missing_key:
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+			return NULL;
+		}
 		return &EG(uninitialized_zval);
 	}
 
@@ -1698,15 +1702,20 @@ static zval *teds_stricttreemap_read_dimension(zend_object *object, zval *offset
 			return &entry->value;
 		}
 	}
-	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
-	return NULL;
+	goto handle_missing_key;
 }
 
 static int teds_stricttreemap_has_dimension(zend_object *object, zval *offset_zv, int check_empty)
 {
 	ZVAL_DEREF(offset_zv);
-	const teds_stricttreemap_tree *array = teds_stricttreemap_tree_from_object(object);
-	return teds_stricttreemap_tree_offset_exists_and_not_null(array, offset_zv);
+	const teds_stricttreemap_tree *tree = teds_stricttreemap_tree_from_object(object);
+	if (tree->nNumOfElements > 0) {
+		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(tree, offset_zv);
+		if (entry) {
+			return teds_has_dimension_helper(&entry->value, check_empty);
+		}
+	}
+	return false;
 }
 
 PHP_MINIT_FUNCTION(teds_stricttreemap)

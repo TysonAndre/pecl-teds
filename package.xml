@@ -13,8 +13,8 @@
  <date>2022-02-19</date>
  <time>16:00:00</time>
  <version>
-  <release>1.1.0</release>
-  <api>1.1.0</api>
+  <release>1.1.1</release>
+  <api>1.1.1</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,18 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Fix ImmutableSequence throwing for ArrayAccess shorthand read syntax.
-* Add CachedIterable as an alternative to ImmutableIterable that lazily evaluates Traversable objects passed into the constructor. (e.g. only runs Generators up to the most recently requested offset)
-* Change exception type to `Teds\UnsupportedOperationException` in a few places.
-* Add `Teds\is_same_array_handle(array $array1, array $array2): bool` for infinite recursion detection when processing arrays.
-* Fix memory leak when initializing `Teds\StrictMinHeap`/`Teds\StrictMaxHeap` from Traversables.
-* Fix memory leak when constructing collections from Traversable where rewind throws
-* Use first/last as method names for getting the first and last method names. Keep bottom/top as aliases to be deprecated later.
-* Add first/last helper methods to more collection types
-* Optimize implementations of `$map[$x]` array access shorthand in `Teds\Map` implementations.
-* Throw for `$map[] = $value` instead of setting the key for null in `Teds\Map` implementations.
-* Fix Teds\IntVector and Teds\LowMemoryVector shift implementation for integers
-* Add more methods to Teds\BitSet to read/write bytes/integers, convert to/from strings.
+* Fix bugs in Teds\Map array access shorthand.
  </notes>
  <contents>
   <dir name="/">
@@ -237,6 +226,7 @@
     <file name="Map/from_pairs.phpt" role="test" />
     <file name="Map/gc.phpt" role="test" />
     <file name="Map/offset.phpt" role="test" />
+    <file name="Map/referenceShorthand.phpt" role="test" />
     <file name="Map/remove.phpt" role="test" />
     <file name="Map/toArray.phpt" role="test" />
     <file name="MutableIterable/clone.phpt" role="test" />
@@ -375,6 +365,33 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-02-19</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.1.0</release>
+    <api>1.1.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Fix ImmutableSequence throwing for ArrayAccess shorthand read syntax.
+* Add CachedIterable as an alternative to ImmutableIterable that lazily evaluates Traversable objects passed into the constructor. (e.g. only runs Generators up to the most recently requested offset)
+* Change exception type to `Teds\UnsupportedOperationException` in a few places.
+* Add `Teds\is_same_array_handle(array $array1, array $array2): bool` for infinite recursion detection when processing arrays.
+* Fix memory leak when initializing `Teds\StrictMinHeap`/`Teds\StrictMaxHeap` from Traversables.
+* Fix memory leak when constructing collections from Traversable where rewind throws
+* Use first/last as method names for getting the first and last method names. Keep bottom/top as aliases to be deprecated later.
+* Add first/last helper methods to more collection types
+* Optimize implementations of `$map[$x]` array access shorthand in `Teds\Map` implementations.
+* Throw for `$map[] = $value` instead of setting the key for null in `Teds\Map` implementations.
+* Fix Teds\IntVector and Teds\LowMemoryVector shift implementation for integers
+* Add more methods to Teds\BitSet to read/write bytes/integers, convert to/from strings.
+   </notes>
+  </release>
   <release>
    <date>2022-02-16</date>
    <time>16:00:00</time>

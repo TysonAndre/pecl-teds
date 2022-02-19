@@ -1225,7 +1225,11 @@ static void teds_stricthashmap_unset_dimension(zend_object *object, zval *offset
 static zval *teds_stricthashmap_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+handle_missing_key:
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+			return NULL;
+		}
 		return &EG(uninitialized_zval);
 	}
 
@@ -1240,14 +1244,19 @@ static zval *teds_stricthashmap_read_dimension(zend_object *object, zval *offset
 			return &entry->value;
 		}
 	}
-	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
-	return NULL;
+	goto handle_missing_key;
 }
 
 static int teds_stricthashmap_has_dimension(zend_object *object, zval *offset_zv, int check_empty)
 {
 	ZVAL_DEREF(offset_zv);
 	const teds_stricthashmap_entries *array = teds_stricthashmap_entries_from_object(object);
+	if (array->nNumOfElements > 0) {
+		teds_stricthashmap_entry *entry = teds_stricthashmap_entries_find_bucket_computing_hash(array, offset_zv);
+		if (entry) {
+			return teds_has_dimension_helper(&entry->value, check_empty);
+		}
+	}
 	return teds_stricthashmap_entries_offset_exists_and_not_null(array, offset_zv);
 }
 
