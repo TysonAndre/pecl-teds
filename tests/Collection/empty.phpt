@@ -29,6 +29,7 @@ function test_empty_implementation(string $class_name) {
 foreach ([
     Teds\BitSet::class,
     Teds\Deque::class,
+    Teds\CachedIterable::class,
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,
     Teds\IntVector::class,
@@ -64,13 +65,21 @@ toArray: array(0) {
 clear: NULL
 object(Teds\Deque)#1 (0) {
 }
+Testing Teds\CachedIterable
+values: array(0) {
+}
+toArray: array(0) {
+}
+clear: Caught Teds\CachedIterable does not support clear - it is immutable
+object(Teds\CachedIterable)#1 (0) {
+}
 Testing Teds\ImmutableIterable
 values: array(0) {
 }
 toArray: array(0) {
 }
 clear: Caught Teds\ImmutableIterable does not support clear - it is immutable
-object(Teds\ImmutableIterable)#1 (0) {
+object(Teds\ImmutableIterable)#2 (0) {
 }
 Testing Teds\ImmutableSequence
 values: array(0) {
@@ -78,7 +87,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: Caught Teds\ImmutableSequence does not support clear - it is immutable
-object(Teds\ImmutableSequence)#2 (0) {
+object(Teds\ImmutableSequence)#1 (0) {
 }
 Testing Teds\IntVector
 values: array(0) {
@@ -86,7 +95,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\IntVector)#1 (0) {
+object(Teds\IntVector)#2 (0) {
 }
 Testing Teds\LowMemoryVector
 values: array(0) {
@@ -94,7 +103,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\LowMemoryVector)#1 (0) {
+object(Teds\LowMemoryVector)#2 (0) {
 }
 Testing Teds\MutableIterable
 values: array(0) {
@@ -102,7 +111,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\MutableIterable)#1 (0) {
+object(Teds\MutableIterable)#2 (0) {
 }
 Testing Teds\StrictHashMap
 values: array(0) {
@@ -110,7 +119,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictHashMap)#1 (0) {
+object(Teds\StrictHashMap)#2 (0) {
 }
 Testing Teds\StrictHashSet
 values: array(0) {
@@ -118,7 +127,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictHashSet)#1 (0) {
+object(Teds\StrictHashSet)#2 (0) {
 }
 Testing Teds\StrictMaxHeap
 values: array(0) {
@@ -126,7 +135,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictMaxHeap)#1 (0) {
+object(Teds\StrictMaxHeap)#2 (0) {
 }
 Testing Teds\StrictMinHeap
 values: array(0) {
@@ -134,7 +143,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictMinHeap)#1 (0) {
+object(Teds\StrictMinHeap)#2 (0) {
 }
 Testing Teds\StrictSortedVectorMap
 values: array(0) {
@@ -142,7 +151,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictSortedVectorMap)#1 (0) {
+object(Teds\StrictSortedVectorMap)#2 (0) {
 }
 Testing Teds\StrictSortedVectorSet
 values: array(0) {
@@ -150,7 +159,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictSortedVectorSet)#1 (0) {
+object(Teds\StrictSortedVectorSet)#2 (0) {
 }
 Testing Teds\StrictTreeMap
 values: array(0) {
@@ -158,7 +167,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictTreeMap)#1 (0) {
+object(Teds\StrictTreeMap)#2 (0) {
 }
 Testing Teds\StrictTreeSet
 values: array(0) {
@@ -166,7 +175,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictTreeSet)#1 (0) {
+object(Teds\StrictTreeSet)#2 (0) {
 }
 Testing Teds\Vector
 values: array(0) {
@@ -174,5 +183,5 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\Vector)#1 (0) {
+object(Teds\Vector)#2 (0) {
 }

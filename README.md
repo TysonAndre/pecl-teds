@@ -39,6 +39,15 @@ Objects within this data structure or references in arrays in this data structur
 
 Traversables are eagerly iterated over in the constructor.
 
+### Teds\CachedIterable
+
+[`Teds\CachedIterable` API](./teds_cachediterable.stub.php)
+
+This is similar to `Teds\ImmutableIterable` but lazily evaluates Traversables instead of eagerly evaluating Traversables.
+(E.g. Generators will only run until the last offset used from a CachedIterable. See [tests/CachedIterable/lazy.phpt](./tests/CachedIterable/lazy.phpt) and [tests/CachedIterable/selfReferential.phpt](./tests/CachedIterable/selfReferential.phpt) for examples.)
+
+This can be used to cache results of generators without fetching more elements than needed (e.g. Generators that repeatedly call databases or services to paginate).
+
 ### Teds\ImmutableSequence
 
 [`Teds\ImmutableSequence` API](./teds_immutablesequence.stub.php)

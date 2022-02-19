@@ -23,7 +23,7 @@ extern zend_module_entry teds_module_entry;
 
 PHP_MINIT_FUNCTION(teds);
 
-# define PHP_TEDS_VERSION "1.0.2dev"
+# define PHP_TEDS_VERSION "1.1.0dev"
 
 # if defined(ZTS) && defined(COMPILE_DL_TEDS)
 ZEND_TSRMLS_CACHE_EXTERN()

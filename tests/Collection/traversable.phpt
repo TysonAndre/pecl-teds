@@ -39,6 +39,7 @@ function test_traversable(string $class_name) {
 }
 foreach ([
     Teds\Deque::class,
+    Teds\CachedIterable::class,
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,
     Teds\LowMemoryVector::class,
@@ -85,6 +86,39 @@ Key: 10
 Value: 2
 Rewind and iterate again starting from r0
 Key: 0
+Value: 's0'
+End early
+
+Test Teds\CachedIterable
+Key: 'r0'
+Value: 's0'
+Key: 'r1'
+Value: 's1'
+Key: 'r2'
+Value: 's2'
+Key: 'r3'
+Value: 's3'
+Key: 'r4'
+Value: 's4'
+Key: 'r5'
+Value: 's5'
+Key: 'r6'
+Value: 's6'
+Key: 'r7'
+Value: 's7'
+Key: (object) array(
+   'key' => 'value',
+)
+Value: (object) array(
+   'key' => 'value',
+)
+Key: 0
+Value: 1
+Key: 0
+Value: 2
+Done evaluating the generator
+Rewind and iterate again starting from r0
+Key: 'r0'
 Value: 's0'
 End early
 

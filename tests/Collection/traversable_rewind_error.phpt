@@ -77,6 +77,7 @@ foreach ([
     Teds\StrictTreeMap::class,
     Teds\StrictTreeSet::class,
     Teds\Vector::class,
+    Teds\CachedIterable::class,
 ] as $class_name) {
     test_rewind_throw($class_name);
 }
@@ -180,3 +181,43 @@ Teds\Vector: Caught RuntimeException: current threw
 Teds\Vector: Caught RuntimeException: next threw
 Teds\Vector: Caught RuntimeException: __destruct threw
 skip Teds\Vector keyThrows
+Test Teds\CachedIterable
+Teds\CachedIterable: Caught RuntimeException: rewind threw
+Teds\CachedIterable: succeeded despite validThrows: true
+object(Teds\CachedIterable)#4 (0) {
+}
+Teds\CachedIterable: Caught RuntimeException: valid threw
+Teds\CachedIterable: succeeded despite currentThrows: true
+object(Teds\CachedIterable)#5 (0) {
+}
+Teds\CachedIterable: Caught RuntimeException: current threw
+Teds\CachedIterable: succeeded despite nextThrows: true
+object(Teds\CachedIterable)#6 (1) {
+  [0]=>
+  array(2) {
+    [0]=>
+    object(stdClass)#8 (0) {
+    }
+    [1]=>
+    object(stdClass)#1 (0) {
+    }
+  }
+}
+Teds\CachedIterable: Caught RuntimeException: next threw
+Teds\CachedIterable: succeeded despite destructThrows: true
+object(Teds\CachedIterable)#3 (1) {
+  [0]=>
+  array(2) {
+    [0]=>
+    object(stdClass)#9 (0) {
+    }
+    [1]=>
+    object(stdClass)#4 (0) {
+    }
+  }
+}
+Teds\CachedIterable: Caught RuntimeException: __destruct threw
+Teds\CachedIterable: succeeded despite keyThrows: true
+object(Teds\CachedIterable)#7 (0) {
+}
+Teds\CachedIterable: Caught RuntimeException: key threw

@@ -51,6 +51,7 @@ foreach ($functions as $name => $info) {
 --EXPECT--
 Classes:
 final class Teds\BitSet implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Sequence, Traversable
+final class Teds\CachedIterable implements Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Traversable
 interface Teds\Collection extends Countable, Traversable
 final class Teds\Deque implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Sequence, Traversable
 final class Teds\ImmutableIterable implements Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Traversable

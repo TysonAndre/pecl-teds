@@ -11,6 +11,7 @@ function test_collection_from_array(string $class_name) {
 }
 
 foreach ([
+    Teds\CachedIterable::class,
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,
     Teds\LowMemoryVector::class,
@@ -29,6 +30,41 @@ foreach ([
 
 ?>
 --EXPECT--
+Test Teds\CachedIterable
+object(Teds\CachedIterable)#1 (2) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(5) "first"
+    [1]=>
+    string(21) "v_Teds\CachedIterable"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(21) "k_Teds\CachedIterable"
+    [1]=>
+    object(stdClass)#2 (0) {
+    }
+  }
+}
+array(2) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(5) "first"
+    [1]=>
+    string(21) "v_Teds\CachedIterable"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(21) "k_Teds\CachedIterable"
+    [1]=>
+    object(stdClass)#2 (0) {
+    }
+  }
+}
 Test Teds\ImmutableIterable
 object(Teds\ImmutableIterable)#1 (2) {
   [0]=>

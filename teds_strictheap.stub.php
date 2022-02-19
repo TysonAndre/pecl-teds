@@ -47,11 +47,11 @@ final class StrictMinHeap implements \Iterator, Collection
 
     public static function __set_state(array $state): StrictMinHeap { }
 
-    /** @return list<mixed> */
+    /** @psalm-return list<mixed> */
     public function values(): array {}
 
     /**
-     * @return array mapping entries to themselves or throwing.
+     * @psalm-return array mapping entries to themselves or throwing.
      * @see self::values
      */
     public function toArray(): array {}
@@ -109,7 +109,7 @@ final class StrictMaxHeap implements \Iterator, Collection
     public function values(): array {}
 
     /**
-     * @return array mapping entries to themselves or throwing.
+     * @psalm-return array mapping entries to themselves or throwing.
      * @see self::values
      * @implementation-alias Teds\StrictMinHeap::toArray
      */
@@ -117,7 +117,7 @@ final class StrictMaxHeap implements \Iterator, Collection
 
     /**
      * @implementation-alias Teds\StrictMinHeap::toArray
-     * @return array mapping entries to themselves or throwing.
+     * @psalm-return array mapping entries to themselves or throwing.
      * @see self::values
      */
     /** @implementation-alias Teds\StrictMinHeap::contains */

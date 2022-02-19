@@ -48,6 +48,7 @@ foreach ([
     Teds\StrictTreeMap::class,
     Teds\StrictTreeSet::class,
     Teds\Vector::class,
+    Teds\CachedIterable::class,
 ] as $class_name) {
     test_empty_implementation($class_name);
 }
@@ -321,4 +322,33 @@ toArray: array(1) {
 }
 clear: NULL
 object(Teds\Vector)#1 (0) {
+}
+
+Testing Teds\CachedIterable
+object(Teds\CachedIterable)#1 (1) {
+  [0]=>
+  array(2) {
+    [0]=>
+    int(0)
+    [1]=>
+    string(21) "v_Teds\CachedIterable"
+  }
+}
+values: array(1) {
+  [0]=>
+  string(21) "v_Teds\CachedIterable"
+}
+toArray: array(1) {
+  [0]=>
+  string(21) "v_Teds\CachedIterable"
+}
+clear: Caught Teds\CachedIterable does not support clear - it is immutable
+object(Teds\CachedIterable)#1 (1) {
+  [0]=>
+  array(2) {
+    [0]=>
+    int(0)
+    [1]=>
+    string(21) "v_Teds\CachedIterable"
+  }
 }

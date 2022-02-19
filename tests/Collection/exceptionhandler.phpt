@@ -31,6 +31,7 @@ function test_collection_exceptionhandler(string $class) {
 foreach ([
     Teds\BitSet::class,
     Teds\Deque::class,
+    Teds\CachedIterable::class,  // does not throw because it does not evaluate unless requested.
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,
     Teds\LowMemoryVector::class,
@@ -63,6 +64,10 @@ in HasDestructor::__destruct in value1
 in HasDestructor::__destruct in value2
 Caught RuntimeException: test
 Done
+
+Test Teds\CachedIterable
+Done
+in HasDestructor::__destruct in value1
 
 Test Teds\ImmutableIterable
 Overridden in maps

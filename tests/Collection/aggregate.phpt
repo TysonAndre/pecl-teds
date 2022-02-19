@@ -13,6 +13,7 @@ function test_immutableaggregate(string $class_name) {
     }
 }
 foreach ([
+    Teds\CachedIterable::class,
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,
     Teds\LowMemoryVector::class,
@@ -31,6 +32,11 @@ foreach ([
 
 ?>
 --EXPECT--
+Test Teds\CachedIterable
+k1="first" k2="first" v1="x" v2="x"
+k1="first" k2="second" v1="x" v2={"key":"value"}
+k1="second" k2="first" v1={"key":"value"} v2="x"
+k1="second" k2="second" v1={"key":"value"} v2={"key":"value"}
 Test Teds\ImmutableIterable
 k1="first" k2="first" v1="x" v2="x"
 k1="first" k2="second" v1="x" v2={"key":"value"}
