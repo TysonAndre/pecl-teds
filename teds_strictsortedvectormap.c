@@ -810,10 +810,10 @@ PHP_METHOD(Teds_StrictSortedVectorMap, methodName) \
 	RETVAL_COPY(&entries[(index)].propName); \
 }
 
-IMPLEMENT_READ_OFFSET_PHP_METHOD(bottom, 0, value)
-IMPLEMENT_READ_OFFSET_PHP_METHOD(bottomKey, 0, key)
-IMPLEMENT_READ_OFFSET_PHP_METHOD(top, intern->array.size - 1, value)
-IMPLEMENT_READ_OFFSET_PHP_METHOD(topKey, intern->array.size - 1, key)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(first, 0, value)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(firstKey, 0, key)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(last, intern->array.size - 1, value)
+IMPLEMENT_READ_OFFSET_PHP_METHOD(lastKey, intern->array.size - 1, key)
 
 PHP_METHOD(Teds_StrictSortedVectorMap, pop) {
 	ZEND_PARSE_PARAMETERS_NONE();

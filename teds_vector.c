@@ -1180,6 +1180,31 @@ PHP_METHOD(Teds_Vector, pop)
 	}
 }
 
+PHP_METHOD(Teds_Vector, first)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	if (array->size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first value of empty Teds\\Vector", 0);
+		RETURN_THROWS();
+	}
+	RETVAL_COPY(&array->entries[0]);
+}
+
+PHP_METHOD(Teds_Vector, last)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	const uint32_t old_size = array->size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read last value of empty Teds\\Vector", 0);
+		RETURN_THROWS();
+	}
+	RETVAL_COPY(&array->entries[array->size - 1]);
+}
+
 PHP_METHOD(Teds_Vector, shift)
 {
 	ZEND_PARSE_PARAMETERS_NONE();

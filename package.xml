@@ -28,6 +28,8 @@
 * Add `Teds\is_same_array_handle(array $array1, array $array2): bool` for infinite recursion detection when processing arrays.
 * Fix memory leak when initializing `Teds\StrictMinHeap`/`Teds\StrictMaxHeap` from Traversables.
 * Fix memory leak when constructing collections from Traversable where rewind throws
+* Use first/last as method names for getting the first and last method names. Keep bottom/top as aliases to be deprecated later.
+* Add first/last helper methods to more collection types
  </notes>
  <contents>
   <dir name="/">

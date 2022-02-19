@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 2258393e9831a9b85397c7d01ccd2517ab88d388 */
+ * Stub hash: 35f151d7506c7ab60268b8054fe6a7dcfc934355 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictTreeSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -32,14 +32,18 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictTreeSet_toArray arginfo_class_Teds_StrictTreeSet___serialize
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictTreeSet_bottom, 0, 0, IS_MIXED, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictTreeSet_first, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_StrictTreeSet_top arginfo_class_Teds_StrictTreeSet_bottom
+#define arginfo_class_Teds_StrictTreeSet_bottom arginfo_class_Teds_StrictTreeSet_first
 
-#define arginfo_class_Teds_StrictTreeSet_pop arginfo_class_Teds_StrictTreeSet_bottom
+#define arginfo_class_Teds_StrictTreeSet_last arginfo_class_Teds_StrictTreeSet_first
 
-#define arginfo_class_Teds_StrictTreeSet_shift arginfo_class_Teds_StrictTreeSet_bottom
+#define arginfo_class_Teds_StrictTreeSet_top arginfo_class_Teds_StrictTreeSet_first
+
+#define arginfo_class_Teds_StrictTreeSet_pop arginfo_class_Teds_StrictTreeSet_first
+
+#define arginfo_class_Teds_StrictTreeSet_shift arginfo_class_Teds_StrictTreeSet_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictTreeSet_contains, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
@@ -65,8 +69,8 @@ ZEND_METHOD(Teds_StrictTreeSet, values);
 ZEND_METHOD(Teds_StrictTreeSet, __unserialize);
 ZEND_METHOD(Teds_StrictTreeSet, __set_state);
 ZEND_METHOD(Teds_StrictTreeSet, toArray);
-ZEND_METHOD(Teds_StrictTreeSet, bottom);
-ZEND_METHOD(Teds_StrictTreeSet, top);
+ZEND_METHOD(Teds_StrictTreeSet, first);
+ZEND_METHOD(Teds_StrictTreeSet, last);
 ZEND_METHOD(Teds_StrictTreeSet, pop);
 ZEND_METHOD(Teds_StrictTreeSet, shift);
 ZEND_METHOD(Teds_StrictTreeSet, contains);
@@ -87,8 +91,10 @@ static const zend_function_entry class_Teds_StrictTreeSet_methods[] = {
 	ZEND_ME(Teds_StrictTreeSet, __set_state, arginfo_class_Teds_StrictTreeSet___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_StrictTreeSet, values, arginfo_class_Teds_StrictTreeSet_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeSet, toArray, arginfo_class_Teds_StrictTreeSet_toArray, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictTreeSet, bottom, arginfo_class_Teds_StrictTreeSet_bottom, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictTreeSet, top, arginfo_class_Teds_StrictTreeSet_top, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictTreeSet, first, arginfo_class_Teds_StrictTreeSet_first, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictTreeSet, bottom, first, arginfo_class_Teds_StrictTreeSet_bottom, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictTreeSet, last, arginfo_class_Teds_StrictTreeSet_last, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictTreeSet, top, last, arginfo_class_Teds_StrictTreeSet_top, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeSet, pop, arginfo_class_Teds_StrictTreeSet_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeSet, shift, arginfo_class_Teds_StrictTreeSet_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeSet, contains, arginfo_class_Teds_StrictTreeSet_contains, ZEND_ACC_PUBLIC)

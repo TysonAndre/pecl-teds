@@ -70,6 +70,11 @@ final class Vector implements \IteratorAggregate, Sequence, \JsonSerializable
     public function unshift(mixed ...$values): void {}
     public function shift(): mixed {}
 
+    /** Read the first value or throws \UnderflowException */
+    public function first(): mixed {}
+    /** Read the last value or throws \UnderflowException */
+    public function last(): mixed {}
+
     public function toArray(): array {}
 
     /**

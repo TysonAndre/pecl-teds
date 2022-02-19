@@ -20,6 +20,18 @@ function test_empty_implementation(string $class_name) {
         } catch (Teds\UnsupportedOperationException $e) {
             echo "Caught {$e->getMessage()}\n";
         }
+        if (stripos($class_name, 'Heap') === false) {
+            try {
+                var_dump($collection->first());
+            } catch (Throwable $e) {
+                printf("first() Caught %s: %s\n", $e::class, $e->getMessage());
+            }
+            try {
+                var_dump($collection->last());
+            } catch (Throwable $e) {
+                printf("last() Caught %s: %s\n", $e::class, $e->getMessage());
+            }
+        }
         var_dump($collection);
     } catch (Throwable $e) {
         echo "ERROR: Failed to test empty $class_name : {$e->getMessage()}\n";
@@ -55,6 +67,8 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
+first() Caught UnderflowException: Cannot read first bit of empty Teds\BitSet
+last() Caught UnderflowException: Cannot read last bit of empty Teds\BitSet
 object(Teds\BitSet)#1 (0) {
 }
 Testing Teds\Deque
@@ -63,7 +77,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\Deque)#1 (0) {
+first() Caught UnderflowException: Cannot read first value of empty Teds\Deque
+last() Caught UnderflowException: Cannot read last value of empty Teds\Deque
+object(Teds\Deque)#3 (0) {
 }
 Testing Teds\CachedIterable
 values: array(0) {
@@ -71,7 +87,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: Caught Teds\CachedIterable does not support clear - it is immutable
-object(Teds\CachedIterable)#1 (0) {
+first() Caught Error: Call to undefined method Teds\CachedIterable::first()
+last() Caught Error: Call to undefined method Teds\CachedIterable::last()
+object(Teds\CachedIterable)#2 (0) {
 }
 Testing Teds\ImmutableIterable
 values: array(0) {
@@ -79,7 +97,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: Caught Teds\ImmutableIterable does not support clear - it is immutable
-object(Teds\ImmutableIterable)#2 (0) {
+first() Caught Error: Call to undefined method Teds\ImmutableIterable::first()
+last() Caught Error: Call to undefined method Teds\ImmutableIterable::last()
+object(Teds\ImmutableIterable)#3 (0) {
 }
 Testing Teds\ImmutableSequence
 values: array(0) {
@@ -87,7 +107,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: Caught Teds\ImmutableSequence does not support clear - it is immutable
-object(Teds\ImmutableSequence)#1 (0) {
+first() Caught UnderflowException: Cannot get first element of empty Teds\ImmutableSequence
+last() Caught UnderflowException: Cannot get last element of empty Teds\ImmutableSequence
+object(Teds\ImmutableSequence)#2 (0) {
 }
 Testing Teds\IntVector
 values: array(0) {
@@ -95,7 +117,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\IntVector)#2 (0) {
+first() Caught UnderflowException: Cannot read first value of empty Teds\IntVector
+last() Caught UnderflowException: Cannot read last value of empty Teds\IntVector
+object(Teds\IntVector)#3 (0) {
 }
 Testing Teds\LowMemoryVector
 values: array(0) {
@@ -103,7 +127,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\LowMemoryVector)#2 (0) {
+first() Caught UnderflowException: Cannot read first value of empty Teds\LowMemoryVector
+last() Caught UnderflowException: Cannot read last value of empty Teds\LowMemoryVector
+object(Teds\LowMemoryVector)#1 (0) {
 }
 Testing Teds\MutableIterable
 values: array(0) {
@@ -111,6 +137,8 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
+first() Caught Error: Call to undefined method Teds\MutableIterable::first()
+last() Caught Error: Call to undefined method Teds\MutableIterable::last()
 object(Teds\MutableIterable)#2 (0) {
 }
 Testing Teds\StrictHashMap
@@ -119,7 +147,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictHashMap)#2 (0) {
+first() Caught Error: Call to undefined method Teds\StrictHashMap::first()
+last() Caught Error: Call to undefined method Teds\StrictHashMap::last()
+object(Teds\StrictHashMap)#3 (0) {
 }
 Testing Teds\StrictHashSet
 values: array(0) {
@@ -127,7 +157,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictHashSet)#2 (0) {
+first() Caught Error: Call to undefined method Teds\StrictHashSet::first()
+last() Caught Error: Call to undefined method Teds\StrictHashSet::last()
+object(Teds\StrictHashSet)#1 (0) {
 }
 Testing Teds\StrictMaxHeap
 values: array(0) {
@@ -151,6 +183,8 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
+first() Caught UnderflowException: Cannot read first of empty StrictSortedVectorMap
+last() Caught UnderflowException: Cannot read last of empty StrictSortedVectorMap
 object(Teds\StrictSortedVectorMap)#2 (0) {
 }
 Testing Teds\StrictSortedVectorSet
@@ -159,7 +193,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictSortedVectorSet)#2 (0) {
+first() Caught UnderflowException: Cannot read first of empty StrictSortedVectorSet
+last() Caught UnderflowException: Cannot read last of empty StrictSortedVectorSet
+object(Teds\StrictSortedVectorSet)#3 (0) {
 }
 Testing Teds\StrictTreeMap
 values: array(0) {
@@ -167,7 +203,9 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\StrictTreeMap)#2 (0) {
+first() Caught UnderflowException: Cannot read first of empty StrictTreeMap
+last() Caught UnderflowException: Cannot read last of empty StrictTreeMap
+object(Teds\StrictTreeMap)#1 (0) {
 }
 Testing Teds\StrictTreeSet
 values: array(0) {
@@ -175,6 +213,8 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
+first() Caught UnderflowException: Cannot read first value of empty StrictTreeSet
+last() Caught UnderflowException: Cannot read last value of empty StrictTreeSet
 object(Teds\StrictTreeSet)#2 (0) {
 }
 Testing Teds\Vector
@@ -183,5 +223,7 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-object(Teds\Vector)#2 (0) {
+first() Caught UnderflowException: Cannot read first value of empty Teds\Vector
+last() Caught UnderflowException: Cannot read last value of empty Teds\Vector
+object(Teds\Vector)#3 (0) {
 }

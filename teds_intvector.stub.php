@@ -60,6 +60,15 @@ final class IntVector implements \IteratorAggregate, Sequence, \JsonSerializable
      * @throws \UnderflowException if there are no more elements
      */
     public function pop(): int {}
+    /**
+     * @throws \UnderflowException if there are no more elements
+     */
+    public function first(): int {}
+    /**
+     * @throws \UnderflowException if there are no more elements
+     */
+    public function last(): int {}
+
     public function clear(): void {}
     public function unshift(mixed ...$values): void {}
     /**

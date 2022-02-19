@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 1e3ef4a2ef9fe5e65ae736a006f49d4209257e8c */
+ * Stub hash: 915c891aa0a1bd81e90fab78ae85080ff57ef3f4 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSequence___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
@@ -48,6 +48,10 @@ ZEND_END_ARG_INFO()
 #define arginfo_class_Teds_ImmutableSequence_unshift arginfo_class_Teds_ImmutableSequence_push
 
 #define arginfo_class_Teds_ImmutableSequence_shift arginfo_class_Teds_ImmutableSequence_pop
+
+#define arginfo_class_Teds_ImmutableSequence_first arginfo_class_Teds_ImmutableSequence_pop
+
+#define arginfo_class_Teds_ImmutableSequence_last arginfo_class_Teds_ImmutableSequence_pop
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSequence_clear, 0, 0, IS_VOID, 0)
 ZEND_END_ARG_INFO()
@@ -103,6 +107,8 @@ ZEND_METHOD(Teds_ImmutableSequence, push);
 ZEND_METHOD(Teds_ImmutableSequence, pop);
 ZEND_METHOD(Teds_ImmutableSequence, unshift);
 ZEND_METHOD(Teds_ImmutableSequence, shift);
+ZEND_METHOD(Teds_ImmutableSequence, first);
+ZEND_METHOD(Teds_ImmutableSequence, last);
 ZEND_METHOD(Teds_ImmutableSequence, clear);
 ZEND_METHOD(Teds_ImmutableSequence, offsetGet);
 ZEND_METHOD(Teds_ImmutableSequence, offsetExists);
@@ -131,6 +137,8 @@ static const zend_function_entry class_Teds_ImmutableSequence_methods[] = {
 	ZEND_ME(Teds_ImmutableSequence, pop, arginfo_class_Teds_ImmutableSequence_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, unshift, arginfo_class_Teds_ImmutableSequence_unshift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, shift, arginfo_class_Teds_ImmutableSequence_shift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSequence, first, arginfo_class_Teds_ImmutableSequence_first, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSequence, last, arginfo_class_Teds_ImmutableSequence_last, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, clear, arginfo_class_Teds_ImmutableSequence_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, offsetGet, arginfo_class_Teds_ImmutableSequence_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, offsetExists, arginfo_class_Teds_ImmutableSequence_offsetExists, ZEND_ACC_PUBLIC)

@@ -54,9 +54,13 @@ final class StrictSortedVectorSet implements \IteratorAggregate, Set, \JsonSeria
     public function toArray(): array {}
 
     /** Returns the first value, throws if empty. */
+    public function first(): mixed {}
+    /** @implementation-alias Teds\StrictSortedVectorSet::first */
     public function bottom(): mixed {}
 
     /** Returns the last value, throws if empty */
+    public function last(): mixed {}
+    /** @implementation-alias Teds\StrictSortedVectorSet::last */
     public function top(): mixed {}
 
     /**

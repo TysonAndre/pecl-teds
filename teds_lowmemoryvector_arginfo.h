@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a92dbf7d11148d94399aec1bea29ee7bc8fc248f */
+ * Stub hash: 9a3fb78b9fb5d4c61cef8d6e1e789d1a5a28e723 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_LowMemoryVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -27,16 +27,20 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_LowMemoryVector___set_
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_LowMemoryVector_first, 0, 0, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_LowMemoryVector_last arginfo_class_Teds_LowMemoryVector_first
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_LowMemoryVector_push, 0, 0, IS_VOID, 0)
 	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_LowMemoryVector_pop, 0, 0, IS_MIXED, 0)
-ZEND_END_ARG_INFO()
+#define arginfo_class_Teds_LowMemoryVector_pop arginfo_class_Teds_LowMemoryVector_first
 
 #define arginfo_class_Teds_LowMemoryVector_unshift arginfo_class_Teds_LowMemoryVector_push
 
-#define arginfo_class_Teds_LowMemoryVector_shift arginfo_class_Teds_LowMemoryVector_pop
+#define arginfo_class_Teds_LowMemoryVector_shift arginfo_class_Teds_LowMemoryVector_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_LowMemoryVector_clear, 0, 0, IS_VOID, 0)
 ZEND_END_ARG_INFO()
@@ -92,6 +96,8 @@ ZEND_METHOD(Teds_LowMemoryVector, capacity);
 ZEND_METHOD(Teds_LowMemoryVector, __serialize);
 ZEND_METHOD(Teds_LowMemoryVector, __unserialize);
 ZEND_METHOD(Teds_LowMemoryVector, __set_state);
+ZEND_METHOD(Teds_LowMemoryVector, first);
+ZEND_METHOD(Teds_LowMemoryVector, last);
 ZEND_METHOD(Teds_LowMemoryVector, push);
 ZEND_METHOD(Teds_LowMemoryVector, pop);
 ZEND_METHOD(Teds_LowMemoryVector, unshift);
@@ -118,6 +124,8 @@ static const zend_function_entry class_Teds_LowMemoryVector_methods[] = {
 	ZEND_ME(Teds_LowMemoryVector, __serialize, arginfo_class_Teds_LowMemoryVector___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, __unserialize, arginfo_class_Teds_LowMemoryVector___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, __set_state, arginfo_class_Teds_LowMemoryVector___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Teds_LowMemoryVector, first, arginfo_class_Teds_LowMemoryVector_first, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_LowMemoryVector, last, arginfo_class_Teds_LowMemoryVector_last, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, push, arginfo_class_Teds_LowMemoryVector_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, pop, arginfo_class_Teds_LowMemoryVector_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, unshift, arginfo_class_Teds_LowMemoryVector_unshift, ZEND_ACC_PUBLIC)

@@ -43,6 +43,7 @@ final class StrictHashSet implements \IteratorAggregate, Set, \JsonSerializable
 
     /** Returns a list of the unique values in order of insertion. */
     public function values(): array {}
+    // TODO: first()/last() value
 
     /** Returns an array mapping keys to themselves. */
     public function toArray(): array {}

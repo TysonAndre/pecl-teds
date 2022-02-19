@@ -10,18 +10,18 @@ for ($i = 0; $i < 7; $i++) {
 }
 echo "shift\n";
 echo $it->shift(), "\n";
-echo $it->bottom(), "\n";
+echo $it->first(), "\n";
 echo $it->shift(), "\n";
 echo "pop\n";
 echo $it->pop(), "\n";
-echo $it->top(), "\n";
+echo $it->last(), "\n";
 echo $it->pop(), "\n";
 echo implode(',', $it->values()) . "\n";
 echo $it->pop(), "\n";
 echo $it->pop(), "\n";
 echo $it->pop(), "\n";
 echo "Empty\n";
-foreach (['pop', 'shift', 'bottom', 'top'] as $method) {
+foreach (['pop', 'shift', 'first', 'last'] as $method) {
     try {
         echo "$method: ";
         var_dump($it->{$method}());
@@ -48,7 +48,7 @@ v2
 Empty
 pop: Caught: Cannot pop from empty StrictSortedVectorSet
 shift: Caught: Cannot shift from empty StrictSortedVectorSet
-bottom: Caught: Cannot read bottom of empty StrictSortedVectorSet
-top: Caught: Cannot read top of empty StrictSortedVectorSet
+first: Caught: Cannot read first of empty StrictSortedVectorSet
+last: Caught: Cannot read last of empty StrictSortedVectorSet
 object(Teds\StrictSortedVectorSet)#1 (0) {
 }

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 994936a68bec99b0b0aad5b5ffb3dfb4958b1457 */
+ * Stub hash: 6206f7f7f75747904a4b020b0f7355e1cdc7196f */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictSortedVectorSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -32,14 +32,18 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictSortedVectorSet_toArray arginfo_class_Teds_StrictSortedVectorSet___serialize
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorSet_bottom, 0, 0, IS_MIXED, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorSet_first, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_StrictSortedVectorSet_top arginfo_class_Teds_StrictSortedVectorSet_bottom
+#define arginfo_class_Teds_StrictSortedVectorSet_bottom arginfo_class_Teds_StrictSortedVectorSet_first
 
-#define arginfo_class_Teds_StrictSortedVectorSet_pop arginfo_class_Teds_StrictSortedVectorSet_bottom
+#define arginfo_class_Teds_StrictSortedVectorSet_last arginfo_class_Teds_StrictSortedVectorSet_first
 
-#define arginfo_class_Teds_StrictSortedVectorSet_shift arginfo_class_Teds_StrictSortedVectorSet_bottom
+#define arginfo_class_Teds_StrictSortedVectorSet_top arginfo_class_Teds_StrictSortedVectorSet_first
+
+#define arginfo_class_Teds_StrictSortedVectorSet_pop arginfo_class_Teds_StrictSortedVectorSet_first
+
+#define arginfo_class_Teds_StrictSortedVectorSet_shift arginfo_class_Teds_StrictSortedVectorSet_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorSet_contains, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
@@ -61,8 +65,8 @@ ZEND_METHOD(Teds_StrictSortedVectorSet, values);
 ZEND_METHOD(Teds_StrictSortedVectorSet, __unserialize);
 ZEND_METHOD(Teds_StrictSortedVectorSet, __set_state);
 ZEND_METHOD(Teds_StrictSortedVectorSet, toArray);
-ZEND_METHOD(Teds_StrictSortedVectorSet, bottom);
-ZEND_METHOD(Teds_StrictSortedVectorSet, top);
+ZEND_METHOD(Teds_StrictSortedVectorSet, first);
+ZEND_METHOD(Teds_StrictSortedVectorSet, last);
 ZEND_METHOD(Teds_StrictSortedVectorSet, pop);
 ZEND_METHOD(Teds_StrictSortedVectorSet, shift);
 ZEND_METHOD(Teds_StrictSortedVectorSet, contains);
@@ -81,8 +85,10 @@ static const zend_function_entry class_Teds_StrictSortedVectorSet_methods[] = {
 	ZEND_ME(Teds_StrictSortedVectorSet, __set_state, arginfo_class_Teds_StrictSortedVectorSet___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_StrictSortedVectorSet, values, arginfo_class_Teds_StrictSortedVectorSet_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorSet, toArray, arginfo_class_Teds_StrictSortedVectorSet_toArray, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorSet, bottom, arginfo_class_Teds_StrictSortedVectorSet_bottom, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorSet, top, arginfo_class_Teds_StrictSortedVectorSet_top, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictSortedVectorSet, first, arginfo_class_Teds_StrictSortedVectorSet_first, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorSet, bottom, first, arginfo_class_Teds_StrictSortedVectorSet_bottom, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictSortedVectorSet, last, arginfo_class_Teds_StrictSortedVectorSet_last, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorSet, top, last, arginfo_class_Teds_StrictSortedVectorSet_top, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorSet, pop, arginfo_class_Teds_StrictSortedVectorSet_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorSet, shift, arginfo_class_Teds_StrictSortedVectorSet_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorSet, contains, arginfo_class_Teds_StrictSortedVectorSet_contains, ZEND_ACC_PUBLIC)

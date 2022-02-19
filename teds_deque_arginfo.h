@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 4ef6323a22a6d8e9d3b7f6a1875a76533d7115a6 */
+ * Stub hash: bd78109c39127f2b4b743d5e2daa64812c765dfc */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -39,7 +39,11 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Deque_shift arginfo_class_Teds_Deque_pop
 
+#define arginfo_class_Teds_Deque_first arginfo_class_Teds_Deque_pop
+
 #define arginfo_class_Teds_Deque_bottom arginfo_class_Teds_Deque_pop
+
+#define arginfo_class_Teds_Deque_last arginfo_class_Teds_Deque_pop
 
 #define arginfo_class_Teds_Deque_top arginfo_class_Teds_Deque_pop
 
@@ -100,8 +104,8 @@ ZEND_METHOD(Teds_Deque, push);
 ZEND_METHOD(Teds_Deque, unshift);
 ZEND_METHOD(Teds_Deque, pop);
 ZEND_METHOD(Teds_Deque, shift);
-ZEND_METHOD(Teds_Deque, bottom);
-ZEND_METHOD(Teds_Deque, top);
+ZEND_METHOD(Teds_Deque, first);
+ZEND_METHOD(Teds_Deque, last);
 ZEND_METHOD(Teds_Deque, get);
 ZEND_METHOD(Teds_Deque, set);
 ZEND_METHOD(Teds_Deque, offsetGet);
@@ -127,8 +131,10 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_ME(Teds_Deque, unshift, arginfo_class_Teds_Deque_unshift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, pop, arginfo_class_Teds_Deque_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, shift, arginfo_class_Teds_Deque_shift, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Deque, bottom, arginfo_class_Teds_Deque_bottom, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Deque, top, arginfo_class_Teds_Deque_top, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Deque, first, arginfo_class_Teds_Deque_first, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Deque, bottom, first, arginfo_class_Teds_Deque_bottom, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Deque, last, arginfo_class_Teds_Deque_last, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Deque, top, last, arginfo_class_Teds_Deque_top, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, toArray, arginfo_class_Teds_Deque_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Deque, values, toArray, arginfo_class_Teds_Deque_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, get, arginfo_class_Teds_Deque_get, ZEND_ACC_PUBLIC)

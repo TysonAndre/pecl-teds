@@ -1034,10 +1034,10 @@ PHP_METHOD(Teds_StrictTreeMap, methodName) \
        RETVAL_COPY(&node->propName); \
 }
 
-IMPLEMENT_READ_POSITION_PHP_METHOD(bottom, first, value)
-IMPLEMENT_READ_POSITION_PHP_METHOD(bottomKey, first, key)
-IMPLEMENT_READ_POSITION_PHP_METHOD(top, last, value)
-IMPLEMENT_READ_POSITION_PHP_METHOD(topKey, last, key)
+IMPLEMENT_READ_POSITION_PHP_METHOD(first, first, value)
+IMPLEMENT_READ_POSITION_PHP_METHOD(firstKey, first, key)
+IMPLEMENT_READ_POSITION_PHP_METHOD(last, last, value)
+IMPLEMENT_READ_POSITION_PHP_METHOD(lastKey, last, key)
 
 #define IMPLEMENT_REMOVE_POSITION_PHP_METHOD(methodName, pos) \
 PHP_METHOD(Teds_StrictTreeMap, methodName) \

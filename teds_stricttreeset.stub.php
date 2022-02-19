@@ -53,9 +53,13 @@ final class StrictTreeSet implements \IteratorAggregate, Set, \JsonSerializable
     public function toArray(): array {}
 
     /** Returns the first value, throws if empty. */
+    public function first(): mixed {}
+    /** @implementation-alias Teds\StrictTreeSet::first */
     public function bottom(): mixed {}
 
     /** Returns the last value, throws if empty */
+    public function last(): mixed {}
+    /** @implementation-alias Teds\StrictTreeSet::last */
     public function top(): mixed {}
 
     /**

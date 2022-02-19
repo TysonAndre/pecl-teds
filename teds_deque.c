@@ -1082,14 +1082,14 @@ PHP_METHOD(Teds_Deque, pop)
 	teds_deque_try_shrink_capacity(intern, old_size);
 }
 
-PHP_METHOD(Teds_Deque, top)
+PHP_METHOD(Teds_Deque, last)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
 	const uint32_t old_size = intern->array.size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read top of empty Teds\\Deque", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read last value of empty Teds\\Deque", 0);
 		RETURN_THROWS();
 	}
 
@@ -1121,14 +1121,14 @@ PHP_METHOD(Teds_Deque, shift)
 	teds_deque_try_shrink_capacity(intern, old_size);
 }
 
-PHP_METHOD(Teds_Deque, bottom)
+PHP_METHOD(Teds_Deque, first)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
 	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
 	if (intern->array.size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read bottom of empty Teds\\Deque", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first value of empty Teds\\Deque", 0);
 		RETURN_THROWS();
 	}
 

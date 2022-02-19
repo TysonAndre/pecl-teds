@@ -50,15 +50,23 @@ final class StrictTreeMap implements \IteratorAggregate, Map, \JsonSerializable
     // bottom/top matches use for SplDoublyLinkedList.
 
     /** Returns the first value, throws if empty. */
+    public function first(): mixed {}
+    /** @implementation-alias Teds\StrictTreeMap::first */
     public function bottom(): mixed {}
 
     /** Returns the first key, throws if empty. */
+    public function firstKey(): mixed {}
+    /** @implementation-alias Teds\StrictTreeMap::firstKey */
     public function bottomKey(): mixed {}
 
     /** Returns the last value, throws if empty */
+    public function last(): mixed {}
+    /** @implementation-alias Teds\StrictTreeMap::last */
     public function top(): mixed {}
 
     /** Returns the last key, throws if empty */
+    public function lastKey(): mixed {}
+    /** @implementation-alias Teds\StrictTreeMap::lastKey */
     public function topKey(): mixed {}
 
     /**

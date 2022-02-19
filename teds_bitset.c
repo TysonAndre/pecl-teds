@@ -1176,6 +1176,32 @@ PHP_METHOD(Teds_BitSet, pop)
 	}
 }
 
+PHP_METHOD(Teds_BitSet, first)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->bit_size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first bit of empty Teds\\BitSet", 0);
+		RETURN_THROWS();
+	}
+	teds_bitset_entries_copy_offset(array, 0, return_value, false);
+}
+
+PHP_METHOD(Teds_BitSet, last)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->bit_size;
+	if (old_size == 0) {
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read last bit of empty Teds\\BitSet", 0);
+		RETURN_THROWS();
+	}
+	teds_bitset_entries_copy_offset(array, old_size - 1, return_value, false);
+}
+
 static zend_always_inline void teds_bitset_entries_shift(teds_bitset_entries *array) {
 	uint8_t *const entries_bits = array->entries_bits;
 	ZEND_ASSERT(array->bit_size <= array->bit_capacity);

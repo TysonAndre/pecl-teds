@@ -64,9 +64,17 @@ final class Deque implements \IteratorAggregate, Sequence, \JsonSerializable
      */
     public function shift(): mixed {}
 
-    /** Peeks at the value at the start of the Deque, throws if empty */
+    /**
+     * Peeks at the value at the start of the Deque, throws if empty
+     */
+    public function first(): mixed {}
+    /** @implementation-alias Teds\Deque::first */
     public function bottom(): mixed {}
-    /** Peeks at the value at the end of the Deque, throws if empty */
+    /**
+     * Peeks at the value at the end of the Deque, throws if empty
+     */
+    public function last(): mixed {}
+    /** @implementation-alias Teds\Deque::last */
     public function top(): mixed {}
 
     /** Returns a list of the elements from front to back. */
