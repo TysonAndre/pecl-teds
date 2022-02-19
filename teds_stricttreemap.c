@@ -140,7 +140,7 @@ static zend_always_inline void teds_stricttreemap_tree_rotate_dir_root(teds_stri
 	}
 }
 
-static zend_always_inline void teds_stricttreemap_entries_rebalance_after_insert(teds_stricttreemap_tree *tree, teds_stricttreemap_node *node) {
+static zend_always_inline void teds_stricttreemap_tree_rebalance_after_insert(teds_stricttreemap_tree *tree, teds_stricttreemap_node *node) {
 	while (true) {
 		teds_stricttreemap_node *parent = node->parent;
 		// ZEND_ASSERT(TEDS_STRICTTREEMAP_NODE_COLOR(node) == TEDS_NODE_RED);
@@ -242,7 +242,7 @@ finish_insert:
 					return false;
 				}
 
-				teds_stricttreemap_entries_rebalance_after_insert(tree, c);
+				teds_stricttreemap_tree_rebalance_after_insert(tree, c);
 
 				return true;
 			}
@@ -277,12 +277,18 @@ typedef struct _teds_stricttreemap_it {
 	teds_stricttreemap_node *node;
 } teds_stricttreemap_it;
 
-static zend_always_inline teds_stricttreemap *teds_stricttreemap_from_obj(zend_object *obj)
+static zend_always_inline teds_stricttreemap *teds_stricttreemap_from_object(zend_object *obj)
 {
 	return (teds_stricttreemap*)((char*)(obj) - XtOffsetOf(teds_stricttreemap, std));
 }
 
-#define Z_STRICTTREEMAP_P(zv)  teds_stricttreemap_from_obj(Z_OBJ_P((zv)))
+static zend_always_inline teds_stricttreemap_tree *teds_stricttreemap_tree_from_object(zend_object *obj)
+{
+	return &teds_stricttreemap_from_object(obj)->array;
+}
+
+#define Z_STRICTTREEMAP_P(zv)  teds_stricttreemap_from_object(Z_OBJ_P((zv)))
+#define Z_STRICTTREEMAP_TREE_P(zv)  (&teds_stricttreemap_from_object(Z_OBJ_P((zv)))->array)
 
 static zend_always_inline bool teds_stricttreemap_tree_uninitialized(teds_stricttreemap_tree *array)
 {
@@ -520,7 +526,7 @@ void teds_stricttreemap_tree_dtor(teds_stricttreemap_tree *array)
 
 static HashTable* teds_stricttreemap_get_gc(zend_object *obj, zval **table, int *table_count)
 {
-	teds_stricttreemap *intern = teds_stricttreemap_from_obj(obj);
+	teds_stricttreemap *intern = teds_stricttreemap_from_object(obj);
 	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 	if (intern->array.nNumOfElements > 0) {
 		zval *key, *val;
@@ -541,7 +547,7 @@ static HashTable* teds_stricttreemap_get_gc(zend_object *obj, zval **table, int 
 
 static HashTable* teds_stricttreemap_get_properties(zend_object *obj)
 {
-	teds_stricttreemap *intern = teds_stricttreemap_from_obj(obj);
+	teds_stricttreemap *intern = teds_stricttreemap_from_object(obj);
 	const uint32_t len = intern->array.nNumOfElements;
 	HashTable *ht = zend_std_get_properties(obj);
 	uint32_t old_length = zend_hash_num_elements(ht);
@@ -568,7 +574,7 @@ static HashTable* teds_stricttreemap_get_properties(zend_object *obj)
 
 static void teds_stricttreemap_free_storage(zend_object *object)
 {
-	teds_stricttreemap *intern = teds_stricttreemap_from_obj(object);
+	teds_stricttreemap *intern = teds_stricttreemap_from_object(object);
 	teds_stricttreemap_tree_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
@@ -586,7 +592,7 @@ static zend_object *teds_stricttreemap_new_ex(zend_class_entry *class_type, zend
 	intern->std.handlers = &teds_handler_StrictTreeMap;
 
 	if (orig && clone_orig) {
-		teds_stricttreemap *other = teds_stricttreemap_from_obj(orig);
+		teds_stricttreemap *other = teds_stricttreemap_from_object(orig);
 		teds_stricttreemap_tree_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.root = NULL;
@@ -614,7 +620,7 @@ static int teds_stricttreemap_count_elements(zend_object *object, zend_long *cou
 {
 	teds_stricttreemap *intern;
 
-	intern = teds_stricttreemap_from_obj(object);
+	intern = teds_stricttreemap_from_object(object);
 	*count = intern->array.nNumOfElements;
 	return SUCCESS;
 }
@@ -957,7 +963,7 @@ static void teds_stricttreemap_tree_init_from_traversable_pairs(teds_stricttreem
 
 static zend_object* create_from_pairs(zval *iterable) {
 	zend_object *object = teds_stricttreemap_new(teds_ce_StrictTreeMap);
-	teds_stricttreemap *intern = teds_stricttreemap_from_obj(object);
+	teds_stricttreemap *intern = teds_stricttreemap_from_object(object);
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
 			teds_stricttreemap_tree_init_from_array_pairs(&intern->array, Z_ARRVAL_P(iterable));
@@ -989,7 +995,7 @@ PHP_METHOD(Teds_StrictTreeMap, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_stricttreemap_new(teds_ce_StrictTreeMap);
-	teds_stricttreemap *intern = teds_stricttreemap_from_obj(object);
+	teds_stricttreemap *intern = teds_stricttreemap_from_object(object);
 	teds_stricttreemap_tree_init_from_array_pairs(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
@@ -1385,6 +1391,17 @@ static bool teds_stricttreemap_tree_remove_key(teds_stricttreemap_tree *tree, zv
 	return true;
 }
 
+static zend_always_inline bool teds_stricttreemap_tree_offset_exists_and_not_null(const teds_stricttreemap_tree *tree, zval *key)
+{
+	if (tree->nNumOfElements > 0) {
+		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(tree, key);
+		if (entry) {
+			return Z_TYPE(entry->value) != IS_NULL;
+		}
+	}
+	return false;
+}
+
 PHP_METHOD(Teds_StrictTreeMap, offsetExists)
 {
 	zval *key;
@@ -1392,14 +1409,8 @@ PHP_METHOD(Teds_StrictTreeMap, offsetExists)
 		Z_PARAM_ZVAL(key)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	if (intern->array.nNumOfElements > 0) {
-		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(&intern->array, key);
-		if (entry) {
-			RETURN_BOOL(Z_TYPE(entry->value) != IS_NULL);
-		}
-	}
-	RETURN_FALSE;
+	const teds_stricttreemap_tree *tree = Z_STRICTTREEMAP_TREE_P(ZEND_THIS);
+	RETURN_BOOL(teds_stricttreemap_tree_offset_exists_and_not_null(tree, key));
 }
 
 PHP_METHOD(Teds_StrictTreeMap, offsetGet)
@@ -1648,6 +1659,56 @@ PHP_METHOD(Teds_StrictTreeMap, clear)
 	TEDS_RETURN_VOID();
 }
 
+static void teds_stricttreemap_write_dimension(zend_object *object, zval *offset_zv, zval *value)
+{
+	teds_stricttreemap_tree *array = teds_stricttreemap_tree_from_object(object);
+	if (UNEXPECTED(!offset_zv || Z_TYPE_P(offset_zv) == IS_UNDEF)) {
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\StrictHashMap does not support appending with []=", 0);
+		return;
+	}
+
+	ZVAL_DEREF(offset_zv);
+	ZVAL_DEREF(value);
+	teds_stricttreemap_tree_insert(array, offset_zv, value, false);
+}
+
+static void teds_stricttreemap_unset_dimension(zend_object *object, zval *offset)
+{
+	teds_stricttreemap_tree *array = teds_stricttreemap_tree_from_object(object);
+
+	ZVAL_DEREF(offset);
+	teds_stricttreemap_tree_remove_key(array, offset);
+}
+
+static zval *teds_stricttreemap_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
+{
+	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+		return &EG(uninitialized_zval);
+	}
+
+	const teds_stricttreemap_tree *array = teds_stricttreemap_tree_from_object(object);
+	ZVAL_DEREF(offset_zv);
+
+	(void)rv;
+
+	if (array->nNumOfElements > 0) {
+		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(array, offset_zv);
+		if (entry) {
+			return &entry->value;
+		}
+	}
+	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+	return NULL;
+}
+
+static int teds_stricttreemap_has_dimension(zend_object *object, zval *offset_zv, int check_empty)
+{
+	ZVAL_DEREF(offset_zv);
+	const teds_stricttreemap_tree *array = teds_stricttreemap_tree_from_object(object);
+	return teds_stricttreemap_tree_offset_exists_and_not_null(array, offset_zv);
+}
+
 PHP_MINIT_FUNCTION(teds_stricttreemap)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
@@ -1663,6 +1724,10 @@ PHP_MINIT_FUNCTION(teds_stricttreemap)
 	teds_handler_StrictTreeMap.get_gc          = teds_stricttreemap_get_gc;
 	teds_handler_StrictTreeMap.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_StrictTreeMap.free_obj        = teds_stricttreemap_free_storage;
+	teds_handler_StrictTreeMap.write_dimension = teds_stricttreemap_write_dimension;
+	teds_handler_StrictTreeMap.has_dimension   = teds_stricttreemap_has_dimension;
+	teds_handler_StrictTreeMap.read_dimension  = teds_stricttreemap_read_dimension;
+	teds_handler_StrictTreeMap.unset_dimension = teds_stricttreemap_unset_dimension;
 
 	teds_ce_StrictTreeMap->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 	teds_ce_StrictTreeMap->get_iterator = teds_stricttreemap_get_iterator;

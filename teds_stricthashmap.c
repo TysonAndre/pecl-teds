@@ -131,12 +131,13 @@ typedef struct _teds_stricthashmap_it {
 	uint32_t             current;
 } teds_stricthashmap_it;
 
-static zend_always_inline teds_stricthashmap *teds_stricthashmap_from_obj(zend_object *obj)
+static zend_always_inline teds_stricthashmap *teds_stricthashmap_from_object(zend_object *obj)
 {
 	return (teds_stricthashmap*)((char*)(obj) - XtOffsetOf(teds_stricthashmap, std));
 }
+#define teds_stricthashmap_entries_from_object(obj) (&teds_stricthashmap_from_object((obj))->array)
 
-#define Z_STRICTHASHMAP_P(zv)  teds_stricthashmap_from_obj(Z_OBJ_P((zv)))
+#define Z_STRICTHASHMAP_P(zv)  teds_stricthashmap_from_object(Z_OBJ_P((zv)))
 #define Z_STRICTHASHMAP_ENTRIES_P(zv)  (&(Z_STRICTHASHMAP_P((zv)))->array)
 
 static bool teds_stricthashmap_entries_uninitialized(teds_stricthashmap_entries *array)
@@ -419,7 +420,7 @@ void teds_stricthashmap_entries_dtor(teds_stricthashmap_entries *array)
 
 static HashTable* teds_stricthashmap_get_gc(zend_object *obj, zval **table, int *table_count)
 {
-	teds_stricthashmap *intern = teds_stricthashmap_from_obj(obj);
+	teds_stricthashmap *intern = teds_stricthashmap_from_object(obj);
 	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 	if (intern->array.nNumOfElements > 0) {
 		zval *key, *val;
@@ -438,7 +439,7 @@ static HashTable* teds_stricthashmap_get_gc(zend_object *obj, zval **table, int 
 
 static HashTable* teds_stricthashmap_get_properties(zend_object *obj)
 {
-	teds_stricthashmap *intern = teds_stricthashmap_from_obj(obj);
+	teds_stricthashmap *intern = teds_stricthashmap_from_object(obj);
 	const uint32_t len = intern->array.nNumOfElements;
 	HashTable *ht = zend_std_get_properties(obj);
 	uint32_t old_length = zend_hash_num_elements(ht);
@@ -466,7 +467,7 @@ static HashTable* teds_stricthashmap_get_properties(zend_object *obj)
 
 static void teds_stricthashmap_free_storage(zend_object *object)
 {
-	teds_stricthashmap *intern = teds_stricthashmap_from_obj(object);
+	teds_stricthashmap *intern = teds_stricthashmap_from_object(object);
 	teds_stricthashmap_entries_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
@@ -484,7 +485,7 @@ static zend_object *teds_stricthashmap_new_ex(zend_class_entry *class_type, zend
 	intern->std.handlers = &teds_handler_StrictHashMap;
 
 	if (orig && clone_orig) {
-		teds_stricthashmap *other = teds_stricthashmap_from_obj(orig);
+		teds_stricthashmap *other = teds_stricthashmap_from_object(orig);
 		teds_stricthashmap_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.arData = NULL;
@@ -512,7 +513,7 @@ static int teds_stricthashmap_count_elements(zend_object *object, zend_long *cou
 {
 	teds_stricthashmap *intern;
 
-	intern = teds_stricthashmap_from_obj(object);
+	intern = teds_stricthashmap_from_object(object);
 	*count = intern->array.nNumOfElements;
 	return SUCCESS;
 }
@@ -832,7 +833,7 @@ static void teds_stricthashmap_entries_init_from_traversable_pairs(teds_strictha
 
 static zend_object* create_from_pairs(zval *iterable) {
 	zend_object *object = teds_stricthashmap_new(teds_ce_StrictHashMap);
-	teds_stricthashmap *intern = teds_stricthashmap_from_obj(object);
+	teds_stricthashmap *intern = teds_stricthashmap_from_object(object);
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
 			teds_stricthashmap_entries_init_from_array_pairs(&intern->array, Z_ARRVAL_P(iterable));
@@ -864,7 +865,7 @@ PHP_METHOD(Teds_StrictHashMap, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_stricthashmap_new(teds_ce_StrictHashMap);
-	teds_stricthashmap *intern = teds_stricthashmap_from_obj(object);
+	teds_stricthashmap *intern = teds_stricthashmap_from_object(object);
 	teds_stricthashmap_entries_init_from_array_pairs(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
@@ -1004,6 +1005,20 @@ static bool teds_stricthashmap_entries_remove_key(teds_stricthashmap_entries *ar
 	return true;
 }
 
+static bool teds_stricthashmap_entries_offset_exists_and_not_null(const teds_stricthashmap_entries *array, zval *key)
+{
+	ZEND_ASSERT(Z_TYPE_P(key) != IS_REFERENCE);
+	ZEND_ASSERT(Z_TYPE_P(key) != IS_UNDEF);
+
+	if (array->nNumOfElements > 0) {
+		teds_stricthashmap_entry *entry = teds_stricthashmap_entries_find_bucket_computing_hash(array, key);
+		if (entry) {
+			return Z_TYPE(entry->value) != IS_NULL;
+		}
+	}
+	return false;
+}
+
 PHP_METHOD(Teds_StrictHashMap, offsetExists)
 {
 	zval *key;
@@ -1011,14 +1026,8 @@ PHP_METHOD(Teds_StrictHashMap, offsetExists)
 		Z_PARAM_ZVAL(key)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_stricthashmap *intern = Z_STRICTHASHMAP_P(ZEND_THIS);
-	if (intern->array.nNumOfElements > 0) {
-		teds_stricthashmap_entry *entry = teds_stricthashmap_entries_find_bucket_computing_hash(&intern->array, key);
-		if (entry) {
-			RETURN_BOOL(Z_TYPE(entry->value) != IS_NULL);
-		}
-	}
-	RETURN_FALSE;
+	const teds_stricthashmap_entries *array = Z_STRICTHASHMAP_ENTRIES_P(ZEND_THIS);
+	RETURN_BOOL(teds_stricthashmap_entries_offset_exists_and_not_null(array, key));
 }
 
 PHP_METHOD(Teds_StrictHashMap, offsetGet)
@@ -1084,8 +1093,7 @@ PHP_METHOD(Teds_StrictHashMap, offsetUnset)
 		Z_PARAM_ZVAL(key)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_stricthashmap *intern = Z_STRICTHASHMAP_P(ZEND_THIS);
-	teds_stricthashmap_entries_remove_key(&intern->array, key);
+	teds_stricthashmap_entries_remove_key(Z_STRICTHASHMAP_ENTRIES_P(ZEND_THIS), key);
 	TEDS_RETURN_VOID();
 }
 
@@ -1193,6 +1201,56 @@ PHP_METHOD(Teds_StrictHashMap, clear)
 	TEDS_RETURN_VOID();
 }
 
+static void teds_stricthashmap_write_dimension(zend_object *object, zval *offset_zv, zval *value)
+{
+	teds_stricthashmap_entries *array = teds_stricthashmap_entries_from_object(object);
+	if (UNEXPECTED(!offset_zv || Z_TYPE_P(offset_zv) == IS_UNDEF)) {
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\StrictHashMap does not support appending with []=", 0);
+		return;
+	}
+
+	ZVAL_DEREF(offset_zv);
+	ZVAL_DEREF(value);
+	teds_stricthashmap_entries_insert(array, offset_zv, value, false);
+}
+
+static void teds_stricthashmap_unset_dimension(zend_object *object, zval *offset)
+{
+	teds_stricthashmap_entries *array = teds_stricthashmap_entries_from_object(object);
+
+	ZVAL_DEREF(offset);
+	teds_stricthashmap_entries_remove_key(array, offset);
+}
+
+static zval *teds_stricthashmap_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
+{
+	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+		return &EG(uninitialized_zval);
+	}
+
+	const teds_stricthashmap_entries *array = teds_stricthashmap_entries_from_object(object);
+	ZVAL_DEREF(offset_zv);
+
+	(void)rv;
+
+	if (array->nNumOfElements > 0) {
+		teds_stricthashmap_entry *entry = teds_stricthashmap_entries_find_bucket_computing_hash(array, offset_zv);
+		if (entry) {
+			return &entry->value;
+		}
+	}
+	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+	return NULL;
+}
+
+static int teds_stricthashmap_has_dimension(zend_object *object, zval *offset_zv, int check_empty)
+{
+	ZVAL_DEREF(offset_zv);
+	const teds_stricthashmap_entries *array = teds_stricthashmap_entries_from_object(object);
+	return teds_stricthashmap_entries_offset_exists_and_not_null(array, offset_zv);
+}
+
 PHP_MINIT_FUNCTION(teds_stricthashmap)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
@@ -1208,6 +1266,10 @@ PHP_MINIT_FUNCTION(teds_stricthashmap)
 	teds_handler_StrictHashMap.get_gc          = teds_stricthashmap_get_gc;
 	teds_handler_StrictHashMap.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_StrictHashMap.free_obj        = teds_stricthashmap_free_storage;
+	teds_handler_StrictHashMap.write_dimension = teds_stricthashmap_write_dimension;
+	teds_handler_StrictHashMap.has_dimension   = teds_stricthashmap_has_dimension;
+	teds_handler_StrictHashMap.read_dimension  = teds_stricthashmap_read_dimension;
+	teds_handler_StrictHashMap.unset_dimension = teds_stricthashmap_unset_dimension;
 
 	teds_ce_StrictHashMap->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 	teds_ce_StrictHashMap->get_iterator = teds_stricthashmap_get_iterator;

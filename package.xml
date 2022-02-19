@@ -30,6 +30,8 @@
 * Fix memory leak when constructing collections from Traversable where rewind throws
 * Use first/last as method names for getting the first and last method names. Keep bottom/top as aliases to be deprecated later.
 * Add first/last helper methods to more collection types
+* Optimize implementations of `$map[$x]` array access shorthand in `Teds\Map` implementations.
+* Throw for `$map[] = $value` instead of setting the key for null in `Teds\Map` implementations.
  </notes>
  <contents>
   <dir name="/">
@@ -230,6 +232,7 @@
     <file name="Map/contains.phpt" role="test" />
     <file name="Map/from_pairs.phpt" role="test" />
     <file name="Map/gc.phpt" role="test" />
+    <file name="Map/offset.phpt" role="test" />
     <file name="Map/remove.phpt" role="test" />
     <file name="Map/toArray.phpt" role="test" />
     <file name="MutableIterable/clone.phpt" role="test" />
