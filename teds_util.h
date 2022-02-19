@@ -204,4 +204,12 @@ static zend_always_inline size_t teds_stricthashset_next_pow2_capacity(size_t nS
 #define teds_strictsortedvectorset_next_pow2_capacity teds_deque_next_pow2_capacity
 #define teds_strictsortedvectormap_next_pow2_capacity teds_deque_next_pow2_capacity
 
+static zend_always_inline int teds_has_dimension_helper(zval *value, int check_empty)
+{
+	if (check_empty) {
+		return zend_is_true(value);
+	}
+	return Z_TYPE_P(value) != IS_NULL;
+}
+
 #endif

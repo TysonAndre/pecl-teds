@@ -1469,6 +1469,11 @@ static void teds_intvector_write_dimension(zend_object *object, zval *offset_zv,
 static zval *teds_intvector_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
+handle_missing_key:
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			return NULL;
+		}
 		return &EG(uninitialized_zval);
 	}
 
@@ -1478,10 +1483,7 @@ static zval *teds_intvector_read_dimension(zend_object *object, zval *offset_zv,
 	const teds_intvector_entries *array = &teds_intvector_from_object(object)->array;
 
 	if (UNEXPECTED(!teds_offset_within_size_t(offset, array->size))) {
-		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		}
-		return NULL;
+		goto handle_missing_key;
 	} else {
 		return teds_intvector_entries_read_offset(array, (zend_ulong) offset, rv);
 	}

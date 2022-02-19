@@ -1220,7 +1220,11 @@ static void teds_strictsortedvectormap_unset_dimension(zend_object *object, zval
 static zval *teds_strictsortedvectormap_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+handle_missing_key:
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+			return NULL;
+		}
 		return &EG(uninitialized_zval);
 	}
 
@@ -1235,15 +1239,20 @@ static zval *teds_strictsortedvectormap_read_dimension(zend_object *object, zval
 			return &result.entry->value;
 		}
 	}
-	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
-	return NULL;
+	goto handle_missing_key;
 }
 
 static int teds_strictsortedvectormap_has_dimension(zend_object *object, zval *offset_zv, int check_empty)
 {
 	ZVAL_DEREF(offset_zv);
 	const teds_strictsortedvectormap_entries *array = teds_strictsortedvectormap_entries_from_object(object);
-	return teds_strictsortedvectormap_entries_offset_exists_and_not_null(array, offset_zv);
+	if (array->size > 0) {
+		teds_strictsortedvectormap_search_result result = teds_strictsortedvectormap_entries_sorted_search_for_key(array, offset_zv);
+		if (result.found) {
+			return teds_has_dimension_helper(&result.entry->value, check_empty);
+		}
+	}
+	return false;
 }
 
 PHP_MINIT_FUNCTION(teds_strictsortedvectormap)

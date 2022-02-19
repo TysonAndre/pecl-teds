@@ -1302,6 +1302,11 @@ static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zv
 static zval *teds_vector_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
+handle_missing_key:
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			return NULL;
+		}
 		return &EG(uninitialized_zval);
 	}
 
@@ -1312,11 +1317,8 @@ static zval *teds_vector_read_dimension(zend_object *object, zval *offset_zv, in
 
 	(void)rv;
 
-	if (UNEXPECTED(offset < 0 || (zend_ulong) offset >= intern->array.size)) {
-		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		}
-		return NULL;
+	if (UNEXPECTED((zend_ulong) offset >= intern->array.size || offset < 0)) {
+		goto handle_missing_key;
 	} else {
 		return &intern->array.entries[offset];
 	}
@@ -1341,10 +1343,7 @@ static int teds_vector_has_dimension(zend_object *object, zval *offset_zv, int c
 	}
 
 	zval *val = &intern->array.entries[offset];
-	if (check_empty) {
-		return zend_is_true(val);
-	}
-	return Z_TYPE_P(val) != IS_NULL;
+	return teds_has_dimension_helper(val, check_empty);
 }
 
 PHP_MINIT_FUNCTION(teds_vector)

@@ -770,8 +770,12 @@ PHP_METHOD(Teds_Deque, containsKey)
 static zval *teds_deque_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv)) {
-		zend_throw_exception(spl_ce_RuntimeException, "[] operator not supported for Teds\\Deque", 0);
-		return NULL;
+handle_missing_key:
+		if (type != BP_VAR_IS) {
+			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			return NULL;
+		}
+		return &EG(uninitialized_zval);
 	}
 
 	zend_long offset;
@@ -782,10 +786,7 @@ static zval *teds_deque_read_dimension(zend_object *object, zval *offset_zv, int
 	(void) rv; /* rv is not used */
 
 	if (UNEXPECTED(offset < 0 || (zend_ulong) offset >= intern->array.size)) {
-		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		}
-		return NULL;
+		goto handle_missing_key;
 	} else {
 		return teds_deque_get_entry_at_offset(&intern->array, offset);
 	}
