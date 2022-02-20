@@ -633,7 +633,7 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int8(cons
 }
 
 static zend_always_inline zend_string *teds_create_string_from_entries_int16(const char *raw, const size_t len) {
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 	zend_string *const result = zend_string_alloc(len * sizeof(int16_t), 0);
 	uint16_t *dst = (uint16_t *)ZSTR_VAL(result);
 	const uint16_t *src = (const uint16_t *)raw;
@@ -650,7 +650,7 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int16(con
 }
 
 static zend_always_inline zend_string *teds_create_string_from_entries_int32(const char *raw, const size_t len) {
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 	zend_string *const result = zend_string_alloc(len * sizeof(int32_t), 0);
 	uint32_t *dst = (uint32_t *)ZSTR_VAL(result);
 	const uint32_t *src = (const uint32_t *)raw;
@@ -667,7 +667,7 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int32(con
 }
 
 static zend_always_inline zend_string *teds_create_string_from_entries_int64(const char *raw, const size_t len) {
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 	zend_string *const result = zend_string_alloc(len * sizeof(int64_t), 0);
 	uint64_t *dst = (uint64_t *)ZSTR_VAL(result);
 	const uint64_t *src = (const uint64_t *)raw;
@@ -1057,7 +1057,7 @@ PHP_METHOD(Teds_BitSet, offsetSet)
 }
 
 #define teds_bitset_convert_8(x) (x)
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 #define teds_bitset_convert_16(x) teds_bswap_16((x))
 #define teds_bitset_convert_32(x) teds_bswap_32((x))
 #define teds_bitset_convert_64(x) teds_bswap_64((x))
@@ -1234,7 +1234,7 @@ static zend_always_inline void teds_bitset_entries_unshift_single(teds_bitset_en
 	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
 	size_t n = old_size >> 3;
 	uint8_t *const entries_bits = array->entries_bits;
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 	for (; n > 0; n--) {
 		entries_bits[n] = (entries_bits[n] << 1) | (entries_bits[n - 1] >> 7);
 	}

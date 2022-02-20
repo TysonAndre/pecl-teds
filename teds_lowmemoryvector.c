@@ -822,7 +822,7 @@ PHP_METHOD(Teds_LowMemoryVector, __unserialize)
 			array->entries_int8 = (int8_t *)values;
 			array->size = num_elements;
 			array->capacity = num_elements;
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 			/* TODO: Can probably optimize this with C restrict keyword to indicate memory doesn't overlap? */
 			if (type_tag != LMV_TYPE_INT8) {
 				if (type_tag == LMV_TYPE_INT64 || type_tag == LMV_TYPE_DOUBLE) {
@@ -869,7 +869,7 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int8(cons
 }
 
 static zend_always_inline zend_string *teds_create_string_from_entries_int16(const char *raw, const size_t len) {
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 	zend_string *const result = zend_string_alloc(len * sizeof(int16_t), 0);
 	uint16_t *dst = (uint16_t *)ZSTR_VAL(result);
 	const uint16_t *src = (const uint16_t *)raw;
@@ -886,7 +886,7 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int16(con
 }
 
 static zend_always_inline zend_string *teds_create_string_from_entries_int32(const char *raw, const size_t len) {
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 	zend_string *const result = zend_string_alloc(len * sizeof(int32_t), 0);
 	uint32_t *dst = (uint32_t *)ZSTR_VAL(result);
 	const uint32_t *src = (const uint32_t *)raw;
@@ -903,7 +903,7 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int32(con
 }
 
 static zend_always_inline zend_string *teds_create_string_from_entries_int64(const char *raw, const size_t len) {
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 	zend_string *const result = zend_string_alloc(len * sizeof(int64_t), 0);
 	uint64_t *dst = (uint64_t *)ZSTR_VAL(result);
 	const uint64_t *src = (const uint64_t *)raw;
