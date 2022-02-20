@@ -595,6 +595,23 @@ PHP_METHOD(Teds_ImmutableSortedStringSet, __unserialize)
 	teds_immutablesortedstringset_entries_unserialize_from_zend_string(array, str);
 }
 
+PHP_METHOD(Teds_ImmutableSortedStringSet, unserialize)
+{
+	zend_string *zstr;
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_STR(zstr)
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_object *new_object = teds_immutablesortedstringset_new(teds_ce_ImmutableSortedStringSet);
+	teds_immutablesortedstringset_entries *array = teds_immutablesortedstringset_entries_from_object(new_object);
+	if (ZSTR_LEN(zstr) == 0) {
+		teds_immutablesortedstringset_entries_set_empty_list(array);
+	} else {
+		teds_immutablesortedstringset_entries_unserialize_from_zend_string(array, zstr);
+	}
+	RETURN_OBJ(new_object);
+}
+
 PHP_METHOD(Teds_ImmutableSortedStringSet, __serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -607,10 +624,22 @@ PHP_METHOD(Teds_ImmutableSortedStringSet, __serialize)
 	zend_array *result = zend_new_array(1);
 	zval tmp;
 	zend_string *backing_string = teds_immutablesortedstringset_entries_get_backing_zend_string(array);
-	zend_string_addref(backing_string);
-	ZVAL_STR(&tmp, backing_string);
+	ZVAL_STR_COPY(&tmp, backing_string);
 	zend_hash_next_index_insert(result, &tmp);
 	RETURN_ARR(result);
+}
+
+PHP_METHOD(Teds_ImmutableSortedStringSet, serialize)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	const teds_immutablesortedstringset_entries *const array = Z_IMMUTABLESORTEDSTRINGSET_ENTRIES_P(ZEND_THIS);
+	const uint32_t len = array->size;
+	if (len == 0) {
+		RETURN_EMPTY_STRING();
+	}
+	zend_string *backing_string = teds_immutablesortedstringset_entries_get_backing_zend_string(array);
+	RETURN_STR_COPY(backing_string);
 }
 
 /* Deliberately copied so that inlining will work instead of being forced to make a function call */

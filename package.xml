@@ -23,7 +23,9 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Add Teds\SortedIntVectorSet - a Set implementation represented in a way similar to an `Teds\IntVector` with unique sorted integers.
-  (This may be useful for reducing memory usage and speeding up lookups, when unserializing large Sets of integers which change infrequently. See benchmarks/benchmark_vector_unserialize.php)
+  (This may be useful for reducing memory usage and speeding up unserialization, when unserializing large Sets of integers which change infrequently. See benchmarks/benchmark_vector_unserialize.php)
+* Add Teds\ImmutableSortedStringSet - an immutable Set implementation containing a list of unique strings sorted with strcmp.
+  (This may be useful for reducing memory usage and speeding up unserialization, when unserializing large Sets of strings which change infrequently. See benchmarks/benchmark_string_set.php)
  </notes>
  <contents>
   <dir name="/">

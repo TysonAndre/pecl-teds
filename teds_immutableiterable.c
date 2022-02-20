@@ -862,7 +862,7 @@ PHP_METHOD(Teds_ImmutableIterable, indexOfKey)
 	const uint32_t len = intern->array.size;
 	zval_pair *entries = intern->array.entries;
 	for (uint32_t i = 0; i < len; i++) {
-		if (zend_is_identical(key, &entries[i].key)) {
+		if (teds_is_identical_inline(key, &entries[i].key)) {
 			RETURN_LONG(i);
 		}
 	}
@@ -880,7 +880,7 @@ PHP_METHOD(Teds_ImmutableIterable, indexOfValue)
 	const uint32_t len = intern->array.size;
 	zval_pair *entries = intern->array.entries;
 	for (uint32_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &entries[i].value)) {
+		if (teds_is_identical_inline(value, &entries[i].value)) {
 			RETURN_LONG(i);
 		}
 	}
@@ -898,7 +898,7 @@ PHP_METHOD(Teds_ImmutableIterable, containsKey)
 	const uint32_t len = intern->array.size;
 	zval_pair *entries = intern->array.entries;
 	for (uint32_t i = 0; i < len; i++) {
-		if (zend_is_identical(key, &entries[i].key)) {
+		if (teds_is_identical_inline(key, &entries[i].key)) {
 			RETURN_TRUE;
 		}
 	}
@@ -916,7 +916,7 @@ PHP_METHOD(Teds_ImmutableIterable, contains)
 	const uint32_t len = intern->array.size;
 	zval_pair *entries = intern->array.entries;
 	for (uint32_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &entries[i].value)) {
+		if (teds_is_identical_inline(value, &entries[i].value)) {
 			RETURN_TRUE;
 		}
 	}

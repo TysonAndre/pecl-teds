@@ -12,6 +12,11 @@ function test_serialize_values(...$values) {
     $ser = serialize($vec);
     echo encode_raw_string($ser), "\n\n";
     echo "Unserialized: ";var_dump(unserialize($ser));
+    unset($ser);
+    echo "Test to/from bytes\n";
+    $data_bytes = $vec->serialize();
+    echo encode_raw_string($data_bytes), "\n\n";
+    echo "Unserialized: ";var_dump(Teds\IntVector::unserialize($data_bytes));
 }
 test_serialize_values();
 test_serialize_values(0);
@@ -37,6 +42,11 @@ try {
 
 Unserialized: object(Teds\IntVector)#3 (0) {
 }
+Test to/from bytes
+""
+
+Unserialized: object(Teds\IntVector)#3 (0) {
+}
 [0]
 "O:14:\"Teds\\IntVector\":2:{i:0;i:1;i:1;s:1:\"\x00\";}"
 
@@ -44,8 +54,24 @@ Unserialized: object(Teds\IntVector)#3 (1) {
   [0]=>
   int(0)
 }
+Test to/from bytes
+"\x00\x01"
+
+Unserialized: object(Teds\IntVector)#3 (1) {
+  [0]=>
+  int(0)
+}
 [127,-128]
 "O:14:\"Teds\\IntVector\":2:{i:0;i:1;i:1;s:2:\"\x7f\x80\";}"
+
+Unserialized: object(Teds\IntVector)#3 (2) {
+  [0]=>
+  int(127)
+  [1]=>
+  int(-128)
+}
+Test to/from bytes
+"\x7f\x80\x01"
 
 Unserialized: object(Teds\IntVector)#3 (2) {
   [0]=>
@@ -64,8 +90,28 @@ Unserialized: object(Teds\IntVector)#3 (3) {
   [2]=>
   int(-32768)
 }
+Test to/from bytes
+"\x00\x01\xff\x7f\x00\x80\x02"
+
+Unserialized: object(Teds\IntVector)#3 (3) {
+  [0]=>
+  int(256)
+  [1]=>
+  int(32767)
+  [2]=>
+  int(-32768)
+}
 [32767,-2147483648]
 "O:14:\"Teds\\IntVector\":2:{i:0;i:3;i:1;s:8:\"\xff\x7f\x00\x00\x00\x00\x00\x80\";}"
+
+Unserialized: object(Teds\IntVector)#3 (2) {
+  [0]=>
+  int(32767)
+  [1]=>
+  int(-2147483648)
+}
+Test to/from bytes
+"\xff\x7f\x00\x00\x00\x00\x00\x80\x03"
 
 Unserialized: object(Teds\IntVector)#3 (2) {
   [0]=>

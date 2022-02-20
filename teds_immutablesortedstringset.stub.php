@@ -14,14 +14,14 @@ namespace Teds;
 final class ImmutableSortedStringSet implements \IteratorAggregate, Set, \JsonSerializable
 {
     /**
-     * Construct a SortedStringSet from an iterable of strings, deduplicating and sorting the result.
+     * Construct an ImmutableSortedStringSet from an iterable of strings, deduplicating and sorting the result.
      *
      * The keys will be ignored, and values will be sorted and reindexed.
      * @psalm-param iterator<string> $iterator
      */
     public function __construct(iterable $iterator = []) {}
     /**
-     * Returns an iterator that will return the indexes and values of iterable until index >= count()
+     * Returns an iterator that will return the indexes and values of this ImmutableSortedStringSet
      */
     public function getIterator(): \InternalIterator {}
     /**
@@ -29,21 +29,30 @@ final class ImmutableSortedStringSet implements \IteratorAggregate, Set, \JsonSe
      */
     public function count(): int {}
     /**
-     * Returns whether this set string is empty (has a count of 0)
+     * Returns whether this set of strings is empty (has a count of 0)
      */
     public function isEmpty(): bool {}
 
     /**
-     * Returns an array containing the representation type used and a little-endian binary representation of the data.
+     * Returns an array containing a little-endian binary representation of the number of strings, lengths of strings, and sorted strings.
      */
     public function __serialize(): array {}
     /**
-     * Returns an array containing the representation type used and a little-endian binary representation of the data.
+     * Unserializes the ImmutableSortedStringSet from an array containing a little-endian binary representation of the number of strings, lengths of strings, and sorted strings.
      */
     public function __unserialize(array $data): void {}
 
     /**
-     * Create a SortedStringSet of unique values from an array
+     * Returns a string containing a little-endian binary representation of the number of strings, lengths of strings, and sorted strings.
+     */
+    public function serialize(): string {}
+    /**
+     * Returns an ImmutableSortedStringSet created from a little-endian binary representation of the number of strings, lengths of strings, and sorted strings.
+     */
+    public static function unserialize(string $data): ImmutableSortedStringSet {}
+
+    /**
+     * Create an ImmutableSortedStringSet of unique strings from an array
      */
     public static function __set_state(array $array): ImmutableSortedStringSet {}
 

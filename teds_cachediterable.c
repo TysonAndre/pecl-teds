@@ -870,7 +870,7 @@ PHP_METHOD(Teds_CachedIterable, indexOfKey)
 		const uint32_t len = array->size;
 		zval_pair *entries = array->entries;
 		for (; i < len; i++) {
-			if (zend_is_identical(key, &entries[i].key)) {
+			if (teds_is_identical_inline(key, &entries[i].key)) {
 				RETURN_LONG(i);
 			}
 		}
@@ -880,7 +880,7 @@ PHP_METHOD(Teds_CachedIterable, indexOfKey)
 			break;
 		}
 		ZEND_ASSERT(i + 1 == array->size);
-		if (zend_is_identical(key, &array->entries[i].key)) {
+		if (teds_is_identical_inline(key, &array->entries[i].key)) {
 			RETURN_LONG(i);
 		}
 	}
@@ -900,7 +900,7 @@ PHP_METHOD(Teds_CachedIterable, indexOfValue)
 		const uint32_t len = array->size;
 		zval_pair *entries = array->entries;
 		for (; i < len; i++) {
-			if (zend_is_identical(value, &entries[i].value)) {
+			if (teds_is_identical_inline(value, &entries[i].value)) {
 				RETURN_LONG(i);
 			}
 		}
@@ -910,7 +910,7 @@ PHP_METHOD(Teds_CachedIterable, indexOfValue)
 			break;
 		}
 		ZEND_ASSERT(i + 1 == array->size);
-		if (zend_is_identical(value, &array->entries[i].value)) {
+		if (teds_is_identical_inline(value, &array->entries[i].value)) {
 			RETURN_LONG(i);
 		}
 	}
@@ -930,7 +930,7 @@ PHP_METHOD(Teds_CachedIterable, containsKey)
 		const uint32_t len = array->size;
 		zval_pair *entries = array->entries;
 		for (; i < len; i++) {
-			if (zend_is_identical(key, &entries[i].key)) {
+			if (teds_is_identical_inline(key, &entries[i].key)) {
 				RETURN_TRUE;
 			}
 		}
@@ -940,7 +940,7 @@ PHP_METHOD(Teds_CachedIterable, containsKey)
 			break;
 		}
 		ZEND_ASSERT(i + 1 == array->size);
-		if (zend_is_identical(key, &array->entries[i].key)) {
+		if (teds_is_identical_inline(key, &array->entries[i].key)) {
 			RETURN_TRUE;
 		}
 	}
@@ -960,7 +960,7 @@ PHP_METHOD(Teds_CachedIterable, contains)
 		const uint32_t len = array->size;
 		zval_pair *entries = array->entries;
 		for (; i < len; i++) {
-			if (zend_is_identical(value, &entries[i].value)) {
+			if (teds_is_identical_inline(value, &entries[i].value)) {
 				RETURN_TRUE;
 			}
 		}
@@ -970,7 +970,7 @@ PHP_METHOD(Teds_CachedIterable, contains)
 			break;
 		}
 		ZEND_ASSERT(i + 1 == array->size);
-		if (zend_is_identical(value, &array->entries[i].value)) {
+		if (teds_is_identical_inline(value, &array->entries[i].value)) {
 			RETURN_TRUE;
 		}
 	}

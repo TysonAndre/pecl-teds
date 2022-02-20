@@ -1,5 +1,6 @@
 <?php
 
+use Teds\ImmutableSortedIntSet;
 use Teds\IntVector;
 use Teds\LowMemoryVector;
 use Teds\SortedIntVectorSet;
@@ -290,6 +291,54 @@ function bench_sortedintvectorset(int $n, int $iterations) {
         $n, $iterations, $endMemory - $startMemory,
         $totalTimeSeconds, $unserializeAndFreeTimeSeconds, $totalReserializeTimeSeconds, $totalSearchTimeSeconds, $total, strlen($ser));
 }
+function bench_immutablesortedintset(int $n, int $iterations) {
+    $totalSearchTime = 0.0;
+    $total = 0;
+    srand(1234);
+    $values = [];
+    for ($i = 0; $i < $n; $i++) {
+        $values[] = rand();
+    }
+    $values = new ImmutableSortedIntSet($values); // NOTE: this uses insertion sort by design to reduce memory usage and speed up unserialization, and is faster to construct all at once.
+    $lastValue = $values->last();
+    $ser = serialize($values);
+    if (!is_string($ser)) { throw new RuntimeException("failed to serialize\n"); }
+    unset($values);
+
+    $totalSearchTime = 0;
+    $totalReserializeTime = 0;
+    $totalSearchTime = 0;
+    $startTime = hrtime(true);
+
+    for ($j = 0; $j < $iterations; $j++) {
+        unset($values);
+        $startMemory = memory_get_usage();
+        $startUnserializeTime = hrtime(true);
+        $values = unserialize($ser);
+        $endMemory = memory_get_usage();
+
+        $startSingleSearchTime = hrtime(true);
+        $total += $values->indexOf($lastValue);
+        $startReserializeTime = hrtime(true);
+
+        serialize($values);  // serialize, not used
+
+        $endReserializeTime = hrtime(true);
+
+        $totalSearchTime += $startReserializeTime - $startSingleSearchTime;
+        $totalReserializeTime += $endReserializeTime - $startReserializeTime;
+    }
+    $endTime = hrtime(true);
+
+    $totalTimeSeconds = ($endTime - $startTime) / 1000000000;
+    $totalSearchTimeSeconds = $totalSearchTime / 1000000000;
+    $totalReserializeTimeSeconds = $totalReserializeTime / 1000000000;
+    $unserializeAndFreeTimeSeconds = $totalTimeSeconds - $totalSearchTimeSeconds - $totalReserializeTimeSeconds;
+
+    printf("Repeatedly unserializing, searching, reser... ImmutableSortedIntSet   n=%8d iterations=%8d memory=%8d bytes\n => total time = %.3f seconds unserialize+free time=%.3f reserialize time = %.3f search time=%.4f result=%d\n => serialized memory=%8d bytes\n",
+        $n, $iterations, $endMemory - $startMemory,
+        $totalTimeSeconds, $unserializeAndFreeTimeSeconds, $totalReserializeTimeSeconds, $totalSearchTimeSeconds, $total, strlen($ser));
+}
 
 $n = 2**20;
 $iterations = 10;
@@ -319,6 +368,7 @@ foreach ($sizes as [$n, $iterations]) {
     bench_low_memory_vector($n, $iterations);
     bench_int_vector($n, $iterations);
     bench_sortedintvectorset($n, $iterations);
+    bench_immutablesortedintset($n, $iterations);
     echo "\n";
 }
 /*

@@ -51,6 +51,9 @@ final class IntVector implements \IteratorAggregate, Sequence, \JsonSerializable
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
 
+    public function serialize(): string {}
+    public static function unserialize(string $data): IntVector {}
+
     /** Create this from an array */
     public static function __set_state(array $array): IntVector {}
 
@@ -175,8 +178,7 @@ final class SortedIntVectorSet implements \IteratorAggregate, Set, \JsonSerializ
      */
     public function __serialize(): array {}
     /**
-     * Returns an array containing the representation type used and a little-endian binary representation of the data.
-     * @implementation-alias Teds\IntVector::__unserialize
+     * Unserializes this from an array containing the representation type used and a little-endian binary representation of the data.
      */
     public function __unserialize(array $data): void {}
 
@@ -241,6 +243,119 @@ final class SortedIntVectorSet implements \IteratorAggregate, Set, \JsonSerializ
     /**
      * Returns true if there exists an integer === $value in this IntVector.
      * (Uses binary search)
+     */
+    public function contains(mixed $value): bool {}
+
+    /**
+     * @implementation-alias Teds\IntVector::toArray
+     */
+    public function jsonSerialize(): array {}
+}
+
+/**
+ * An immutable set of unique integers sorted by value.
+ *
+ * This is designed for fast unserialization/unserialization with low memory usage, and relatively fast (logarithmic) lookup time.
+ * (e.g. for sets that are rarely modified but frequently unserialized and read from).
+ */
+final class ImmutableSortedIntSet implements \IteratorAggregate, Set, \JsonSerializable
+{
+    /**
+     * Construct a ImmutableSortedIntSet from an iterable of integers, deduplicating and sorting the result.
+     *
+     * The keys will be ignored, and values will be sorted and reindexed.
+     * @psalm-param iterator<int> $iterator
+     */
+    public function __construct(iterable $iterator = []) {}
+    /**
+     * Returns an iterator that will return the indexes and values of this ImmutableSortedIntSet
+     * @implementation-alias Teds\IntVector::getIterator
+     */
+    public function getIterator(): \InternalIterator {}
+    /**
+     * Returns the number of values in this ImmutableSortedIntSet
+     * @implementation-alias Teds\IntVector::count
+     */
+    public function count(): int {}
+    /**
+     * Returns whether this set of integers is empty (has a count of 0)
+     * @implementation-alias Teds\IntVector::isEmpty
+     */
+    public function isEmpty(): bool {}
+
+    /**
+     * Returns an array containing a little-endian binary representation of the number of integers, lengths of integers, and sorted integers.
+     */
+    public function __serialize(): array {}
+    /**
+     * Unserializes the ImmutableSortedIntSet from an array containing a little-endian binary representation of the number of integers, lengths of integers, and sorted integers.
+     * FIXME optimize and take the raw string directly, like ImmutableSortedStringSet
+     */
+    public function __unserialize(array $data): void {}
+
+    /**
+     * Returns a string containing a little-endian binary representation of the number of integers, lengths of integers, and sorted integers.
+     */
+    // public function serialize(): string {}
+    /**
+     * Returns an ImmutableSortedIntSet created from a little-endian binary representation of the number of integers, lengths of integers, and sorted integers.
+     */
+    // public static function unserialize(string $data): ImmutableSortedIntSet {}
+
+    /**
+     * Create an ImmutableSortedIntSet of unique integers from an array
+     * @implementation-alias Teds\SortedIntVectorSet::__set_state
+     */
+    public static function __set_state(array $array): ImmutableSortedIntSet {}
+
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     */
+    public function add(mixed $value): bool {}
+
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @implementation-alias Teds\ImmutableSortedIntSet::add
+     */
+    public function remove(mixed $value): bool {}
+
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     */
+    public function clear(): void {}
+
+    /**
+     * @throws \UnderflowException if there are no more elements
+     * @implementation-alias Teds\IntVector::first
+     */
+    public function first(): int {}
+    /**
+     * @throws \UnderflowException if there are no more elements
+     * @implementation-alias Teds\IntVector::last
+     */
+    public function last(): int {}
+
+    /**
+     * @psalm-return list<int>
+     * @implementation-alias Teds\IntVector::toArray
+     */
+    public function toArray(): array {}
+    /** @implementation-alias Teds\IntVector::toArray */
+    public function values(): array {}
+    // Strictly typed, unlike offsetGet/offsetSet
+    /** @implementation-alias Teds\IntVector::get */
+    public function get(int $offset): int {}
+
+    /**
+     * Returns the offset of a value that is === $value, or returns null.
+     * (Uses binary search)
+     * @implementation-alias Teds\SortedIntVectorSet::indexOf
+     */
+    public function indexOf(int $value): ?int {}
+    /**
+     * Returns true if there exists an int === $value in this ImmutableSortedIntSet.
+     * (Uses binary search)
+     * @implementation-alias Teds\SortedIntVectorSet::contains
      */
     public function contains(mixed $value): bool {}
 

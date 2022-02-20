@@ -947,7 +947,7 @@ static teds_stricthashmap_entry *teds_stricthashmap_entries_find_value(const ted
 {
 	teds_stricthashmap_entry *it;
 	TEDS_STRICTHASHMAP_FOREACH_BUCKET(array, it) {
-		if (zend_is_identical(value, &it->value)) {
+		if (teds_is_identical_inline(value, &it->value)) {
 			return it;
 		}
 	} TEDS_STRICTHASHMAP_FOREACH_END();
