@@ -970,7 +970,8 @@ zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 		case IS_ARRAY:  {
 			HashTable *h1 = Z_ARR_P(v1);
 			HashTable *h2 = Z_ARR_P(v2);
-			return zend_hash_compare(h1, h2, teds_stable_compare_wrap, true);
+			int result = zend_hash_compare(h1, h2, teds_stable_compare_wrap, true);
+			return SPACESHIP_OP(result, 0);
 		}
 		case IS_OBJECT: {
 			/* Sort by class name, then by object handle, to group objects of the same class together. */

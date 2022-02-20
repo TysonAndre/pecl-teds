@@ -40,7 +40,7 @@ dump_stable_compare([], [1]);
 dump_stable_compare([1], [1]);
 dump_stable_compare([1], ['a' => 1]);
 dump_stable_compare([1], [2]);
-dump_stable_compare(['a' => 1, 'b' => 1], ['b' => 1, 'a' => 1]);
+dump_stable_compare(['a' => 1, 'x' => 1], ['x' => 1, 'a' => 1]);
 
 echo "Test compare objects\n";
 dump_stable_compare(spl_object_id($o1), spl_object_id($o2));
@@ -141,9 +141,9 @@ stable_compare(array (
 )): -1 (opposite 1)
 stable_compare(array (
   'a' => 1,
-  'b' => 1,
+  'x' => 1,
 ), array (
-  'b' => 1,
+  'x' => 1,
   'a' => 1,
 )): -1 (opposite 1)
 Test compare objects
