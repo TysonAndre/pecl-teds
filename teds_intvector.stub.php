@@ -133,3 +133,119 @@ final class IntVector implements \IteratorAggregate, Sequence, \JsonSerializable
      */
     public function jsonSerialize(): array {}
 }
+
+/**
+ * Similar to an IntVector but elements are unique and sorted by increasing value.
+ *
+ * @see IntVector
+ */
+final class SortedIntVectorSet implements \IteratorAggregate, Set, \JsonSerializable
+{
+    /**
+     * Construct a SortedIntVectorSet from an iterable of integers, deduplicating and sorting the result.
+     *
+     * The keys will be ignored, and values will be sorted and reindexed.
+     * @psalm-param iterator<int> $iterator
+     */
+    public function __construct(iterable $iterator = []) {}
+    /**
+     * Returns an iterator that will return the indexes and values of iterable until index >= count()
+     * @implementation-alias Teds\IntVector::getIterator
+     */
+    public function getIterator(): \InternalIterator {}
+    /**
+     * Returns the number of values in this IntVector
+     * @implementation-alias Teds\IntVector::count
+     */
+    public function count(): int {}
+    /**
+     * Returns whether this vector is empty (has a count of 0)
+     * @implementation-alias Teds\IntVector::isEmpty
+     */
+    public function isEmpty(): bool {}
+    /**
+     * Returns the total capacity of this IntVector.
+     * @implementation-alias Teds\IntVector::capacity
+     */
+    public function capacity(): int {}
+
+    /**
+     * Returns an array containing the representation type used and a little-endian binary representation of the data.
+     * @implementation-alias Teds\IntVector::__serialize
+     */
+    public function __serialize(): array {}
+    /**
+     * Returns an array containing the representation type used and a little-endian binary representation of the data.
+     * @implementation-alias Teds\IntVector::__unserialize
+     */
+    public function __unserialize(array $data): void {}
+
+    /**
+     * Create a SortedIntVectorSet of unique values from an array
+     */
+    public static function __set_state(array $array): IntVector {}
+
+    /**
+     * @throws \UnderflowException if there are no more elements
+     * @implementation-alias Teds\IntVector::pop
+     */
+    public function pop(): int {}
+
+    /**
+     * Add a value
+     */
+    public function add(mixed $value): bool {}
+
+    /**
+     * Remove a value
+     */
+    public function remove(mixed $value): bool {}
+
+    /**
+     * @implementation-alias Teds\IntVector::clear
+     */
+    public function clear(): void {}
+    /**
+     * @throws \UnderflowException if there are no more elements
+     * @implementation-alias Teds\IntVector::shift
+     */
+    public function shift(): int {}
+
+    /**
+     * @throws \UnderflowException if there are no more elements
+     * @implementation-alias Teds\IntVector::first
+     */
+    public function first(): int {}
+    /**
+     * @throws \UnderflowException if there are no more elements
+     * @implementation-alias Teds\IntVector::last
+     */
+    public function last(): int {}
+
+    /**
+     * @psalm-return list<int>
+     * @implementation-alias Teds\IntVector::toArray
+     */
+    public function toArray(): array {}
+    /** @implementation-alias Teds\IntVector::toArray */
+    public function values(): array {}
+    // Strictly typed, unlike offsetGet/offsetSet
+    /** @implementation-alias Teds\IntVector::get */
+    public function get(int $offset): int {}
+
+    /**
+     * Returns the offset of a value that is === $value, or returns null.
+     * (Uses binary search)
+     */
+    public function indexOf(int $value): ?int {}
+    /**
+     * Returns true if there exists an integer === $value in this IntVector.
+     * (Uses binary search)
+     */
+    public function contains(mixed $value): bool {}
+
+    /**
+     * @implementation-alias Teds\IntVector::toArray
+     */
+    public function jsonSerialize(): array {}
+}

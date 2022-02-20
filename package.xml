@@ -13,8 +13,8 @@
  <date>2022-02-19</date>
  <time>16:00:00</time>
  <version>
-  <release>1.1.2</release>
-  <api>1.1.2</api>
+  <release>1.2.0dev</release>
+  <api>1.2.0dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,8 +22,8 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Fix big-endian builds (#160)
-* Make `teds\stable_compare` consistently 1/0/-1 for arrays with different keys on all platforms.
+* Add Teds\SortedIntVectorSet - a Set implementation represented in a way similar to an `Teds\IntVector` with unique sorted integers.
+  (This may be useful for reducing memory usage and speeding up lookups, when unserializing large Sets of integers which change infrequently. See benchmarks/benchmark_vector_unserialize.php)
  </notes>
  <contents>
   <dir name="/">
@@ -251,6 +251,8 @@
     <file name="Set/gc.phpt" role="test" />
     <file name="Set/serialization.phpt" role="test" />
     <file name="Set/set_state.phpt" role="test" />
+    <file name="SortedIntVectorSet/addRemove.phpt" role="test" />
+    <file name="SortedIntVectorSet/create.phpt" role="test" />
     <file name="StrictHashMap/clone.phpt" role="test" />
     <file name="StrictHashMap/floatKey.phpt" role="test" />
     <file name="StrictHashMap/keys_values.phpt" role="test" />
@@ -366,6 +368,23 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-02-19</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.1.2</release>
+    <api>1.1.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Fix big-endian builds (#160)
+* Make `teds\stable_compare` consistently 1/0/-1 for arrays with different keys on all platforms.
+   </notes>
+  </release>
   <release>
    <date>2022-02-19</date>
    <time>16:00:00</time>
