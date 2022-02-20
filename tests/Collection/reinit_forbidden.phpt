@@ -26,6 +26,7 @@ foreach ([
     Teds\CachedIterable::class,
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,
+    Teds\ImmutableSortedStringSet::class,
     Teds\IntVector::class,
     Teds\SortedIntVectorSet::class,
     Teds\LowMemoryVector::class,
@@ -46,73 +47,77 @@ foreach ([
 --EXPECTF--
 Caught RuntimeException: Called Teds\BitSet::__construct twice
 Caught RuntimeException: Teds\BitSet already unserialized
-object(Teds\BitSet)#%d (0) {
+object(Teds\BitSet)#1 (0) {
 }
 Caught RuntimeException: Called Teds\Deque::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\Deque)#%d (0) {
+object(Teds\Deque)#5 (0) {
 }
 Caught RuntimeException: Called Teds\CachedIterable::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\CachedIterable)#%d (0) {
+object(Teds\CachedIterable)#2 (0) {
 }
 Caught RuntimeException: Called Teds\ImmutableIterable::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\ImmutableIterable)#%d (0) {
+object(Teds\ImmutableIterable)#4 (0) {
 }
 Caught RuntimeException: Called Teds\ImmutableSequence::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\ImmutableSequence)#%d (0) {
+object(Teds\ImmutableSequence)#1 (0) {
+}
+Caught RuntimeException: Called Teds\ImmutableSortedStringSet::__construct twice
+Caught RuntimeException: Already unserialized
+object(Teds\ImmutableSortedStringSet)#5 (0) {
 }
 Caught RuntimeException: Called Teds\IntVector::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\IntVector)#%d (0) {
+object(Teds\IntVector)#2 (0) {
 }
 Caught RuntimeException: Called Teds\SortedIntVectorSet::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\SortedIntVectorSet)#%d (0) {
+object(Teds\SortedIntVectorSet)#4 (0) {
 }
 Caught RuntimeException: Called Teds\LowMemoryVector::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\LowMemoryVector)#%d (0) {
+object(Teds\LowMemoryVector)#1 (0) {
 }
 Caught RuntimeException: Called Teds\MutableIterable::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\MutableIterable)#%d (0) {
+object(Teds\MutableIterable)#5 (0) {
 }
 Caught RuntimeException: Called Teds\StrictHashMap::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\StrictHashMap)#%d (0) {
+object(Teds\StrictHashMap)#2 (0) {
 }
 Caught RuntimeException: Called Teds\StrictHashSet::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\StrictHashSet)#%d (0) {
+object(Teds\StrictHashSet)#4 (0) {
 }
 Caught RuntimeException: Called Teds\StrictHeap::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\StrictMaxHeap)#%d (0) {
+object(Teds\StrictMaxHeap)#1 (0) {
 }
 Caught RuntimeException: Called Teds\StrictHeap::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\StrictMinHeap)#%d (0) {
+object(Teds\StrictMinHeap)#5 (0) {
 }
 Caught RuntimeException: Called Teds\StrictSortedVectorMap::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\StrictSortedVectorMap)#%d (0) {
+object(Teds\StrictSortedVectorMap)#2 (0) {
 }
 Caught RuntimeException: Called Teds\StrictSortedVectorSet::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\StrictSortedVectorSet)#%d (0) {
+object(Teds\StrictSortedVectorSet)#4 (0) {
 }
 Caught RuntimeException: Called Teds\StrictTreeMap::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\StrictTreeMap)#%d (0) {
+object(Teds\StrictTreeMap)#1 (0) {
 }
 Caught RuntimeException: Called Teds\StrictTreeSet::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\StrictTreeSet)#%d (0) {
+object(Teds\StrictTreeSet)#5 (0) {
 }
 Caught RuntimeException: Called Teds\Vector::__construct twice
 Caught RuntimeException: Already unserialized
-object(Teds\Vector)#%d (0) {
+object(Teds\Vector)#2 (0) {
 }

@@ -43,6 +43,7 @@ foreach ([
     Teds\Deque::class,
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,
+    Teds\ImmutableSortedStringSet::class,
     // Teds\IntVector::class,
     Teds\LowMemoryVector::class,
     Teds\MutableIterable::class,
@@ -60,9 +61,9 @@ foreach ([
     test_nonempty_implementation($class_name);
 }
 ?>
---EXPECT--
+--EXPECTF--
 Testing Teds\Deque
-object(Teds\Deque)#1 (2) {
+object(Teds\Deque)#%d (2) {
   [0]=>
   string(12) "v_Teds\Deque"
   [1]=>
@@ -83,11 +84,11 @@ toArray: array(2) {
 First: string(12) "v_Teds\Deque"
 Last: string(12) "z_Teds\Deque"
 clear: NULL
-object(Teds\Deque)#1 (0) {
+object(Teds\Deque)#%d (0) {
 }
 
 Testing Teds\ImmutableIterable
-object(Teds\ImmutableIterable)#1 (2) {
+object(Teds\ImmutableIterable)#%d (2) {
   [0]=>
   array(2) {
     [0]=>
@@ -116,7 +117,7 @@ toArray: array(2) {
   string(24) "z_Teds\ImmutableIterable"
 }
 clear: Caught Teds\ImmutableIterable does not support clear - it is immutable
-object(Teds\ImmutableIterable)#1 (2) {
+object(Teds\ImmutableIterable)#%d (2) {
   [0]=>
   array(2) {
     [0]=>
@@ -134,7 +135,7 @@ object(Teds\ImmutableIterable)#1 (2) {
 }
 
 Testing Teds\ImmutableSequence
-object(Teds\ImmutableSequence)#2 (2) {
+object(Teds\ImmutableSequence)#%d (2) {
   [0]=>
   string(24) "v_Teds\ImmutableSequence"
   [1]=>
@@ -155,15 +156,44 @@ toArray: array(2) {
 First: string(24) "v_Teds\ImmutableSequence"
 Last: string(24) "z_Teds\ImmutableSequence"
 clear: Caught Teds\ImmutableSequence does not support clear - it is immutable
-object(Teds\ImmutableSequence)#2 (2) {
+object(Teds\ImmutableSequence)#%d (2) {
   [0]=>
   string(24) "v_Teds\ImmutableSequence"
   [1]=>
   string(24) "z_Teds\ImmutableSequence"
 }
 
+Testing Teds\ImmutableSortedStringSet
+object(Teds\ImmutableSortedStringSet)#%d (2) {
+  [0]=>
+  string(31) "v_Teds\ImmutableSortedStringSet"
+  [1]=>
+  string(31) "z_Teds\ImmutableSortedStringSet"
+}
+values: array(2) {
+  [0]=>
+  string(31) "v_Teds\ImmutableSortedStringSet"
+  [1]=>
+  string(31) "z_Teds\ImmutableSortedStringSet"
+}
+toArray: array(2) {
+  [0]=>
+  string(31) "v_Teds\ImmutableSortedStringSet"
+  [1]=>
+  string(31) "z_Teds\ImmutableSortedStringSet"
+}
+First: string(31) "v_Teds\ImmutableSortedStringSet"
+Last: string(31) "z_Teds\ImmutableSortedStringSet"
+clear: Caught Teds\ImmutableSortedStringSet is immutable
+object(Teds\ImmutableSortedStringSet)#%d (2) {
+  [0]=>
+  string(31) "v_Teds\ImmutableSortedStringSet"
+  [1]=>
+  string(31) "z_Teds\ImmutableSortedStringSet"
+}
+
 Testing Teds\LowMemoryVector
-object(Teds\LowMemoryVector)#1 (2) {
+object(Teds\LowMemoryVector)#%d (2) {
   [0]=>
   string(22) "v_Teds\LowMemoryVector"
   [1]=>
@@ -184,11 +214,11 @@ toArray: array(2) {
 First: string(22) "v_Teds\LowMemoryVector"
 Last: string(22) "z_Teds\LowMemoryVector"
 clear: NULL
-object(Teds\LowMemoryVector)#1 (0) {
+object(Teds\LowMemoryVector)#%d (0) {
 }
 
 Testing Teds\MutableIterable
-object(Teds\MutableIterable)#1 (2) {
+object(Teds\MutableIterable)#%d (2) {
   [0]=>
   array(2) {
     [0]=>
@@ -217,11 +247,11 @@ toArray: array(2) {
   string(22) "z_Teds\MutableIterable"
 }
 clear: NULL
-object(Teds\MutableIterable)#1 (0) {
+object(Teds\MutableIterable)#%d (0) {
 }
 
 Testing Teds\StrictHashMap
-object(Teds\StrictHashMap)#1 (2) {
+object(Teds\StrictHashMap)#%d (2) {
   [0]=>
   array(2) {
     [0]=>
@@ -250,11 +280,11 @@ toArray: array(2) {
   string(20) "z_Teds\StrictHashMap"
 }
 clear: NULL
-object(Teds\StrictHashMap)#1 (0) {
+object(Teds\StrictHashMap)#%d (0) {
 }
 
 Testing Teds\StrictHashSet
-object(Teds\StrictHashSet)#1 (2) {
+object(Teds\StrictHashSet)#%d (2) {
   [0]=>
   string(20) "v_Teds\StrictHashSet"
   [1]=>
@@ -273,11 +303,11 @@ toArray: array(2) {
   string(20) "z_Teds\StrictHashSet"
 }
 clear: NULL
-object(Teds\StrictHashSet)#1 (0) {
+object(Teds\StrictHashSet)#%d (0) {
 }
 
 Testing Teds\StrictMaxHeap
-object(Teds\StrictMaxHeap)#1 (0) {
+object(Teds\StrictMaxHeap)#%d (0) {
 }
 values: array(2) {
   [0]=>
@@ -292,11 +322,11 @@ toArray: array(2) {
   string(20) "v_Teds\StrictMaxHeap"
 }
 clear: NULL
-object(Teds\StrictMaxHeap)#1 (0) {
+object(Teds\StrictMaxHeap)#%d (0) {
 }
 
 Testing Teds\StrictMinHeap
-object(Teds\StrictMinHeap)#1 (2) {
+object(Teds\StrictMinHeap)#%d (2) {
   [0]=>
   string(20) "v_Teds\StrictMinHeap"
   [1]=>
@@ -315,11 +345,11 @@ toArray: array(2) {
   string(20) "z_Teds\StrictMinHeap"
 }
 clear: NULL
-object(Teds\StrictMinHeap)#1 (0) {
+object(Teds\StrictMinHeap)#%d (0) {
 }
 
 Testing Teds\StrictSortedVectorMap
-object(Teds\StrictSortedVectorMap)#1 (2) {
+object(Teds\StrictSortedVectorMap)#%d (2) {
   [0]=>
   array(2) {
     [0]=>
@@ -350,11 +380,11 @@ toArray: array(2) {
 First: string(28) "v_Teds\StrictSortedVectorMap"
 Last: string(28) "z_Teds\StrictSortedVectorMap"
 clear: NULL
-object(Teds\StrictSortedVectorMap)#1 (0) {
+object(Teds\StrictSortedVectorMap)#%d (0) {
 }
 
 Testing Teds\StrictSortedVectorSet
-object(Teds\StrictSortedVectorSet)#1 (2) {
+object(Teds\StrictSortedVectorSet)#%d (2) {
   [0]=>
   string(28) "v_Teds\StrictSortedVectorSet"
   [1]=>
@@ -375,11 +405,11 @@ toArray: array(2) {
 First: string(28) "v_Teds\StrictSortedVectorSet"
 Last: string(28) "z_Teds\StrictSortedVectorSet"
 clear: NULL
-object(Teds\StrictSortedVectorSet)#1 (0) {
+object(Teds\StrictSortedVectorSet)#%d (0) {
 }
 
 Testing Teds\StrictTreeMap
-object(Teds\StrictTreeMap)#1 (2) {
+object(Teds\StrictTreeMap)#%d (2) {
   [0]=>
   array(2) {
     [0]=>
@@ -410,11 +440,11 @@ toArray: array(2) {
 First: string(20) "v_Teds\StrictTreeMap"
 Last: string(20) "z_Teds\StrictTreeMap"
 clear: NULL
-object(Teds\StrictTreeMap)#1 (0) {
+object(Teds\StrictTreeMap)#%d (0) {
 }
 
 Testing Teds\StrictTreeSet
-object(Teds\StrictTreeSet)#1 (2) {
+object(Teds\StrictTreeSet)#%d (2) {
   [0]=>
   string(20) "v_Teds\StrictTreeSet"
   [1]=>
@@ -435,11 +465,11 @@ toArray: array(2) {
 First: string(20) "v_Teds\StrictTreeSet"
 Last: string(20) "z_Teds\StrictTreeSet"
 clear: NULL
-object(Teds\StrictTreeSet)#1 (0) {
+object(Teds\StrictTreeSet)#%d (0) {
 }
 
 Testing Teds\Vector
-object(Teds\Vector)#1 (2) {
+object(Teds\Vector)#%d (2) {
   [0]=>
   string(13) "v_Teds\Vector"
   [1]=>
@@ -460,11 +490,11 @@ toArray: array(2) {
 First: string(13) "v_Teds\Vector"
 Last: string(13) "z_Teds\Vector"
 clear: NULL
-object(Teds\Vector)#1 (0) {
+object(Teds\Vector)#%d (0) {
 }
 
 Testing Teds\CachedIterable
-object(Teds\CachedIterable)#1 (2) {
+object(Teds\CachedIterable)#%d (2) {
   [0]=>
   array(2) {
     [0]=>
@@ -493,7 +523,7 @@ toArray: array(2) {
   string(21) "z_Teds\CachedIterable"
 }
 clear: Caught Teds\CachedIterable does not support clear - it is immutable
-object(Teds\CachedIterable)#1 (2) {
+object(Teds\CachedIterable)#%d (2) {
   [0]=>
   array(2) {
     [0]=>

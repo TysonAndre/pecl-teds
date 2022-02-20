@@ -56,6 +56,7 @@ interface Teds\Collection extends Countable, Traversable
 final class Teds\Deque implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Sequence, Traversable
 final class Teds\ImmutableIterable implements Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Traversable
 final class Teds\ImmutableSequence implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Sequence, Traversable
+final class Teds\ImmutableSortedStringSet implements Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Set, Traversable
 final class Teds\IntVector implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Sequence, Traversable
 final class Teds\LowMemoryVector implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable, Teds\Collection, Teds\Sequence, Traversable
 interface Teds\Map extends ArrayAccess, Countable, Teds\Collection, Traversable
