@@ -12,6 +12,7 @@ class MyIterator implements Iterator  {
         public bool $validThrows = false,
         public bool $destructThrows = false,
         public bool $valid = true,
+        public bool $valueIsObject = true,
     ) {
     }
 
@@ -21,7 +22,7 @@ class MyIterator implements Iterator  {
 
     public function current(): mixed {
         if ($this->currentThrows) { ;throw new RuntimeException(__FUNCTION__ . " threw"); }
-        return new stdClass();
+        return $this->valueIsObject ? new stdClass() : "value";
     }
 
     public function next(): void {
@@ -53,11 +54,18 @@ function test_rewind_throw(string $class_name) {
             echo "skip $class_name keyThrows\n";
             continue;
         }
+        $params = [$param => true];
+        if ($class_name === Teds\ImmutableSortedStringSet::class) {
+            $params['valueIsObject'] = false;
+        }
         try {
-            $it = new $class_name(new MyIterator(...[$param => true]));
+            $it = new $class_name(new MyIterator(...$params));
             echo "$class_name: succeeded despite $param: true\n";
             var_dump($it);
-        } catch (Exception $e) {
+            echo "Releasing $class_name";
+            unset($it);
+            gc_collect_cycles();
+        } catch (Throwable $e) {
             printf("%s: Caught %s: %s\n", $class_name, $e::class, $e->getMessage());
         }
     }
@@ -66,6 +74,7 @@ foreach ([
     Teds\Deque::class,
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,
+    Teds\ImmutableSortedStringSet::class,
     Teds\LowMemoryVector::class,
     Teds\MutableIterable::class,
     Teds\StrictHashMap::class,
@@ -82,7 +91,7 @@ foreach ([
     test_rewind_throw($class_name);
 }
 ?>
---EXPECT--
+--EXPECTF--
 Test Teds\Deque
 Teds\Deque: Caught RuntimeException: rewind threw
 Teds\Deque: Caught RuntimeException: valid threw
@@ -104,6 +113,13 @@ Teds\ImmutableSequence: Caught RuntimeException: current threw
 Teds\ImmutableSequence: Caught RuntimeException: next threw
 Teds\ImmutableSequence: Caught RuntimeException: __destruct threw
 skip Teds\ImmutableSequence keyThrows
+Test Teds\ImmutableSortedStringSet
+Teds\ImmutableSortedStringSet: Caught RuntimeException: rewind threw
+Teds\ImmutableSortedStringSet: Caught RuntimeException: valid threw
+Teds\ImmutableSortedStringSet: Caught RuntimeException: current threw
+Teds\ImmutableSortedStringSet: Caught RuntimeException: next threw
+Teds\ImmutableSortedStringSet: Caught RuntimeException: __destruct threw
+skip Teds\ImmutableSortedStringSet keyThrows
 Test Teds\LowMemoryVector
 Teds\LowMemoryVector: Caught RuntimeException: rewind threw
 Teds\LowMemoryVector: Caught RuntimeException: valid threw
@@ -184,40 +200,40 @@ skip Teds\Vector keyThrows
 Test Teds\CachedIterable
 Teds\CachedIterable: Caught RuntimeException: rewind threw
 Teds\CachedIterable: succeeded despite validThrows: true
-object(Teds\CachedIterable)#4 (0) {
+object(Teds\CachedIterable)#%d (0) {
 }
 Teds\CachedIterable: Caught RuntimeException: valid threw
 Teds\CachedIterable: succeeded despite currentThrows: true
-object(Teds\CachedIterable)#5 (0) {
+object(Teds\CachedIterable)#%d (0) {
 }
 Teds\CachedIterable: Caught RuntimeException: current threw
 Teds\CachedIterable: succeeded despite nextThrows: true
-object(Teds\CachedIterable)#6 (1) {
+object(Teds\CachedIterable)#%d (1) {
   [0]=>
   array(2) {
     [0]=>
-    object(stdClass)#8 (0) {
+    object(stdClass)#%d (0) {
     }
     [1]=>
-    object(stdClass)#1 (0) {
+    object(stdClass)#%d (0) {
     }
   }
 }
 Teds\CachedIterable: Caught RuntimeException: next threw
 Teds\CachedIterable: succeeded despite destructThrows: true
-object(Teds\CachedIterable)#3 (1) {
+object(Teds\CachedIterable)#%d (1) {
   [0]=>
   array(2) {
     [0]=>
-    object(stdClass)#9 (0) {
+    object(stdClass)#%d (0) {
     }
     [1]=>
-    object(stdClass)#4 (0) {
+    object(stdClass)#%d (0) {
     }
   }
 }
 Teds\CachedIterable: Caught RuntimeException: __destruct threw
 Teds\CachedIterable: succeeded despite keyThrows: true
-object(Teds\CachedIterable)#7 (0) {
+object(Teds\CachedIterable)#%d (0) {
 }
 Teds\CachedIterable: Caught RuntimeException: key threw

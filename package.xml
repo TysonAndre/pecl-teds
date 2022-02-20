@@ -63,6 +63,10 @@
    <file name="teds_immutablesequence.c" role="src" />
    <file name="teds_immutablesequence.h" role="src" />
    <file name="teds_immutablesequence.stub.php" role="src" />
+   <file name="teds_immutablesortedstringset_arginfo.h" role="src" />
+   <file name="teds_immutablesortedstringset.c" role="src" />
+   <file name="teds_immutablesortedstringset.h" role="src" />
+   <file name="teds_immutablesortedstringset.stub.php" role="src" />
    <file name="teds_interfaces_arginfo.h" role="src" />
    <file name="teds_interfaces.c" role="src" />
    <file name="teds_interfaces.h" role="src" />
@@ -188,6 +192,8 @@
     <file name="ImmutableSequence/set_state.phpt" role="test" />
     <file name="ImmutableSequence/toArray.phpt" role="test" />
     <file name="ImmutableSequence/unserialize.phpt" role="test" />
+    <file name="ImmutableSortedStringSet/contains.phpt" role="test" />
+    <file name="ImmutableSortedStringSet/create.phpt" role="test" />
     <file name="IntVector/IntVector.phpt" role="test" />
     <file name="IntVector/aggregate.phpt" role="test" />
     <file name="IntVector/arrayCast.phpt" role="test" />

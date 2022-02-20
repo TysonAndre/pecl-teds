@@ -37,6 +37,7 @@
 #include "teds_lowmemoryvector.h"
 #include "teds_immutableiterable.h"
 #include "teds_immutablesequence.h"
+#include "teds_immutablesortedstringset.h"
 #include "teds_intvector.h"
 #include "teds_interfaces.h"
 #include "teds_mutableiterable.h"
@@ -1108,6 +1109,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_deque)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutableiterable)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_immutablesortedstringset)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_intvector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_mutableiterable)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_lowmemoryvector)(INIT_FUNC_ARGS_PASSTHRU);
