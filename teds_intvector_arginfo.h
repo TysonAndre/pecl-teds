@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a7a3cb1fac4581f2062767d05f3b7e7f07ffb42e */
+ * Stub hash: 05e124b56e36617b1dbf32b0cba82a0ed3935dc1 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_IntVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -21,6 +21,13 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_IntVector___unserialize, 0, 1, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, data, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_IntVector_serialize, 0, 0, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_IntVector_unserialize, 0, 1, Teds\\IntVector, 0)
+	ZEND_ARG_TYPE_INFO(0, data, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_IntVector___set_state, 0, 1, Teds\\IntVector, 0)
@@ -137,6 +144,44 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_SortedIntVectorSet_jsonSerialize arginfo_class_Teds_IntVector___serialize
 
+#define arginfo_class_Teds_ImmutableSortedIntSet___construct arginfo_class_Teds_IntVector___construct
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_getIterator arginfo_class_Teds_IntVector_getIterator
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_count arginfo_class_Teds_IntVector_count
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_isEmpty arginfo_class_Teds_IntVector_isEmpty
+
+#define arginfo_class_Teds_ImmutableSortedIntSet___serialize arginfo_class_Teds_IntVector___serialize
+
+#define arginfo_class_Teds_ImmutableSortedIntSet___unserialize arginfo_class_Teds_IntVector___unserialize
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableSortedIntSet___set_state, 0, 1, Teds\\ImmutableSortedIntSet, 0)
+	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_add arginfo_class_Teds_IntVector_contains
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_remove arginfo_class_Teds_IntVector_contains
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_clear arginfo_class_Teds_IntVector_clear
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_first arginfo_class_Teds_IntVector_count
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_last arginfo_class_Teds_IntVector_count
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_toArray arginfo_class_Teds_IntVector___serialize
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_values arginfo_class_Teds_IntVector___serialize
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_get arginfo_class_Teds_IntVector_get
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_indexOf arginfo_class_Teds_IntVector_indexOf
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_contains arginfo_class_Teds_IntVector_contains
+
+#define arginfo_class_Teds_ImmutableSortedIntSet_jsonSerialize arginfo_class_Teds_IntVector___serialize
+
 
 ZEND_METHOD(Teds_IntVector, __construct);
 ZEND_METHOD(Teds_IntVector, getIterator);
@@ -145,6 +190,8 @@ ZEND_METHOD(Teds_IntVector, isEmpty);
 ZEND_METHOD(Teds_IntVector, capacity);
 ZEND_METHOD(Teds_IntVector, __serialize);
 ZEND_METHOD(Teds_IntVector, __unserialize);
+ZEND_METHOD(Teds_IntVector, serialize);
+ZEND_METHOD(Teds_IntVector, unserialize);
 ZEND_METHOD(Teds_IntVector, __set_state);
 ZEND_METHOD(Teds_IntVector, push);
 ZEND_METHOD(Teds_IntVector, pushInts);
@@ -166,11 +213,17 @@ ZEND_METHOD(Teds_IntVector, offsetUnset);
 ZEND_METHOD(Teds_IntVector, indexOf);
 ZEND_METHOD(Teds_IntVector, contains);
 ZEND_METHOD(Teds_SortedIntVectorSet, __construct);
+ZEND_METHOD(Teds_SortedIntVectorSet, __unserialize);
 ZEND_METHOD(Teds_SortedIntVectorSet, __set_state);
 ZEND_METHOD(Teds_SortedIntVectorSet, add);
 ZEND_METHOD(Teds_SortedIntVectorSet, remove);
 ZEND_METHOD(Teds_SortedIntVectorSet, indexOf);
 ZEND_METHOD(Teds_SortedIntVectorSet, contains);
+ZEND_METHOD(Teds_ImmutableSortedIntSet, __construct);
+ZEND_METHOD(Teds_ImmutableSortedIntSet, __serialize);
+ZEND_METHOD(Teds_ImmutableSortedIntSet, __unserialize);
+ZEND_METHOD(Teds_ImmutableSortedIntSet, add);
+ZEND_METHOD(Teds_ImmutableSortedIntSet, clear);
 
 
 static const zend_function_entry class_Teds_IntVector_methods[] = {
@@ -181,6 +234,8 @@ static const zend_function_entry class_Teds_IntVector_methods[] = {
 	ZEND_ME(Teds_IntVector, capacity, arginfo_class_Teds_IntVector_capacity, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, __serialize, arginfo_class_Teds_IntVector___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, __unserialize, arginfo_class_Teds_IntVector___unserialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_IntVector, serialize, arginfo_class_Teds_IntVector_serialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_IntVector, unserialize, arginfo_class_Teds_IntVector_unserialize, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_IntVector, __set_state, arginfo_class_Teds_IntVector___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_IntVector, push, arginfo_class_Teds_IntVector_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, pushInts, arginfo_class_Teds_IntVector_pushInts, ZEND_ACC_PUBLIC)
@@ -214,7 +269,7 @@ static const zend_function_entry class_Teds_SortedIntVectorSet_methods[] = {
 	ZEND_MALIAS(Teds_IntVector, isEmpty, isEmpty, arginfo_class_Teds_SortedIntVectorSet_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, capacity, capacity, arginfo_class_Teds_SortedIntVectorSet_capacity, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, __serialize, __serialize, arginfo_class_Teds_SortedIntVectorSet___serialize, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_IntVector, __unserialize, __unserialize, arginfo_class_Teds_SortedIntVectorSet___unserialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_SortedIntVectorSet, __unserialize, arginfo_class_Teds_SortedIntVectorSet___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedIntVectorSet, __set_state, arginfo_class_Teds_SortedIntVectorSet___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_MALIAS(Teds_IntVector, pop, pop, arginfo_class_Teds_SortedIntVectorSet_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedIntVectorSet, add, arginfo_class_Teds_SortedIntVectorSet_add, ZEND_ACC_PUBLIC)
@@ -229,6 +284,29 @@ static const zend_function_entry class_Teds_SortedIntVectorSet_methods[] = {
 	ZEND_ME(Teds_SortedIntVectorSet, indexOf, arginfo_class_Teds_SortedIntVectorSet_indexOf, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedIntVectorSet, contains, arginfo_class_Teds_SortedIntVectorSet_contains, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, jsonSerialize, toArray, arginfo_class_Teds_SortedIntVectorSet_jsonSerialize, ZEND_ACC_PUBLIC)
+	ZEND_FE_END
+};
+
+
+static const zend_function_entry class_Teds_ImmutableSortedIntSet_methods[] = {
+	ZEND_ME(Teds_ImmutableSortedIntSet, __construct, arginfo_class_Teds_ImmutableSortedIntSet___construct, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, getIterator, getIterator, arginfo_class_Teds_ImmutableSortedIntSet_getIterator, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, count, count, arginfo_class_Teds_ImmutableSortedIntSet_count, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, isEmpty, isEmpty, arginfo_class_Teds_ImmutableSortedIntSet_isEmpty, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSortedIntSet, __serialize, arginfo_class_Teds_ImmutableSortedIntSet___serialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSortedIntSet, __unserialize, arginfo_class_Teds_ImmutableSortedIntSet___unserialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_SortedIntVectorSet, __set_state, __set_state, arginfo_class_Teds_ImmutableSortedIntSet___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Teds_ImmutableSortedIntSet, add, arginfo_class_Teds_ImmutableSortedIntSet_add, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_ImmutableSortedIntSet, remove, add, arginfo_class_Teds_ImmutableSortedIntSet_remove, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSortedIntSet, clear, arginfo_class_Teds_ImmutableSortedIntSet_clear, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, first, first, arginfo_class_Teds_ImmutableSortedIntSet_first, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, last, last, arginfo_class_Teds_ImmutableSortedIntSet_last, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, toArray, toArray, arginfo_class_Teds_ImmutableSortedIntSet_toArray, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, values, toArray, arginfo_class_Teds_ImmutableSortedIntSet_values, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, get, get, arginfo_class_Teds_ImmutableSortedIntSet_get, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_SortedIntVectorSet, indexOf, indexOf, arginfo_class_Teds_ImmutableSortedIntSet_indexOf, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_SortedIntVectorSet, contains, contains, arginfo_class_Teds_ImmutableSortedIntSet_contains, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, jsonSerialize, toArray, arginfo_class_Teds_ImmutableSortedIntSet_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
@@ -249,6 +327,18 @@ static zend_class_entry *register_class_Teds_SortedIntVectorSet(zend_class_entry
 	zend_class_entry ce, *class_entry;
 
 	INIT_NS_CLASS_ENTRY(ce, "Teds", "SortedIntVectorSet", class_Teds_SortedIntVectorSet_methods);
+	class_entry = zend_register_internal_class_ex(&ce, NULL);
+	class_entry->ce_flags |= ZEND_ACC_FINAL;
+	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Set, class_entry_JsonSerializable);
+
+	return class_entry;
+}
+
+static zend_class_entry *register_class_Teds_ImmutableSortedIntSet(zend_class_entry *class_entry_IteratorAggregate, zend_class_entry *class_entry_Teds_Set, zend_class_entry *class_entry_JsonSerializable)
+{
+	zend_class_entry ce, *class_entry;
+
+	INIT_NS_CLASS_ENTRY(ce, "Teds", "ImmutableSortedIntSet", class_Teds_ImmutableSortedIntSet_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 	zend_class_implements(class_entry, 3, class_entry_IteratorAggregate, class_entry_Teds_Set, class_entry_JsonSerializable);

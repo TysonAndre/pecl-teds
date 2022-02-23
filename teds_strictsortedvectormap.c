@@ -935,7 +935,7 @@ static teds_strictsortedvectormap_entry *teds_strictsortedvectormap_find_value(c
 	const uint32_t len = intern->array.size;
 	teds_strictsortedvectormap_entry *entries = intern->array.entries;
 	for (uint32_t i = 0; i < len; i++) {
-		if (zend_is_identical(value, &entries[i].value)) {
+		if (teds_is_identical_inline(value, &entries[i].value)) {
 			return &entries[i];
 		}
 	}

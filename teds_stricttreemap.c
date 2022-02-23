@@ -1113,7 +1113,7 @@ static teds_stricttreemap_node *teds_stricttreemap_tree_find_value(const teds_st
 {
 	teds_stricttreemap_node *it;
 	TEDS_STRICTTREEMAP_FOREACH_NODE(array, it) {
-		if (zend_is_identical(value, &it->value)) {
+		if (teds_is_identical_inline(value, &it->value)) {
 			return it;
 		}
 	} TEDS_STRICTTREEMAP_FOREACH_END();

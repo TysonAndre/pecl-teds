@@ -850,7 +850,7 @@ PHP_METHOD(Teds_Deque, indexOf)
 	/* TODO: Search in 2 parts instead. */
 	for (uint32_t i = 0; i < len; i++) {
 		zval *dest = teds_deque_get_entry_at_offset(&intern->array, i);
-		if (zend_is_identical(value, dest)) {
+		if (teds_is_identical_inline(value, dest)) {
 			RETURN_LONG(i);
 		}
 	}
@@ -870,7 +870,7 @@ PHP_METHOD(Teds_Deque, contains)
 	/* TODO: See if performance is faster for special cased local copy vs pointer, scalar checks, etc. */
 	for (uint32_t i = 0; i < len; i++) {
 		zval *dest = teds_deque_get_entry_at_offset(&intern->array, i);
-		if (zend_is_identical(value, dest)) {
+		if (teds_is_identical_inline(value, dest)) {
 			RETURN_TRUE;
 		}
 	}

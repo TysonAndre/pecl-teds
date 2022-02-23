@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 16473de35a003eac8311eb816b5ad48c46e63764 */
+ * Stub hash: d8840a8fff92b44ddd7480325e6517a113a26ed8 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSortedStringSet___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -21,6 +21,13 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSortedString
 	ZEND_ARG_TYPE_INFO(0, data, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSortedStringSet_serialize, 0, 0, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableSortedStringSet_unserialize, 0, 1, Teds\\ImmutableSortedStringSet, 0)
+	ZEND_ARG_TYPE_INFO(0, data, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableSortedStringSet___set_state, 0, 1, Teds\\ImmutableSortedStringSet, 0)
 	ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
@@ -34,10 +41,9 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSortedStringSet_clear, 0, 0, IS_VOID, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableSortedStringSet_first, 0, 0, IS_STRING, 0)
-ZEND_END_ARG_INFO()
+#define arginfo_class_Teds_ImmutableSortedStringSet_first arginfo_class_Teds_ImmutableSortedStringSet_serialize
 
-#define arginfo_class_Teds_ImmutableSortedStringSet_last arginfo_class_Teds_ImmutableSortedStringSet_first
+#define arginfo_class_Teds_ImmutableSortedStringSet_last arginfo_class_Teds_ImmutableSortedStringSet_serialize
 
 #define arginfo_class_Teds_ImmutableSortedStringSet_toArray arginfo_class_Teds_ImmutableSortedStringSet___serialize
 
@@ -62,6 +68,8 @@ ZEND_METHOD(Teds_ImmutableSortedStringSet, count);
 ZEND_METHOD(Teds_ImmutableSortedStringSet, isEmpty);
 ZEND_METHOD(Teds_ImmutableSortedStringSet, __serialize);
 ZEND_METHOD(Teds_ImmutableSortedStringSet, __unserialize);
+ZEND_METHOD(Teds_ImmutableSortedStringSet, serialize);
+ZEND_METHOD(Teds_ImmutableSortedStringSet, unserialize);
 ZEND_METHOD(Teds_ImmutableSortedStringSet, __set_state);
 ZEND_METHOD(Teds_ImmutableSortedStringSet, add);
 ZEND_METHOD(Teds_ImmutableSortedStringSet, clear);
@@ -80,6 +88,8 @@ static const zend_function_entry class_Teds_ImmutableSortedStringSet_methods[] =
 	ZEND_ME(Teds_ImmutableSortedStringSet, isEmpty, arginfo_class_Teds_ImmutableSortedStringSet_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSortedStringSet, __serialize, arginfo_class_Teds_ImmutableSortedStringSet___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSortedStringSet, __unserialize, arginfo_class_Teds_ImmutableSortedStringSet___unserialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSortedStringSet, serialize, arginfo_class_Teds_ImmutableSortedStringSet_serialize, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_ImmutableSortedStringSet, unserialize, arginfo_class_Teds_ImmutableSortedStringSet_unserialize, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_ImmutableSortedStringSet, __set_state, arginfo_class_Teds_ImmutableSortedStringSet___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_ImmutableSortedStringSet, add, arginfo_class_Teds_ImmutableSortedStringSet_add, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_ImmutableSortedStringSet, remove, add, arginfo_class_Teds_ImmutableSortedStringSet_remove, ZEND_ACC_PUBLIC)

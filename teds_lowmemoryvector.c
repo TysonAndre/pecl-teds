@@ -87,6 +87,27 @@ static const uint8_t teds_lmv_shift_for_element[LMV_TYPE_COUNT] = {
 	4, /* LMV_TYPE_ZVAL, 16 bytes = 1 << 4, but not even used */
 };
 
+#define TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int_smaller, entries_smaller, int_larger, entries_larger, TEDS_LMV__TYPE_LARGER) do { \
+		ZEND_ASSERT(sizeof(int_smaller) < sizeof(int_larger)); \
+		array->type_tag = TEDS_LMV__TYPE_LARGER; \
+		int_smaller *const original_entries = array->entries_smaller; \
+		const int_smaller *src = original_entries; \
+		const size_t size = array->size; \
+		const size_t capacity = size >= 2 ? size * 2 : 4; \
+		array->capacity = capacity; \
+		int_larger *const entries_larger  = safe_emalloc(capacity, sizeof(int_larger), 0); \
+		const int_larger *const end = entries_larger + size; \
+		int_larger *dst = entries_larger; \
+		array->entries_larger = entries_larger; \
+		while (dst < end) { \
+			*dst++ = *src++; \
+		} \
+		if (array->capacity > 0) { \
+			efree(original_entries); \
+		} \
+		return; \
+	} while (0)
+
 typedef struct _teds_lowmemoryvector_entries {
 	uint32_t size;
 	uint32_t capacity;
@@ -1595,15 +1616,15 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 
 #ifdef LMV_TYPE_INT64
 			if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
-				TEDS_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int64_t, entries_int64, LMV_TYPE_INT64);
+				TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int64_t, entries_int64, LMV_TYPE_INT64);
 				return;
 			}
 #endif
 			if (Z_LVAL_P(val) != (int16_t) Z_LVAL_P(val)) {
-				TEDS_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int32_t, entries_int32, LMV_TYPE_INT32);
+				TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int32_t, entries_int32, LMV_TYPE_INT32);
 				return;
 			}
-			TEDS_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int16_t, entries_int16, LMV_TYPE_INT16);
+			TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int16_t, entries_int16, LMV_TYPE_INT16);
 			return;
 		case LMV_TYPE_INT16:
 			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int16_t, entries_int16);
@@ -1611,17 +1632,17 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 
 #ifdef LMV_TYPE_INT64
 			if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
-				TEDS_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int64_t, entries_int64, LMV_TYPE_INT64);
+				TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int64_t, entries_int64, LMV_TYPE_INT64);
 			}
 #endif
-			TEDS_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int32_t, entries_int32, LMV_TYPE_INT32);
+			TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int32_t, entries_int32, LMV_TYPE_INT32);
 			return;
 		case LMV_TYPE_INT32:
 			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int32_t, entries_int32);
 
 #ifdef LMV_TYPE_INT64
 			if (UNEXPECTED(Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val))) {
-				TEDS_PROMOTE_INT_TYPE_AND_RETURN(int32_t, entries_int32, int64_t, entries_int64, LMV_TYPE_INT64);
+				TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int32_t, entries_int32, int64_t, entries_int64, LMV_TYPE_INT64);
 			}
 #endif
 			return;
@@ -1631,7 +1652,7 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 			return;
 #endif
 
-#undef TEDS_PROMOTE_INT_TYPE_AND_RETURN
+#undef TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN
 		case LMV_TYPE_DOUBLE:
 			if (UNEXPECTED(Z_TYPE_P(val) != IS_DOUBLE)) {
 				array->type_tag = LMV_TYPE_ZVAL;

@@ -24,6 +24,51 @@ static zend_always_inline bool teds_is_nan(const double v) {
 	return v != v;
 }
 
+static bool teds_is_identical_inline(zval *op1, zval *op2);
+
+/* return int to be compatible with compare_func_t. Copied from Zend/zend_operators.h to support inlining.  */
+static int teds_hash_zval_identical_function(zval *z1, zval *z2) /* {{{ */
+{
+	/* is_identical_function() returns 1 in case of identity and 0 in case
+	 * of a difference;
+	 * whereas this comparison function is expected to return 0 on identity,
+	 * and non zero otherwise.
+	 */
+	ZVAL_DEREF(z1);
+	ZVAL_DEREF(z2);
+	return !teds_is_identical_inline(z1, z2);
+}
+/* }}} */
+
+static zend_always_inline bool teds_is_identical_inline(zval *op1, zval *op2) /* {{{ Copied from zend_is_identical to support inlining for repeated calls in Vector. */
+{
+	if (Z_TYPE_P(op1) != Z_TYPE_P(op2)) {
+		return 0;
+	}
+	switch (Z_TYPE_P(op1)) {
+		case IS_NULL:
+		case IS_FALSE:
+		case IS_TRUE:
+			return 1;
+		case IS_LONG:
+			return (Z_LVAL_P(op1) == Z_LVAL_P(op2));
+		case IS_RESOURCE:
+			return (Z_RES_P(op1) == Z_RES_P(op2));
+		case IS_DOUBLE:
+			return (Z_DVAL_P(op1) == Z_DVAL_P(op2));
+		case IS_STRING:
+			return zend_string_equals(Z_STR_P(op1), Z_STR_P(op2));
+		case IS_ARRAY:
+			return (Z_ARRVAL_P(op1) == Z_ARRVAL_P(op2) ||
+				zend_hash_compare(Z_ARRVAL_P(op1), Z_ARRVAL_P(op2), (compare_func_t) teds_hash_zval_identical_function, 1) == 0);
+		case IS_OBJECT:
+			return (Z_OBJ_P(op1) == Z_OBJ_P(op2));
+		default:
+			return 0;
+	}
+}
+/* }}} */
+
 static zend_always_inline HashTable *teds_new_array_check_overflow(size_t n) {
 #if SIZEOF_SIZE_T > 4
 	if (UNEXPECTED(n >= HT_MAX_SIZE)) {
@@ -47,7 +92,7 @@ static inline zval *teds_zval_copy_range(const zval *original, size_t n) {
 
 int teds_hash_zval_identical_or_both_nan_function(zval *op1, zval *op2);
 
-/** For use with strict_hash. This is a modified version of zend_is_identical. */
+/** For use with strict_hash. This is a modified version of teds_is_identical_inline. */
 static inline int teds_is_identical_or_both_nan(const zval *op1, const zval *op2) {
 	if (Z_TYPE_P(op1) != Z_TYPE_P(op2)) {
 		return 0;
@@ -81,7 +126,7 @@ static inline int teds_is_identical_or_both_nan(const zval *op1, const zval *op2
 
 static inline bool teds_zval_range_contains(const zval *target, const zval *original, uint32_t n) {
 	for (const zval *const end = original + n; original != end; original++) {
-		if (zend_is_identical((zval *)original, (zval *)target)) {
+		if (teds_is_identical_inline((zval *)original, (zval *)target)) {
 			return true;
 		}
 	}
@@ -90,7 +135,7 @@ static inline bool teds_zval_range_contains(const zval *target, const zval *orig
 
 static inline void teds_zval_range_zval_indexof(zval *return_value, const zval *target, const zval *const original, uint32_t n) {
 	for (const zval *it = original, *const end = original + n; it != end; it++) {
-		if (zend_is_identical((zval *)it, (zval *)target)) {
+		if (teds_is_identical_inline((zval *)it, (zval *)target)) {
 			RETURN_LONG(it - original);
 		}
 	}
