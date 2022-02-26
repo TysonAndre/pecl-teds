@@ -33,6 +33,9 @@
 #include "teds_bitvector.h"
 #include "teds_deque.h"
 #include "teds_cachediterable.h"
+#if PHP_VERSION_ID >= 80100
+#include "teds_emptycollection.h"
+#endif
 #include "teds_exceptions.h"
 #include "teds_lowmemoryvector.h"
 #include "teds_immutableiterable.h"
@@ -1107,6 +1110,10 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_bitvector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_cachediterable)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_deque)(INIT_FUNC_ARGS_PASSTHRU);
+#if PHP_VERSION_ID >= 80100
+	/* This uses php 8.1 enums */
+	PHP_MINIT(teds_emptysequence)(INIT_FUNC_ARGS_PASSTHRU);
+#endif
 	PHP_MINIT(teds_immutableiterable)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesortedstringset)(INIT_FUNC_ARGS_PASSTHRU);

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 2b14b006c08a2bfc806a3e046ecd82e01f5df150 */
+ * Stub hash: e7a2e4f36e7560096e20279277c34a14910d3d76 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_IntVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")

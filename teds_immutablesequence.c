@@ -957,8 +957,7 @@ PHP_METHOD(Teds_ImmutableSequence, contains)
 
 ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, offsetSet)
 {
-	zval                  *zindex, *value;
-
+	zval *zindex, *value;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "zz", &zindex, &value) == FAILURE) {
 		RETURN_THROWS();
 	}
