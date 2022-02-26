@@ -39,7 +39,7 @@ function test_nonempty_implementation(string $class_name) {
 }
 
 foreach ([
-    // Teds\BitSet::class,
+    // Teds\BitVector::class,
     Teds\Deque::class,
     Teds\ImmutableIterable::class,
     Teds\ImmutableSequence::class,

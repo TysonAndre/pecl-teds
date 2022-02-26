@@ -3,7 +3,7 @@
 
 // @phan-file-suppress PhanPossiblyUndeclaredVariable
 
-use Teds\BitSet;
+use Teds\BitVector;
 use Teds\Deque;
 use Teds\LowMemoryVector;
 use Teds\Vector;
@@ -62,13 +62,13 @@ function bench_vector(int $n, int $iterations) {
     printf("Appending to Vector:          n=%8d iterations=%8d memory=%8d bytes\n => create+destroy time=%.3f read time = %.3f total time = %.3f result=%d\n",
         $n, $iterations, $endMemory - $startMemory, $totalTime - $totalReadTimeSeconds, $totalReadTimeSeconds, $totalTime, $total);
 }
-function bench_bitset(int $n, int $iterations) {
+function bench_bitvector(int $n, int $iterations) {
     $startTime = hrtime(true);
     $totalReadTime = 0.0;
     $total = 0;
     for ($j = 0; $j < $iterations; $j++) {
         $startMemory = memory_get_usage();
-        $values = new BitSet();
+        $values = new BitVector();
         for ($i = 0; $i < $n; $i++) {
             $values[] = $i % 3 > 0;
         }
@@ -86,7 +86,7 @@ function bench_bitset(int $n, int $iterations) {
     $endTime = hrtime(true);
     $totalTime = ($endTime - $startTime) / 1000000000;
     $totalReadTimeSeconds = $totalReadTime / 1000000000;
-    printf("Appending to BitSet:          n=%8d iterations=%8d memory=%8d bytes\n => create+destroy time=%.3f read time = %.3f total time = %.3f result=%d\n",
+    printf("Appending to BitVector:       n=%8d iterations=%8d memory=%8d bytes\n => create+destroy time=%.3f read time = %.3f total time = %.3f result=%d\n",
         $n, $iterations, $endMemory - $startMemory, $totalTime - $totalReadTimeSeconds, $totalReadTimeSeconds, $totalTime, $total);
 }
 function bench_low_memory_vector(int $n, int $iterations) {
@@ -224,7 +224,7 @@ echo "(Note that LowMemoryVector has specialized representations for collections
 foreach ($sizes as [$n, $iterations]) {
     bench_array($n, $iterations);
     bench_vector($n, $iterations);
-    bench_bitset($n, $iterations);
+    bench_bitvector($n, $iterations);
     bench_low_memory_vector($n, $iterations);
     bench_queue($n, $iterations);
     bench_spl_stack($n, $iterations);
@@ -239,7 +239,7 @@ Appending to array:           n=       1 iterations= 8000000 memory=     216 byt
  => create+destroy time=0.670 read time = 0.299 total time = 0.970 result=0
 Appending to Vector:          n=       1 iterations= 8000000 memory=     120 bytes
  => create+destroy time=1.035 read time = 0.334 total time = 1.369 result=0
-Appending to BitSet:          n=       1 iterations= 8000000 memory=      72 bytes
+Appending to BitVector:       n=       1 iterations= 8000000 memory=      72 bytes
  => create+destroy time=1.000 read time = 0.340 total time = 1.340 result=0
 Appending to LowMemoryVector: n=       1 iterations= 8000000 memory=      72 bytes
  => create+destroy time=1.032 read time = 0.351 total time = 1.383 result=0
@@ -255,7 +255,7 @@ Appending to array:           n=       4 iterations= 2000000 memory=     216 byt
  => create+destroy time=0.282 read time = 0.124 total time = 0.407 result=4000000
 Appending to Vector:          n=       4 iterations= 2000000 memory=     120 bytes
  => create+destroy time=0.415 read time = 0.165 total time = 0.580 result=4000000
-Appending to BitSet:          n=       4 iterations= 2000000 memory=      72 bytes
+Appending to BitVector:       n=       4 iterations= 2000000 memory=      72 bytes
  => create+destroy time=0.378 read time = 0.169 total time = 0.547 result=4000000
 Appending to LowMemoryVector: n=       4 iterations= 2000000 memory=      72 bytes
  => create+destroy time=0.387 read time = 0.167 total time = 0.554 result=4000000
@@ -271,7 +271,7 @@ Appending to array:           n=       8 iterations= 1000000 memory=     216 byt
  => create+destroy time=0.224 read time = 0.096 total time = 0.320 result=5000000
 Appending to Vector:          n=       8 iterations= 1000000 memory=     184 bytes
  => create+destroy time=0.304 read time = 0.132 total time = 0.436 result=5000000
-Appending to BitSet:          n=       8 iterations= 1000000 memory=      72 bytes
+Appending to BitVector:       n=       8 iterations= 1000000 memory=      72 bytes
  => create+destroy time=0.278 read time = 0.140 total time = 0.418 result=5000000
 Appending to LowMemoryVector: n=       8 iterations= 1000000 memory=      72 bytes
  => create+destroy time=0.288 read time = 0.148 total time = 0.436 result=5000000
@@ -287,7 +287,7 @@ Appending to array:           n=    1024 iterations=    8000 memory=   20536 byt
  => create+destroy time=0.157 read time = 0.069 total time = 0.225 result=5456000
 Appending to Vector:          n=    1024 iterations=    8000 memory=   16440 bytes
  => create+destroy time=0.185 read time = 0.105 total time = 0.290 result=5456000
-Appending to BitSet:          n=    1024 iterations=    8000 memory=     224 bytes
+Appending to BitVector:       n=    1024 iterations=    8000 memory=     224 bytes
  => create+destroy time=0.170 read time = 0.118 total time = 0.289 result=5456000
 Appending to LowMemoryVector: n=    1024 iterations=    8000 memory=    1088 bytes
  => create+destroy time=0.172 read time = 0.114 total time = 0.286 result=5456000
@@ -303,7 +303,7 @@ Appending to array:           n= 1048576 iterations=      20 memory=16781392 byt
  => create+destroy time=0.593 read time = 0.181 total time = 0.774 result=13981000
 Appending to Vector:          n= 1048576 iterations=      20 memory=16777296 bytes
  => create+destroy time=0.686 read time = 0.268 total time = 0.954 result=13981000
-Appending to BitSet:          n= 1048576 iterations=      20 memory=  147520 bytes
+Appending to BitVector:       n= 1048576 iterations=      20 memory=  147520 bytes
  => create+destroy time=0.412 read time = 0.292 total time = 0.703 result=13981000
 Appending to LowMemoryVector: n= 1048576 iterations=      20 memory= 1048640 bytes
  => create+destroy time=0.409 read time = 0.281 total time = 0.690 result=13981000

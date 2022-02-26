@@ -51,7 +51,7 @@ function test_empty_implementation(string $class_name) {
 }
 
 foreach ([
-    Teds\BitSet::class,
+    Teds\BitVector::class,
     Teds\Deque::class,
     Teds\IntVector::class,
     Teds\StrictHashMap::class,
@@ -64,13 +64,13 @@ foreach ([
 }
 ?>
 --EXPECT--
-Testing Teds\BitSet
-set TypeError: Illegal Teds\BitSet value type int
-offsetSet TypeError: Illegal Teds\BitSet value type int
+Testing Teds\BitVector
+set TypeError: Illegal Teds\BitVector value type int
+offsetSet TypeError: Illegal Teds\BitVector value type int
 get caught OutOfBoundsException: Index out of range
 offsetGet caught OutOfBoundsException: Index out of range
-unset caught Teds\UnsupportedOperationException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
-object(Teds\BitSet)#1 (0) {
+unset caught Teds\UnsupportedOperationException: Teds\BitVector does not support offsetUnset - elements must be removed by resizing
+object(Teds\BitVector)#1 (0) {
 }
 
 

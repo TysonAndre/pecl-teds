@@ -1,9 +1,9 @@
 --TEST--
-Teds\BitSet can be cloned
+Teds\BitVector can be cloned
 --FILE--
 <?php
 
-$it = new Teds\BitSet([true]);
+$it = new Teds\BitVector([true]);
 $it2 = clone $it;
 unset($it);
 foreach ($it2 as $key => $value) {
@@ -19,7 +19,7 @@ var_dump($it2);
 Saw entry:
 int(0)
 bool(true)
-object(Teds\BitSet)#2 (3) {
+object(Teds\BitVector)#2 (3) {
   [0]=>
   bool(true)
   [1]=>

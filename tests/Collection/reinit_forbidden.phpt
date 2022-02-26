@@ -21,7 +21,7 @@ function test_no_reinitialize(string $class_name) {
     var_dump($it);
 }
 foreach ([
-    Teds\BitSet::class,
+    Teds\BitVector::class,
     Teds\Deque::class,
     Teds\CachedIterable::class,
     Teds\ImmutableIterable::class,
@@ -45,9 +45,9 @@ foreach ([
 }
 ?>
 --EXPECTF--
-Caught RuntimeException: Called Teds\BitSet::__construct twice
-Caught RuntimeException: Teds\BitSet already unserialized
-object(Teds\BitSet)#1 (0) {
+Caught RuntimeException: Called Teds\BitVector::__construct twice
+Caught RuntimeException: Teds\BitVector already unserialized
+object(Teds\BitVector)#1 (0) {
 }
 Caught RuntimeException: Called Teds\Deque::__construct twice
 Caught RuntimeException: Already unserialized

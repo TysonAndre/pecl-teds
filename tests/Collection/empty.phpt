@@ -39,7 +39,7 @@ function test_empty_implementation(string $class_name) {
 }
 
 foreach ([
-    Teds\BitSet::class,
+    Teds\BitVector::class,
     Teds\Deque::class,
     Teds\CachedIterable::class,
     Teds\ImmutableIterable::class,
@@ -64,15 +64,15 @@ foreach ([
 }
 ?>
 --EXPECTF--
-Testing Teds\BitSet
+Testing Teds\BitVector
 values: array(0) {
 }
 toArray: array(0) {
 }
 clear: NULL
-first() Caught UnderflowException: Cannot read first bit of empty Teds\BitSet
-last() Caught UnderflowException: Cannot read last bit of empty Teds\BitSet
-object(Teds\BitSet)#%d (0) {
+first() Caught UnderflowException: Cannot read first bit of empty Teds\BitVector
+last() Caught UnderflowException: Cannot read last bit of empty Teds\BitVector
+object(Teds\BitVector)#%d (0) {
 }
 Testing Teds\Deque
 values: array(0) {

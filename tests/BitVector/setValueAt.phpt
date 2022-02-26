@@ -1,5 +1,5 @@
 --TEST--
-Teds\BitSet offsetSet/set
+Teds\BitVector offsetSet/set
 --FILE--
 <?php
 
@@ -12,13 +12,13 @@ function expect_throws(Closure $cb): void {
     }
 }
 
-echo "Test empty bitset\n";
-$it = new Teds\BitSet([]);
+echo "Test empty bitvector\n";
+$it = new Teds\BitVector([]);
 expect_throws(fn() => $it->offsetSet(0, true));
 expect_throws(fn() => $it->set(0, strtoupper('value')));
 
-echo "Test short bitset\n";
-$it = new Teds\BitSet([true, false, true]);
+echo "Test short bitvector\n";
+$it = new Teds\BitVector([true, false, true]);
 $it->set(0, false);
 $it->setBit(1, true);
 $it->offsetSet(2, false);
@@ -31,13 +31,13 @@ expect_throws(fn() => $it->set(PHP_INT_MAX, true));
 
 ?>
 --EXPECT--
-Test empty bitset
+Test empty bitvector
 Caught OutOfBoundsException: Index out of range
-Caught TypeError: Illegal Teds\BitSet value type string
-Test short bitset
+Caught TypeError: Illegal Teds\BitVector value type string
+Test short bitvector
 [false,true,false]
 Caught OutOfBoundsException: Index out of range
 Caught OutOfBoundsException: Index out of range
 Caught OutOfBoundsException: Index out of range
-Caught TypeError: Illegal Teds\BitSet value type string
+Caught TypeError: Illegal Teds\BitVector value type string
 Caught OutOfBoundsException: Index out of range

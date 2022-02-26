@@ -1,8 +1,8 @@
 --TEST--
-Teds\BitSet insert
+Teds\BitVector insert
 --FILE--
 <?php
-foreach ([Teds\BitSet::class, Teds\Vector::class, Teds\Deque::class, Teds\LowMemoryVector::class] as $class) {
+foreach ([Teds\BitVector::class, Teds\Vector::class, Teds\Deque::class, Teds\LowMemoryVector::class] as $class) {
     echo "Test $class\n";
     $bs = new $class();
     $bs->insert(0, true, false, true, true);
@@ -24,7 +24,7 @@ foreach ([Teds\BitSet::class, Teds\Vector::class, Teds\Deque::class, Teds\LowMem
     echo json_encode($bs), "\n";
 }
 --EXPECT--
-Test Teds\BitSet
+Test Teds\BitVector
 [true,false,true,true]
 [true,false,false,true,false,true,true]
 Threw OutOfBoundsException: Index out of range

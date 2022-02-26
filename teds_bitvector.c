@@ -19,8 +19,8 @@
 
 #include "php_teds.h"
 #include "teds.h"
-#include "teds_bitset_arginfo.h"
-#include "teds_bitset.h"
+#include "teds_bitvector_arginfo.h"
+#include "teds_bitvector.h"
 #include "teds_interfaces.h"
 #include "teds_exceptions.h"
 // #include "ext/spl/spl_functions.h"
@@ -36,36 +36,36 @@
 #define BYTES_FOR_BIT_SIZE(n) BYTE_OF_BIT_POSITION((n) + 7)
 
 /* zend_alloc.c allocations are at least 8 bytes. */
-#define TEDS_MIN_BITSET_BITS (8 * 8)
+#define TEDS_MIN_BITVECTOR_BITS (8 * 8)
 /* Avoid overflow */
 #if SIZEOF_ZEND_LONG > SIZEOF_SIZE_T
 #error expected SIZEOF_ZEND_LONG <= SIZEOF_SIZE_T
 #endif
 
-/* Returns a positive integer that is a multiple of TEDS_MIN_BITSET_BITS */
-static size_t teds_bitset_compute_next_valid_capacity(size_t size) {
-	return (size + TEDS_MIN_BITSET_BITS) & ~(TEDS_MIN_BITSET_BITS - 1);
+/* Returns a positive integer that is a multiple of TEDS_MIN_BITVECTOR_BITS */
+static size_t teds_bitvector_compute_next_valid_capacity(size_t size) {
+	return (size + TEDS_MIN_BITVECTOR_BITS) & ~(TEDS_MIN_BITVECTOR_BITS - 1);
 }
 
 /* Low enough to check for overflow */
-#define TEDS_MAX_BITSET_BITS (((size_t) 1) << (SIZEOF_ZEND_LONG * 8 - 2))
+#define TEDS_MAX_BITVECTOR_BITS (((size_t) 1) << (SIZEOF_ZEND_LONG * 8 - 2))
 
-static zend_always_inline bool teds_bitset_is_bool(const zval *offset) {
+static zend_always_inline bool teds_bitvector_is_bool(const zval *offset) {
 	//return ((uint8_t)(Z_TYPE_P(offset) - IS_FALSE)) <= 1;
 	return EXPECTED(Z_TYPE_P(offset) == IS_FALSE || Z_TYPE_P(offset) == IS_TRUE);
 }
 
-#define TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(value, value_zv) do { \
+#define TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(value, value_zv) do { \
 	const zval *_tmp = (value_zv); \
-	if (UNEXPECTED(!teds_bitset_is_bool(_tmp))) { \
+	if (UNEXPECTED(!teds_bitvector_is_bool(_tmp))) { \
 		if (EXPECTED(Z_TYPE_P(_tmp) == IS_REFERENCE)) { \
 			_tmp = Z_REFVAL_P(_tmp); \
-			if (EXPECTED(teds_bitset_is_bool(_tmp))) { \
+			if (EXPECTED(teds_bitvector_is_bool(_tmp))) { \
 				(value) = Z_TYPE_P(_tmp) != IS_FALSE; \
 				break; \
 			} \
 		} \
-		zend_type_error("Illegal Teds\\BitSet value type %s", zend_zval_type_name(_tmp)); \
+		zend_type_error("Illegal Teds\\BitVector value type %s", zend_zval_type_name(_tmp)); \
 		return; \
 	} else { \
 		(value) = Z_TYPE_P(_tmp) != IS_FALSE; \
@@ -77,14 +77,14 @@ static zend_always_inline bool teds_bitset_is_bool(const zval *offset) {
 #define MAX_ZVAL_COUNT ((SIZE_MAX / sizeof(zval)) - 1)
 #define MAX_VALID_OFFSET ((size_t)(MAX_ZVAL_COUNT > ZEND_LONG_MAX ? ZEND_LONG_MAX : MAX_ZVAL_COUNT))
 
-zend_object_handlers teds_handler_BitSet;
-zend_class_entry *teds_ce_BitSet;
+zend_object_handlers teds_handler_BitVector;
+zend_class_entry *teds_ce_BitVector;
 
-/* This is a placeholder value to distinguish between empty and uninitialized BitSet instances.
+/* This is a placeholder value to distinguish between empty and uninitialized BitVector instances.
  * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
 static const int8_t empty_entry_list[1];
 
-typedef struct _teds_bitset_entries {
+typedef struct _teds_bitvector_entries {
 	/* This is deliberately a size_t instead of an uint32_t.
 	 * This is memory efficient enough that it's more likely to be used in practice for more than 4 billion values,
 	 * and garbage collection isn't a problem.
@@ -92,56 +92,56 @@ typedef struct _teds_bitset_entries {
 	size_t bit_size;
 	size_t bit_capacity;
 	uint8_t *entries_bits;
-} teds_bitset_entries;
+} teds_bitvector_entries;
 
-typedef struct _teds_bitset {
-	teds_bitset_entries		array;
+typedef struct _teds_bitvector {
+	teds_bitvector_entries		array;
 	zend_object				std;
-} teds_bitset;
+} teds_bitvector;
 
-/* Used by InternalIterator returned by BitSet->getIterator() */
-typedef struct _teds_bitset_it {
+/* Used by InternalIterator returned by BitVector->getIterator() */
+typedef struct _teds_bitvector_it {
 	zend_object_iterator intern;
 	size_t               current;
 	/* Temporary memory location to store the most recent get_current_value() result */
 	zval                 tmp;
-} teds_bitset_it;
+} teds_bitvector_it;
 
-static void teds_bitset_entries_raise_capacity(teds_bitset_entries *intern, const size_t new_capacity);
-static zend_always_inline void teds_bitset_entries_push(teds_bitset_entries *array, const bool value, const bool check_capacity);
-static zend_always_inline void teds_bitset_entries_copy_offset(const teds_bitset_entries *array, const size_t offset, zval *dst, bool pop);
-static zend_always_inline zval *teds_bitset_entries_read_offset(const teds_bitset_entries *intern, const size_t offset, zval *tmp);
-static void teds_bitset_entries_init_from_array_values(teds_bitset_entries *array, zend_array *raw_data);
-static zend_array *teds_bitset_entries_to_refcounted_array(const teds_bitset_entries *array);
+static void teds_bitvector_entries_raise_capacity(teds_bitvector_entries *intern, const size_t new_capacity);
+static zend_always_inline void teds_bitvector_entries_push(teds_bitvector_entries *array, const bool value, const bool check_capacity);
+static zend_always_inline void teds_bitvector_entries_copy_offset(const teds_bitvector_entries *array, const size_t offset, zval *dst, bool pop);
+static zend_always_inline zval *teds_bitvector_entries_read_offset(const teds_bitvector_entries *intern, const size_t offset, zval *tmp);
+static void teds_bitvector_entries_init_from_array_values(teds_bitvector_entries *array, zend_array *raw_data);
+static zend_array *teds_bitvector_entries_to_refcounted_array(const teds_bitvector_entries *array);
 
 /*
  * If a bit_size this large is encountered, assume the allocation will likely fail or
  * future changes to the bit_capacity will overflow.
  */
-static ZEND_COLD void teds_error_noreturn_max_bitset_capacity()
+static ZEND_COLD void teds_error_noreturn_max_bitvector_capacity()
 {
-	zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\BitSet bit_capacity");
+	zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\BitVector bit_capacity");
 }
 
-static zend_always_inline teds_bitset *teds_bitset_from_object(zend_object *obj)
+static zend_always_inline teds_bitvector *teds_bitvector_from_object(zend_object *obj)
 {
-	return (teds_bitset*)((char*)(obj) - XtOffsetOf(teds_bitset, std));
+	return (teds_bitvector*)((char*)(obj) - XtOffsetOf(teds_bitvector, std));
 }
 
-#define Z_BITSET_P(zv)  (teds_bitset_from_object(Z_OBJ_P((zv))))
-#define Z_BITSET_ENTRIES_P(zv)  (&(Z_BITSET_P((zv))->array))
+#define Z_BITVECTOR_P(zv)  (teds_bitvector_from_object(Z_OBJ_P((zv))))
+#define Z_BITVECTOR_ENTRIES_P(zv)  (&(Z_BITVECTOR_P((zv))->array))
 
-static zend_always_inline bool teds_bitset_entries_empty_capacity(const teds_bitset_entries *array)
+static zend_always_inline bool teds_bitvector_entries_empty_capacity(const teds_bitvector_entries *array)
 {
 	if (array->bit_capacity > 0) {
 		ZEND_ASSERT(array->entries_bits != (void *)empty_entry_list);
 		return false;
 	}
-	// This bitset may have reserved bit_capacity.
+	// This bitvector may have reserved bit_capacity.
 	return true;
 }
 
-static zend_always_inline bool teds_bitset_entries_uninitialized(const teds_bitset_entries *array)
+static zend_always_inline bool teds_bitvector_entries_uninitialized(const teds_bitvector_entries *array)
 {
 	if (array->entries_bits == NULL) {
 		ZEND_ASSERT(array->bit_size == 0);
@@ -152,13 +152,13 @@ static zend_always_inline bool teds_bitset_entries_uninitialized(const teds_bits
 	return false;
 }
 
-static void teds_bitset_entries_raise_capacity(teds_bitset_entries *array, const size_t new_capacity) {
+static void teds_bitvector_entries_raise_capacity(teds_bitvector_entries *array, const size_t new_capacity) {
 	ZEND_ASSERT((array->bit_capacity & 7) == 0);
-	ZEND_ASSERT((new_capacity & (TEDS_MIN_BITSET_BITS - 1)) == 0);
+	ZEND_ASSERT((new_capacity & (TEDS_MIN_BITVECTOR_BITS - 1)) == 0);
 	ZEND_ASSERT(new_capacity > array->bit_capacity);
 	const size_t bytes_needed = BYTES_FOR_BIT_SIZE(new_capacity);
-	if (UNEXPECTED(new_capacity >= TEDS_MAX_BITSET_BITS)) {
-		teds_error_noreturn_max_bitset_capacity();
+	if (UNEXPECTED(new_capacity >= TEDS_MAX_BITVECTOR_BITS)) {
+		teds_error_noreturn_max_bitvector_capacity();
 		return;
 	}
 	//fprintf(stderr, "reallocate %d bytes %d bits\n", (int)bytes_needed, (int)new_capacity);
@@ -171,7 +171,7 @@ static void teds_bitset_entries_raise_capacity(teds_bitset_entries *array, const
 	ZEND_ASSERT(array->entries_bits != NULL);
 }
 
-static inline void teds_bitset_entries_shrink_capacity(teds_bitset_entries *array, const size_t bit_size, const size_t bit_capacity, void *old_entries_bits) {
+static inline void teds_bitvector_entries_shrink_capacity(teds_bitvector_entries *array, const size_t bit_size, const size_t bit_capacity, void *old_entries_bits) {
 	ZEND_ASSERT(bit_size <= bit_capacity);
 	ZEND_ASSERT(bit_size == array->bit_size);
 	ZEND_ASSERT(bit_capacity > 0);
@@ -183,17 +183,17 @@ static inline void teds_bitset_entries_shrink_capacity(teds_bitset_entries *arra
 	ZEND_ASSERT(array->entries_bits != NULL);
 }
 
-static zend_always_inline void teds_bitset_entries_set_empty_list(teds_bitset_entries *array) {
+static zend_always_inline void teds_bitvector_entries_set_empty_list(teds_bitvector_entries *array) {
 	array->bit_size = 0;
 	array->bit_capacity = 0;
 	array->entries_bits = (void *)empty_entry_list;
 }
 
-static void teds_bitset_entries_init_from_traversable(teds_bitset_entries *array, zend_object *obj)
+static void teds_bitvector_entries_init_from_traversable(teds_bitvector_entries *array, zend_object *obj)
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	teds_bitset_entries_set_empty_list(array);
+	teds_bitvector_entries_set_empty_list(array);
 	zval tmp_obj;
 	ZVAL_OBJ(&tmp_obj, obj);
 	iter = ce->get_iterator(ce, &tmp_obj, 0);
@@ -222,21 +222,21 @@ static void teds_bitset_entries_init_from_traversable(teds_bitset_entries *array
 		}
 
 		bool value;
-		if (UNEXPECTED(!teds_bitset_is_bool(value_zv))) {
+		if (UNEXPECTED(!teds_bitvector_is_bool(value_zv))) {
 			if (EXPECTED(Z_TYPE_P(value_zv) == IS_REFERENCE)) {
 				value_zv = Z_REFVAL_P(value_zv);
-				if (EXPECTED(teds_bitset_is_bool(value_zv))) {
+				if (EXPECTED(teds_bitvector_is_bool(value_zv))) {
 					value = Z_TYPE_P(value_zv) != IS_FALSE;
 					break;
 				}
 			}
-			zend_type_error("Illegal Teds\\BitSet value type %s", zend_zval_type_name(value_zv));
+			zend_type_error("Illegal Teds\\BitVector value type %s", zend_zval_type_name(value_zv));
 			break;
 		} else {
 			value = Z_TYPE_P(value_zv) != IS_FALSE;
 		}
 
-		teds_bitset_entries_push(array, value, true);
+		teds_bitvector_entries_push(array, value, true);
 
 		iter->index++;
 		funcs->move_forward(iter);
@@ -251,11 +251,11 @@ cleanup_iter:
 	}
 }
 
-static void teds_bitset_entries_copy_ctor(teds_bitset_entries *to, const teds_bitset_entries *from)
+static void teds_bitvector_entries_copy_ctor(teds_bitvector_entries *to, const teds_bitvector_entries *from)
 {
 	zend_long bit_size = from->bit_size;
 	if (!bit_size) {
-		teds_bitset_entries_set_empty_list(to);
+		teds_bitvector_entries_set_empty_list(to);
 		return;
 	}
 
@@ -269,7 +269,7 @@ static void teds_bitset_entries_copy_ctor(teds_bitset_entries *to, const teds_bi
 	memcpy(to->entries_bits, from->entries_bits, BYTES_FOR_BIT_SIZE(bit_size));
 }
 
-static HashTable* teds_bitset_get_gc(zend_object *obj, zval **table, int *n)
+static HashTable* teds_bitvector_get_gc(zend_object *obj, zval **table, int *n)
 {
 	/* Zend/zend_gc.c does not initialize table or n. So we need to set n to 0 at minimum. */
 	*n = 0;
@@ -279,49 +279,49 @@ static HashTable* teds_bitset_get_gc(zend_object *obj, zval **table, int *n)
 	return NULL;
 }
 
-static HashTable* teds_bitset_get_properties(zend_object *obj)
+static HashTable* teds_bitvector_get_properties(zend_object *obj)
 {
 	(void)obj;
 	/* Thankfully, anything using Z_OBJPROP_P for infinite recursion detection (var_export) won't need to worry about infinite recursion, all fields are integers and there are no properties. */
 	return (HashTable*)&zend_empty_array;
 }
 
-static HashTable* teds_bitset_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
+static HashTable* teds_bitvector_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
 {
 	(void)purpose;
-	teds_bitset_entries *array = &teds_bitset_from_object(obj)->array;
+	teds_bitvector_entries *array = &teds_bitvector_from_object(obj)->array;
 	if (!array->bit_size) {
 		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
 		return (HashTable*)&zend_empty_array;
 	}
 	/* var_export uses get_properties_for for infinite recursion detection rather than get_properties(Z_OBJPROP).
 	 * or checking for recursion on the object itself (php_var_dump).
-	 * However, BitSet can only contain integers, making infinite recursion impossible, so it's safe to return new arrays. */
-	return teds_bitset_entries_to_refcounted_array(array);
+	 * However, BitVector can only contain integers, making infinite recursion impossible, so it's safe to return new arrays. */
+	return teds_bitvector_entries_to_refcounted_array(array);
 }
 
-static void teds_bitset_free_storage(zend_object *object)
+static void teds_bitvector_free_storage(zend_object *object)
 {
-	teds_bitset *intern = teds_bitset_from_object(object);
-	if (!teds_bitset_entries_empty_capacity(&intern->array)) {
+	teds_bitvector *intern = teds_bitvector_from_object(object);
+	if (!teds_bitvector_entries_empty_capacity(&intern->array)) {
 		efree(intern->array.entries_bits);
 	}
 	zend_object_std_dtor(object);
 }
 
-static zend_object *teds_bitset_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
+static zend_object *teds_bitvector_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
 {
-	teds_bitset *intern = zend_object_alloc(sizeof(teds_bitset), class_type);
+	teds_bitvector *intern = zend_object_alloc(sizeof(teds_bitvector), class_type);
 	/* This is a final class */
-	ZEND_ASSERT(class_type == teds_ce_BitSet);
+	ZEND_ASSERT(class_type == teds_ce_BitVector);
 
 	zend_object_std_init(&intern->std, class_type);
 	object_properties_init(&intern->std, class_type);
-	intern->std.handlers = &teds_handler_BitSet;
+	intern->std.handlers = &teds_handler_BitVector;
 
 	if (orig && clone_orig) {
-		teds_bitset *other = teds_bitset_from_object(orig);
-		teds_bitset_entries_copy_ctor(&intern->array, &other->array);
+		teds_bitvector *other = teds_bitvector_from_object(orig);
+		teds_bitvector_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.entries_bits = NULL;
 	}
@@ -329,49 +329,49 @@ static zend_object *teds_bitset_new_ex(zend_class_entry *class_type, zend_object
 	return &intern->std;
 }
 
-static zend_object *teds_bitset_new(zend_class_entry *class_type)
+static zend_object *teds_bitvector_new(zend_class_entry *class_type)
 {
-	return teds_bitset_new_ex(class_type, NULL, 0);
+	return teds_bitvector_new_ex(class_type, NULL, 0);
 }
 
-static zend_object *teds_bitset_clone(zend_object *old_object)
+static zend_object *teds_bitvector_clone(zend_object *old_object)
 {
-	zend_object *new_object = teds_bitset_new_ex(old_object->ce, old_object, 1);
+	zend_object *new_object = teds_bitvector_new_ex(old_object->ce, old_object, 1);
 
 	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
 }
 
-static int teds_bitset_count_elements(zend_object *object, zend_long *count)
+static int teds_bitvector_count_elements(zend_object *object, zend_long *count)
 {
-	const teds_bitset *intern = teds_bitset_from_object(object);
+	const teds_bitvector *intern = teds_bitvector_from_object(object);
 	*count = intern->array.bit_size;
 	return SUCCESS;
 }
 
-/* Get number of entries in this bitset */
-PHP_METHOD(Teds_BitSet, count)
+/* Get number of entries in this bitvector */
+PHP_METHOD(Teds_BitVector, count)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	RETURN_LONG(Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_size);
+	RETURN_LONG(Z_BITVECTOR_ENTRIES_P(ZEND_THIS)->bit_size);
 }
 
-/* Get number of entries in this bitset */
-PHP_METHOD(Teds_BitSet, capacity)
+/* Get number of entries in this bitvector */
+PHP_METHOD(Teds_BitVector, capacity)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	RETURN_LONG(Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_capacity);
+	RETURN_LONG(Z_BITVECTOR_ENTRIES_P(ZEND_THIS)->bit_capacity);
 }
 
-/* Check if the bitset is empty. */
-PHP_METHOD(Teds_BitSet, isEmpty)
+/* Check if the bitvector is empty. */
+PHP_METHOD(Teds_BitVector, isEmpty)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	RETURN_BOOL(Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_size == 0);
+	RETURN_BOOL(Z_BITVECTOR_ENTRIES_P(ZEND_THIS)->bit_size == 0);
 }
 
-static void teds_bitset_set_range(teds_bitset_entries *const array, const size_t start_bit, const size_t end_bit, const bool value_bool) {
+static void teds_bitvector_set_range(teds_bitvector_entries *const array, const size_t start_bit, const size_t end_bit, const bool value_bool) {
 	ZEND_ASSERT(start_bit < end_bit);
 	ZEND_ASSERT(end_bit < array->bit_capacity);
 	uint8_t *const entries_bits = array->entries_bits;
@@ -396,8 +396,8 @@ static void teds_bitset_set_range(teds_bitset_entries *const array, const size_t
 	}
 }
 
-/* Set size in bits of this BitSet */
-PHP_METHOD(Teds_BitSet, setSize)
+/* Set size in bits of this BitVector */
+PHP_METHOD(Teds_BitVector, setSize)
 {
 	zend_long size_signed;
 	bool default_bool = false;
@@ -412,27 +412,27 @@ PHP_METHOD(Teds_BitSet, setSize)
 		RETURN_THROWS();
 	}
 	const zend_ulong size = size_signed;
-	teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	teds_bitvector_entries *const array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	if (size <= old_size) {
 		array->bit_size = size;
-		const size_t capacity = teds_bitset_compute_next_valid_capacity(size);
+		const size_t capacity = teds_bitvector_compute_next_valid_capacity(size);
 		if (UNEXPECTED(capacity < array->bit_capacity)) {
-			teds_bitset_entries_shrink_capacity(array, size, capacity, array->entries_bits);
+			teds_bitvector_entries_shrink_capacity(array, size, capacity, array->entries_bits);
 		}
 		TEDS_RETURN_VOID();
 	}
 	/* Raise the capacity as needed and fill the space with nulls */
 	if (UNEXPECTED(size > array->bit_capacity)) {
-		teds_bitset_entries_raise_capacity(array, teds_bitset_compute_next_valid_capacity(size + (size >> 2)));
+		teds_bitvector_entries_raise_capacity(array, teds_bitvector_compute_next_valid_capacity(size + (size >> 2)));
 	}
-	teds_bitset_set_range(array, old_size, size, default_bool);
+	teds_bitvector_set_range(array, old_size, size, default_bool);
 	array->bit_size = size;
 	TEDS_RETURN_VOID();
 }
 
 /* Create this from an optional iterable */
-PHP_METHOD(Teds_BitSet, __construct)
+PHP_METHOD(Teds_BitVector, __construct)
 {
 	zval *object = ZEND_THIS;
 	zval* iterable = NULL;
@@ -442,62 +442,62 @@ PHP_METHOD(Teds_BitSet, __construct)
 		Z_PARAM_ITERABLE(iterable)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(object);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(object);
 
-	if (UNEXPECTED(!teds_bitset_entries_uninitialized(array))) {
-		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\BitSet::__construct twice", 0);
+	if (UNEXPECTED(!teds_bitvector_entries_uninitialized(array))) {
+		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\BitVector::__construct twice", 0);
 		RETURN_THROWS();
 	}
 	if (!iterable) {
-		teds_bitset_entries_set_empty_list(array);
+		teds_bitvector_entries_set_empty_list(array);
 		return;
 	}
 
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_bitset_entries_init_from_array_values(array, Z_ARRVAL_P(iterable));
+			teds_bitvector_entries_init_from_array_values(array, Z_ARRVAL_P(iterable));
 			return;
 		case IS_OBJECT:
-			teds_bitset_entries_init_from_traversable(array, Z_OBJ_P(iterable));
+			teds_bitvector_entries_init_from_traversable(array, Z_OBJ_P(iterable));
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
 }
 
-PHP_METHOD(Teds_BitSet, clear)
+PHP_METHOD(Teds_BitVector, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 
-	if (!teds_bitset_entries_empty_capacity(array)) {
+	if (!teds_bitvector_entries_empty_capacity(array)) {
 		efree(array->entries_bits);
 	}
-	teds_bitset_entries_set_empty_list(array);
+	teds_bitvector_entries_set_empty_list(array);
 	TEDS_RETURN_VOID();
 }
 
-PHP_METHOD(Teds_BitSet, getIterator)
+PHP_METHOD(Teds_BitVector, getIterator)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	zend_create_internal_iterator_zval(return_value, ZEND_THIS);
 }
 
-static void teds_bitset_it_dtor(zend_object_iterator *iter)
+static void teds_bitvector_it_dtor(zend_object_iterator *iter)
 {
 	zval_ptr_dtor(&iter->data);
 }
 
-static void teds_bitset_it_rewind(zend_object_iterator *iter)
+static void teds_bitvector_it_rewind(zend_object_iterator *iter)
 {
-	((teds_bitset_it*)iter)->current = 0;
+	((teds_bitvector_it*)iter)->current = 0;
 }
 
-static int teds_bitset_it_valid(zend_object_iterator *iter)
+static int teds_bitvector_it_valid(zend_object_iterator *iter)
 {
-	teds_bitset_it     *iterator = (teds_bitset_it*)iter;
-	teds_bitset *object   = Z_BITSET_P(&iter->data);
+	teds_bitvector_it     *iterator = (teds_bitvector_it*)iter;
+	teds_bitvector *object   = Z_BITVECTOR_P(&iter->data);
 
 	if (iterator->current < object->array.bit_size) {
 		return SUCCESS;
@@ -506,21 +506,21 @@ static int teds_bitset_it_valid(zend_object_iterator *iter)
 	return FAILURE;
 }
 
-static zval *teds_bitset_it_get_current_data(zend_object_iterator *iter)
+static zval *teds_bitvector_it_get_current_data(zend_object_iterator *iter)
 {
-	teds_bitset_it *iterator = (teds_bitset_it*)iter;
-	teds_bitset_entries *array   = Z_BITSET_ENTRIES_P(&iter->data);
+	teds_bitvector_it *iterator = (teds_bitvector_it*)iter;
+	teds_bitvector_entries *array   = Z_BITVECTOR_ENTRIES_P(&iter->data);
 	if (UNEXPECTED(iterator->current >= array->bit_size)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		return &EG(uninitialized_zval);
 	}
-	return teds_bitset_entries_read_offset(array, iterator->current, &iterator->tmp);
+	return teds_bitvector_entries_read_offset(array, iterator->current, &iterator->tmp);
 }
 
-static void teds_bitset_it_get_current_key(zend_object_iterator *iter, zval *key)
+static void teds_bitvector_it_get_current_key(zend_object_iterator *iter, zval *key)
 {
-	teds_bitset_it     *iterator = (teds_bitset_it*)iter;
-	teds_bitset *object   = Z_BITSET_P(&iter->data);
+	teds_bitvector_it     *iterator = (teds_bitvector_it*)iter;
+	teds_bitvector *object   = Z_BITVECTOR_P(&iter->data);
 
 	size_t offset = iterator->current;
 	if (offset >= object->array.bit_size) {
@@ -530,50 +530,50 @@ static void teds_bitset_it_get_current_key(zend_object_iterator *iter, zval *key
 	}
 }
 
-static void teds_bitset_it_move_forward(zend_object_iterator *iter)
+static void teds_bitvector_it_move_forward(zend_object_iterator *iter)
 {
-	((teds_bitset_it*)iter)->current++;
+	((teds_bitvector_it*)iter)->current++;
 }
 
 /* iterator handler table */
-static const zend_object_iterator_funcs teds_bitset_it_funcs = {
-	teds_bitset_it_dtor,
-	teds_bitset_it_valid,
-	teds_bitset_it_get_current_data,
-	teds_bitset_it_get_current_key,
-	teds_bitset_it_move_forward,
-	teds_bitset_it_rewind,
+static const zend_object_iterator_funcs teds_bitvector_it_funcs = {
+	teds_bitvector_it_dtor,
+	teds_bitvector_it_valid,
+	teds_bitvector_it_get_current_data,
+	teds_bitvector_it_get_current_key,
+	teds_bitvector_it_move_forward,
+	teds_bitvector_it_rewind,
 	NULL,
 	NULL, /* get_gc */
 };
 
 
-zend_object_iterator *teds_bitset_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
+zend_object_iterator *teds_bitvector_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
 	// This is final
-	ZEND_ASSERT(ce == teds_ce_BitSet);
-	teds_bitset_it *iterator;
+	ZEND_ASSERT(ce == teds_ce_BitVector);
+	teds_bitvector_it *iterator;
 
 	if (UNEXPECTED(by_ref)) {
 		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
 		return NULL;
 	}
 
-	iterator = emalloc(sizeof(teds_bitset_it));
+	iterator = emalloc(sizeof(teds_bitvector_it));
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
 	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
-	iterator->intern.funcs = &teds_bitset_it_funcs;
+	iterator->intern.funcs = &teds_bitvector_it_funcs;
 
 	return &iterator->intern;
 }
 
-static void teds_bitset_initialize_from_bytes(teds_bitset_entries *array, const uint8_t *bytes, const size_t byte_count, const uint8_t modulo_bit_len)
+static void teds_bitvector_initialize_from_bytes(teds_bitvector_entries *array, const uint8_t *bytes, const size_t byte_count, const uint8_t modulo_bit_len)
 {
 	const size_t bit_size = byte_count * 8 - modulo_bit_len;
 	ZEND_ASSERT(bit_size > 0);
-	const size_t bit_capacity = teds_bitset_compute_next_valid_capacity(bit_size);
+	const size_t bit_capacity = teds_bitvector_compute_next_valid_capacity(bit_size);
 	// fprintf(stderr, "byte_count=%d modulo_bit_len=%d bit_size=%d bit_capacity=%d\n", (int)byte_count, (int)modulo_bit_len, (int)bit_size, (int)bit_capacity);
 	uint8_t *const bytes_copy = emalloc(bit_capacity >> 3);
 	memcpy(bytes_copy, bytes, byte_count);
@@ -582,49 +582,49 @@ static void teds_bitset_initialize_from_bytes(teds_bitset_entries *array, const 
 	array->bit_capacity = bit_capacity;
 }
 
-PHP_METHOD(Teds_BitSet, __unserialize)
+PHP_METHOD(Teds_BitVector, __unserialize)
 {
 	HashTable *raw_data;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "h", &raw_data) == FAILURE) {
 		RETURN_THROWS();
 	}
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
-	if (UNEXPECTED(!teds_bitset_entries_uninitialized(array))) {
-		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet already unserialized", 0);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
+	if (UNEXPECTED(!teds_bitvector_entries_uninitialized(array))) {
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitVector already unserialized", 0);
 		RETURN_THROWS();
 	}
 	if (zend_hash_num_elements(raw_data) == 0) {
-		teds_bitset_entries_set_empty_list(array);
+		teds_bitvector_entries_set_empty_list(array);
 		return;
 	}
 
 	if (UNEXPECTED(zend_hash_num_elements(raw_data) != 1)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet unexpected __unserialize data: expected exactly 0 or 1 value", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitVector unexpected __unserialize data: expected exactly 0 or 1 value", 0);
 		RETURN_THROWS();
 	}
 	const zval *const raw_zval = zend_hash_index_find(raw_data, 0);
 	if (UNEXPECTED(raw_zval == NULL)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet missing data to unserialize", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitVector missing data to unserialize", 0);
 		RETURN_THROWS();
 	}
 	if (Z_TYPE_P(raw_zval) != IS_STRING) {
-		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet expected string for binary data", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitVector expected string for binary data", 0);
 		RETURN_THROWS();
 	}
 	const zend_string *const zstr = Z_STR_P(raw_zval);
 	if (ZSTR_LEN(zstr) == 0) {
 		// Not expected but allowed
-		teds_bitset_entries_set_empty_list(array);
+		teds_bitvector_entries_set_empty_list(array);
 		return;
 	}
 	const uint8_t *bytes = (const uint8_t *)ZSTR_VAL(zstr);
 	const size_t byte_count = ZSTR_LEN(zstr) - 1;
 	const uint8_t modulo_bit_len = (uint8_t) bytes[byte_count];
 	if (modulo_bit_len >= 8) {
-		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet expected binary data to end with number of wasted bits", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitVector expected binary data to end with number of wasted bits", 0);
 		RETURN_THROWS();
 	}
-	teds_bitset_initialize_from_bytes(array, bytes, byte_count, modulo_bit_len);
+	teds_bitvector_initialize_from_bytes(array, bytes, byte_count, modulo_bit_len);
 	TEDS_RETURN_VOID();
 }
 
@@ -683,7 +683,7 @@ static zend_always_inline zend_string *teds_create_string_from_entries_int64(con
 #endif
 }
 
-static zend_string *teds_bitset_create_serialized_string(const teds_bitset_entries *const array)
+static zend_string *teds_bitvector_create_serialized_string(const teds_bitvector_entries *const array)
 {
 	const size_t len = array->bit_size;
 	const uint8_t removed_bits = ((8 - len) & 7);
@@ -698,7 +698,7 @@ static zend_string *teds_bitset_create_serialized_string(const teds_bitset_entri
 	return ret;
 }
 
-static zend_string *teds_bitset_create_serialized_string_no_padding(const teds_bitset_entries *const array)
+static zend_string *teds_bitvector_create_serialized_string_no_padding(const teds_bitvector_entries *const array)
 {
 	const size_t len = array->bit_size;
 	const uint8_t removed_bits = ((8 - len) & 7);
@@ -711,94 +711,94 @@ static zend_string *teds_bitset_create_serialized_string_no_padding(const teds_b
 	return ret;
 }
 
-PHP_METHOD(Teds_BitSet, __serialize)
+PHP_METHOD(Teds_BitVector, __serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	const teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const teds_bitvector_entries *const array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t len = array->bit_size;
 	if (len == 0) {
 		RETURN_EMPTY_ARRAY();
 	}
-	/* Represent the bitset as the bytes, followed by the number of bits % 8 */
+	/* Represent the bitvector as the bytes, followed by the number of bits % 8 */
 	zval tmp;
-	ZVAL_STR(&tmp, teds_bitset_create_serialized_string(array));
+	ZVAL_STR(&tmp, teds_bitvector_create_serialized_string(array));
 	zend_array *result = zend_new_array(1);
 	zend_hash_next_index_insert(result, &tmp);
 	RETURN_ARR(result);
 }
 
-PHP_METHOD(Teds_BitSet, serialize)
+PHP_METHOD(Teds_BitVector, serialize)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	const teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const teds_bitvector_entries *const array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t len = array->bit_size;
 	if (len == 0) {
 		RETURN_EMPTY_STRING();
 	}
-	RETURN_STR(teds_bitset_create_serialized_string(array));
+	RETURN_STR(teds_bitvector_create_serialized_string(array));
 }
 
-PHP_METHOD(Teds_BitSet, unserialize)
+PHP_METHOD(Teds_BitVector, unserialize)
 {
 	zend_string *zstr;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_STR(zstr)
 	ZEND_PARSE_PARAMETERS_END();
 
-	zend_object *new_object = teds_bitset_new(teds_ce_BitSet);
-	teds_bitset *bitset = teds_bitset_from_object(new_object);
+	zend_object *new_object = teds_bitvector_new(teds_ce_BitVector);
+	teds_bitvector *bitvector = teds_bitvector_from_object(new_object);
 	if (ZSTR_LEN(zstr) == 0) {
-		teds_bitset_entries_set_empty_list(&bitset->array);
+		teds_bitvector_entries_set_empty_list(&bitvector->array);
 	} else {
 		const uint8_t *bytes = (const uint8_t *)ZSTR_VAL(zstr);
 		const size_t byte_count = ZSTR_LEN(zstr) - 1;
 		const uint8_t modulo_bit_len = (uint8_t) bytes[byte_count];
 		if (modulo_bit_len >= 8) {
-			zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitSet expected binary data to end with number of wasted bits", 0);
+			zend_throw_exception(spl_ce_RuntimeException, "Teds\\BitVector expected binary data to end with number of wasted bits", 0);
 			RETURN_THROWS();
 		}
 
-		teds_bitset_initialize_from_bytes(&bitset->array, bytes, byte_count, modulo_bit_len);
+		teds_bitvector_initialize_from_bytes(&bitvector->array, bytes, byte_count, modulo_bit_len);
 	}
 	RETURN_OBJ(new_object);
 }
 
-PHP_METHOD(Teds_BitSet, toBinaryString)
+PHP_METHOD(Teds_BitVector, toBinaryString)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	const teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const teds_bitvector_entries *const array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t len = array->bit_size;
 	if (len == 0) {
 		RETURN_EMPTY_STRING();
 	}
-	RETURN_STR(teds_bitset_create_serialized_string_no_padding(array));
+	RETURN_STR(teds_bitvector_create_serialized_string_no_padding(array));
 }
 
-PHP_METHOD(Teds_BitSet, fromBinaryString)
+PHP_METHOD(Teds_BitVector, fromBinaryString)
 {
 	zend_string *zstr;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_STR(zstr)
 	ZEND_PARSE_PARAMETERS_END();
 
-	zend_object *new_object = teds_bitset_new(teds_ce_BitSet);
-	teds_bitset *bitset = teds_bitset_from_object(new_object);
+	zend_object *new_object = teds_bitvector_new(teds_ce_BitVector);
+	teds_bitvector *bitvector = teds_bitvector_from_object(new_object);
 	if (ZSTR_LEN(zstr) == 0) {
-		teds_bitset_entries_set_empty_list(&bitset->array);
+		teds_bitvector_entries_set_empty_list(&bitvector->array);
 	} else {
 		const uint8_t *bytes = (const uint8_t *)ZSTR_VAL(zstr);
 		const size_t byte_count = ZSTR_LEN(zstr);
 
-		teds_bitset_initialize_from_bytes(&bitset->array, bytes, byte_count, 0);
+		teds_bitvector_initialize_from_bytes(&bitvector->array, bytes, byte_count, 0);
 	}
 	RETURN_OBJ(new_object);
 }
 
-static void teds_bitset_entries_init_from_array_values(teds_bitset_entries *array, zend_array *raw_data)
+static void teds_bitvector_entries_init_from_array_values(teds_bitvector_entries *array, zend_array *raw_data)
 {
 	const size_t num_entries = zend_hash_num_elements(raw_data);
-	teds_bitset_entries_set_empty_list(array);
+	teds_bitvector_entries_set_empty_list(array);
 	if (num_entries == 0) {
 		return;
 	}
@@ -810,26 +810,26 @@ static void teds_bitset_entries_init_from_array_values(teds_bitset_entries *arra
 	zval *val_zv;
 	ZEND_HASH_FOREACH_VAL(raw_data, val_zv) {
 		zend_long val;
-		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(val, val_zv);
-		teds_bitset_entries_push(array, val, 0);
+		TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(val, val_zv);
+		teds_bitvector_entries_push(array, val, 0);
 	} ZEND_HASH_FOREACH_END();
 }
 
-PHP_METHOD(Teds_BitSet, __set_state)
+PHP_METHOD(Teds_BitVector, __set_state)
 {
 	zend_array *array_ht;
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
-	zend_object *object = teds_bitset_new(teds_ce_BitSet);
-	teds_bitset *intern = teds_bitset_from_object(object);
-	teds_bitset_entries_init_from_array_values(&intern->array, array_ht);
+	zend_object *object = teds_bitvector_new(teds_ce_BitVector);
+	teds_bitvector *intern = teds_bitvector_from_object(object);
+	teds_bitvector_entries_init_from_array_values(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
 }
 
-static zend_array *teds_bitset_entries_to_refcounted_array(const teds_bitset_entries *array) {
+static zend_array *teds_bitvector_entries_to_refcounted_array(const teds_bitvector_entries *array) {
 	size_t len = array->bit_size;
 	const uint8_t *const bit_values = array->entries_bits;
 	zend_array *const values = teds_new_array_check_overflow(len);
@@ -847,39 +847,39 @@ static zend_array *teds_bitset_entries_to_refcounted_array(const teds_bitset_ent
 	return values;
 }
 
-PHP_METHOD(Teds_BitSet, toArray)
+PHP_METHOD(Teds_BitVector, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	const teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	size_t len = array->bit_size;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
-	RETURN_ARR(teds_bitset_entries_to_refcounted_array(array));
+	RETURN_ARR(teds_bitvector_entries_to_refcounted_array(array));
 }
 
-static zend_always_inline void teds_bitset_convert_zval_value_to_long_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
+static zend_always_inline void teds_bitvector_convert_zval_value_to_long_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
 {
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(zval_this);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(zval_this);
 	size_t len = array->bit_size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		RETURN_THROWS();
 	}
-	teds_bitset_entries_copy_offset(array, offset, return_value, false);
+	teds_bitvector_entries_copy_offset(array, offset, return_value, false);
 }
 
-PHP_METHOD(Teds_BitSet, get)
+PHP_METHOD(Teds_BitVector, get)
 {
 	zend_long offset;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_LONG(offset)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_bitset_convert_zval_value_to_long_at_offset(return_value, ZEND_THIS, offset);
+	teds_bitvector_convert_zval_value_to_long_at_offset(return_value, ZEND_THIS, offset);
 }
 
-PHP_METHOD(Teds_BitSet, offsetGet)
+PHP_METHOD(Teds_BitVector, offsetGet)
 {
 	zval *offset_zv;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -889,10 +889,10 @@ PHP_METHOD(Teds_BitSet, offsetGet)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	teds_bitset_convert_zval_value_to_long_at_offset(return_value, ZEND_THIS, offset);
+	teds_bitvector_convert_zval_value_to_long_at_offset(return_value, ZEND_THIS, offset);
 }
 
-PHP_METHOD(Teds_BitSet, offsetExists)
+PHP_METHOD(Teds_BitVector, offsetExists)
 {
 	zval *offset_zv;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -902,11 +902,11 @@ PHP_METHOD(Teds_BitSet, offsetExists)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	RETURN_BOOL((zend_ulong) offset < Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_size);
+	RETURN_BOOL((zend_ulong) offset < Z_BITVECTOR_ENTRIES_P(ZEND_THIS)->bit_size);
 }
 
 /* containsKey is similar to offsetExists but rejects non-integers */
-PHP_METHOD(Teds_BitSet, containsKey)
+PHP_METHOD(Teds_BitVector, containsKey)
 {
 	zval *offset_zv;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -918,17 +918,17 @@ PHP_METHOD(Teds_BitSet, containsKey)
 	}
 	zend_long offset = Z_LVAL_P(offset_zv);
 
-	RETURN_BOOL((zend_ulong) offset < Z_BITSET_ENTRIES_P(ZEND_THIS)->bit_size);
+	RETURN_BOOL((zend_ulong) offset < Z_BITVECTOR_ENTRIES_P(ZEND_THIS)->bit_size);
 }
 
-PHP_METHOD(Teds_BitSet, indexOf)
+PHP_METHOD(Teds_BitVector, indexOf)
 {
 	bool value;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_BOOL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	const teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t len = array->bit_size;
 	if (len == 0) {
 		RETURN_NULL();
@@ -959,18 +959,18 @@ PHP_METHOD(Teds_BitSet, indexOf)
 	RETURN_NULL();
 }
 
-PHP_METHOD(Teds_BitSet, contains)
+PHP_METHOD(Teds_BitVector, contains)
 {
 	zval *value_zv;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ZVAL(value_zv)
 	ZEND_PARSE_PARAMETERS_END();
 
-	if (!teds_bitset_is_bool(value_zv)) {
+	if (!teds_bitvector_is_bool(value_zv)) {
 		RETURN_FALSE;
 	}
 	const uint8_t value = Z_TYPE_P(value_zv) != IS_FALSE ? 1 : 0;
-	const teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const uint8_t *const entries_bits = array->entries_bits;
 	const size_t len = array->bit_size;
 	if (len == 0) {
@@ -993,8 +993,8 @@ PHP_METHOD(Teds_BitSet, contains)
 	RETURN_BOOL(v & ((1 << (len & 7)) - 1));
 }
 
-static zend_always_inline void teds_bitset_set_value_at_offset(zend_object *object, const zend_long offset, const bool value) {
-	teds_bitset_entries *array = &teds_bitset_from_object(object)->array;
+static zend_always_inline void teds_bitvector_set_value_at_offset(zend_object *object, const zend_long offset, const bool value) {
+	teds_bitvector_entries *array = &teds_bitvector_from_object(object)->array;
 	size_t len = array->bit_size;
 	if (UNEXPECTED((zend_ulong) offset >= len) || offset < 0) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
@@ -1008,7 +1008,7 @@ static zend_always_inline void teds_bitset_set_value_at_offset(zend_object *obje
 	}
 }
 
-PHP_METHOD(Teds_BitSet, set)
+PHP_METHOD(Teds_BitVector, set)
 {
 	zend_long offset;
 	zval *value_zv;
@@ -1018,13 +1018,13 @@ PHP_METHOD(Teds_BitSet, set)
 	ZEND_PARSE_PARAMETERS_END();
 
 	bool value;
-	TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(value, value_zv);
+	TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(value, value_zv);
 
-	teds_bitset_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	teds_bitvector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 	TEDS_RETURN_VOID();
 }
 
-PHP_METHOD(Teds_BitSet, setBit)
+PHP_METHOD(Teds_BitVector, setBit)
 {
 	zend_long offset;
 	bool value;
@@ -1033,12 +1033,12 @@ PHP_METHOD(Teds_BitSet, setBit)
 		Z_PARAM_BOOL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_bitset_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	teds_bitvector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 	TEDS_RETURN_VOID();
 }
 
 
-PHP_METHOD(Teds_BitSet, offsetSet)
+PHP_METHOD(Teds_BitVector, offsetSet)
 {
 	zval                  *offset_zv, *value_zv;
 
@@ -1050,41 +1050,41 @@ PHP_METHOD(Teds_BitSet, offsetSet)
 	bool value;
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
-	TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(value, value_zv);
+	TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(value, value_zv);
 
-	teds_bitset_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	teds_bitvector_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
 	TEDS_RETURN_VOID();
 }
 
-#define teds_bitset_convert_8(x) (x)
+#define teds_bitvector_convert_8(x) (x)
 #ifdef WORDS_BIGENDIAN
-#define teds_bitset_convert_16(x) teds_bswap_16((x))
-#define teds_bitset_convert_32(x) teds_bswap_32((x))
-#define teds_bitset_convert_64(x) teds_bswap_64((x))
+#define teds_bitvector_convert_16(x) teds_bswap_16((x))
+#define teds_bitvector_convert_32(x) teds_bswap_32((x))
+#define teds_bitvector_convert_64(x) teds_bswap_64((x))
 #else
-#define teds_bitset_convert_16(x) (x)
-#define teds_bitset_convert_32(x) (x)
-#define teds_bitset_convert_64(x) (x)
+#define teds_bitvector_convert_16(x) (x)
+#define teds_bitvector_convert_32(x) (x)
+#define teds_bitvector_convert_64(x) (x)
 #endif
 
-#define TEDS_BITSET_DECLARE_INT_GETTER(methodName, cTypeName, cTypeNameUnsigned, errorTypeName, convertName) \
-PHP_METHOD(Teds_BitSet, methodName) \
+#define TEDS_BITVECTOR_DECLARE_INT_GETTER(methodName, cTypeName, cTypeNameUnsigned, errorTypeName, convertName) \
+PHP_METHOD(Teds_BitVector, methodName) \
 { \
 	zend_long offset_int; \
 	ZEND_PARSE_PARAMETERS_START(1, 1) \
 		Z_PARAM_LONG(offset_int) \
 	ZEND_PARSE_PARAMETERS_END(); \
-	teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS); \
+	teds_bitvector_entries *const array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS); \
 	if (UNEXPECTED(((zend_ulong)offset_int) >= (array->bit_size / (sizeof(cTypeNameUnsigned) * 8)) || offset_int < 0)) { \
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Teds\\BitSet " # errorTypeName " index invalid or out of range", 0); \
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Teds\\BitVector " # errorTypeName " index invalid or out of range", 0); \
 		RETURN_THROWS(); \
 	} \
 	cTypeName result = ((cTypeName)(cTypeNameUnsigned)convertName(((cTypeNameUnsigned *)array->entries_bits)[offset_int])); \
 	RETURN_LONG(result); \
 }
 
-#define TEDS_BITSET_DECLARE_INT_SETTER(methodName, cTypeName, cTypeNameUnsigned, errorTypeName, convertName) \
-PHP_METHOD(Teds_BitSet, methodName) \
+#define TEDS_BITVECTOR_DECLARE_INT_SETTER(methodName, cTypeName, cTypeNameUnsigned, errorTypeName, convertName) \
+PHP_METHOD(Teds_BitVector, methodName) \
 { \
 	zend_long offset_int; \
 	zend_long offset_value; \
@@ -1092,9 +1092,9 @@ PHP_METHOD(Teds_BitSet, methodName) \
 		Z_PARAM_LONG(offset_int) \
 		Z_PARAM_LONG(offset_value) \
 	ZEND_PARSE_PARAMETERS_END(); \
-	teds_bitset_entries *const array = Z_BITSET_ENTRIES_P(ZEND_THIS); \
+	teds_bitvector_entries *const array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS); \
 	if (UNEXPECTED(((zend_ulong)offset_int) >= (array->bit_size / (sizeof(cTypeNameUnsigned) * 8)) || offset_int < 0)) { \
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Teds\\BitSet " # errorTypeName " index invalid or out of range", 0); \
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Teds\\BitVector " # errorTypeName " index invalid or out of range", 0); \
 		RETURN_THROWS(); \
 	} \
 	((cTypeNameUnsigned *)array->entries_bits)[offset_int] = convertName(offset_value); \
@@ -1102,28 +1102,28 @@ PHP_METHOD(Teds_BitSet, methodName) \
 }
 
 
-TEDS_BITSET_DECLARE_INT_GETTER(getInt8,   int8_t,   uint8_t,  int8, teds_bitset_convert_8)
-TEDS_BITSET_DECLARE_INT_GETTER(getInt16,  int16_t,  uint16_t, int16, teds_bitset_convert_16)
-TEDS_BITSET_DECLARE_INT_GETTER(getInt32,  int32_t,  uint32_t, int32, teds_bitset_convert_32)
-TEDS_BITSET_DECLARE_INT_GETTER(getUInt8,  uint8_t,  uint8_t,  int8, teds_bitset_convert_8)
-TEDS_BITSET_DECLARE_INT_GETTER(getUInt16, uint16_t, uint16_t, int16, teds_bitset_convert_16)
-TEDS_BITSET_DECLARE_INT_GETTER(getUInt32, uint32_t, uint32_t, int32, teds_bitset_convert_32)
-TEDS_BITSET_DECLARE_INT_SETTER(setInt8,   int8_t,   uint8_t,  int8, teds_bitset_convert_8)
-TEDS_BITSET_DECLARE_INT_SETTER(setInt16,  int16_t,  uint16_t, int16, teds_bitset_convert_16)
-TEDS_BITSET_DECLARE_INT_SETTER(setInt32,  int32_t,  uint32_t, int32, teds_bitset_convert_32)
+TEDS_BITVECTOR_DECLARE_INT_GETTER(getInt8,   int8_t,   uint8_t,  int8, teds_bitvector_convert_8)
+TEDS_BITVECTOR_DECLARE_INT_GETTER(getInt16,  int16_t,  uint16_t, int16, teds_bitvector_convert_16)
+TEDS_BITVECTOR_DECLARE_INT_GETTER(getInt32,  int32_t,  uint32_t, int32, teds_bitvector_convert_32)
+TEDS_BITVECTOR_DECLARE_INT_GETTER(getUInt8,  uint8_t,  uint8_t,  int8, teds_bitvector_convert_8)
+TEDS_BITVECTOR_DECLARE_INT_GETTER(getUInt16, uint16_t, uint16_t, int16, teds_bitvector_convert_16)
+TEDS_BITVECTOR_DECLARE_INT_GETTER(getUInt32, uint32_t, uint32_t, int32, teds_bitvector_convert_32)
+TEDS_BITVECTOR_DECLARE_INT_SETTER(setInt8,   int8_t,   uint8_t,  int8, teds_bitvector_convert_8)
+TEDS_BITVECTOR_DECLARE_INT_SETTER(setInt16,  int16_t,  uint16_t, int16, teds_bitvector_convert_16)
+TEDS_BITVECTOR_DECLARE_INT_SETTER(setInt32,  int32_t,  uint32_t, int32, teds_bitvector_convert_32)
 #if SIZEOF_ZEND_LONG > 4
-TEDS_BITSET_DECLARE_INT_GETTER(getInt64,  int64_t,  uint64_t, int64, teds_bitset_convert_64)
-TEDS_BITSET_DECLARE_INT_SETTER(setInt64,  int64_t,  uint64_t, int64, teds_bitset_convert_64)
+TEDS_BITVECTOR_DECLARE_INT_GETTER(getInt64,  int64_t,  uint64_t, int64, teds_bitvector_convert_64)
+TEDS_BITVECTOR_DECLARE_INT_SETTER(setInt64,  int64_t,  uint64_t, int64, teds_bitvector_convert_64)
 #else
-ZEND_COLD PHP_METHOD(Teds_BitSet, getInt64)
+ZEND_COLD PHP_METHOD(Teds_BitVector, getInt64)
 {
 	zend_long offset_int;
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_LONG(offset_int)
 	ZEND_PARSE_PARAMETERS_END();
-	teds_throw_unsupportedoperationexception("Teds\\BitSet 64-bit method not supported on 32-bit builds");
+	teds_throw_unsupportedoperationexception("Teds\\BitVector 64-bit method not supported on 32-bit builds");
 }
-ZEND_COLD PHP_METHOD(Teds_BitSet, setInt64)
+ZEND_COLD PHP_METHOD(Teds_BitVector, setInt64)
 {
 	zend_long offset_int;
 	zend_long offset_value;
@@ -1131,11 +1131,11 @@ ZEND_COLD PHP_METHOD(Teds_BitSet, setInt64)
 		Z_PARAM_LONG(offset_int)
 		Z_PARAM_LONG(offset_value)
 	ZEND_PARSE_PARAMETERS_END();
-	teds_throw_unsupportedoperationexception("Teds\\BitSet 64-bit method not supported on 32-bit builds");
+	teds_throw_unsupportedoperationexception("Teds\\BitVector 64-bit method not supported on 32-bit builds");
 }
 #endif
 
-static zend_always_inline bool teds_bitset_entries_read_offset_as_bool(const teds_bitset_entries *const array, const size_t offset)
+static zend_always_inline bool teds_bitvector_entries_read_offset_as_bool(const teds_bitvector_entries *const array, const size_t offset)
 {
 	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
 	ZEND_ASSERT(offset <= array->bit_size);
@@ -1143,22 +1143,22 @@ static zend_always_inline bool teds_bitset_entries_read_offset_as_bool(const ted
 	return (array->entries_bits[offset >> 3] >> (offset & 7)) & 1;
 }
 
-static zend_always_inline void teds_bitset_entries_copy_offset(const teds_bitset_entries *array, const zend_ulong offset, zval *dst, bool pop)
+static zend_always_inline void teds_bitvector_entries_copy_offset(const teds_bitvector_entries *array, const zend_ulong offset, zval *dst, bool pop)
 {
 	ZEND_ASSERT(pop ? array->bit_size < array->bit_capacity : array->bit_size <= array->bit_capacity);
 	ZEND_ASSERT(pop ? offset == array->bit_size : offset < array->bit_size);
 	ZEND_ASSERT(dst != NULL);
 
-	ZVAL_BOOL(dst, teds_bitset_entries_read_offset_as_bool(array, offset));
+	ZVAL_BOOL(dst, teds_bitvector_entries_read_offset_as_bool(array, offset));
 }
 
-static zend_always_inline zval *teds_bitset_entries_read_offset(const teds_bitset_entries *const array, const size_t offset, zval *const tmp)
+static zend_always_inline zval *teds_bitvector_entries_read_offset(const teds_bitvector_entries *const array, const size_t offset, zval *const tmp)
 {
-	ZVAL_BOOL(tmp, teds_bitset_entries_read_offset_as_bool(array, offset));
+	ZVAL_BOOL(tmp, teds_bitvector_entries_read_offset_as_bool(array, offset));
 	return tmp;
 }
 
-static zend_always_inline void teds_bitset_entries_push(teds_bitset_entries *array, const bool value, const bool check_capacity)
+static zend_always_inline void teds_bitvector_entries_push(teds_bitvector_entries *array, const bool value, const bool check_capacity)
 {
 	const size_t old_size = array->bit_size;
 	if (check_capacity) {
@@ -1168,9 +1168,9 @@ static zend_always_inline void teds_bitset_entries_push(teds_bitset_entries *arr
 
 		if (UNEXPECTED(old_size >= old_capacity)) {
 			ZEND_ASSERT(old_size == old_capacity);
-			const size_t new_capacity = teds_bitset_compute_next_valid_capacity(old_size + (old_size >> 1));
+			const size_t new_capacity = teds_bitvector_compute_next_valid_capacity(old_size + (old_size >> 1));
 			ZEND_ASSERT(new_capacity > old_capacity);
-			teds_bitset_entries_raise_capacity(array, new_capacity);
+			teds_bitvector_entries_raise_capacity(array, new_capacity);
 		}
 	} else {
 		ZEND_ASSERT(old_size < array->bit_capacity);
@@ -1187,7 +1187,7 @@ static zend_always_inline void teds_bitset_entries_push(teds_bitset_entries *arr
 }
 
 /* Based on array_push */
-PHP_METHOD(Teds_BitSet, push)
+PHP_METHOD(Teds_BitVector, push)
 {
 	const zval *args;
 	uint32_t argc;
@@ -1199,24 +1199,24 @@ PHP_METHOD(Teds_BitSet, push)
 	if (UNEXPECTED(argc == 0)) {
 		return;
 	}
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	const size_t new_size = old_size + argc;
 	/* The compiler will type check but eliminate dead code on platforms where size_t is 32 bits (4 bytes) */
 	if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_size > MAX_VALID_OFFSET + 1 || new_size < old_size)) {
-		teds_error_noreturn_max_bitset_capacity();
+		teds_error_noreturn_max_bitvector_capacity();
 		ZEND_UNREACHABLE();
 	}
 
 	for (uint32_t i = 0; i < argc; i++) {
 		zend_long new_value;
-		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
-		teds_bitset_entries_push(array, new_value, true);
+		TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
+		teds_bitvector_entries_push(array, new_value, true);
 	}
 	TEDS_RETURN_VOID();
 }
 
-static zend_always_inline void teds_bitset_entries_unshift_single(teds_bitset_entries *array, const bool value)
+static zend_always_inline void teds_bitvector_entries_unshift_single(teds_bitvector_entries *array, const bool value)
 {
 	const size_t old_size = array->bit_size;
 	const size_t old_capacity = array->bit_capacity;
@@ -1225,9 +1225,9 @@ static zend_always_inline void teds_bitset_entries_unshift_single(teds_bitset_en
 
 	if (UNEXPECTED(old_size >= old_capacity)) {
 		ZEND_ASSERT(old_size == old_capacity);
-		const size_t new_capacity = teds_bitset_compute_next_valid_capacity(old_size + (old_size >> 1));
+		const size_t new_capacity = teds_bitvector_compute_next_valid_capacity(old_size + (old_size >> 1));
 		ZEND_ASSERT(new_capacity > old_capacity);
-		teds_bitset_entries_raise_capacity(array, new_capacity);
+		teds_bitvector_entries_raise_capacity(array, new_capacity);
 	}
 
 	array->bit_size++;
@@ -1256,7 +1256,7 @@ static zend_always_inline void teds_bitset_entries_unshift_single(teds_bitset_en
 	entries_bits[0] = (entries_bits[0] << 1) | (value ? 1 : 0);
 }
 
-static zend_always_inline void teds_bitset_entries_insert_single(teds_bitset_entries *array, const size_t offset, const bool value)
+static zend_always_inline void teds_bitvector_entries_insert_single(teds_bitvector_entries *array, const size_t offset, const bool value)
 {
 	const size_t old_size = array->bit_size;
 	const size_t old_capacity = array->bit_capacity;
@@ -1265,9 +1265,9 @@ static zend_always_inline void teds_bitset_entries_insert_single(teds_bitset_ent
 
 	if (UNEXPECTED(old_size >= old_capacity)) {
 		ZEND_ASSERT(old_size == old_capacity);
-		const size_t new_capacity = teds_bitset_compute_next_valid_capacity(old_size + (old_size >> 1));
+		const size_t new_capacity = teds_bitvector_compute_next_valid_capacity(old_size + (old_size >> 1));
 		ZEND_ASSERT(new_capacity > old_capacity);
-		teds_bitset_entries_raise_capacity(array, new_capacity);
+		teds_bitvector_entries_raise_capacity(array, new_capacity);
 	}
 
 	array->bit_size++;
@@ -1285,7 +1285,7 @@ static zend_always_inline void teds_bitset_entries_insert_single(teds_bitset_ent
 	entries_bits[n] = (old & insert_mask) | ((value ? 1 : 0) << bitpos) | ((old & ~insert_mask) << 1);
 }
 
-PHP_METHOD(Teds_BitSet, unshift)
+PHP_METHOD(Teds_BitVector, unshift)
 {
 	const zval *args;
 	uint32_t argc;
@@ -1297,25 +1297,25 @@ PHP_METHOD(Teds_BitSet, unshift)
 	if (UNEXPECTED(argc == 0)) {
 		return;
 	}
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	const size_t new_size = old_size + argc;
 	/* The compiler will type check but eliminate dead code on platforms where size_t is 32 bits (4 bytes) */
 	if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_size > MAX_VALID_OFFSET + 1 || new_size < old_size)) {
-		teds_error_noreturn_max_bitset_capacity();
+		teds_error_noreturn_max_bitvector_capacity();
 		ZEND_UNREACHABLE();
 	}
 
 	/* TODO: Optimize this for large varargs case */
 	for (uint32_t i = 0; i < argc; i++) {
 		zend_long new_value;
-		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
-		teds_bitset_entries_unshift_single(array, new_value);
+		TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
+		teds_bitvector_entries_unshift_single(array, new_value);
 	}
 	TEDS_RETURN_VOID();
 }
 
-PHP_METHOD(Teds_BitSet, insert)
+PHP_METHOD(Teds_BitVector, insert)
 {
 	zend_long offset;
 	const zval *args;
@@ -1326,7 +1326,7 @@ PHP_METHOD(Teds_BitSet, insert)
 		Z_PARAM_VARIADIC('+', args, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	if (UNEXPECTED((zend_ulong) offset > array->bit_size || offset < 0)) {
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
@@ -1338,21 +1338,21 @@ PHP_METHOD(Teds_BitSet, insert)
 	const size_t new_size = old_size + argc;
 	/* The compiler will type check but eliminate dead code on platforms where size_t is 32 bits (4 bytes) */
 	if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_size > MAX_VALID_OFFSET + 1 || new_size < old_size)) {
-		teds_error_noreturn_max_bitset_capacity();
+		teds_error_noreturn_max_bitvector_capacity();
 		ZEND_UNREACHABLE();
 	}
 
 	/* TODO: Optimize this for large varargs case */
 	for (uint32_t i = 0; i < argc; i++) {
 		zend_long new_value;
-		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
-		teds_bitset_entries_insert_single(array, offset + i, new_value);
+		TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
+		teds_bitvector_entries_insert_single(array, offset + i, new_value);
 	}
 	TEDS_RETURN_VOID();
 }
 
 /* Based on array_push */
-PHP_METHOD(Teds_BitSet, pushBits)
+PHP_METHOD(Teds_BitVector, pushBits)
 {
 	const zval *args;
 	uint32_t argc;
@@ -1364,76 +1364,76 @@ PHP_METHOD(Teds_BitSet, pushBits)
 	if (UNEXPECTED(argc == 0)) {
 		return;
 	}
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	const size_t new_size = old_size + argc;
 	/* The compiler will type check but eliminate dead code on platforms where size_t is 32 bits (4 bytes) */
 	if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_size > MAX_VALID_OFFSET + 1 || new_size < old_size)) {
-		teds_error_noreturn_max_bitset_capacity();
+		teds_error_noreturn_max_bitvector_capacity();
 		ZEND_UNREACHABLE();
 	}
 
-	const size_t new_capacity = teds_bitset_compute_next_valid_capacity(new_size);
+	const size_t new_capacity = teds_bitvector_compute_next_valid_capacity(new_size);
 	if (UNEXPECTED(new_capacity > array->bit_capacity)) {
-		teds_bitset_entries_raise_capacity(array, teds_bitset_compute_next_valid_capacity(new_size + (new_size >> 1)));
+		teds_bitvector_entries_raise_capacity(array, teds_bitvector_compute_next_valid_capacity(new_size + (new_size >> 1)));
 	}
 
 	uint32_t i = 0;
 	do {
 		bool new_value;
-		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
-		teds_bitset_entries_push(array, new_value, false);
+		TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
+		teds_bitvector_entries_push(array, new_value, false);
 		i++;
 	} while (i < argc);
 	TEDS_RETURN_VOID();
 }
 
-PHP_METHOD(Teds_BitSet, pop)
+PHP_METHOD(Teds_BitVector, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\BitSet", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\BitVector", 0);
 		RETURN_THROWS();
 	}
 	array->bit_size--;
-	teds_bitset_entries_copy_offset(array, array->bit_size, return_value, true);
+	teds_bitvector_entries_copy_offset(array, array->bit_size, return_value, true);
 
-	const size_t capacity = teds_bitset_compute_next_valid_capacity(old_size);
+	const size_t capacity = teds_bitvector_compute_next_valid_capacity(old_size);
 	if (UNEXPECTED(capacity < array->bit_capacity)) {
-		teds_bitset_entries_shrink_capacity(array, old_size - 1, capacity, array->entries_bits);
+		teds_bitvector_entries_shrink_capacity(array, old_size - 1, capacity, array->entries_bits);
 	}
 }
 
-PHP_METHOD(Teds_BitSet, first)
+PHP_METHOD(Teds_BitVector, first)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	const teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first bit of empty Teds\\BitSet", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first bit of empty Teds\\BitVector", 0);
 		RETURN_THROWS();
 	}
-	teds_bitset_entries_copy_offset(array, 0, return_value, false);
+	teds_bitvector_entries_copy_offset(array, 0, return_value, false);
 }
 
-PHP_METHOD(Teds_BitSet, last)
+PHP_METHOD(Teds_BitVector, last)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	const teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read last bit of empty Teds\\BitSet", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read last bit of empty Teds\\BitVector", 0);
 		RETURN_THROWS();
 	}
-	teds_bitset_entries_copy_offset(array, old_size - 1, return_value, false);
+	teds_bitvector_entries_copy_offset(array, old_size - 1, return_value, false);
 }
 
-static zend_always_inline void teds_bitset_entries_shift(teds_bitset_entries *array) {
+static zend_always_inline void teds_bitvector_entries_shift(teds_bitvector_entries *array) {
 	uint8_t *const entries_bits = array->entries_bits;
 	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
 	array->bit_size--;
@@ -1453,46 +1453,46 @@ static zend_always_inline void teds_bitset_entries_shift(teds_bitset_entries *ar
 	entries_bits[i] = (entries_bits[i] >> 1);
 }
 
-PHP_METHOD(Teds_BitSet, shift)
+PHP_METHOD(Teds_BitVector, shift)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\BitSet", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\BitVector", 0);
 		RETURN_THROWS();
 	}
 	/* Remove the least significant bit and replace it */
 	ZVAL_BOOL(return_value, array->entries_bits[0] & 1);
-	teds_bitset_entries_shift(array);
+	teds_bitvector_entries_shift(array);
 
-	const size_t capacity = teds_bitset_compute_next_valid_capacity(old_size);
+	const size_t capacity = teds_bitvector_compute_next_valid_capacity(old_size);
 	if (UNEXPECTED(capacity < array->bit_capacity)) {
-		teds_bitset_entries_shrink_capacity(array, old_size - 1, capacity, array->entries_bits);
+		teds_bitvector_entries_shrink_capacity(array, old_size - 1, capacity, array->entries_bits);
 	}
 }
 
-ZEND_COLD PHP_METHOD(Teds_BitSet, offsetUnset)
+ZEND_COLD PHP_METHOD(Teds_BitVector, offsetUnset)
 {
 	zval                  *offset_zv;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
 		RETURN_THROWS();
 	}
-	zend_throw_exception(teds_ce_UnsupportedOperationException, "Teds\\BitSet does not support offsetUnset - elements must be removed by resizing", 0);
+	zend_throw_exception(teds_ce_UnsupportedOperationException, "Teds\\BitVector does not support offsetUnset - elements must be removed by resizing", 0);
 	RETURN_THROWS();
 }
 
-static void teds_bitset_write_dimension(zend_object *object, zval *offset_zv, zval *value_zv)
+static void teds_bitvector_write_dimension(zend_object *object, zval *offset_zv, zval *value_zv)
 {
-	teds_bitset *intern = teds_bitset_from_object(object);
+	teds_bitvector *intern = teds_bitvector_from_object(object);
 
 	bool v;
-	TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(v, value_zv);
+	TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(v, value_zv);
 
 	if (!offset_zv) {
-		teds_bitset_entries_push(&intern->array, v, true);
+		teds_bitvector_entries_push(&intern->array, v, true);
 		return;
 	}
 
@@ -1503,10 +1503,10 @@ static void teds_bitset_write_dimension(zend_object *object, zval *offset_zv, zv
 		zend_throw_exception(spl_ce_OutOfBoundsException, "Index invalid or out of range", 0);
 		return;
 	}
-	teds_bitset_set_value_at_offset(object, offset, v);
+	teds_bitvector_set_value_at_offset(object, offset, v);
 }
 
-static zval *teds_bitset_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
+static zval *teds_bitvector_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
 {
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
 handle_missing_key:
@@ -1520,16 +1520,16 @@ handle_missing_key:
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW_RETURN_NULLPTR(offset, offset_zv);
 
-	const teds_bitset_entries *array = &teds_bitset_from_object(object)->array;
+	const teds_bitvector_entries *array = &teds_bitvector_from_object(object)->array;
 
 	if (UNEXPECTED(!teds_offset_within_size_t(offset, array->bit_size))) {
 		goto handle_missing_key;
 	} else {
-		return teds_bitset_entries_read_offset(array, (zend_ulong) offset, rv);
+		return teds_bitvector_entries_read_offset(array, (zend_ulong) offset, rv);
 	}
 }
 
-static int teds_bitset_has_dimension(zend_object *object, zval *offset_zv, int check_empty)
+static int teds_bitvector_has_dimension(zend_object *object, zval *offset_zv, int check_empty)
 {
 	zend_long offset;
 	if (UNEXPECTED(Z_TYPE_P(offset_zv) != IS_LONG)) {
@@ -1541,7 +1541,7 @@ static int teds_bitset_has_dimension(zend_object *object, zval *offset_zv, int c
 		offset = Z_LVAL_P(offset_zv);
 	}
 
-	const teds_bitset_entries *array = &teds_bitset_from_object(object)->array;
+	const teds_bitvector_entries *array = &teds_bitvector_from_object(object)->array;
 
 	if (UNEXPECTED(!teds_offset_within_size_t(offset, array->bit_size))) {
 		return 0;
@@ -1549,33 +1549,33 @@ static int teds_bitset_has_dimension(zend_object *object, zval *offset_zv, int c
 
 	/* TODO can optimize */
 	if (check_empty) {
-		return teds_bitset_entries_read_offset_as_bool(array, offset);
+		return teds_bitvector_entries_read_offset_as_bool(array, offset);
 	}
 	return true; /* int !== null */
 }
 
-PHP_MINIT_FUNCTION(teds_bitset)
+PHP_MINIT_FUNCTION(teds_bitvector)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
-	teds_ce_BitSet = register_class_Teds_BitSet(zend_ce_aggregate, teds_ce_Sequence, php_json_serializable_ce);
-	teds_ce_BitSet->create_object = teds_bitset_new;
+	teds_ce_BitVector = register_class_Teds_BitVector(zend_ce_aggregate, teds_ce_Sequence, php_json_serializable_ce);
+	teds_ce_BitVector->create_object = teds_bitvector_new;
 
-	memcpy(&teds_handler_BitSet, &std_object_handlers, sizeof(zend_object_handlers));
+	memcpy(&teds_handler_BitVector, &std_object_handlers, sizeof(zend_object_handlers));
 
-	teds_handler_BitSet.offset          = XtOffsetOf(teds_bitset, std);
-	teds_handler_BitSet.clone_obj       = teds_bitset_clone;
-	teds_handler_BitSet.count_elements  = teds_bitset_count_elements;
-	teds_handler_BitSet.get_properties  = teds_bitset_get_properties;
-	teds_handler_BitSet.get_properties_for = teds_bitset_get_properties_for;
-	teds_handler_BitSet.get_gc          = teds_bitset_get_gc;
-	teds_handler_BitSet.free_obj        = teds_bitset_free_storage;
+	teds_handler_BitVector.offset          = XtOffsetOf(teds_bitvector, std);
+	teds_handler_BitVector.clone_obj       = teds_bitvector_clone;
+	teds_handler_BitVector.count_elements  = teds_bitvector_count_elements;
+	teds_handler_BitVector.get_properties  = teds_bitvector_get_properties;
+	teds_handler_BitVector.get_properties_for = teds_bitvector_get_properties_for;
+	teds_handler_BitVector.get_gc          = teds_bitvector_get_gc;
+	teds_handler_BitVector.free_obj        = teds_bitvector_free_storage;
 
-	teds_handler_BitSet.read_dimension  = teds_bitset_read_dimension;
-	teds_handler_BitSet.write_dimension = teds_bitset_write_dimension;
-	teds_handler_BitSet.has_dimension   = teds_bitset_has_dimension;
+	teds_handler_BitVector.read_dimension  = teds_bitvector_read_dimension;
+	teds_handler_BitVector.write_dimension = teds_bitvector_write_dimension;
+	teds_handler_BitVector.has_dimension   = teds_bitvector_has_dimension;
 
-	teds_ce_BitSet->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-	teds_ce_BitSet->get_iterator = teds_bitset_get_iterator;
+	teds_ce_BitVector->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_BitVector->get_iterator = teds_bitvector_get_iterator;
 
 	return SUCCESS;
 }

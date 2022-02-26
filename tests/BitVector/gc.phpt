@@ -1,18 +1,18 @@
 --TEST--
-Teds\BitSet gc
+Teds\BitVector gc
 --FILE--
 <?php
 call_user_func(function () {
-    $vec = new Teds\BitSet([true, false, true, true, true, true, false, false, true, false, true]);
+    $vec = new Teds\BitVector([true, false, true, true, true, true, false, false, true, false, true]);
     echo json_encode($vec), "\n";
-    $vec2 = new Teds\BitSet([true]);
+    $vec2 = new Teds\BitVector([true]);
     gc_collect_cycles();
     var_dump($vec, $vec2);
     echo var_export($vec, true), "\n";
     gc_collect_cycles();
 });
 call_user_func(function () {
-    $it = (new Teds\BitSet([false]))->getIterator();
+    $it = (new Teds\BitVector([false]))->getIterator();
     gc_collect_cycles();
     var_dump($it);
     var_dump($it->current());
@@ -21,7 +21,7 @@ call_user_func(function () {
 ?>
 --EXPECT--
 [true,false,true,true,true,true,false,false,true,false,true]
-object(Teds\BitSet)#2 (11) {
+object(Teds\BitVector)#2 (11) {
   [0]=>
   bool(true)
   [1]=>
@@ -45,11 +45,11 @@ object(Teds\BitSet)#2 (11) {
   [10]=>
   bool(true)
 }
-object(Teds\BitSet)#3 (1) {
+object(Teds\BitVector)#3 (1) {
   [0]=>
   bool(true)
 }
-Teds\BitSet::__set_state(array(
+Teds\BitVector::__set_state(array(
    0 => true,
    1 => false,
    2 => true,

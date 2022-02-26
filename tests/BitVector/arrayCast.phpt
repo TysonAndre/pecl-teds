@@ -1,9 +1,9 @@
 --TEST--
-Teds\BitSet to array
+Teds\BitVector to array
 --FILE--
 <?php
 // discards keys
-$it = new Teds\BitSet([true, false]);
+$it = new Teds\BitVector([true, false]);
 var_dump($it->toArray());
 var_dump($it->count());
 $it[0] = false;
@@ -26,7 +26,7 @@ array(2) {
   [1]=>
   bool(true)
 }
-object(Teds\BitSet)#1 (2) {
+object(Teds\BitVector)#1 (2) {
   [0]=>
   bool(false)
   [1]=>

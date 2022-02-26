@@ -30,7 +30,7 @@
 #include "ext/standard/php_string.h"
 #include "ext/standard/info.h"
 
-#include "teds_bitset.h"
+#include "teds_bitvector.h"
 #include "teds_deque.h"
 #include "teds_cachediterable.h"
 #include "teds_exceptions.h"
@@ -1104,7 +1104,7 @@ PHP_MINIT_FUNCTION(teds)
 	teds_register_interfaces();
 	teds_register_exceptions();
 
-	PHP_MINIT(teds_bitset)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_bitvector)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_cachediterable)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_deque)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutableiterable)(INIT_FUNC_ARGS_PASSTHRU);

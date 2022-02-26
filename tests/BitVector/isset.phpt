@@ -1,8 +1,8 @@
 --TEST--
-Teds\BitSet isset
+Teds\BitVector isset
 --FILE--
 <?php
-$it = new Teds\BitSet([false, true, true]);
+$it = new Teds\BitVector([false, true, true]);
 foreach ([0, 1, 2, 3, -1, '1', PHP_INT_MIN, PHP_INT_MAX, 1.0, false, true] as $offset) {
     printf("offset=%s isset=%s empty=%s value=%s\n", json_encode($offset), json_encode(isset($it[$offset])), json_encode(empty($it[$offset])), json_encode($it[$offset] ?? null));
 }

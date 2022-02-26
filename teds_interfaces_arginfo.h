@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 0112995f46b22f4e575a6b46676a609fb3834e6d */
+ * Stub hash: 45c5681cfc9b1ad889eb715fdaea3873f5947641 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Collection_values, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
@@ -41,6 +41,10 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_Sequence_shift arginfo_class_Teds_Sequence_pop
 
+#define arginfo_class_Teds_Sequence_first arginfo_class_Teds_Sequence_pop
+
+#define arginfo_class_Teds_Sequence_last arginfo_class_Teds_Sequence_pop
+
 #define arginfo_class_Teds_Map_containsKey arginfo_class_Teds_Collection_contains
 
 #define arginfo_class_Teds_Set_add arginfo_class_Teds_Collection_contains
@@ -68,6 +72,8 @@ static const zend_function_entry class_Teds_Sequence_methods[] = {
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, pop, arginfo_class_Teds_Sequence_pop, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, unshift, arginfo_class_Teds_Sequence_unshift, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, shift, arginfo_class_Teds_Sequence_shift, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
+	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, first, arginfo_class_Teds_Sequence_first, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
+	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, last, arginfo_class_Teds_Sequence_last, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_FE_END
 };
 

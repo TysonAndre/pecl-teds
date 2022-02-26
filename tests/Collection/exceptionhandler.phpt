@@ -29,7 +29,7 @@ function test_collection_exceptionhandler(string $class) {
     echo "Done\n";
 }
 foreach ([
-    Teds\BitSet::class,
+    Teds\BitVector::class,
     Teds\Deque::class,
     Teds\CachedIterable::class,  // does not throw because it does not evaluate unless requested.
     Teds\ImmutableIterable::class,
@@ -52,8 +52,8 @@ foreach ([
 }
 ?>
 --EXPECT--
-Test Teds\BitSet
-Caught TypeError: Illegal Teds\BitSet value type HasDestructor
+Test Teds\BitVector
+Caught TypeError: Illegal Teds\BitVector value type HasDestructor
 Done
 in HasDestructor::__destruct in value1
 

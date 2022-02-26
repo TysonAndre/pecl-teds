@@ -1,5 +1,5 @@
 --TEST--
-Teds\BitSet constructed from Traversable throwing
+Teds\BitVector constructed from Traversable throwing
 --FILE--
 <?php
 
@@ -16,7 +16,7 @@ function yields_and_throws() {
     echo "Not reached\n";
 }
 try {
-    $it = new Teds\BitSet(yields_and_throws());
+    $it = new Teds\BitVector(yields_and_throws());
 } catch (TypeError $e) {
     echo "Caught " . $e->getMessage() . "\n";
 }
@@ -25,6 +25,6 @@ echo "Done\n";
 ?>
 --EXPECT--
 in HasDestructor::__destruct in key
-Caught Illegal Teds\BitSet value type HasDestructor
+Caught Illegal Teds\BitVector value type HasDestructor
 Done
 in HasDestructor::__destruct in invalid value
