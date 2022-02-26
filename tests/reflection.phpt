@@ -7,6 +7,9 @@ echo "Classes:\n";
 $classes = $x->getClasses();
 uksort($classes, 'strcmp');
 foreach ($classes as $name => $info) {
+    if (PHP_VERSION_ID >= 80100 && $info->isEnum()) {
+        continue;
+    }
     foreach ([
         ReflectionClass::IS_IMPLICIT_ABSTRACT => 'IS_IMPLICIT_ABSTRACT',
         ReflectionClass::IS_EXPLICIT_ABSTRACT => 'abstract',

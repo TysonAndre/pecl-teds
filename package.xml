@@ -57,6 +57,10 @@
    <file name="teds_deque.c" role="src" />
    <file name="teds_deque.h" role="src" />
    <file name="teds_deque.stub.php" role="src" />
+   <file name="teds_emptycollection_arginfo.h" role="src" />
+   <file name="teds_emptycollection.c" role="src" />
+   <file name="teds_emptycollection.h" role="src" />
+   <file name="teds_emptycollection.stub.php" role="src" />
    <file name="teds_exceptions_arginfo.h" role="src" />
    <file name="teds_exceptions.c" role="src" />
    <file name="teds_exceptions.h" role="src" />
@@ -135,6 +139,7 @@
     <file name="BitVector/exceptionhandler.phpt" role="test" />
     <file name="BitVector/gc.phpt" role="test" />
     <file name="BitVector/indexOf.phpt" role="test" />
+    <file name="BitVector/insert.phpt" role="test" />
     <file name="BitVector/intAccess.phpt" role="test" />
     <file name="BitVector/isEmpty.phpt" role="test" />
     <file name="BitVector/isset.phpt" role="test" />
@@ -183,6 +188,9 @@
     <file name="Deque/toArray.phpt" role="test" />
     <file name="Deque/unserialize.phpt" role="test" />
     <file name="Deque/unshift.phpt" role="test" />
+    <file name="EmptyMap/EmptyMap.phpt" role="test" />
+    <file name="EmptySequence/EmptySequence.phpt" role="test" />
+    <file name="EmptySet/EmptySet.phpt" role="test" />
     <file name="ImmutableIterable/clone.phpt" role="test" />
     <file name="ImmutableIterable/contains.phpt" role="test" />
     <file name="ImmutableIterable/keyAt_valueAt.phpt" role="test" />
@@ -199,6 +207,7 @@
     <file name="ImmutableSequence/set_state.phpt" role="test" />
     <file name="ImmutableSequence/toArray.phpt" role="test" />
     <file name="ImmutableSequence/unserialize.phpt" role="test" />
+    <file name="ImmutableSortedIntSet/create.phpt" role="test" />
     <file name="ImmutableSortedStringSet/contains.phpt" role="test" />
     <file name="ImmutableSortedStringSet/create.phpt" role="test" />
     <file name="IntVector/IntVector.phpt" role="test" />
@@ -256,6 +265,7 @@
     <file name="Sequence/arrayCast.phpt" role="test" />
     <file name="Sequence/clear.phpt" role="test" />
     <file name="Sequence/contains.phpt" role="test" />
+    <file name="Sequence/insert.phpt" role="test" />
     <file name="Sequence/set.phpt" role="test" />
     <file name="Sequence/set_state.phpt" role="test" />
     <file name="Sequence/shift.phpt" role="test" />
@@ -365,6 +375,7 @@
     <file name="misc/strict_hash_recursion_32bit.phpt" role="test" />
     <file name="misc/strict_hash_typed_property.phpt" role="test" />
     <file name="reflection.phpt" role="test" />
+    <file name="reflection_81.phpt" role="test" />
    </dir>
   </dir>
  </contents>

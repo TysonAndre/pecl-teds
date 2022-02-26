@@ -164,7 +164,7 @@ NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to it
 
 ### Teds\StrictMinHeap and Teds\StrictMaxHeap
 
-[`Teds\Stable*Heap` API/polyfill](./teds_strictheap.stub.php)
+[`Teds\Stable*Heap` API](./teds_strictheap.stub.php)
 
 This uses `Teds\stable_compare` instead of PHP's unstable default comparisons.
 Sorting logic can be customized by inserting `[$priority, $value]` instead of `$value`.
@@ -181,6 +181,12 @@ php > foreach (['19', '9', '2b', '2'] as $v) { $x->insert($v); }
 php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // lexicographically sorted
 19,2,2b,9,
 ```
+
+### Teds\EmptySequence and Teds\EmptySet and Teds\EmptyMap
+
+This provides empty immutable collections for php 8.1+ based on single-case enums.
+
+[Empty Immutable Collection API](./teds_emptycollection.stub.php)
 
 ### Common interfaces
 

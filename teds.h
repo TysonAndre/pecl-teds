@@ -88,6 +88,15 @@ static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 	} \
 } while(0)
 
+#define THROW_IF_OFFSET_NOT_LONG(zv) do { \
+	if (UNEXPECTED(Z_TYPE_P(offset_zv) != IS_LONG)) { \
+		teds_get_offset(offset_zv); \
+		if (UNEXPECTED(EG(exception))) { \
+			return NULL; \
+		} \
+	} \
+} while(0)
+
 typedef struct _teds_strict_hash_node {
 	zend_array *ht;
 	struct _teds_strict_hash_node *prev;
