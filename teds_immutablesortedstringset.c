@@ -442,7 +442,7 @@ static zval *teds_immutablesortedstringset_it_get_current_data(zend_object_itera
 	teds_immutablesortedstringset_it *iterator = (teds_immutablesortedstringset_it*)iter;
 	teds_immutablesortedstringset_entries *array   = Z_IMMUTABLESORTEDSTRINGSET_ENTRIES_P(&iter->data);
 	if (UNEXPECTED(iterator->current >= array->size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return &EG(uninitialized_zval);
 	}
 	return teds_immutablesortedstringset_entries_read_offset(array, iterator->current, &iterator->tmp);
@@ -544,7 +544,7 @@ not_enough_data:
 		}
 		substring_infos[i].offset = it - raw_bytes;
 		substring_infos[i].length = substr_len;
-		if (i > 0 && UNEXPECTED(teds_binary_strcmp(it, substr_len, raw_bytes + substring_infos[i - 1].offset, substring_infos[i - 1].length) <= 0)) {
+		if (i > 0 && UNEXPECTED(teds_binary_strcmp((const char *)it, substr_len, ((const char *)raw_bytes) + substring_infos[i - 1].offset, substring_infos[i - 1].length) <= 0)) {
 			efree(substring_infos);
 			zend_throw_exception(spl_ce_RuntimeException, "ImmutableSortedStringSet was given data to unserialize that was not sorted", 0);
 			return;
@@ -821,7 +821,7 @@ static zend_always_inline void teds_immutablesortedstringset_convert_zval_value_
 	teds_immutablesortedstringset_entries *array = Z_IMMUTABLESORTEDSTRINGSET_ENTRIES_P(zval_this);
 	size_t len = array->size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		RETURN_THROWS();
 	}
 	teds_immutablesortedstringset_entries_copy_offset(array, offset, return_value);

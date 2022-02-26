@@ -29,32 +29,32 @@ foreach ([Teds\ImmutableIterable::class, Teds\CachedIterable::class] as $class_n
     expect_throws(fn() => $it->valueAt(-1));
 }
 ?>
---EXPECT--
+--EXPECTF--
 Test Teds\ImmutableIterable
 Caught ReflectionException: Class Teds\ImmutableIterable is an internal class marked as final that cannot be instantiated without invoking its constructor
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
 string(5) "first"
-object(stdClass)#1 (0) {
+object(stdClass)#%d (0) {
 }
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
 Test Teds\CachedIterable
 Caught ReflectionException: Class Teds\CachedIterable is an internal class marked as final that cannot be instantiated without invoking its constructor
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
 string(5) "first"
-object(stdClass)#3 (0) {
+object(stdClass)#%d (0) {
 }
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range

@@ -537,7 +537,7 @@ static zval_pair *teds_cachediterable_read_offset_helper(teds_cachediterable *in
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_collection_offset_exception();
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];
@@ -829,7 +829,7 @@ PHP_METHOD(Teds_CachedIterable, keyAt)
 	if ((zend_ulong) offset >= len) {
 		if (!teds_cachediterable_entries_ensure_offset_exists(array, (size_t)offset)) {
 			if (!EG(exception)) {
-				zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+				teds_throw_invalid_collection_offset_exception();
 			}
 			RETURN_THROWS();
 		}
@@ -849,7 +849,7 @@ PHP_METHOD(Teds_CachedIterable, valueAt)
 	if ((zend_ulong) offset >= len) {
 		if (!teds_cachediterable_entries_ensure_offset_exists(array, (size_t)offset)) {
 			if (!EG(exception)) {
-				zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+				teds_throw_invalid_collection_offset_exception();
 			}
 			RETURN_THROWS();
 		}

@@ -119,20 +119,6 @@ static void teds_vector_shrink_capacity(teds_vector_entries *array, uint32_t siz
 	ZEND_ASSERT(array->entries != NULL);
 }
 
-/* Initializes the range [from, to) to null. Does not dtor existing entries. */
-/* TODO: Delete if this isn't used in the final version
-static void teds_vector_entries_init_elems(teds_vector_entries *array, zend_long from, zend_long to)
-{
-	ZEND_ASSERT(from <= to);
-	zval *begin = &array->entries[from];
-	zval *end = &array->entries[to];
-
-	while (begin != end) {
-		ZVAL_NULL(begin++);
-	}
-}
-*/
-
 static zend_always_inline void teds_vector_entries_set_empty_list(teds_vector_entries *array) {
 	array->size = 0;
 	array->capacity = 0;
@@ -581,7 +567,7 @@ static zval *teds_vector_read_offset_helper(teds_vector *intern, size_t offset)
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];
@@ -764,7 +750,7 @@ static zend_always_inline void teds_vector_get_value_at_offset(zval *return_valu
 {
 	teds_vector_entries *array = Z_VECTOR_ENTRIES_P(zval_this);
 	if (UNEXPECTED((zend_ulong) offset >= array->size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		RETURN_THROWS();
 	}
 	RETURN_COPY(&array->entries[offset]);
@@ -1043,7 +1029,7 @@ static zend_always_inline void teds_vector_set_value_at_offset(zend_object *obje
 
 	uint32_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
 	zval tmp;
@@ -1171,7 +1157,7 @@ PHP_METHOD(Teds_Vector, insert)
 	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
 	const uint32_t old_size = intern->array.size;
 	if (UNEXPECTED(((zend_ulong) offset) > old_size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
 	ZEND_ASSERT(offset >= 0);
@@ -1310,14 +1296,39 @@ PHP_METHOD(Teds_Vector, reserve)
 	(void) return_value;
 }
 
-ZEND_COLD PHP_METHOD(Teds_Vector, offsetUnset)
+PHP_METHOD(Teds_Vector, offsetUnset)
 {
-	zval                  *offset_zv;
+	zval *offset_zv;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
-		RETURN_THROWS();
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(offset_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
+	teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	const uint32_t old_size = array->size;
+	if (UNEXPECTED((zend_ulong) offset >= old_size)) {
+		TEDS_THROW_INVALID_SEQUENCE_INDEX_EXCEPTION();
 	}
-	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\Vector does not support offsetUnset - elements must be set to null or removed by resizing");
+	zval *entries = array->entries;
+	const uint32_t old_capacity = array->capacity;
+	array->size--;
+	zval old_value;
+	ZVAL_COPY_VALUE(&old_value, &entries[offset]);
+	memmove(entries + offset, entries + offset + 1, sizeof(zval) * (old_size - 1));
+	/* TODO: Adjust iterator positions */
+
+	if (old_size < (old_capacity >> 2)) {
+		/* Shrink the storage if only a quarter of the capacity is used  */
+		const uint32_t size = old_size - 1;
+		const uint32_t capacity = size > 2 ? size * 2 : 4;
+		if (capacity < old_capacity) {
+			teds_vector_shrink_capacity(array, size, capacity, entries);
+		}
+	}
+	zval_ptr_dtor(&old_value);
 }
 
 static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zval *value)
@@ -1332,7 +1343,7 @@ static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zv
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	if (offset < 0 || (zend_ulong) offset >= intern->array.size) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
 	ZVAL_DEREF(value);
@@ -1344,7 +1355,7 @@ static zval *teds_vector_read_dimension(zend_object *object, zval *offset_zv, in
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
 handle_missing_key:
 		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			teds_throw_invalid_sequence_index_exception();
 			return NULL;
 		}
 		return &EG(uninitialized_zval);

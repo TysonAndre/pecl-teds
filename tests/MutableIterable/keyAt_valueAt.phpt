@@ -26,17 +26,17 @@ expect_throws(fn() => $it->keyAt(-1));
 expect_throws(fn() => $it->valueAt(1));
 expect_throws(fn() => $it->valueAt(-1));
 ?>
---EXPECT--
+--EXPECTF--
 Caught ReflectionException: Class Teds\MutableIterable is an internal class marked as final that cannot be instantiated without invoking its constructor
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
 string(5) "first"
-object(stdClass)#1 (0) {
+object(stdClass)#%d (0) {
 }
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range

@@ -68,6 +68,8 @@ static zend_always_inline uint32_t teds_deque_entries_get_capacity(const teds_de
 	return array->mask ? array->mask + 1 : 0;
 }
 
+static zend_always_inline void teds_deque_entries_try_shrink_capacity(teds_deque_entries *array, uint32_t old_size);
+
 #if ZEND_DEBUG
 static void DEBUG_ASSERT_CONSISTENT_DEQUE(const teds_deque_entries *array) {
 	const uint32_t capacity = teds_deque_entries_get_capacity(array);
@@ -515,7 +517,7 @@ static zval *teds_deque_it_get_current_data(zend_object_iterator *iter)
 	const uint64_t offset = iterator->current - array->iteration_offset;
 
 	if (UNEXPECTED(offset >= array->size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return &EG(uninitialized_zval);
 	} else {
 		return teds_deque_get_entry_at_offset(array, offset);
@@ -703,7 +705,7 @@ static zend_always_inline void teds_deque_get_value_at_offset(zval *return_value
 	const teds_deque *intern = Z_DEQUE_P(zval_this);
 	uint32_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		RETURN_THROWS();
 	}
 	RETURN_COPY(teds_deque_get_entry_at_offset(&intern->array, offset));
@@ -772,7 +774,7 @@ static zval *teds_deque_read_dimension(zend_object *object, zval *offset_zv, int
 	if (UNEXPECTED(!offset_zv)) {
 handle_missing_key:
 		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			teds_throw_invalid_sequence_index_exception();
 			return NULL;
 		}
 		return &EG(uninitialized_zval);
@@ -795,7 +797,7 @@ handle_missing_key:
 static zend_always_inline void teds_deque_set_value_at_offset(zend_object *object, zend_long offset, zval *value) {
 	const teds_deque *intern = teds_deque_from_object(object);
 	if (UNEXPECTED((zend_ulong) offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
 	zval *const ptr = teds_deque_get_entry_at_offset(&intern->array, offset);
@@ -1028,7 +1030,6 @@ PHP_METHOD(Teds_Deque, unshift)
 	const size_t new_size = old_size + argc;
 	uint32_t mask = intern->array.mask;
 	const uint32_t old_capacity = mask ? mask + 1 : 0;
-	ZEND_ASSERT(new_size < ZEND_ULONG_MAX);
 
 	if (new_size > old_capacity) {
 		const size_t new_capacity = teds_deque_next_pow2_capacity(new_size);
@@ -1055,13 +1056,12 @@ PHP_METHOD(Teds_Deque, unshift)
 	TEDS_RETURN_VOID();
 }
 
-static void teds_deque_entries_insert_values(teds_deque_entries *const array, const uint32_t insert_offset, uint32_t argc, const zval *args) {
+static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entries *const array, const uint32_t insert_offset, uint32_t argc, const zval *args) {
 	const uint32_t old_size = array->size;
 	const size_t new_size = old_size + argc;
 	uint32_t mask = array->mask;
 	const uint32_t old_capacity = mask ? mask + 1 : 0;
 	ZEND_ASSERT(argc > 0);
-	ZEND_ASSERT(new_size < ZEND_ULONG_MAX);
 
 	if (new_size > old_capacity) {
 		const size_t new_capacity = teds_deque_next_pow2_capacity(new_size);
@@ -1072,9 +1072,10 @@ static void teds_deque_entries_insert_values(teds_deque_entries *const array, co
 	zval *const circular_buffer = array->circular_buffer;
 
 	/* Move elements to the end of the deque */
-	uint32_t src_offset = offset + old_size; /* Masked in do-while loop. */
+	/* TODO move the start instead when there are less elements. */
+	uint32_t src_offset = (offset + old_size) & mask; /* Masked in do-while loop. */
 	uint32_t dst_offset = src_offset + argc;
-	uint32_t src_end = (offset + insert_offset) & mask;
+	const uint32_t src_end = (offset + insert_offset) & mask;
 
 	while (src_offset != src_end) {
 		src_offset = (src_offset - 1) & mask;
@@ -1112,22 +1113,73 @@ PHP_METHOD(Teds_Deque, insert)
 
 	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
 	if (UNEXPECTED(((zend_ulong) insert_offset) > array->size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
-		return;
+		teds_throw_invalid_sequence_index_exception();
+		TEDS_RETURN_VOID();
 	}
 	ZEND_ASSERT(insert_offset >= 0);
 
 	if (UNEXPECTED(argc == 0)) {
-		return;
+		TEDS_RETURN_VOID();
 	}
 	teds_deque_entries_insert_values(array, insert_offset, argc, args);
+	TEDS_RETURN_VOID();
 }
 
-static zend_always_inline void teds_deque_try_shrink_capacity(teds_deque *intern, uint32_t old_size)
+static zend_always_inline void teds_deque_entries_remove_offset(teds_deque_entries *const array, const uint32_t remove_offset) {
+	const uint32_t old_size = array->size;
+	uint32_t mask = array->mask;
+	ZEND_ASSERT(remove_offset < old_size);
+
+	const uint32_t offset = array->offset;
+	zval *const circular_buffer = array->circular_buffer;
+
+	/* Move elements from the end of the deque to replace the removed element */
+	/* TODO: Remove from the front instead if there are fewer elements to remove, adjust iteration_offset */
+	uint32_t it_offset = (offset + remove_offset) & mask;
+	zval removed_val;
+	ZVAL_COPY_VALUE(&removed_val, &circular_buffer[it_offset]);
+	const uint32_t it_end = (offset + old_size - 1) & mask;
+	ZEND_ASSERT(Z_TYPE(circular_buffer[it_offset]) != IS_UNDEF);
+
+	while (it_offset != it_end) {
+		const uint32_t next_offset = (it_offset + 1) & mask;
+		ZEND_ASSERT(Z_TYPE(circular_buffer[next_offset]) != IS_UNDEF);
+		ZVAL_COPY_VALUE(&circular_buffer[it_offset], &circular_buffer[next_offset]);
+		it_offset = next_offset;
+	}
+
+	const uint32_t new_size = old_size - 1;
+	array->size = new_size;
+	teds_deque_entries_try_shrink_capacity(array, new_size);
+	zval_ptr_dtor(&removed_val);
+
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+}
+
+PHP_METHOD(Teds_Deque, offsetUnset)
 {
-	const uint32_t old_mask = intern->array.mask;
+	zval *offset_zv;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(offset_zv)
+	ZEND_PARSE_PARAMETERS_END();
+
+	zend_long offset;
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
+	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+	const uint32_t old_size = array->size;
+	if (UNEXPECTED((zend_ulong) offset >= old_size)) {
+		TEDS_THROW_INVALID_SEQUENCE_INDEX_EXCEPTION();
+	}
+	teds_deque_entries_remove_offset(array, offset);
+}
+
+static zend_always_inline void teds_deque_entries_try_shrink_capacity(teds_deque_entries *array, uint32_t old_size)
+{
+	const uint32_t old_mask = array->mask;
 	if (old_size - 1 <= ((old_mask) >> 2) && old_mask > TEDS_DEQUE_MIN_MASK) {
-		teds_deque_shrink_capacity(&intern->array, (old_mask >> 1) + 1);
+		teds_deque_shrink_capacity(array, (old_mask >> 1) + 1);
 	}
 }
 
@@ -1135,20 +1187,20 @@ PHP_METHOD(Teds_Deque, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	const uint32_t old_size = intern->array.size;
+	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+	const uint32_t old_size = array->size;
 	if (old_size == 0) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty deque", 0);
 		RETURN_THROWS();
 	}
 
-	zval *val = teds_deque_get_entry_at_offset(&intern->array, old_size - 1);
-	intern->array.size--;
+	zval *val = teds_deque_get_entry_at_offset(array, old_size - 1);
+	array->size--;
 	/* This is being removed. Use a macro that doesn't change the total reference count. */
 	RETVAL_COPY_VALUE(val);
 
-	ZEND_ASSERT(intern->array.mask >= TEDS_DEQUE_MIN_MASK);
-	teds_deque_try_shrink_capacity(intern, old_size);
+	ZEND_ASSERT(array->mask >= TEDS_DEQUE_MIN_MASK);
+	teds_deque_entries_try_shrink_capacity(array, old_size);
 }
 
 PHP_METHOD(Teds_Deque, last)
@@ -1170,50 +1222,38 @@ PHP_METHOD(Teds_Deque, shift)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
-	const uint32_t old_size = intern->array.size;
+	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+	const uint32_t old_size = array->size;
 	if (old_size == 0) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty deque", 0);
 		RETURN_THROWS();
 	}
 
-	intern->array.size--;
-	intern->array.iteration_offset++;  /* The front moved forward */
-	const uint32_t old_offset = intern->array.offset;
-	const uint32_t old_mask = intern->array.mask;
-	intern->array.offset++;
-	if (intern->array.offset > old_mask) {
-		intern->array.offset = 0;
+	array->size--;
+	array->iteration_offset++;  /* The front moved forward */
+	const uint32_t old_offset = array->offset;
+	const uint32_t old_mask = array->mask;
+	array->offset++;
+	if (array->offset > old_mask) {
+		array->offset = 0;
 	}
-	RETVAL_COPY_VALUE(&intern->array.circular_buffer[old_offset]);
-	teds_deque_try_shrink_capacity(intern, old_size);
+	RETVAL_COPY_VALUE(&array->circular_buffer[old_offset]);
+	teds_deque_entries_try_shrink_capacity(array, old_size);
 }
 
 PHP_METHOD(Teds_Deque, first)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	const teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
-	if (intern->array.size == 0) {
+	const teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+	if (array->size == 0) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first value of empty Teds\\Deque", 0);
 		RETURN_THROWS();
 	}
 
-	RETVAL_COPY(&intern->array.circular_buffer[intern->array.offset]);
-}
-
-ZEND_COLD PHP_METHOD(Teds_Deque, offsetUnset)
-{
-	zval                  *offset_zv;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
-		RETURN_THROWS();
-	}
-	// Diverge from SplFixedArray - null isn't the same thing as undefined.
-	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\Deque does not support offsetUnset - elements must be set to null or removed by resizing");
-	RETURN_THROWS();
+	RETVAL_COPY(&array->circular_buffer[array->offset]);
 }
 
 PHP_MINIT_FUNCTION(teds_deque)

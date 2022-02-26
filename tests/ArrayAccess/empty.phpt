@@ -63,14 +63,14 @@ foreach ([
     echo "\n";
 }
 ?>
---EXPECT--
+--EXPECTF--
 Testing Teds\BitVector
 set TypeError: Illegal Teds\BitVector value type int
 offsetSet TypeError: Illegal Teds\BitVector value type int
 get caught OutOfBoundsException: Index out of range
 offsetGet caught OutOfBoundsException: Index out of range
-unset caught Teds\UnsupportedOperationException: Teds\BitVector does not support offsetUnset - elements must be removed by resizing
-object(Teds\BitVector)#1 (0) {
+unset caught OutOfBoundsException: Index out of range
+object(Teds\BitVector)#%d (0) {
 }
 
 
@@ -79,18 +79,18 @@ set RuntimeException: Index invalid or out of range
 offsetSet OutOfBoundsException: Index out of range
 get caught OutOfBoundsException: Index out of range
 offsetGet caught OutOfBoundsException: Index out of range
-unset caught Teds\UnsupportedOperationException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
-object(Teds\Deque)#3 (0) {
+unset caught OutOfBoundsException: Index out of range
+object(Teds\Deque)#%d (0) {
 }
 
 
 Testing Teds\IntVector
-set OutOfBoundsException: Index invalid or out of range
+set OutOfBoundsException: Index out of range
 offsetSet OutOfBoundsException: Index out of range
 get caught OutOfBoundsException: Index out of range
 offsetGet caught OutOfBoundsException: Index out of range
-unset caught Teds\UnsupportedOperationException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
-object(Teds\IntVector)#4 (0) {
+unset caught OutOfBoundsException: Index out of range
+object(Teds\IntVector)#%d (0) {
 }
 
 
@@ -99,7 +99,7 @@ skip caught set test - Teds\StrictHashMap is a Map
 get caught OutOfBoundsException: Key not found
 offsetGet caught OutOfBoundsException: Key not found
 Successfully unset offset 1 on empty collection
-object(Teds\StrictHashMap)#2 (0) {
+object(Teds\StrictHashMap)#%d (0) {
 }
 
 
@@ -108,7 +108,7 @@ skip caught set test - Teds\StrictSortedVectorMap is a Map
 get caught OutOfBoundsException: Key not found
 offsetGet caught OutOfBoundsException: Key not found
 Successfully unset offset 1 on empty collection
-object(Teds\StrictSortedVectorMap)#3 (0) {
+object(Teds\StrictSortedVectorMap)#%d (0) {
 }
 
 
@@ -117,7 +117,7 @@ skip caught set test - Teds\StrictTreeMap is a Map
 get caught OutOfBoundsException: Key not found
 offsetGet caught OutOfBoundsException: Key not found
 Successfully unset offset 1 on empty collection
-object(Teds\StrictTreeMap)#4 (0) {
+object(Teds\StrictTreeMap)#%d (0) {
 }
 
 
@@ -126,6 +126,6 @@ set OutOfBoundsException: Index out of range
 offsetSet OutOfBoundsException: Index out of range
 get caught OutOfBoundsException: Index out of range
 offsetGet caught OutOfBoundsException: Index out of range
-unset caught Teds\UnsupportedOperationException: Teds\Vector does not support offsetUnset - elements must be set to null or removed by resizing
-object(Teds\Vector)#2 (0) {
+unset caught OutOfBoundsException: Index out of range
+object(Teds\Vector)#%d (0) {
 }

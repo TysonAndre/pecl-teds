@@ -16,7 +16,8 @@ $it = new Teds\IntVector([12345]);
 var_dump($it->offsetGet(0));
 var_dump($it->get(0));
 expect_throws(fn() => $it->offsetSet(1,12345));
-expect_throws(fn() => $it->offsetUnset(0));
+expect_throws(fn() => $it->offsetUnset(-1));
+expect_throws(fn() => $it->offsetUnset(count($it)));
 var_dump($it->offsetGet('0'));
 echo "offsetExists checks\n";
 var_dump($it->offsetExists(1));
@@ -39,8 +40,9 @@ expect_throws(fn() => $it->offsetGet('invalid'));
 expect_throws(fn() => $it->get('invalid'));
 expect_throws(fn() => $it[['invalid']]);
 expect_throws(fn() => $it->offsetUnset(PHP_INT_MAX));
+expect_throws(fn() => $it->offsetUnset(PHP_INT_MIN));
 expect_throws(fn() => $it->offsetSet(PHP_INT_MAX,'x'));
-expect_throws(function () use ($it) { unset($it[0]); });
+expect_throws(function () use ($it) { unset($it[-1]); });
 var_dump($it->getIterator());
 ?>
 --EXPECT--
@@ -48,7 +50,8 @@ Caught ReflectionException: Class Teds\IntVector is an internal class marked as 
 int(12345)
 int(12345)
 Caught OutOfBoundsException: Index out of range
-Caught Teds\UnsupportedOperationException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 int(12345)
 offsetExists checks
 bool(false)
@@ -70,8 +73,9 @@ Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\IntVector::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught Teds\UnsupportedOperationException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal Teds\IntVector value type string
-Caught Teds\UnsupportedOperationException: Teds\IntVector does not support offsetUnset - elements must be removed by resizing
+Caught OutOfBoundsException: Index out of range
 object(InternalIterator)#1 (0) {
 }

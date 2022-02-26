@@ -427,7 +427,7 @@ static zval *teds_immutablesequence_read_offset_helper(teds_immutablesequence *i
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];
@@ -607,7 +607,7 @@ static zend_always_inline void teds_immutablesequence_get_value_at_offset(zval *
 {
 	teds_immutablesequence_entries *array = Z_IMMUTABLESEQUENCE_ENTRIES_P(zval_this);
 	if (UNEXPECTED((zend_ulong) offset >= array->size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		RETURN_THROWS();
 	}
 	RETURN_COPY(&array->entries[offset]);
@@ -981,7 +981,7 @@ static zval *teds_immutablesequence_read_dimension(zend_object *object, zval *of
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
 handle_missing_key:
 		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			teds_throw_invalid_sequence_index_exception();
 			return NULL;
 		}
 		return &EG(uninitialized_zval);

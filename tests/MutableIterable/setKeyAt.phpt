@@ -22,15 +22,15 @@ $it->setKeyAt(0, new ArrayObject());
 var_dump($it->keyAt(0));
 var_dump($it->valueAt(0));
 ?>
---EXPECT--
+--EXPECTF--
 Caught ReflectionException: Class Teds\MutableIterable is an internal class marked as final that cannot be instantiated without invoking its constructor
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-Caught OutOfBoundsException: Index out of range
-object(ArrayObject)#5 (1) {
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+Caught OutOfBoundsException: Offset out of range
+object(ArrayObject)#%d (1) {
   ["storage":"ArrayObject":private]=>
   array(0) {
   }
 }
-object(stdClass)#4 (0) {
+object(stdClass)#%d (0) {
 }

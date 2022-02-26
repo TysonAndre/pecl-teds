@@ -378,11 +378,11 @@ static void teds_bitvector_set_range(teds_bitvector_entries *const array, const 
 	ZEND_ASSERT(entries_bits != NULL);
 
 	const int8_t value = value_bool ? -1 : 0;
-	const size_t start_byte = (start_bit + 7) >> 3;
-	const size_t end_byte = (end_bit + 7) >> 3;
+	const size_t start_byte_offset = (start_bit + 7) >> 3;
+	const size_t end_byte_offset = (end_bit + 7) >> 3;
 
 	const uint8_t start_mask = (1 << (start_bit & 7)) - 1;
-	// fprintf(stderr, "start_bit=%d end_bit=%d start_byte=%d end_byte=%d value=%d start_mask=%d\n", (int)start_bit, (int)end_bit, (int)start_byte, (int)end_byte, (int)value, (int)start_mask);
+	// fprintf(stderr, "start_bit=%d end_bit=%d start_byte_offset=%d end_byte_offset=%d value=%d start_mask=%d\n", (int)start_bit, (int)end_bit, (int)start_byte_offset, (int)end_byte_offset, (int)value, (int)start_mask);
 	if (start_bit & 7) {
 		/* Set/clear upper bits */
 		if (value) {
@@ -391,8 +391,8 @@ static void teds_bitvector_set_range(teds_bitvector_entries *const array, const 
 			entries_bits[start_bit >> 3] &= start_mask;
 		}
 	}
-	if (start_byte < end_byte) {
-		memset(&entries_bits[start_byte], value_bool ? -1 : 0, end_byte - start_byte);
+	if (start_byte_offset < end_byte_offset) {
+		memset(&entries_bits[start_byte_offset], value_bool ? -1 : 0, end_byte_offset - start_byte_offset);
 	}
 }
 
@@ -511,7 +511,7 @@ static zval *teds_bitvector_it_get_current_data(zend_object_iterator *iter)
 	teds_bitvector_it *iterator = (teds_bitvector_it*)iter;
 	teds_bitvector_entries *array   = Z_BITVECTOR_ENTRIES_P(&iter->data);
 	if (UNEXPECTED(iterator->current >= array->bit_size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return &EG(uninitialized_zval);
 	}
 	return teds_bitvector_entries_read_offset(array, iterator->current, &iterator->tmp);
@@ -863,7 +863,7 @@ static zend_always_inline void teds_bitvector_convert_zval_value_to_long_at_offs
 	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(zval_this);
 	size_t len = array->bit_size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		RETURN_THROWS();
 	}
 	teds_bitvector_entries_copy_offset(array, offset, return_value, false);
@@ -997,7 +997,7 @@ static zend_always_inline void teds_bitvector_set_value_at_offset(zend_object *o
 	teds_bitvector_entries *array = &teds_bitvector_from_object(object)->array;
 	size_t len = array->bit_size;
 	if (UNEXPECTED((zend_ulong) offset >= len) || offset < 0) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
 	uint8_t *const ptr = &array->entries_bits[((zend_ulong) offset) >> 3];
@@ -1076,7 +1076,7 @@ PHP_METHOD(Teds_BitVector, methodName) \
 	ZEND_PARSE_PARAMETERS_END(); \
 	teds_bitvector_entries *const array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS); \
 	if (UNEXPECTED(((zend_ulong)offset_int) >= (array->bit_size / (sizeof(cTypeNameUnsigned) * 8)) || offset_int < 0)) { \
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Teds\\BitVector " # errorTypeName " index invalid or out of range", 0); \
+		teds_throw_invalid_sequence_index_exception(); \
 		RETURN_THROWS(); \
 	} \
 	cTypeName result = ((cTypeName)(cTypeNameUnsigned)convertName(((cTypeNameUnsigned *)array->entries_bits)[offset_int])); \
@@ -1094,7 +1094,7 @@ PHP_METHOD(Teds_BitVector, methodName) \
 	ZEND_PARSE_PARAMETERS_END(); \
 	teds_bitvector_entries *const array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS); \
 	if (UNEXPECTED(((zend_ulong)offset_int) >= (array->bit_size / (sizeof(cTypeNameUnsigned) * 8)) || offset_int < 0)) { \
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Teds\\BitVector " # errorTypeName " index invalid or out of range", 0); \
+		teds_throw_invalid_sequence_index_exception(); \
 		RETURN_THROWS(); \
 	} \
 	((cTypeNameUnsigned *)array->entries_bits)[offset_int] = convertName(offset_value); \
@@ -1329,7 +1329,7 @@ PHP_METHOD(Teds_BitVector, insert)
 	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
 	if (UNEXPECTED((zend_ulong) offset > array->bit_size || offset < 0)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
 	if (UNEXPECTED(argc == 0)) {
@@ -1436,21 +1436,56 @@ PHP_METHOD(Teds_BitVector, last)
 static zend_always_inline void teds_bitvector_entries_shift(teds_bitvector_entries *array) {
 	uint8_t *const entries_bits = array->entries_bits;
 	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
+	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
 	array->bit_size--;
-	/* Number of bytes *after* removing the last byte */
-	const size_t bytes = array->bit_size >> 3;
+	/* Offset of the last byte *after* removing a bit */
+	const size_t last_byte_offset = array->bit_size >> 3;
 	/* Remove the least significant bit and replace it */
 	/* TODO: Optimize */
 	size_t i = 0;
 #ifndef WORDS_BIGENDIAN
-	for (; i + 8 <= bytes; i += 8) {
+	for (; i + 8 <= last_byte_offset; i += 8) {
 		*((uint64_t *)(&entries_bits[i])) = (*((uint64_t *)(&entries_bits[i])) >> 1) | (((uint64_t)entries_bits[i + 8]) << 63);
 	}
 #endif
-	for (; i < bytes; i++) {
+	for (; i < last_byte_offset; i++) {
 		entries_bits[i] = (entries_bits[i] >> 1) | (entries_bits[i + 1] << 7);
 	}
+	/* E.g. if there were originally 64 bits, and then 63, replace the 7th byte with the 7th byte shifted by 1, taking nothing from the next byte (last_byte_offset = 7) */
 	entries_bits[i] = (entries_bits[i] >> 1);
+}
+
+static zend_always_inline uint8_t remove_bit_from_byte(const uint8_t old, const uint8_t bitpos) {
+	ZEND_ASSERT(bitpos < 8);
+	const uint8_t keep_mask = (1 << (bitpos)) - 1;
+	return (old & keep_mask) | ((old & ~((1 << (bitpos + 1)) - 1)) >> 1);
+}
+
+static zend_always_inline void teds_bitvector_entries_unset_offset(teds_bitvector_entries *array, size_t offset_bit) {
+	uint8_t *const entries_bits = array->entries_bits;
+	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
+	ZEND_ASSERT(offset_bit < array->bit_size);
+	array->bit_size--;
+	/* Number of bytes *after* removing the last byte, minus 1 */
+	const size_t last_byte_offset = array->bit_size >> 3;
+	size_t it_byte_offset = offset_bit >> 3;
+	const uint8_t bitpos = offset_bit & 7;
+	const uint8_t old = entries_bits[it_byte_offset];
+
+	ZEND_ASSERT(it_byte_offset <= last_byte_offset);
+	if (it_byte_offset == last_byte_offset) {
+		entries_bits[it_byte_offset] = remove_bit_from_byte(old, bitpos);
+		return;
+	}
+
+	entries_bits[it_byte_offset] = remove_bit_from_byte(old, bitpos) | (entries_bits[it_byte_offset + 1] << 7);
+	it_byte_offset++;
+	/* E.g. if there were originally 64 bits, and then 63, replace the 7th byte with the 7th byte shifted by 1, taking nothing from the next byte (last_byte_offset = 7) */
+	while (it_byte_offset < last_byte_offset) {
+		entries_bits[it_byte_offset] = (entries_bits[it_byte_offset] >> 1) | (entries_bits[it_byte_offset + 1] << 7);
+		it_byte_offset++;
+	}
+	entries_bits[it_byte_offset] = entries_bits[it_byte_offset] >> 1;
 }
 
 PHP_METHOD(Teds_BitVector, shift)
@@ -1473,15 +1508,29 @@ PHP_METHOD(Teds_BitVector, shift)
 	}
 }
 
-ZEND_COLD PHP_METHOD(Teds_BitVector, offsetUnset)
+PHP_METHOD(Teds_BitVector, offsetUnset)
 {
 	zval                  *offset_zv;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &offset_zv) == FAILURE) {
-		RETURN_THROWS();
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(offset_zv);
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->bit_size;
+	zend_long offset;
+
+	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
+
+	if (UNEXPECTED(!teds_offset_within_size_t(offset, array->bit_size))) {
+		TEDS_THROW_INVALID_SEQUENCE_INDEX_EXCEPTION();
 	}
-	zend_throw_exception(teds_ce_UnsupportedOperationException, "Teds\\BitVector does not support offsetUnset - elements must be removed by resizing", 0);
-	RETURN_THROWS();
+
+	teds_bitvector_entries_unset_offset(array, offset);
+	const size_t capacity = teds_bitvector_compute_next_valid_capacity(old_size);
+	if (UNEXPECTED(capacity < array->bit_capacity)) {
+		teds_bitvector_entries_shrink_capacity(array, old_size - 1, capacity, array->entries_bits);
+	}
 }
 
 static void teds_bitvector_write_dimension(zend_object *object, zval *offset_zv, zval *value_zv)
@@ -1500,7 +1549,7 @@ static void teds_bitvector_write_dimension(zend_object *object, zval *offset_zv,
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	if (UNEXPECTED(!teds_offset_within_size_t(offset, intern->array.bit_size))) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index invalid or out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
 	teds_bitvector_set_value_at_offset(object, offset, v);
@@ -1511,7 +1560,7 @@ static zval *teds_bitvector_read_dimension(zend_object *object, zval *offset_zv,
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
 handle_missing_key:
 		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+			teds_throw_invalid_sequence_index_exception();
 			return NULL;
 		}
 		return &EG(uninitialized_zval);

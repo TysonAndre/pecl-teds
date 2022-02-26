@@ -463,7 +463,7 @@ static zval_pair *teds_immutableiterable_read_offset_helper(teds_immutableiterab
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_collection_offset_exception();
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];
@@ -829,7 +829,7 @@ PHP_METHOD(Teds_ImmutableIterable, keyAt)
 	teds_immutableiterable *intern = Z_IMMUTABLEITERABLE_P(ZEND_THIS);
 	uint32_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_collection_offset_exception();
 		RETURN_THROWS();
 	}
 	RETURN_COPY(&intern->array.entries[offset].key);
@@ -845,7 +845,7 @@ PHP_METHOD(Teds_ImmutableIterable, valueAt)
 	teds_immutableiterable *intern = Z_IMMUTABLEITERABLE_P(ZEND_THIS);
 	uint32_t len = intern->array.size;
 	if (UNEXPECTED((zend_ulong) offset >= len)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_collection_offset_exception();
 		RETURN_THROWS();
 	}
 	RETURN_COPY(&intern->array.entries[offset].value);
