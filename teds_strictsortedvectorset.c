@@ -25,6 +25,7 @@
 #include "teds_strictsortedvectorset.h"
 #include "teds_util.h"
 #include "teds_interfaces.h"
+#include "teds_exceptions.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -472,7 +473,7 @@ static teds_strictsortedvectorset_entry *teds_strictsortedvectorset_read_offset_
 	/* we have to return NULL on error here to avoid memleak because of
 	 * ZE duplicating uninitialized_zval_ptr */
 	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		teds_throw_invalid_sequence_index_exception();
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];

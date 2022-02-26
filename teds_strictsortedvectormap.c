@@ -23,6 +23,7 @@
 #include "teds_strictsortedvectormap.h"
 #include "teds_util.h"
 #include "teds_interfaces.h"
+#include "teds_exceptions.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -999,8 +1000,7 @@ PHP_METHOD(Teds_StrictSortedVectorMap, offsetGet)
 			RETURN_COPY(&result.entry->value);
 		}
 	}
-	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
-	RETURN_THROWS();
+	TEDS_THROW_MISSING_MAP_KEY_EXCEPTION();
 }
 
 PHP_METHOD(Teds_StrictSortedVectorMap, get)
@@ -1023,8 +1023,7 @@ PHP_METHOD(Teds_StrictSortedVectorMap, get)
 	if (default_zv != NULL) {
 		RETURN_COPY(default_zv);
 	}
-	zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
-	RETURN_THROWS();
+	TEDS_THROW_MISSING_MAP_KEY_EXCEPTION();
 }
 
 static zend_always_inline bool teds_strictsortedvectormap_entries_insert(teds_strictsortedvectormap_entries *array, zval *key, zval *value, bool probably_largest) {
@@ -1222,7 +1221,7 @@ static zval *teds_strictsortedvectormap_read_dimension(zend_object *object, zval
 	if (UNEXPECTED(!offset_zv || Z_ISUNDEF_P(offset_zv))) {
 handle_missing_key:
 		if (type != BP_VAR_IS) {
-			zend_throw_exception(spl_ce_OutOfBoundsException, "Key not found", 0);
+			teds_throw_missing_map_key_exception();
 			return NULL;
 		}
 		return &EG(uninitialized_zval);

@@ -110,7 +110,8 @@ final class LowMemoryVector implements \IteratorAggregate, Sequence, \JsonSerial
     public function offsetSet(mixed $offset, mixed $value): void {}
 
     /**
-     * @throws \RuntimeException unconditionally because unset and null are different things, unlike SplFixedArray
+     * Removes the value at (int)$offset and reindexes the subsequent elements of the vector.
+     * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
      */
     public function offsetUnset(mixed $offset): void {}
 

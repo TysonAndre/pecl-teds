@@ -118,8 +118,9 @@ final class IntVector implements \IteratorAggregate, Sequence, \JsonSerializable
     public function offsetSet(mixed $offset, mixed $value): void {}
 
     /**
-     * @throws \RuntimeException unconditionally because unset and null are different things.
-     * Also, this can only contain integers.
+     * Removes the value at (int)$offset and reindexes the following elements of the vector.
+     * @psalm-param int $offset
+     * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
      */
     public function offsetUnset(mixed $offset): void {}
 

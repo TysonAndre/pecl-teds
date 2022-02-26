@@ -54,7 +54,7 @@ bool(false)
 Yielded 2
 Check 3 % 2 === 0
 Caught RuntimeException: Teds\CachedIterable reentry detected while already fetching next element
-Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Offset out of range
 The 1st prime is 2
 count: caught RuntimeException: Teds\CachedIterable failed due to exception from underlying Traversable
 toArray: caught RuntimeException: Teds\CachedIterable failed due to exception from underlying Traversable

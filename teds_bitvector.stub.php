@@ -217,13 +217,13 @@ final class BitVector implements \IteratorAggregate, Sequence, \JsonSerializable
      * Sets the value at offset (int)$offset to $value
      * @psalm-param int $offset
      * @psalm-param bool $value
-     * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
+     * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this BitVector
      */
     public function offsetSet(mixed $offset, mixed $value): void {}
 
     /**
-     * @throws \RuntimeException unconditionally because unset and null are different things.
-     * Also, this can only contain booleans.
+     * Removes the bit at (int)$offset and reindexes the following bits.
+     * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this BitVector
      */
     public function offsetUnset(mixed $offset): void {}
 

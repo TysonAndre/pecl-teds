@@ -57,9 +57,9 @@ Fetching by int8:
  50: 32
  84: 54
 118: 76
-getInt8 caught OutOfBoundsException: Teds\BitVector int8 index invalid or out of range
-getInt32 caught OutOfBoundsException: Teds\BitVector int32 index invalid or out of range
-setInt8 caught OutOfBoundsException: Teds\BitVector int8 index invalid or out of range
+getInt8 caught OutOfBoundsException: Index out of range
+getInt32 caught OutOfBoundsException: Index out of range
+setInt8 caught OutOfBoundsException: Index out of range
 Fetching by int16:
   5023: 139f
  31693: 7bcd

@@ -16,7 +16,9 @@ $it = new Teds\Deque(['first' => new stdClass()]);
 var_dump($it->offsetGet(0));
 var_dump($it->get(0));
 expect_throws(fn() => $it->offsetSet(1,'x'));
-expect_throws(fn() => $it->offsetUnset(0));
+expect_throws(fn() => $it->offsetUnset(PHP_INT_MIN));
+expect_throws(fn() => $it->offsetUnset(-1));
+expect_throws(fn() => $it->offsetUnset(count($it)));
 var_dump($it->offsetGet('0'));
 echo "offsetExists checks\n";
 var_dump($it->offsetExists(1));
@@ -40,7 +42,7 @@ expect_throws(fn() => $it->get('invalid'));
 expect_throws(fn() => $it[['invalid']]);
 expect_throws(fn() => $it->offsetUnset(PHP_INT_MAX));
 expect_throws(fn() => $it->offsetSet(PHP_INT_MAX,'x'));
-expect_throws(function () use ($it) { unset($it[0]); });
+expect_throws(function () use ($it) { unset($it[-1]); });
 var_dump($it->getIterator());
 ?>
 --EXPECT--
@@ -50,7 +52,9 @@ object(stdClass)#1 (0) {
 object(stdClass)#1 (0) {
 }
 Caught OutOfBoundsException: Index out of range
-Caught Teds\UnsupportedOperationException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 object(stdClass)#1 (0) {
 }
 offsetExists checks
@@ -73,8 +77,8 @@ Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
 Caught TypeError: Teds\Deque::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught Teds\UnsupportedOperationException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
 Caught OutOfBoundsException: Index out of range
-Caught Teds\UnsupportedOperationException: Teds\Deque does not support offsetUnset - elements must be set to null or removed by resizing
+Caught OutOfBoundsException: Index out of range
+Caught OutOfBoundsException: Index out of range
 object(InternalIterator)#2 (0) {
 }

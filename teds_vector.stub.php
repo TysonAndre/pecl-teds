@@ -110,7 +110,8 @@ final class Vector implements \IteratorAggregate, Sequence, \JsonSerializable
     public function offsetSet(mixed $offset, mixed $value): void {}
 
     /**
-     * @throws \RuntimeException unconditionally because unset and null are different things, unlike SplFixedArray
+     * Removes the element at (int)$offset and reindexes the following elements of the vector.
+     * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
      */
     public function offsetUnset(mixed $offset): void {}
 
