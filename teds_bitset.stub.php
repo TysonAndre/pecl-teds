@@ -68,9 +68,13 @@ final class BitSet implements \IteratorAggregate, Sequence, \JsonSerializable
 
     public function push(mixed ...$values): void {}
     /**
-     * TODO: optimize unshift(), this is currently inefficient.
+     * TODO: optimize unshift(), this is currently inefficient for varargs.
      */
     public function unshift(mixed ...$values): void {}
+    /**
+     * TODO: optimize insert(), this is currently inefficient for varargs.
+     */
+    public function insert(int $offset, mixed ...$values): void {}
     public function pushBits(bool ...$values): void {}
 
     /**

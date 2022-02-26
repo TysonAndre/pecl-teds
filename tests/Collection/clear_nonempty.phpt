@@ -155,7 +155,7 @@ toArray: array(2) {
 }
 First: string(24) "v_Teds\ImmutableSequence"
 Last: string(24) "z_Teds\ImmutableSequence"
-clear: Caught Teds\ImmutableSequence does not support clear - it is immutable
+clear: Caught Teds\ImmutableSequence is immutable
 object(Teds\ImmutableSequence)#%d (2) {
   [0]=>
   string(24) "v_Teds\ImmutableSequence"

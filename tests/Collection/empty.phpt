@@ -109,7 +109,7 @@ values: array(0) {
 }
 toArray: array(0) {
 }
-clear: Caught Teds\ImmutableSequence does not support clear - it is immutable
+clear: Caught Teds\ImmutableSequence is immutable
 first() Caught UnderflowException: Cannot get first element of empty Teds\ImmutableSequence
 last() Caught UnderflowException: Cannot get last element of empty Teds\ImmutableSequence
 object(Teds\ImmutableSequence)#%d (0) {

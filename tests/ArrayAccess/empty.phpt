@@ -122,7 +122,7 @@ object(Teds\StrictTreeMap)#4 (0) {
 
 
 Testing Teds\Vector
-set OutOfBoundsException: Index invalid or out of range
+set OutOfBoundsException: Index out of range
 offsetSet OutOfBoundsException: Index out of range
 get caught OutOfBoundsException: Index out of range
 offsetGet caught OutOfBoundsException: Index out of range

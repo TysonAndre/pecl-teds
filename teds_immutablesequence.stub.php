@@ -14,7 +14,7 @@ namespace Teds;
  */
 final class ImmutableSequence implements \IteratorAggregate, Sequence, \JsonSerializable
 {
-    public function __construct(iterable $iterator) {}
+    public function __construct(iterable $iterator = []) {}
     public function getIterator(): \InternalIterator {}
     public function count(): int {}
     /** Returns true if there are 0 elements in the ImmutableSequence. */
@@ -44,6 +44,11 @@ final class ImmutableSequence implements \IteratorAggregate, Sequence, \JsonSeri
      * @throws \Teds\UnsupportedOperationException unconditionally
      * @return never
      */
+    public function insert(int $offset, mixed ...$values): void {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @return never
+     */
     public function push(mixed ...$values): void {}
     /**
      * @throws \Teds\UnsupportedOperationException unconditionally
@@ -53,11 +58,13 @@ final class ImmutableSequence implements \IteratorAggregate, Sequence, \JsonSeri
     /**
      * @throws \Teds\UnsupportedOperationException unconditionally
      * @return never
+     * @implementation-alias Teds\ImmutableSequence::push
      */
     public function unshift(mixed ...$values): void {}
     /**
      * @throws \Teds\UnsupportedOperationException unconditionally
      * @return never
+     * @implementation-alias Teds\ImmutableSequence::pop
      */
     public function shift(): mixed {}
 

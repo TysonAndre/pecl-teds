@@ -363,26 +363,31 @@ PHP_METHOD(Teds_ImmutableSequence, isEmpty)
 PHP_METHOD(Teds_ImmutableSequence, __construct)
 {
 	zval *object = ZEND_THIS;
-	zval* iterable;
+	zval* iterable = NULL;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
+	ZEND_PARSE_PARAMETERS_START(0, 1)
+		Z_PARAM_OPTIONAL
 		Z_PARAM_ITERABLE(iterable)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_immutablesequence *intern = Z_IMMUTABLESEQUENCE_P(object);
+	teds_immutablesequence_entries *array = Z_IMMUTABLESEQUENCE_ENTRIES_P(object);
 
-	if (UNEXPECTED(!teds_immutablesequence_entries_uninitialized(&intern->array))) {
+	if (UNEXPECTED(!teds_immutablesequence_entries_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\ImmutableSequence::__construct twice", 0);
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
 	}
+	if (!iterable) {
+		teds_immutablesequence_entries_set_empty_list(array);
+		return;
+	}
 
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_immutablesequence_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
+			teds_immutablesequence_entries_init_from_array(array, Z_ARRVAL_P(iterable));
 			return;
 		case IS_OBJECT:
-			teds_immutablesequence_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
+			teds_immutablesequence_entries_init_from_traversable(array, Z_OBJ_P(iterable));
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -632,21 +637,24 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, set)
 ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, push)
 {
 	zval *tmp;
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &tmp) == FAILURE) {
+	int num_varargs;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "*", &tmp, &num_varargs) == FAILURE) {
 		RETURN_THROWS();
 	}
 
-	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support push - it is immutable");
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence is immutable");
 }
 
-ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, unshift)
+ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, insert)
 {
+	zval offset;
 	zval *tmp;
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &tmp) == FAILURE) {
+	int num_varargs;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l*", &offset, &tmp, &num_varargs) == FAILURE) {
 		RETURN_THROWS();
 	}
 
-	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support unshift - it is immutable");
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence is immutable");
 }
 
 ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, pop)
@@ -655,7 +663,7 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, pop)
 		RETURN_THROWS();
 	}
 
-	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support pop - it is immutable");
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence is immutable");
 }
 
 PHP_METHOD(Teds_ImmutableSequence, first)
@@ -692,16 +700,7 @@ ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, clear)
 		RETURN_THROWS();
 	}
 
-	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support clear - it is immutable");
-}
-
-ZEND_COLD PHP_METHOD(Teds_ImmutableSequence, shift)
-{
-	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_THROWS();
-	}
-
-	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence does not support shift - it is immutable");
+	TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSequence is immutable");
 }
 
 PHP_METHOD(Teds_ImmutableSequence, offsetGet)

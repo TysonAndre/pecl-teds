@@ -1256,6 +1256,35 @@ static zend_always_inline void teds_bitset_entries_unshift_single(teds_bitset_en
 	entries_bits[0] = (entries_bits[0] << 1) | (value ? 1 : 0);
 }
 
+static zend_always_inline void teds_bitset_entries_insert_single(teds_bitset_entries *array, const size_t offset, const bool value)
+{
+	const size_t old_size = array->bit_size;
+	const size_t old_capacity = array->bit_capacity;
+
+	ZEND_ASSERT((old_capacity & 7) == 0);
+
+	if (UNEXPECTED(old_size >= old_capacity)) {
+		ZEND_ASSERT(old_size == old_capacity);
+		const size_t new_capacity = teds_bitset_compute_next_valid_capacity(old_size + (old_size >> 1));
+		ZEND_ASSERT(new_capacity > old_capacity);
+		teds_bitset_entries_raise_capacity(array, new_capacity);
+	}
+
+	array->bit_size++;
+	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
+	size_t n = old_size >> 3;
+	const size_t start = offset >> 3;
+	uint8_t *const entries_bits = array->entries_bits;
+	for (; n > start; n--) {
+		entries_bits[n] = (entries_bits[n] << 1) | (entries_bits[n - 1] >> 7);
+	}
+	const uint8_t bitpos = offset & 7;
+	const uint8_t insert_mask = (1 << (bitpos)) - 1;
+	const uint8_t old = entries_bits[n];
+	/* Insert the bit after least insignificant bits and move up the most significant bits */
+	entries_bits[n] = (old & insert_mask) | ((value ? 1 : 0) << bitpos) | ((old & ~insert_mask) << 1);
+}
+
 PHP_METHOD(Teds_BitSet, unshift)
 {
 	const zval *args;
@@ -1282,6 +1311,42 @@ PHP_METHOD(Teds_BitSet, unshift)
 		zend_long new_value;
 		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
 		teds_bitset_entries_unshift_single(array, new_value);
+	}
+	TEDS_RETURN_VOID();
+}
+
+PHP_METHOD(Teds_BitSet, insert)
+{
+	zend_long offset;
+	const zval *args;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(1, -1)
+		Z_PARAM_LONG(offset);
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_bitset_entries *array = Z_BITSET_ENTRIES_P(ZEND_THIS);
+	const size_t old_size = array->bit_size;
+	if (UNEXPECTED((zend_ulong) offset > array->bit_size || offset < 0)) {
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		return;
+	}
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+	const size_t new_size = old_size + argc;
+	/* The compiler will type check but eliminate dead code on platforms where size_t is 32 bits (4 bytes) */
+	if (SIZEOF_SIZE_T < 8 && UNEXPECTED(new_size > MAX_VALID_OFFSET + 1 || new_size < old_size)) {
+		teds_error_noreturn_max_bitset_capacity();
+		ZEND_UNREACHABLE();
+	}
+
+	/* TODO: Optimize this for large varargs case */
+	for (uint32_t i = 0; i < argc; i++) {
+		zend_long new_value;
+		TEDS_BITSET_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
+		teds_bitset_entries_insert_single(array, offset + i, new_value);
 	}
 	TEDS_RETURN_VOID();
 }

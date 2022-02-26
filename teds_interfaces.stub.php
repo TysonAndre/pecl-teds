@@ -45,11 +45,19 @@ interface Collection extends \Traversable, \Countable {
  * This represents a Collection that can be used like a list without gaps.
  * E.g. get()/set() will work for is_int($offset) && 0 <= $offset and $offset < $list->count().
  *
+ * @implementation-notes
  * NOTE: List is a reserved keyword in php and cannot be used as an identifier, e.g. `list($x) = [1]`.
+ * List is also used as a non-standard type in phpdoc for arrays where array_is_list() is true.
+ *
+ * NOTE: Many methods of Sequence throw \OutOfBoundsException.
+ * https://www.php.net/manual/en/class.outofboundsexception.php is described as an exception that "represents errors that cannot be detected at compile time."
+ * Since the length of a Sequence (e.g. Vector, Deque) is often not known at compile time and the code in question may be accepting `Sequence $sequence`,
+ * throwing `OutOfBoundsException extends RuntimeException` seems more appropriate than `OutOfRangeException extends LogicException`
  */
 interface Sequence extends Collection, \ArrayAccess {
     public function get(int $offset): mixed {}
     public function set(int $offset, mixed $value): void {}
+    public function insert(int $offset, mixed ...$values): void {}
 
     public function push(mixed ...$values): void {}
     public function pop(): mixed {}
