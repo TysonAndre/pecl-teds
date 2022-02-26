@@ -1,27 +1,27 @@
 --TEST--
-Teds\BitSet indexOf/contains
+Teds\BitVector indexOf/contains
 --FILE--
 <?php
 // discards keys
-$it = new Teds\BitSet();
+$it = new Teds\BitVector();
 var_dump($it->indexOf(false));
 var_dump($it->indexOf(true));
 var_dump($it->contains(false));
 var_dump($it->contains(true));
 echo "Build 1-element\n";
-$it = new Teds\BitSet([true]);
+$it = new Teds\BitVector([true]);
 var_dump($it->indexOf(false));
 var_dump($it->indexOf(true));
 var_dump($it->contains(false));
 var_dump($it->contains(true));
 echo "Build 1-element false\n";
-$it = new Teds\BitSet([false]);
+$it = new Teds\BitVector([false]);
 var_dump($it->indexOf(false));
 var_dump($it->indexOf(true));
 var_dump($it->contains(false));
 var_dump($it->contains(true));
 echo "Build 4-element\n";
-$it = new Teds\BitSet([true, true, false, false]);
+$it = new Teds\BitVector([true, true, false, false]);
 var_dump($it->indexOf(false));
 var_dump($it->indexOf(true));
 var_dump($it->contains(false));

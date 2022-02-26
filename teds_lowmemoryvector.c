@@ -1771,14 +1771,53 @@ PHP_METHOD(Teds_LowMemoryVector, unshift)
 		teds_lowmemoryvector_entries_raise_capacity(array, new_size > 3 ? new_size + (new_size >> 1) : 4);
 	}
 
-	for (uint32_t i = 0; i < argc && array->type_tag != LMV_TYPE_ZVAL; i++) {
-		teds_lowmemoryvector_entries_update_type_tag(array, &args[i]);
-	}
 	uint8_t *const raw_bytes = array->entries_uint8;
 	memmove(raw_bytes + argc * (size_t) memory_per_element, raw_bytes, memory_per_element * old_size);
 	array->size = new_size;
 	for (uint32_t i = 0; i < argc; i++) {
 		teds_lowmemoryvector_entries_set_value_at_offset(array, argc - i - 1, &args[i], false);
+	}
+
+	TEDS_RETURN_VOID();
+}
+
+PHP_METHOD(Teds_LowMemoryVector, insert)
+{
+	zend_long offset;
+	const zval *args;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(1, -1)
+		Z_PARAM_LONG(offset)
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
+	if (UNEXPECTED((zend_ulong) offset > array->size)) {
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		return;
+	}
+	ZEND_ASSERT(offset >= 0);
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+
+	for (uint32_t i = 0; i < argc && array->type_tag != LMV_TYPE_ZVAL; i++) {
+		teds_lowmemoryvector_entries_update_type_tag(array, &args[i]);
+	}
+	const uint8_t memory_per_element = teds_lowmemoryvector_entries_compute_memory_per_element(array);
+	const size_t old_size = array->size;
+	const size_t new_size = ((size_t) array->size) + argc;
+	if (new_size >= array->capacity) {
+		teds_lowmemoryvector_entries_raise_capacity(array, new_size > 3 ? new_size + (new_size >> 1) : 4);
+	}
+
+	uint8_t *const raw_bytes = array->entries_uint8;
+	uint8_t *const insert_start = raw_bytes + ((size_t) offset) * memory_per_element;
+	memmove(insert_start + argc * (size_t) memory_per_element, insert_start, memory_per_element * (old_size - offset));
+	array->size = new_size;
+	for (uint32_t i = 0; i < argc; i++) {
+		teds_lowmemoryvector_entries_set_value_at_offset(array, offset + i, &args[i], false);
 	}
 
 	TEDS_RETURN_VOID();

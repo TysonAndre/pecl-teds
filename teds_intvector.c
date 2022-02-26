@@ -39,7 +39,7 @@
 #define TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING 0
 #endif
 
-#define TEDS_IMMUTABLESORTEDINTSET_BYTE_THRESHOLD (1 << 20)
+#define TEDS_IMMUTABLESORTEDINTSET_BYTE_THRESHOLD (1 << 13)
 
 #define TEDS_IMMUTABLESORTEDINTSET_THROW_UNSUPPORTEDOPERATIONEXCEPTION() TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSortedIntSet is immutable")
 
@@ -2096,6 +2096,63 @@ PHP_METHOD(Teds_IntVector, unshift)
 		teds_intvector_entries_set_value_at_offset(array, argc - i - 1, longs[i], false);
 	}
 
+	efree(longs);
+
+	TEDS_RETURN_VOID();
+}
+
+PHP_METHOD(Teds_IntVector, insert)
+{
+	zend_long offset;
+	const zval *args;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(1, -1)
+		Z_PARAM_LONG(offset)
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
+	if (UNEXPECTED((zend_ulong) offset > array->size)) {
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		return;
+	}
+	ZEND_ASSERT(offset >= 0);
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+	zend_long *const longs = safe_emalloc(argc, sizeof(zend_long), 0);
+
+	for (uint32_t i = 0; i < argc; i++) {
+		const zval *const arg = &args[i];
+		zend_long v;
+		if (UNEXPECTED(Z_TYPE_P(arg) != IS_LONG)) {
+			v = teds_intvector_convert_zval_value_to_long(arg);
+			if (UNEXPECTED(EG(exception))) {
+				efree(longs);
+				return;
+			}
+		} else {
+			v = Z_LVAL_P(arg);
+		}
+		longs[i] = v;
+		teds_intvector_entries_update_type_tag(array, v);
+	}
+
+	const uint8_t memory_per_element = teds_intvector_entries_compute_memory_per_element(array);
+	const size_t old_size = array->size;
+	const size_t new_size = ((size_t) array->size) + argc;
+	if (new_size >= array->capacity) {
+		teds_intvector_entries_raise_capacity(array, new_size > 3 ? new_size + (new_size >> 1) : 4);
+	}
+
+	uint8_t *const raw_bytes = array->entries_uint8;
+	uint8_t *const insert_start = raw_bytes + ((size_t) offset) * memory_per_element;
+	memmove(insert_start + argc * (size_t) memory_per_element, insert_start, memory_per_element * (old_size - offset));
+	array->size = new_size;
+	for (uint32_t i = 0; i < argc; i++) {
+		teds_intvector_entries_set_value_at_offset(array, offset + i, longs[i], false);
+	}
 	efree(longs);
 
 	TEDS_RETURN_VOID();

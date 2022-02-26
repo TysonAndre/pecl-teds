@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 9a3fb78b9fb5d4c61cef8d6e1e789d1a5a28e723 */
+ * Stub hash: 92ad2b1804c1062a5f5ccc8f8cd81e65582048f9 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_LowMemoryVector___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -39,6 +39,11 @@ ZEND_END_ARG_INFO()
 #define arginfo_class_Teds_LowMemoryVector_pop arginfo_class_Teds_LowMemoryVector_first
 
 #define arginfo_class_Teds_LowMemoryVector_unshift arginfo_class_Teds_LowMemoryVector_push
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_LowMemoryVector_insert, 0, 1, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_LowMemoryVector_shift arginfo_class_Teds_LowMemoryVector_first
 
@@ -101,6 +106,7 @@ ZEND_METHOD(Teds_LowMemoryVector, last);
 ZEND_METHOD(Teds_LowMemoryVector, push);
 ZEND_METHOD(Teds_LowMemoryVector, pop);
 ZEND_METHOD(Teds_LowMemoryVector, unshift);
+ZEND_METHOD(Teds_LowMemoryVector, insert);
 ZEND_METHOD(Teds_LowMemoryVector, shift);
 ZEND_METHOD(Teds_LowMemoryVector, clear);
 ZEND_METHOD(Teds_LowMemoryVector, toArray);
@@ -129,6 +135,7 @@ static const zend_function_entry class_Teds_LowMemoryVector_methods[] = {
 	ZEND_ME(Teds_LowMemoryVector, push, arginfo_class_Teds_LowMemoryVector_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, pop, arginfo_class_Teds_LowMemoryVector_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, unshift, arginfo_class_Teds_LowMemoryVector_unshift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_LowMemoryVector, insert, arginfo_class_Teds_LowMemoryVector_insert, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, shift, arginfo_class_Teds_LowMemoryVector_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, clear, arginfo_class_Teds_LowMemoryVector_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_LowMemoryVector, toArray, arginfo_class_Teds_LowMemoryVector_toArray, ZEND_ACC_PUBLIC)

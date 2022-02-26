@@ -85,6 +85,7 @@ final class Vector implements \IteratorAggregate, Sequence, \JsonSerializable
     // Strictly typed, unlike offsetGet/offsetSet
     public function get(int $offset): mixed {}
     public function set(int $offset, mixed $value): void {}
+    public function insert(int $offset, mixed ...$values): void {}
 
     /**
      * Returns the value at (int)$offset.

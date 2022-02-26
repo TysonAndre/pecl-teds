@@ -95,6 +95,7 @@ final class Deque implements \IteratorAggregate, Sequence, \JsonSerializable
      * @throws \OutOfBoundsException if the value of (int)$offset is not within the bounds of this vector
      */
     public function set(int $offset, mixed $value): void {}
+    public function insert(int $offset, mixed ...$values): void {}
     // Must be mixed for compatibility with ArrayAccess
     /**
      * Returns the value at offset (int)$offset (relative to the start of the Deque)

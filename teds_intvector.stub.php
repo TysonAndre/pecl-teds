@@ -74,6 +74,7 @@ final class IntVector implements \IteratorAggregate, Sequence, \JsonSerializable
 
     public function clear(): void {}
     public function unshift(mixed ...$values): void {}
+    public function insert(int $offset, mixed ...$values): void {}
     /**
      * @throws \UnderflowException if there are no more elements
      */

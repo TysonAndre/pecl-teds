@@ -1,5 +1,5 @@
 --TEST--
-Teds\BitSet offsetGet/get
+Teds\BitVector offsetGet/get
 --FILE--
 <?php
 
@@ -11,8 +11,8 @@ function expect_throws(Closure $cb): void {
         printf("Caught %s: %s\n", $e::class, $e->getMessage());
     }
 }
-expect_throws(fn() => (new ReflectionClass(Teds\BitSet::class))->newInstanceWithoutConstructor());
-$it = new Teds\BitSet([true]);
+expect_throws(fn() => (new ReflectionClass(Teds\BitVector::class))->newInstanceWithoutConstructor());
+$it = new Teds\BitVector([true]);
 var_dump($it->offsetGet(0));
 var_dump($it->get(0));
 expect_throws(fn() => $it->offsetSet(1,true));
@@ -44,11 +44,11 @@ expect_throws(function () use ($it) { unset($it[0]); });
 var_dump($it->getIterator());
 ?>
 --EXPECT--
-Caught ReflectionException: Class Teds\BitSet is an internal class marked as final that cannot be instantiated without invoking its constructor
+Caught ReflectionException: Class Teds\BitVector is an internal class marked as final that cannot be instantiated without invoking its constructor
 bool(true)
 bool(true)
 Caught OutOfBoundsException: Index out of range
-Caught Teds\UnsupportedOperationException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\BitVector does not support offsetUnset - elements must be removed by resizing
 bool(true)
 offsetExists checks
 bool(false)
@@ -68,10 +68,10 @@ Caught OutOfBoundsException: Index out of range
 Caught OutOfBoundsException: Index out of range
 Caught OutOfBoundsException: Index out of range
 Caught TypeError: Illegal offset type string
-Caught TypeError: Teds\BitSet::get(): Argument #1 ($offset) must be of type int, string given
+Caught TypeError: Teds\BitVector::get(): Argument #1 ($offset) must be of type int, string given
 Caught TypeError: Illegal offset type array
-Caught Teds\UnsupportedOperationException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
-Caught TypeError: Illegal Teds\BitSet value type string
-Caught Teds\UnsupportedOperationException: Teds\BitSet does not support offsetUnset - elements must be removed by resizing
+Caught Teds\UnsupportedOperationException: Teds\BitVector does not support offsetUnset - elements must be removed by resizing
+Caught TypeError: Illegal Teds\BitVector value type string
+Caught Teds\UnsupportedOperationException: Teds\BitVector does not support offsetUnset - elements must be removed by resizing
 object(InternalIterator)#1 (0) {
 }

@@ -7,11 +7,11 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef TEDS_BITSET_H
-#define TEDS_BITSET_H
+#ifndef TEDS_BITVECTOR_H
+#define TEDS_BITVECTOR_H
 
-extern zend_class_entry *teds_ce_BitSet;
+extern zend_class_entry *teds_ce_BitVector;
 
-PHP_MINIT_FUNCTION(teds_bitset);
+PHP_MINIT_FUNCTION(teds_bitvector);
 
-#endif	/* TEDS_BITSET_H */
+#endif	/* TEDS_BITVECTOR_H */

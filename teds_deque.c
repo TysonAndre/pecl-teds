@@ -1055,6 +1055,74 @@ PHP_METHOD(Teds_Deque, unshift)
 	TEDS_RETURN_VOID();
 }
 
+static void teds_deque_entries_insert_values(teds_deque_entries *const array, const uint32_t insert_offset, uint32_t argc, const zval *args) {
+	const uint32_t old_size = array->size;
+	const size_t new_size = old_size + argc;
+	uint32_t mask = array->mask;
+	const uint32_t old_capacity = mask ? mask + 1 : 0;
+	ZEND_ASSERT(argc > 0);
+	ZEND_ASSERT(new_size < ZEND_ULONG_MAX);
+
+	if (new_size > old_capacity) {
+		const size_t new_capacity = teds_deque_next_pow2_capacity(new_size);
+		teds_deque_raise_capacity(array, new_capacity);
+		mask = array->mask;
+	}
+	const uint32_t offset = array->offset;
+	zval *const circular_buffer = array->circular_buffer;
+
+	/* Move elements to the end of the deque */
+	uint32_t src_offset = offset + old_size; /* Masked in do-while loop. */
+	uint32_t dst_offset = src_offset + argc;
+	uint32_t src_end = (offset + insert_offset) & mask;
+
+	while (src_offset != src_end) {
+		src_offset = (src_offset - 1) & mask;
+		dst_offset = (dst_offset - 1) & mask;
+		ZEND_ASSERT(Z_TYPE(circular_buffer[src_offset]) != IS_UNDEF);
+		ZVAL_COPY_VALUE(&circular_buffer[dst_offset], &circular_buffer[src_offset]);
+	}
+
+	dst_offset = (offset + insert_offset) & mask;
+	do {
+		zval *dest = &circular_buffer[dst_offset];
+		ZVAL_COPY(dest, args);
+		if (--argc == 0) {
+			break;
+		}
+		args++;
+		dst_offset = (dst_offset + 1) & mask;
+	} while (1);
+
+	array->size = new_size;
+
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
+}
+
+PHP_METHOD(Teds_Deque, insert)
+{
+	const zval *args;
+	zend_long insert_offset;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(1, -1)
+		Z_PARAM_LONG(insert_offset)
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+	if (UNEXPECTED(((zend_ulong) insert_offset) > array->size)) {
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		return;
+	}
+	ZEND_ASSERT(insert_offset >= 0);
+
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+	teds_deque_entries_insert_values(array, insert_offset, argc, args);
+}
+
 static zend_always_inline void teds_deque_try_shrink_capacity(teds_deque *intern, uint32_t old_size)
 {
 	const uint32_t old_mask = intern->array.mask;

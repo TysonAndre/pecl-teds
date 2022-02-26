@@ -1,5 +1,5 @@
 --TEST--
-Teds\BitSet push/pop
+Teds\BitVector push/pop
 --FILE--
 <?php
 
@@ -12,8 +12,8 @@ function expect_throws(Closure $cb): void {
     }
 }
 
-echo "Test empty BitSet\n";
-$it = new Teds\BitSet([]);
+echo "Test empty BitVector\n";
+$it = new Teds\BitVector([]);
 printf("count=%d capacity=%d\n", $it->count(), $it->capacity());
 expect_throws(fn() => $it->pop());
 expect_throws(fn() => $it->pop());
@@ -38,10 +38,10 @@ printf("count=%d capacity=%d\n", count($it), $it->capacity());
 
 ?>
 --EXPECT--
-Test empty BitSet
+Test empty BitVector
 count=0 capacity=0
-Caught UnderflowException: Cannot pop from empty Teds\BitSet
-Caught UnderflowException: Cannot pop from empty Teds\BitSet
+Caught UnderflowException: Cannot pop from empty Teds\BitVector
+Caught UnderflowException: Cannot pop from empty Teds\BitVector
 [true,true,false]
 count=3 capacity=64
 bool(false)

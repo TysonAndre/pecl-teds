@@ -1157,6 +1157,46 @@ PHP_METHOD(Teds_Vector, unshift)
 	TEDS_RETURN_VOID();
 }
 
+PHP_METHOD(Teds_Vector, insert)
+{
+	const zval *args;
+	zend_long offset;
+	uint32_t argc;
+
+	ZEND_PARSE_PARAMETERS_START(1, -1)
+		Z_PARAM_LONG(offset)
+		Z_PARAM_VARIADIC('+', args, argc)
+	ZEND_PARSE_PARAMETERS_END();
+
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	const uint32_t old_size = intern->array.size;
+	if (UNEXPECTED(((zend_ulong) offset) > old_size)) {
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
+		return;
+	}
+	ZEND_ASSERT(offset >= 0);
+
+	if (UNEXPECTED(argc == 0)) {
+		return;
+	}
+	const size_t new_size = ((size_t) old_size) + argc;
+	const uint32_t old_capacity = intern->array.capacity;
+	/* TODO: Adjust iterator positions */
+	if (new_size > old_capacity) {
+		const size_t new_capacity = new_size >= 3 ? (new_size - 1) * 2 : 4;
+		ZEND_ASSERT(new_capacity >= new_size);
+		teds_vector_raise_capacity(intern, new_capacity);
+	}
+	zval *const entries = intern->array.entries;
+	zval *const insert_start = entries + offset;
+	memmove(insert_start + argc, insert_start, sizeof(zval) * (old_size - offset));
+	for (uint32_t i = 0; i < argc; i++) {
+		ZVAL_COPY(&insert_start[i], &args[i]);
+	}
+	intern->array.size = new_size;
+	TEDS_RETURN_VOID();
+}
+
 PHP_METHOD(Teds_Vector, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -1292,7 +1332,7 @@ static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zv
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
 	if (offset < 0 || (zend_ulong) offset >= intern->array.size) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Index invalid or out of range", 0);
+		zend_throw_exception(spl_ce_OutOfBoundsException, "Index out of range", 0);
 		return;
 	}
 	ZVAL_DEREF(value);

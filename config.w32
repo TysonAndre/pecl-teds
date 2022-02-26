@@ -6,7 +6,7 @@ if (PHP_TEDS != 'no') {
 	AC_DEFINE('HAVE_TEDS', 1, 'teds support enabled');
 
 	EXTENSION('teds',
-        'teds.c teds_cachediterable.c teds_immutableiterable.c teds_immutablesequence.c teds_mutableiterable.c teds_vector.c teds_deque.c teds_stricttreemap.c teds_stricttreeset.c teds_strictheap.c teds_stricthashmap.c teds_stricthashset.c teds_strictsortedvectorset.c teds_strictsortedvectormap.c teds_lowmemoryvector.c teds_intvector.c teds_immutablesortedstringset.c teds_bitset.c teds_interfaces.c teds_exceptions.c',
+        'teds.c teds_cachediterable.c teds_immutableiterable.c teds_immutablesequence.c teds_mutableiterable.c teds_vector.c teds_deque.c teds_stricttreemap.c teds_stricttreeset.c teds_strictheap.c teds_stricthashmap.c teds_stricthashset.c teds_strictsortedvectorset.c teds_strictsortedvectormap.c teds_lowmemoryvector.c teds_intvector.c teds_immutablesortedstringset.c teds_bitvector.c teds_interfaces.c teds_exceptions.c',
         null,
         '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
 }

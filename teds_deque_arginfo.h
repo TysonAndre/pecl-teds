@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: bd78109c39127f2b4b743d5e2daa64812c765dfc */
+ * Stub hash: 22357ee7052faa3a10cfc917f18d9209dfdb10aa */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -60,6 +60,11 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_set, 0, 2, IS_V
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_insert, 0, 1, IS_VOID, 0)
+	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_offsetGet, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
@@ -108,6 +113,7 @@ ZEND_METHOD(Teds_Deque, first);
 ZEND_METHOD(Teds_Deque, last);
 ZEND_METHOD(Teds_Deque, get);
 ZEND_METHOD(Teds_Deque, set);
+ZEND_METHOD(Teds_Deque, insert);
 ZEND_METHOD(Teds_Deque, offsetGet);
 ZEND_METHOD(Teds_Deque, offsetExists);
 ZEND_METHOD(Teds_Deque, containsKey);
@@ -139,6 +145,7 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_MALIAS(Teds_Deque, values, toArray, arginfo_class_Teds_Deque_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, get, arginfo_class_Teds_Deque_get, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, set, arginfo_class_Teds_Deque_set, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Deque, insert, arginfo_class_Teds_Deque_insert, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, offsetGet, arginfo_class_Teds_Deque_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, offsetExists, arginfo_class_Teds_Deque_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, containsKey, arginfo_class_Teds_Deque_containsKey, ZEND_ACC_PUBLIC)

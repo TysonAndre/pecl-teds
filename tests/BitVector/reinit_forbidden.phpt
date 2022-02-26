@@ -1,9 +1,9 @@
 --TEST--
-Teds\BitSet cannot be re-initialized
+Teds\BitVector cannot be re-initialized
 --FILE--
 <?php
 
-$it = new Teds\BitSet([]);
+$it = new Teds\BitVector([]);
 
 try {
     $it->__construct([true]);
@@ -21,9 +21,9 @@ try {
 var_dump($it);
 ?>
 --EXPECT--
-Caught RuntimeException: Called Teds\BitSet::__construct twice
-object(Teds\BitSet)#1 (0) {
+Caught RuntimeException: Called Teds\BitVector::__construct twice
+object(Teds\BitVector)#1 (0) {
 }
-Caught RuntimeException: Teds\BitSet already unserialized
-object(Teds\BitSet)#1 (0) {
+Caught RuntimeException: Teds\BitVector already unserialized
+object(Teds\BitVector)#1 (0) {
 }
