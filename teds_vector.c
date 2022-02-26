@@ -618,19 +618,17 @@ static const zend_object_iterator_funcs teds_vector_it_funcs = {
 	NULL, /* get_gc */
 };
 
-
 zend_object_iterator *teds_vector_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
 	// This is final
 	ZEND_ASSERT(ce == teds_ce_Vector);
-	teds_vector_it *iterator;
 
 	if (UNEXPECTED(by_ref)) {
 		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
 		return NULL;
 	}
 
-	iterator = emalloc(sizeof(teds_vector_it));
+	teds_vector_it *iterator = emalloc(sizeof(teds_vector_it));
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 

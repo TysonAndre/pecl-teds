@@ -61,6 +61,45 @@ static zend_object *teds_emptysequence_new(zend_class_entry *class_type)
 	return std;
 }
 
+static void teds_emptycollection_it_noop(zend_object_iterator *iter) {
+	(void)iter;
+} /* noop */
+
+static int teds_emptycollection_it_valid(zend_object_iterator *iter) {
+	(void)iter;
+	return FAILURE;
+}
+
+static zval *teds_emptycollection_it_get_current_data(zend_object_iterator *iter)
+{
+	(void)iter;
+	teds_throw_invalid_sequence_index_exception();
+	return &EG(uninitialized_zval);
+}
+
+static const zend_object_iterator_funcs teds_emptycollection_it_funcs = {
+	teds_emptycollection_it_noop, /* dtor */
+	teds_emptycollection_it_valid,
+	teds_emptycollection_it_get_current_data,
+	NULL, /* get_current_key is optional */
+	teds_emptycollection_it_noop, /* move_forward */
+	NULL, /* rewind is optional */
+	NULL,
+	NULL, /* get_gc */
+};
+static zend_object_iterator *teds_emptycollection_get_iterator(zend_class_entry *ce, zval *object, int byref)
+{
+	if (UNEXPECTED(byref)) {
+		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
+		return NULL;
+	}
+
+	zend_object_iterator *iterator = emalloc(sizeof(zend_object_iterator));
+	zend_iterator_init(iterator);
+	iterator->funcs = &teds_emptycollection_it_funcs;
+	return iterator;
+}
+
 static zend_object *teds_emptymap_new(zend_class_entry *class_type)
 {
 	zend_object *std = zend_object_alloc(sizeof(zend_object), class_type);
@@ -408,7 +447,9 @@ PHP_MINIT_FUNCTION(teds_emptysequence)
 	teds_handler_EmptySequence.has_dimension   = teds_emptysequence_has_dimension;
 
 	teds_ce_EmptySequence->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_EmptySequence->get_iterator = teds_emptycollection_get_iterator;
 
+	/* EmptyMap */
 	teds_ce_EmptyMap = register_class_Teds_EmptyMap(zend_ce_iterator, teds_ce_Map, php_json_serializable_ce);
 	teds_ce_EmptyMap->create_object = teds_emptymap_new;
 
@@ -423,7 +464,9 @@ PHP_MINIT_FUNCTION(teds_emptysequence)
 	teds_handler_EmptyMap.has_dimension   = teds_emptymap_has_dimension;
 
 	teds_ce_EmptyMap->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_EmptyMap->get_iterator = teds_emptycollection_get_iterator;
 
+	/* EmptySet */
 	teds_ce_EmptySet = register_class_Teds_EmptySet(zend_ce_iterator, teds_ce_Set, php_json_serializable_ce);
 	teds_ce_EmptySet->create_object = teds_emptyset_new;
 
@@ -435,6 +478,7 @@ PHP_MINIT_FUNCTION(teds_emptysequence)
 	teds_handler_EmptySet.get_gc          = teds_emptysequence_get_gc; /* Deliberately the same */
 
 	teds_ce_EmptySet->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
+	teds_ce_EmptySet->get_iterator = teds_emptycollection_get_iterator;
 	return SUCCESS;
 }
 #endif /* PHP_VERSION_ID >= 80100 */
