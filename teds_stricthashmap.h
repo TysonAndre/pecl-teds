@@ -87,11 +87,9 @@ typedef struct _teds_stricthashmap {
 	zend_object				std;
 } teds_stricthashmap;
 
-extern const uint32_t teds_stricthashmap_empty_bucket_list[2];
-
 void teds_stricthashmap_entries_init_from_array(teds_stricthashmap_entries *array, zend_array *values);
 
-void teds_stricthashmap_entries_init_from_traversable(teds_stricthashmap_entries *array, zend_object *obj);
+void teds_stricthashmap_entries_init_from_traversable(teds_stricthashmap *intern, zend_object *obj);
 
 teds_stricthashmap_entry *teds_stricthashmap_entries_find_key(const teds_stricthashmap_entries *array, zval *key, zend_ulong h);
 

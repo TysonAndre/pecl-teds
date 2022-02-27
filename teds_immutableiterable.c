@@ -309,6 +309,12 @@ static HashTable* teds_immutableiterable_get_properties(zend_object *obj)
 		ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
 		zend_hash_index_update(ht, i, &tmp);
 	}
+#if PHP_VERSION_ID >= 80200
+	if (HT_IS_PACKED(ht)) {
+		/* Engine doesn't expect packed array */
+		zend_hash_packed_to_hash(ht);
+	}
+#endif
 
 	return ht;
 }

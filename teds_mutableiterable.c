@@ -349,6 +349,12 @@ static HashTable* teds_mutableiterable_get_properties(zend_object *obj)
 		}
 	}
 
+#if PHP_VERSION_ID >= 80200
+	if (HT_IS_PACKED(ht)) {
+		/* Engine doesn't expect packed array */
+		zend_hash_packed_to_hash(ht);
+	}
+#endif
 	return ht;
 }
 
@@ -450,6 +456,9 @@ PHP_METHOD(Teds_MutableIterable, clear)
 	const uint32_t entries_to_remove = intern->array.size;
 	zval *const old_entries = (zval *)intern->array.entries;
 	teds_mutableiterable_entries_set_empty_list(&intern->array);
+	if (intern->std.properties) {
+		zend_hash_clean(intern->std.properties);
+	}
 	teds_zval_dtor_range(old_entries, entries_to_remove * 2);
 	efree(old_entries);
 

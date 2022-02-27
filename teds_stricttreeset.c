@@ -198,6 +198,7 @@ static zend_always_inline bool teds_stricttreeset_tree_insert(teds_stricttreeset
 		it->left = NULL;
 		it->right = NULL;
 		tree->nNumOfElements++;
+		tree->should_rebuild_properties = true;
 		return true;
 	}
 	/* c must be declared in outer scope for goto to work. */
@@ -213,6 +214,7 @@ static zend_always_inline bool teds_stricttreeset_tree_insert(teds_stricttreeset
 				it->right = c;
 finish_insert:
 				tree->nNumOfElements++;
+				tree->should_rebuild_properties = true;
 				if (UNEXPECTED(tree->nNumOfElements >= TEDS_MAX_ZVAL_PAIR_COUNT)) {
 					/* Mainly, the reason to do that is that get_properties returns the tree of properties for get_gc, which expects a uint32_t in php-src/Zend/zend_gc.c
 					 * A less severe reason is that this is converted to an tree in var_dump/var_export for debugging, but the latter can be avoided */
@@ -250,12 +252,13 @@ typedef struct _teds_stricttreeset_it {
 	teds_stricttreeset_node *node;
 } teds_stricttreeset_it;
 
-static zend_always_inline teds_stricttreeset *teds_stricttreeset_from_obj(zend_object *obj)
+static zend_always_inline teds_stricttreeset *teds_stricttreeset_from_object(zend_object *obj)
 {
 	return (teds_stricttreeset*)((char*)(obj) - XtOffsetOf(teds_stricttreeset, std));
 }
 
-#define Z_STRICTTREESET_P(zv)  teds_stricttreeset_from_obj(Z_OBJ_P((zv)))
+#define teds_stricttreeset_tree_from_object(obj)  &(teds_stricttreeset_from_object((obj))->tree)
+#define Z_STRICTTREESET_P(zv)  teds_stricttreeset_from_object(Z_OBJ_P((zv)))
 #define Z_STRICTTREESET_TREE_P(zv) (&Z_STRICTTREESET_P((zv))->tree)
 
 static zend_always_inline bool teds_stricttreeset_tree_uninitialized(teds_stricttreeset_tree *tree)
@@ -332,6 +335,7 @@ void teds_stricttreeset_tree_init_from_array(teds_stricttreeset_tree *tree, zend
 	if (values->nNumOfElements == 0) {
 		return;
 	}
+	tree->should_rebuild_properties = true;
 
 	/* Optimization for constructing this from a sorted tree */
 	teds_stricttreeset_node **nodes = emalloc(values->nNumOfElements * sizeof(teds_stricttreeset_node*));
@@ -439,6 +443,7 @@ static void teds_stricttreeset_tree_copy_ctor(teds_stricttreeset_tree *to, teds_
 	teds_stricttreeset_tree_set_empty_tree(to);
 	/* Copy the original tree structure. It will be balanced if the original tree is balanced. */
 	to->nNumOfElements = from->nNumOfElements;
+	to->should_rebuild_properties = true;
 	to->initialized = true;
 	if (!teds_stricttreeset_tree_empty_size(from)) {
 		to->root = teds_stricttreeset_node_copy_ctor_recursive(from->root, NULL, NULL, NULL);
@@ -475,7 +480,7 @@ void teds_stricttreeset_tree_dtor(teds_stricttreeset_tree *tree)
 
 static HashTable* teds_stricttreeset_get_gc(zend_object *obj, zval **table, int *table_count)
 {
-	teds_stricttreeset *intern = teds_stricttreeset_from_obj(obj);
+	teds_stricttreeset *intern = teds_stricttreeset_from_object(obj);
 	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 	if (intern->tree.nNumOfElements > 0) {
 		zval *key;
@@ -483,43 +488,101 @@ static HashTable* teds_stricttreeset_get_gc(zend_object *obj, zval **table, int 
 		TEDS_STRICTTREESET_FOREACH_KEY(&intern->tree, key) {
 			zend_get_gc_buffer_add_zval(gc_buffer, key);
 		} TEDS_STRICTTREESET_FOREACH_END();
-
 	}
 	/* Overwrites table and table_count. The caller does not initialize these. */
 	zend_get_gc_buffer_use(gc_buffer, table, table_count);
 
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
+	return obj->properties;
 }
 
-static HashTable* teds_stricttreeset_get_properties(zend_object *obj)
+static HashTable* teds_stricttreeset_get_and_populate_properties(zend_object *obj)
 {
-	teds_stricttreeset *intern = teds_stricttreeset_from_obj(obj);
-	const uint32_t len = intern->tree.nNumOfElements;
+	teds_stricttreeset_tree *const tree = teds_stricttreeset_tree_from_object(obj);
 	HashTable *ht = zend_std_get_properties(obj);
-	uint32_t old_length = zend_hash_num_elements(ht);
-	/* Initialize properties tree */
+
+	/* Re-initialize properties array */
+	/*
+	 * Usually, the reference count of the hash table is 1,
+	 * except during cyclic reference cycles.
+	 *
+	 * Maintain the DEBUG invariant that a hash table isn't modified during iteration,
+	 * and avoid unnecessary work rebuilding a hash table for unmodified properties.
+	 *
+	 * See https://github.com/php/php-src/issues/8079 and tests/Deque/var_export_recursion.phpt
+	 * Also see https://github.com/php/php-src/issues/8044 for alternate considered approaches.
+	 */
+	if (!tree->should_rebuild_properties) {
+		return ht;
+	}
+	tree->should_rebuild_properties = false;
+	if (!tree->nNumOfElements && !zend_hash_num_elements(ht)) {
+		/* Nothing to add, update, or remove. */
+		return ht;
+	}
+	if (UNEXPECTED(GC_REFCOUNT(ht) > 1)) {
+		obj->properties = zend_array_dup(ht);
+		GC_DELREF(ht);
+	}
+
+	// Note that destructors may mutate the original array,
+	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
 	uint32_t i = 0;
-	zval *key;
-	TEDS_STRICTTREESET_FOREACH_KEY(&intern->tree, key) {
-		Z_TRY_ADDREF_P(key);
-		zend_hash_index_update(ht, i, key);
+	zval *elem;
+	TEDS_STRICTTREESET_FOREACH_KEY(tree, elem) {
+		TEDS_STRICTTREESET_NODE_REFCOUNT(_p)++;
+
+		Z_TRY_ADDREF_P(elem);
+		zend_hash_index_update(ht, i, elem);
 		i++;
+
+		teds_stricttreeset_node_release(_p);
 	} TEDS_STRICTTREESET_FOREACH_END();
 
-	ZEND_ASSERT(i == len);
-
-	for (uint32_t i = len; i < old_length; i++) {
-		zend_hash_index_del(ht, i);
+	const uint32_t properties_size = zend_hash_num_elements(ht);
+	if (UNEXPECTED(properties_size > i)) {
+		for (; i < properties_size; i++) {
+			zend_hash_index_del(ht, i);
+		}
 	}
+#if PHP_VERSION_ID >= 80200
+	if (HT_IS_PACKED(ht)) {
+		/* Engine doesn't expect packed array */
+		zend_hash_packed_to_hash(ht);
+	}
+#endif
 
 	return ht;
 }
 
+static zend_array *teds_stricttreeset_tree_to_refcounted_array(const teds_stricttreeset_tree *tree);
+
+static HashTable* teds_stricttreeset_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
+{
+	teds_stricttreeset_tree *tree = teds_stricttreeset_tree_from_object(obj);
+	if (!tree->nNumOfElements && !obj->properties) {
+		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
+		return (HashTable*)&zend_empty_array;
+	}
+	switch (purpose) {
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+		case ZEND_PROP_PURPOSE_VAR_EXPORT:
+		case ZEND_PROP_PURPOSE_DEBUG: {
+			HashTable *ht = teds_stricttreeset_get_and_populate_properties(obj);
+			GC_TRY_ADDREF(ht);
+			return ht;
+		}
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+			return teds_stricttreeset_tree_to_refcounted_array(tree);
+		default:
+			ZEND_UNREACHABLE();
+			return NULL;
+	}
+}
+
 static void teds_stricttreeset_free_storage(zend_object *object)
 {
-	teds_stricttreeset *intern = teds_stricttreeset_from_obj(object);
+	teds_stricttreeset *intern = teds_stricttreeset_from_object(object);
 	teds_stricttreeset_tree_dtor(&intern->tree);
 	zend_object_std_dtor(&intern->std);
 }
@@ -537,7 +600,7 @@ static zend_object *teds_stricttreeset_new_ex(zend_class_entry *class_type, zend
 	intern->std.handlers = &teds_handler_StrictTreeSet;
 
 	if (orig && clone_orig) {
-		teds_stricttreeset *other = teds_stricttreeset_from_obj(orig);
+		teds_stricttreeset *other = teds_stricttreeset_from_object(orig);
 		teds_stricttreeset_tree_copy_ctor(&intern->tree, &other->tree);
 	} else {
 		intern->tree.root = NULL;
@@ -565,7 +628,7 @@ static int teds_stricttreeset_count_elements(zend_object *object, zend_long *cou
 {
 	teds_stricttreeset *intern;
 
-	intern = teds_stricttreeset_from_obj(object);
+	intern = teds_stricttreeset_from_object(object);
 	*count = intern->tree.nNumOfElements;
 	return SUCCESS;
 }
@@ -804,6 +867,7 @@ PHP_METHOD(Teds_StrictTreeSet, __unserialize)
 	if (nodes != NULL) {
 		tree->root = teds_stricttreeset_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
 		tree->nNumOfElements = sorted_nodes_count;
+		tree->should_rebuild_properties = true;
 		efree(nodes);
 	}
 }
@@ -816,7 +880,7 @@ PHP_METHOD(Teds_StrictTreeSet, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_stricttreeset_new(teds_ce_StrictTreeSet);
-	teds_stricttreeset *intern = teds_stricttreeset_from_obj(object);
+	teds_stricttreeset *intern = teds_stricttreeset_from_object(object);
 	teds_stricttreeset_tree_init_from_array(&intern->tree, array_ht);
 
 	RETURN_OBJ(object);
@@ -855,14 +919,9 @@ PHP_METHOD(Teds_StrictTreeSet, methodName) \
 IMPLEMENT_REMOVE_POSITION_PHP_METHOD(pop, last)
 IMPLEMENT_REMOVE_POSITION_PHP_METHOD(shift, first)
 
-PHP_METHOD(Teds_StrictTreeSet, values)
+static zend_array *teds_stricttreeset_tree_to_refcounted_array(const teds_stricttreeset_tree *tree)
 {
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_stricttreeset *intern = Z_STRICTTREESET_P(ZEND_THIS);
-	const uint32_t len = intern->tree.nNumOfElements;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
-	}
+	const uint32_t len = tree->nNumOfElements;
 	zend_array *values = zend_new_array(len);
 	/* Initialize return tree */
 	zend_hash_real_init_packed(values);
@@ -870,12 +929,22 @@ PHP_METHOD(Teds_StrictTreeSet, values)
 	/* Go through values and add values to the return tree */
 	ZEND_HASH_FILL_PACKED(values) {
 		zval *value;
-		TEDS_STRICTTREESET_FOREACH_KEY(&intern->tree, value) {
+		TEDS_STRICTTREESET_FOREACH_KEY(tree, value) {
 			Z_TRY_ADDREF_P(value);
 			ZEND_HASH_FILL_ADD(value);
 		} TEDS_STRICTTREESET_FOREACH_END();
 	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
+	return values;
+}
+
+PHP_METHOD(Teds_StrictTreeSet, values)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_stricttreeset_tree *tree = Z_STRICTTREESET_TREE_P(ZEND_THIS);
+	if (!tree->nNumOfElements) {
+		RETURN_EMPTY_ARRAY();
+	}
+	RETURN_ARR(teds_stricttreeset_tree_to_refcounted_array(tree));
 }
 
 PHP_METHOD(Teds_StrictTreeSet, toArray)
@@ -1151,6 +1220,7 @@ static zend_always_inline void teds_stricttreeset_tree_remove_node(teds_stricttr
 
 	ZEND_ASSERT(tree->nNumOfElements > 0);
 	tree->nNumOfElements--;
+	tree->should_rebuild_properties = true;
 	if (free_zvals) {
 		zval_ptr_dtor(&node->key);
 	}
@@ -1296,6 +1366,9 @@ PHP_METHOD(Teds_StrictTreeSet, clear)
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stricttreeset *intern = Z_STRICTTREESET_P(ZEND_THIS);
 	teds_stricttreeset_tree_clear(&intern->tree);
+	if (intern->std.properties) {
+		zend_hash_clean(intern->std.properties);
+	}
 	TEDS_RETURN_VOID();
 }
 
@@ -1310,7 +1383,7 @@ PHP_MINIT_FUNCTION(teds_stricttreeset)
 	teds_handler_StrictTreeSet.offset          = XtOffsetOf(teds_stricttreeset, std);
 	teds_handler_StrictTreeSet.clone_obj       = teds_stricttreeset_clone;
 	teds_handler_StrictTreeSet.count_elements  = teds_stricttreeset_count_elements;
-	teds_handler_StrictTreeSet.get_properties  = teds_stricttreeset_get_properties;
+	teds_handler_StrictTreeSet.get_properties_for  = teds_stricttreeset_get_properties_for;
 	teds_handler_StrictTreeSet.get_gc          = teds_stricttreeset_get_gc;
 	teds_handler_StrictTreeSet.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_StrictTreeSet.free_obj        = teds_stricttreeset_free_storage;
