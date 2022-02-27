@@ -36,13 +36,13 @@
 zend_object_handlers teds_handler_Deque;
 zend_class_entry *teds_ce_Deque;
 
-/* This is a placeholder value to distinguish between empty and uninitialized Deque instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const zval empty_entry_list[1];
-
 typedef struct _teds_deque_entries {
 	/** This is a circular buffer with an offset, size, and capacity(mask + 1) */
 	zval *circular_buffer;
+	/* The number of elements in the Deque. */
+	uint32_t size;
+	/* One less than a power of two (the capacity) */
+	uint32_t mask;
 	/*
 	 * This is a counter which increases when adding elements to the front and decreases when removing elements from the front.
 	 * This is used so that iteration works as expected when the front position is modified during foreach.
@@ -50,12 +50,10 @@ typedef struct _teds_deque_entries {
 	 * This is a uint64_t to work consistently and avoid easily overflowing 4 billion on 32-bit builds.
 	 */
 	uint64_t iteration_offset;
-	/* The number of elements in the Deque. */
-	uint32_t size;
-	/* One less than a power of two (the capacity) */
-	uint32_t mask;
 	/* The offset of the start of the deque in the circular buffer. */
 	uint32_t offset;
+	/* Whether this should rebuild properties if get_properties_for is called. Workaround for Zend engine doing the infinite recursion detection on the properties table. */
+	bool should_rebuild_properties;
 } teds_deque_entries;
 
 /* Is this 0 or a power of 2? */
@@ -102,17 +100,20 @@ typedef struct _teds_deque_it {
 	uint64_t current;
 } teds_deque_it;
 
-static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *value);
-static void teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity);
-static void teds_deque_shrink_capacity(teds_deque_entries *array, const uint32_t new_capacity);
+static zend_always_inline void teds_deque_entries_push_back(teds_deque_entries *array, zval *value);
+static void teds_deque_entries_raise_capacity(teds_deque_entries *array, const size_t new_capacity);
+static void teds_deque_entries_shrink_capacity(teds_deque_entries *array, const uint32_t new_capacity);
 
 static zend_always_inline teds_deque *teds_deque_from_object(zend_object *obj)
 {
 	return (teds_deque*)((char*)(obj) - XtOffsetOf(teds_deque, std));
 }
 
+#define teds_deque_entries_from_object(obj) (&teds_deque_from_object((obj))->array)
+
 #define Z_DEQUE_P(zv)  teds_deque_from_object(Z_OBJ_P((zv)))
-#define Z_DEQUE_ENTRIES_P(zv)  (&teds_deque_from_object(Z_OBJ_P((zv)))->array)
+#define Z_DEQUE_ENTRIES_P(zv)  teds_deque_entries_from_object(Z_OBJ_P((zv)))
+
 
 static zend_always_inline bool teds_deque_entries_empty_capacity(const teds_deque_entries *array)
 {
@@ -120,7 +121,7 @@ static zend_always_inline bool teds_deque_entries_empty_capacity(const teds_dequ
 	return array->mask == 0;
 }
 
-static zend_always_inline bool teds_deque_entries_uninitialized(teds_deque_entries *array)
+static zend_always_inline bool teds_deque_entries_uninitialized(const teds_deque_entries *array)
 {
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 	return array->circular_buffer == NULL;
@@ -142,6 +143,7 @@ static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_a
 		array->circular_buffer = circular_buffer = safe_emalloc(capacity, sizeof(zval), 0);
 		array->size = size;
 		array->mask = capacity - 1;
+		array->should_rebuild_properties = true;
 		ZEND_HASH_FOREACH_VAL(values, val)  {
 			ZEND_ASSERT(i < size);
 			/* This circular buffer is being initialized with an array->offset of 0. */
@@ -213,6 +215,7 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 	array->size = size;
 	array->mask = capacity > 0 ? capacity - 1 : 0;
 	array->circular_buffer = circular_buffer;
+	array->should_rebuild_properties = true;
 cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
@@ -235,6 +238,7 @@ static void teds_deque_entries_copy_ctor(teds_deque_entries *to, const teds_dequ
 	to->circular_buffer = safe_emalloc(size, sizeof(zval), 0);
 	to->size = size;
 	to->mask = capacity - 1;
+	to->should_rebuild_properties = true;
 	ZEND_ASSERT(to->mask <= from->mask);
 	ZEND_ASSERT(from->mask > 0);
 
@@ -320,34 +324,84 @@ static HashTable* teds_deque_get_gc(zend_object *obj, zval **table, int *n)
 	return obj->properties;
 }
 
-static HashTable* teds_deque_get_properties(zend_object *obj)
+static HashTable* teds_deque_get_and_populate_properties(zend_object *obj)
 {
-	teds_deque *intern = teds_deque_from_object(obj);
+	teds_deque_entries *const array = teds_deque_entries_from_object(obj);
 	HashTable *ht = zend_std_get_properties(obj);
 
-	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 
 	/* Re-initialize properties array */
-	if (!intern->array.size && !zend_hash_num_elements(ht)) {
+	/*
+	 * Usually, the reference count of the hash table is 1,
+	 * except during cyclic reference cycles.
+	 *
+	 * Maintain the DEBUG invariant that a hash table isn't modified during iteration,
+	 * and avoid unnecessary work rebuilding a hash table for unmodified properties.
+	 *
+	 * See https://github.com/php/php-src/issues/8079 and tests/Deque/var_export_recursion.phpt
+	 * Also see https://github.com/php/php-src/issues/8044 for alternate considered approaches.
+	 */
+	if (!array->should_rebuild_properties) {
+		return ht;
+	}
+	array->should_rebuild_properties = false;
+	if (!array->size && !zend_hash_num_elements(ht)) {
 		/* Nothing to add, update, or remove. */
 		return ht;
+	}
+	if (UNEXPECTED(GC_REFCOUNT(ht) > 1)) {
+		obj->properties = zend_array_dup(ht);
+		GC_DELREF(ht);
 	}
 
 	// Note that destructors may mutate the original array,
 	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
-	for (uint32_t i = 0; i < intern->array.size; i++) {
-		zval *elem = teds_deque_get_entry_at_offset(&intern->array, i);
+	for (uint32_t i = 0; i < array->size; i++) {
+		zval *elem = teds_deque_get_entry_at_offset(array, i);
 		Z_TRY_ADDREF_P(elem);
 		zend_hash_index_update(ht, i, elem);
 	}
 	const uint32_t properties_size = zend_hash_num_elements(ht);
-	if (UNEXPECTED(properties_size > intern->array.size)) {
-		for (uint32_t i = intern->array.size; i < properties_size; i++) {
+	if (UNEXPECTED(properties_size > array->size)) {
+		for (uint32_t i = array->size; i < properties_size; i++) {
 			zend_hash_index_del(ht, i);
 		}
 	}
+#if PHP_VERSION_ID >= 80200
+	if (HT_IS_PACKED(ht)) {
+		/* Engine doesn't expect packed array */
+		zend_hash_packed_to_hash(ht);
+	}
+#endif
 
 	return ht;
+}
+
+static zend_array* teds_deque_entries_to_refcounted_array(const teds_deque_entries *array);
+
+static HashTable* teds_deque_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
+{
+	teds_deque_entries *array = &teds_deque_from_object(obj)->array;
+	if (!array->size && !obj->properties) {
+		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
+		return (HashTable*)&zend_empty_array;
+	}
+	switch (purpose) {
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+		case ZEND_PROP_PURPOSE_VAR_EXPORT:
+		case ZEND_PROP_PURPOSE_DEBUG: {
+			HashTable *ht = teds_deque_get_and_populate_properties(obj);
+			GC_TRY_ADDREF(ht);
+			return ht;
+		}
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+			return teds_deque_entries_to_refcounted_array(array);
+		default:
+			ZEND_UNREACHABLE();
+			return NULL;
+	}
 }
 
 static void teds_deque_free_storage(zend_object *object)
@@ -437,6 +491,9 @@ PHP_METHOD(Teds_Deque, clear)
 	teds_deque_entries old_array = intern->array;
 	memset(&intern->array, 0, sizeof(intern->array));
 	teds_deque_entries_dtor(&old_array);
+	if (intern->std.properties) {
+		zend_hash_clean(intern->std.properties);
+	}
 	TEDS_RETURN_VOID();
 }
 
@@ -583,19 +640,19 @@ PHP_METHOD(Teds_Deque, __unserialize)
 		RETURN_THROWS();
 	}
 
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	if (UNEXPECTED(!teds_deque_entries_uninitialized(&intern->array))) {
+	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+	if (UNEXPECTED(!teds_deque_entries_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
 	}
 	const uint32_t num_entries = zend_hash_num_elements(raw_data);
-	ZEND_ASSERT(intern->array.circular_buffer == NULL);
+	ZEND_ASSERT(array->circular_buffer == NULL);
 
 	if (num_entries == 0) {
-		intern->array.offset = 0;
-		intern->array.size = 0;
-		intern->array.mask = 0;
-		intern->array.circular_buffer = (zval *)empty_entry_list;
+		array->offset = 0;
+		array->size = 0;
+		array->mask = 0;
+		array->circular_buffer = (zval *)empty_entry_list;
 		return;
 	}
 
@@ -618,9 +675,10 @@ PHP_METHOD(Teds_Deque, __unserialize)
 	} ZEND_HASH_FOREACH_END();
 	ZEND_ASSERT(it <= circular_buffer + num_entries);
 
-	intern->array.size = it - circular_buffer;
-	intern->array.mask = capacity - 1;
-	intern->array.circular_buffer = circular_buffer;
+	array->size = it - circular_buffer;
+	array->mask = capacity - 1;
+	array->circular_buffer = circular_buffer;
+	array->should_rebuild_properties = true;
 }
 
 static void teds_deque_entries_init_from_array_values(teds_deque_entries *array, zend_array *raw_data)
@@ -647,6 +705,7 @@ static void teds_deque_entries_init_from_array_values(teds_deque_entries *array,
 	array->circular_buffer = circular_buffer;
 	array->size = actual_size;
 	array->mask = capacity - 1;
+	array->should_rebuild_properties = true;
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 }
 
@@ -664,7 +723,7 @@ PHP_METHOD(Teds_Deque, __set_state)
 	RETURN_OBJ(object);
 }
 
-static zend_array* teds_deque_to_new_array(const teds_deque_entries *array) {
+static zend_array* teds_deque_entries_to_refcounted_array(const teds_deque_entries *array) {
 	ZEND_ASSERT(array->mask > 0);
 	zval *const circular_buffer = array->circular_buffer;
 	zval *p = circular_buffer + array->offset;
@@ -697,7 +756,7 @@ PHP_METHOD(Teds_Deque, toArray)
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
-	RETURN_ARR(teds_deque_to_new_array(&intern->array));
+	RETURN_ARR(teds_deque_entries_to_refcounted_array(&intern->array));
 }
 
 static zend_always_inline void teds_deque_get_value_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
@@ -794,50 +853,51 @@ handle_missing_key:
 	}
 }
 
-static zend_always_inline void teds_deque_set_value_at_offset(zend_object *object, zend_long offset, zval *value) {
-	const teds_deque *intern = teds_deque_from_object(object);
-	if (UNEXPECTED((zend_ulong) offset >= intern->array.size)) {
+static zend_always_inline void teds_deque_entries_set_value_at_offset(teds_deque_entries *array, zend_long offset, zval *value) {
+	if (UNEXPECTED((zend_ulong) offset >= array->size)) {
 		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
-	zval *const ptr = teds_deque_get_entry_at_offset(&intern->array, offset);
+	array->should_rebuild_properties = true;
+	zval *const ptr = teds_deque_get_entry_at_offset(array, offset);
 	zval tmp;
 	ZVAL_COPY_VALUE(&tmp, ptr);
 	ZVAL_COPY(ptr, value);
 	zval_ptr_dtor(&tmp);
 }
 
-static zend_always_inline void teds_deque_push_back(teds_deque *intern, zval *value) {
-	const uint32_t old_size = intern->array.size;
-	const uint32_t old_mask = intern->array.mask;
+static zend_always_inline void teds_deque_entries_push_back(teds_deque_entries *array, zval *value) {
+	const uint32_t old_size = array->size;
+	const uint32_t old_mask = array->mask;
 	const size_t old_capacity = old_mask ? old_mask + 1 : 0;
 
 	if (old_size >= old_capacity) {
 		ZEND_ASSERT(old_size == old_capacity);
-		teds_deque_raise_capacity(&intern->array, old_capacity ? old_capacity * 2 : TEDS_DEQUE_MIN_CAPACITY);
+		teds_deque_entries_raise_capacity(array, old_capacity ? old_capacity * 2 : TEDS_DEQUE_MIN_CAPACITY);
 	}
-	intern->array.size++;
-	zval *dest = teds_deque_get_entry_at_offset(&intern->array, old_size);
+	array->size++;
+	array->should_rebuild_properties = true;
+	zval *dest = teds_deque_get_entry_at_offset(array, old_size);
 	ZVAL_COPY(dest, value);
 }
 
 static void teds_deque_write_dimension(zend_object *object, zval *offset_zv, zval *value)
 {
+	teds_deque_entries *array = teds_deque_entries_from_object(object);
 	if (!offset_zv) {
-		teds_deque_push_back(teds_deque_from_object(object), value);
+		teds_deque_entries_push_back(array, value);
 		return;
 	}
 
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	const teds_deque *intern = teds_deque_from_object(object);
-	if (UNEXPECTED(offset < 0 || (zend_ulong) offset >= intern->array.size)) {
+	if ((zend_ulong) offset >= array->size || offset < 0) {
 		zend_throw_exception(spl_ce_RuntimeException, "Index invalid or out of range", 0);
 		return;
 	}
 	ZVAL_DEREF(value);
-	teds_deque_set_value_at_offset(object, offset, value);
+	teds_deque_entries_set_value_at_offset(array, offset, value);
 }
 
 PHP_METHOD(Teds_Deque, indexOf)
@@ -888,7 +948,7 @@ PHP_METHOD(Teds_Deque, set)
 		Z_PARAM_ZVAL(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_deque_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	teds_deque_entries_set_value_at_offset(Z_DEQUE_ENTRIES_P(ZEND_THIS), offset, value);
 	TEDS_RETURN_VOID();
 }
 
@@ -904,7 +964,7 @@ PHP_METHOD(Teds_Deque, offsetSet)
 	zend_long offset;
 	CONVERT_OFFSET_TO_LONG_OR_THROW(offset, offset_zv);
 
-	teds_deque_set_value_at_offset(Z_OBJ_P(ZEND_THIS), offset, value);
+	teds_deque_entries_set_value_at_offset(Z_DEQUE_ENTRIES_P(ZEND_THIS), offset, value);
 	TEDS_RETURN_VOID();
 }
 
@@ -931,7 +991,7 @@ static void teds_deque_move_circular_buffer_to_new_buffer_of_capacity(teds_deque
 	array->offset = 0;
 }
 
-static void teds_deque_raise_capacity(teds_deque_entries *array, const size_t new_capacity)
+static void teds_deque_entries_raise_capacity(teds_deque_entries *array, const size_t new_capacity)
 {
 	if (UNEXPECTED(new_capacity > TEDS_MAX_ZVAL_COLLECTION_SIZE)) {
 		/* This is a fatal error, because userland code might expect any catchable throwable
@@ -953,7 +1013,7 @@ static void teds_deque_raise_capacity(teds_deque_entries *array, const size_t ne
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 }
 
-static void teds_deque_shrink_capacity(teds_deque_entries *array, uint32_t new_capacity)
+static void teds_deque_entries_shrink_capacity(teds_deque_entries *array, uint32_t new_capacity)
 {
 	ZEND_ASSERT(teds_is_valid_uint32_capacity(new_capacity));
 	ZEND_ASSERT(array->mask >= TEDS_DEQUE_MIN_MASK);
@@ -985,19 +1045,19 @@ PHP_METHOD(Teds_Deque, push)
 		return;
 	}
 
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	uint32_t old_size = intern->array.size;
+	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+	uint32_t old_size = array->size;
 	const size_t new_size = old_size + argc;
-	uint32_t mask = intern->array.mask;
+	uint32_t mask = array->mask;
 	const uint32_t old_capacity = mask ? mask + 1 : 0;
 
 	if (new_size > old_capacity) {
 		const uint32_t new_capacity = teds_deque_next_pow2_capacity(new_size);
-		teds_deque_raise_capacity(&intern->array, new_capacity);
-		mask = intern->array.mask;
+		teds_deque_entries_raise_capacity(array, new_capacity);
+		mask = array->mask;
 	}
-	zval *const circular_buffer = intern->array.circular_buffer;
-	const uint32_t old_offset = intern->array.offset;
+	zval *const circular_buffer = array->circular_buffer;
+	const uint32_t old_offset = array->offset;
 
 	while (1) {
 		zval *dest = &circular_buffer[(old_offset + old_size) & mask];
@@ -1007,7 +1067,8 @@ PHP_METHOD(Teds_Deque, push)
 		}
 		args++;
 	}
-	intern->array.size = new_size;
+	array->size = new_size;
+	array->should_rebuild_properties = true;
 	TEDS_RETURN_VOID();
 }
 
@@ -1024,20 +1085,20 @@ PHP_METHOD(Teds_Deque, unshift)
 		return;
 	}
 
-	teds_deque *intern = Z_DEQUE_P(ZEND_THIS);
-	intern->array.iteration_offset -= argc; /* The front moved backwards by the number of elements */
-	uint32_t old_size = intern->array.size;
+	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
+	array->iteration_offset -= argc; /* The front moved backwards by the number of elements */
+	uint32_t old_size = array->size;
 	const size_t new_size = old_size + argc;
-	uint32_t mask = intern->array.mask;
+	uint32_t mask = array->mask;
 	const uint32_t old_capacity = mask ? mask + 1 : 0;
 
 	if (new_size > old_capacity) {
 		const size_t new_capacity = teds_deque_next_pow2_capacity(new_size);
-		teds_deque_raise_capacity(&intern->array, new_capacity);
-		mask = intern->array.mask;
+		teds_deque_entries_raise_capacity(array, new_capacity);
+		mask = array->mask;
 	}
-	uint32_t offset = intern->array.offset;
-	zval *const circular_buffer = intern->array.circular_buffer;
+	uint32_t offset = array->offset;
+	zval *const circular_buffer = array->circular_buffer;
 
 	do {
 		offset = (offset - 1) & mask;
@@ -1049,10 +1110,11 @@ PHP_METHOD(Teds_Deque, unshift)
 		args++;
 	} while (1);
 
-	intern->array.offset = offset;
-	intern->array.size = new_size;
+	array->offset = offset;
+	array->size = new_size;
+	array->should_rebuild_properties = true;
 
-	DEBUG_ASSERT_CONSISTENT_DEQUE(&intern->array);
+	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 	TEDS_RETURN_VOID();
 }
 
@@ -1065,7 +1127,7 @@ static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entri
 
 	if (new_size > old_capacity) {
 		const size_t new_capacity = teds_deque_next_pow2_capacity(new_size);
-		teds_deque_raise_capacity(array, new_capacity);
+		teds_deque_entries_raise_capacity(array, new_capacity);
 		mask = array->mask;
 	}
 	const uint32_t offset = array->offset;
@@ -1096,6 +1158,7 @@ static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entri
 	} while (1);
 
 	array->size = new_size;
+	array->should_rebuild_properties = true;
 
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 }
@@ -1150,6 +1213,7 @@ static zend_always_inline void teds_deque_entries_remove_offset(teds_deque_entri
 
 	const uint32_t new_size = old_size - 1;
 	array->size = new_size;
+	array->should_rebuild_properties = true;
 	teds_deque_entries_try_shrink_capacity(array, new_size);
 	zval_ptr_dtor(&removed_val);
 
@@ -1179,7 +1243,7 @@ static zend_always_inline void teds_deque_entries_try_shrink_capacity(teds_deque
 {
 	const uint32_t old_mask = array->mask;
 	if (old_size - 1 <= ((old_mask) >> 2) && old_mask > TEDS_DEQUE_MIN_MASK) {
-		teds_deque_shrink_capacity(array, (old_mask >> 1) + 1);
+		teds_deque_entries_shrink_capacity(array, (old_mask >> 1) + 1);
 	}
 }
 
@@ -1196,6 +1260,7 @@ PHP_METHOD(Teds_Deque, pop)
 
 	zval *val = teds_deque_get_entry_at_offset(array, old_size - 1);
 	array->size--;
+	array->should_rebuild_properties = true;
 	/* This is being removed. Use a macro that doesn't change the total reference count. */
 	RETVAL_COPY_VALUE(val);
 
@@ -1234,10 +1299,8 @@ PHP_METHOD(Teds_Deque, shift)
 	array->iteration_offset++;  /* The front moved forward */
 	const uint32_t old_offset = array->offset;
 	const uint32_t old_mask = array->mask;
-	array->offset++;
-	if (array->offset > old_mask) {
-		array->offset = 0;
-	}
+	array->offset = (old_offset + 1) & old_mask;
+	array->should_rebuild_properties = true;
 	RETVAL_COPY_VALUE(&array->circular_buffer[old_offset]);
 	teds_deque_entries_try_shrink_capacity(array, old_size);
 }
@@ -1267,13 +1330,15 @@ PHP_MINIT_FUNCTION(teds_deque)
 	teds_handler_Deque.offset          = XtOffsetOf(teds_deque, std);
 	teds_handler_Deque.clone_obj       = teds_deque_clone;
 	teds_handler_Deque.count_elements  = teds_deque_count_elements;
-	teds_handler_Deque.get_properties  = teds_deque_get_properties;
+	/* Deliberately use default get_properties implementation for infinite recursion detection, creating empty table if one didn't exist. */
+	teds_handler_Deque.get_properties_for  = teds_deque_get_properties_for;
 	teds_handler_Deque.get_gc          = teds_deque_get_gc;
 	teds_handler_Deque.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_Deque.free_obj        = teds_deque_free_storage;
 
 	teds_handler_Deque.read_dimension  = teds_deque_read_dimension;
 	teds_handler_Deque.write_dimension = teds_deque_write_dimension;
+	/* TODO add */
 	//teds_handler_Deque.unset_dimension = teds_deque_unset_dimension;
 	//teds_handler_Deque.has_dimension   = teds_deque_has_dimension;
 

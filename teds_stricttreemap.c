@@ -54,27 +54,7 @@ static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_tree_find_
 	return NULL;
 }
 
-/*
-static void teds_stricttreemap_node_debug_check_linked_to_parent(const teds_stricttreemap_node *node) {
-#if ZEND_DEBUG
-	if (!node) {
-		return;
-	}
-
-	DEBUG_PRINTF("teds_stricttreemap_node_debug_check_linked_to_parent %p\n", node);
-	if (node->left) {
-		ZEND_ASSERT(node->left->parent == node);
-		teds_stricttreemap_node_debug_check_linked_to_parent(node->left);
-	}
-	if (node->right) {
-		ZEND_ASSERT(node->right->parent == node);
-		teds_stricttreemap_node_debug_check_linked_to_parent(node->right);
-	}
-#endif
-}
-*/
-
-static zend_always_inline void teds_stricttreemap_tree_remove_node(teds_stricttreemap_tree *array, teds_stricttreemap_node *const node, bool free_zvals);
+static zend_always_inline void teds_stricttreemap_tree_remove_node(teds_stricttreemap_tree *tree, teds_stricttreemap_node *const node, bool free_zvals);
 
 static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_alloc(const zval *key, const zval *value, teds_stricttreemap_node *parent) {
 	teds_stricttreemap_node *n = emalloc(sizeof(teds_stricttreemap_node));
@@ -236,8 +216,8 @@ static zend_always_inline bool teds_stricttreemap_tree_insert(teds_stricttreemap
 finish_insert:
 				tree->nNumOfElements++;
 				if (UNEXPECTED(tree->nNumOfElements >= TEDS_MAX_ZVAL_PAIR_COUNT)) {
-					/* Mainly, the reason to do that is that get_properties returns the array of properties for get_gc, which expects a uint32_t in php-src/Zend/zend_gc.c
-					 * A less severe reason is that this is converted to an array in var_dump/var_export for debugging, but the latter can be avoided */
+					/* Mainly, the reason to do that is that get_properties returns the tree of properties for get_gc, which expects a uint32_t in php-src/Zend/zend_gc.c
+					 * A less severe reason is that this is converted to an tree in var_dump/var_export for debugging, but the latter can be avoided */
 					zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\StrictTreeMap capacity");
 					ZEND_UNREACHABLE();
 					return false;
@@ -270,7 +250,7 @@ finish_insert:
 	}
 }
 
-static void teds_stricttreemap_tree_clear(teds_stricttreemap_tree *array);
+static void teds_stricttreemap_tree_clear(teds_stricttreemap_tree *tree);
 
 /* Used by InternalIterator returned by StrictTreeMap->getIterator() */
 typedef struct _teds_stricttreemap_it {
@@ -285,27 +265,27 @@ static zend_always_inline teds_stricttreemap *teds_stricttreemap_from_object(zen
 
 static zend_always_inline teds_stricttreemap_tree *teds_stricttreemap_tree_from_object(zend_object *obj)
 {
-	return &teds_stricttreemap_from_object(obj)->array;
+	return &teds_stricttreemap_from_object(obj)->tree;
 }
 
 #define Z_STRICTTREEMAP_P(zv)  teds_stricttreemap_from_object(Z_OBJ_P((zv)))
-#define Z_STRICTTREEMAP_TREE_P(zv)  (&teds_stricttreemap_from_object(Z_OBJ_P((zv)))->array)
+#define Z_STRICTTREEMAP_TREE_P(zv)  (&teds_stricttreemap_from_object(Z_OBJ_P((zv)))->tree)
 
-static zend_always_inline bool teds_stricttreemap_tree_uninitialized(teds_stricttreemap_tree *array)
+static zend_always_inline bool teds_stricttreemap_tree_uninitialized(teds_stricttreemap_tree *tree)
 {
-	if (array->initialized) {
+	if (tree->initialized) {
 		return false;
 	}
-	ZEND_ASSERT(array->root == NULL);
-	ZEND_ASSERT(array->nNumOfElements == 0);
+	ZEND_ASSERT(tree->root == NULL);
+	ZEND_ASSERT(tree->nNumOfElements == 0);
 	return true;
 }
 
-static zend_always_inline void teds_stricttreemap_tree_set_empty_tree(teds_stricttreemap_tree *array)
+static zend_always_inline void teds_stricttreemap_tree_set_empty_tree(teds_stricttreemap_tree *tree)
 {
-	array->root = NULL;
-	array->nNumOfElements = 0;
-	array->initialized = true;
+	tree->root = NULL;
+	tree->nNumOfElements = 0;
+	tree->initialized = true;
 }
 
 static teds_stricttreemap_node *teds_stricttreemap_node_build_tree_from_sorted_nodes_helper(teds_stricttreemap_node **nodes, const uint32_t n, teds_stricttreemap_node *left_parent, teds_stricttreemap_node *right_parent, int leaf_depth)
@@ -356,9 +336,9 @@ static teds_stricttreemap_node *teds_stricttreemap_node_build_tree_from_sorted_n
 	return teds_stricttreemap_node_build_tree_from_sorted_nodes_helper(nodes, n, NULL, NULL, leaf_depth);
 }
 
-void teds_stricttreemap_tree_init_from_array(teds_stricttreemap_tree *array, zend_array *values)
+void teds_stricttreemap_tree_init_from_array(teds_stricttreemap_tree *tree, zend_array *values)
 {
-	teds_stricttreemap_tree_set_empty_tree(array);
+	teds_stricttreemap_tree_set_empty_tree(tree);
 	if (values->nNumOfElements == 0) {
 		return;
 	}
@@ -370,7 +350,7 @@ void teds_stricttreemap_tree_init_from_array(teds_stricttreemap_tree *array, zen
 	zend_string *skey;
 	zval *val;
 
-	/* Note: The comparison is redundant for a packed array and can be sped up more. */
+	/* Note: The comparison is redundant for a packed tree and can be sped up more. */
 	ZEND_HASH_FOREACH_KEY_VAL(values, nkey, skey, val)  {
 		zval key;
 		if (skey) {
@@ -386,28 +366,28 @@ void teds_stricttreemap_tree_init_from_array(teds_stricttreemap_tree *array, zen
 				i++;
 				continue;
 			}
-			array->root = teds_stricttreemap_node_build_tree_from_sorted_nodes(nodes, i);
-			array->nNumOfElements = i;
+			tree->root = teds_stricttreemap_node_build_tree_from_sorted_nodes(nodes, i);
+			tree->nNumOfElements = i;
 			efree(nodes);
 			nodes = NULL;
 		}
 
-		bool created = teds_stricttreemap_tree_insert(array, &key, val, true);
+		bool created = teds_stricttreemap_tree_insert(tree, &key, val, true);
 		ZEND_ASSERT(created);
 	} ZEND_HASH_FOREACH_END();
 
 	if (nodes != NULL) {
-		array->root = teds_stricttreemap_node_build_tree_from_sorted_nodes(nodes, i);
-		array->nNumOfElements = i;
+		tree->root = teds_stricttreemap_node_build_tree_from_sorted_nodes(nodes, i);
+		tree->nNumOfElements = i;
 		efree(nodes);
 	}
 }
 
-void teds_stricttreemap_tree_init_from_traversable(teds_stricttreemap_tree *array, zend_object *obj)
+void teds_stricttreemap_tree_init_from_traversable(teds_stricttreemap_tree *tree, zend_object *obj)
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	teds_stricttreemap_tree_set_empty_tree(array);
+	teds_stricttreemap_tree_set_empty_tree(tree);
 	zval tmp_obj;
 	ZVAL_OBJ(&tmp_obj, obj);
 	iter = ce->get_iterator(ce, &tmp_obj, 0);
@@ -445,7 +425,7 @@ void teds_stricttreemap_tree_init_from_traversable(teds_stricttreemap_tree *arra
 
 		ZVAL_DEREF(value);
 		/* The key's reference count was already increased by get_current_key. We need to free it after attempting to update the entry */
-		const bool created_new_entry = teds_stricttreemap_tree_insert(array, &key, value, false);
+		const bool created_new_entry = teds_stricttreemap_tree_insert(tree, &key, value, false);
 		zval_ptr_dtor(&key);
 		if (!created_new_entry) {
 			if (UNEXPECTED(EG(exception))) {
@@ -465,7 +445,7 @@ cleanup_iter:
 		zend_iterator_dtor(iter);
 	}
 	if (UNEXPECTED(EG(exception))) {
-		teds_stricttreemap_tree_clear(array);
+		teds_stricttreemap_tree_clear(tree);
 	}
 }
 
@@ -512,16 +492,16 @@ static void teds_stricttreemap_node_dtor(teds_stricttreemap_node *node)
 	}
 }
 
-/* Destructs and frees contents and the array itself.
- * If you want to re-use the array then you need to re-initialize it.
+/* Destructs and frees contents and the tree itself.
+ * If you want to re-use the tree then you need to re-initialize it.
  */
-void teds_stricttreemap_tree_dtor(teds_stricttreemap_tree *array)
+void teds_stricttreemap_tree_dtor(teds_stricttreemap_tree *tree)
 {
-	if (teds_stricttreemap_tree_empty_size(array)) {
+	if (teds_stricttreemap_tree_empty_size(tree)) {
 		return;
 	}
-	teds_stricttreemap_node *root = array->root;
-	teds_stricttreemap_tree_set_empty_tree(array);
+	teds_stricttreemap_node *root = tree->root;
+	teds_stricttreemap_tree_set_empty_tree(tree);
 	teds_stricttreemap_node_dtor(root);
 }
 
@@ -529,10 +509,10 @@ static HashTable* teds_stricttreemap_get_gc(zend_object *obj, zval **table, int 
 {
 	teds_stricttreemap *intern = teds_stricttreemap_from_object(obj);
 	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
-	if (intern->array.nNumOfElements > 0) {
+	if (intern->tree.nNumOfElements > 0) {
 		zval *key, *val;
 
-		TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(&intern->array, key, val) {
+		TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(&intern->tree, key, val) {
 			zend_get_gc_buffer_add_zval(gc_buffer, key);
 			zend_get_gc_buffer_add_zval(gc_buffer, val);
 		} TEDS_STRICTTREEMAP_FOREACH_END();
@@ -549,13 +529,13 @@ static HashTable* teds_stricttreemap_get_gc(zend_object *obj, zval **table, int 
 static HashTable* teds_stricttreemap_get_properties(zend_object *obj)
 {
 	teds_stricttreemap *intern = teds_stricttreemap_from_object(obj);
-	const uint32_t len = intern->array.nNumOfElements;
+	const uint32_t len = intern->tree.nNumOfElements;
 	HashTable *ht = zend_std_get_properties(obj);
 	uint32_t old_length = zend_hash_num_elements(ht);
-	/* Initialize properties array */
+	/* Initialize properties tree */
 	uint32_t i = 0;
 	zval *key, *value;
-	TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(&intern->array, key, value) {
+	TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(&intern->tree, key, value) {
 		zval tmp;
 		Z_TRY_ADDREF_P(key);
 		Z_TRY_ADDREF_P(value);
@@ -576,7 +556,7 @@ static HashTable* teds_stricttreemap_get_properties(zend_object *obj)
 static void teds_stricttreemap_free_storage(zend_object *object)
 {
 	teds_stricttreemap *intern = teds_stricttreemap_from_object(object);
-	teds_stricttreemap_tree_dtor(&intern->array);
+	teds_stricttreemap_tree_dtor(&intern->tree);
 	zend_object_std_dtor(&intern->std);
 }
 
@@ -594,9 +574,9 @@ static zend_object *teds_stricttreemap_new_ex(zend_class_entry *class_type, zend
 
 	if (orig && clone_orig) {
 		teds_stricttreemap *other = teds_stricttreemap_from_object(orig);
-		teds_stricttreemap_tree_copy_ctor(&intern->array, &other->array);
+		teds_stricttreemap_tree_copy_ctor(&intern->tree, &other->tree);
 	} else {
-		intern->array.root = NULL;
+		intern->tree.root = NULL;
 	}
 
 	return &intern->std;
@@ -622,7 +602,7 @@ static int teds_stricttreemap_count_elements(zend_object *object, zend_long *cou
 	teds_stricttreemap *intern;
 
 	intern = teds_stricttreemap_from_object(object);
-	*count = intern->array.nNumOfElements;
+	*count = intern->tree.nNumOfElements;
 	return SUCCESS;
 }
 
@@ -634,7 +614,7 @@ PHP_METHOD(Teds_StrictTreeMap, count)
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(object);
-	RETURN_LONG(intern->array.nNumOfElements);
+	RETURN_LONG(intern->tree.nNumOfElements);
 }
 
 /* Get whether this StrictTreeMap is empty */
@@ -645,7 +625,7 @@ PHP_METHOD(Teds_StrictTreeMap, isEmpty)
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(object);
-	RETURN_BOOL(intern->array.nNumOfElements == 0);
+	RETURN_BOOL(intern->tree.nNumOfElements == 0);
 }
 
 /* Create this from an iterable */
@@ -660,23 +640,23 @@ PHP_METHOD(Teds_StrictTreeMap, __construct)
 
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
 
-	if (UNEXPECTED(!teds_stricttreemap_tree_uninitialized(&intern->array))) {
+	if (UNEXPECTED(!teds_stricttreemap_tree_uninitialized(&intern->tree))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\StrictTreeMap::__construct twice", 0);
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
 	}
 
 	if (iterable == NULL) {
-		teds_stricttreemap_tree_set_empty_tree(&intern->array);
+		teds_stricttreemap_tree_set_empty_tree(&intern->tree);
 		return;
 	}
 
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_stricttreemap_tree_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
+			teds_stricttreemap_tree_init_from_array(&intern->tree, Z_ARRVAL_P(iterable));
 			return;
 		case IS_OBJECT:
-			teds_stricttreemap_tree_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
+			teds_stricttreemap_tree_init_from_traversable(&intern->tree, Z_OBJ_P(iterable));
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -703,7 +683,7 @@ static void teds_stricttreemap_it_rewind(zend_object_iterator *iter)
 {
 	teds_stricttreemap *object   = Z_STRICTTREEMAP_P(&iter->data);
 	teds_stricttreemap_node *const orig_node = ((teds_stricttreemap_it*)iter)->node;
-	teds_stricttreemap_node *const new_node = teds_stricttreemap_tree_get_first(&object->array);
+	teds_stricttreemap_node *const new_node = teds_stricttreemap_tree_get_first(&object->tree);
 	if (new_node == orig_node) {
 		return;
 	}
@@ -790,7 +770,7 @@ zend_object_iterator *teds_stricttreemap_get_iterator(zend_class_entry *ce, zval
 	zend_object *obj = Z_OBJ_P(object);
 	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_stricttreemap_it_funcs;
-	teds_stricttreemap_node *node = teds_stricttreemap_tree_get_first(&Z_STRICTTREEMAP_P(object)->array);
+	teds_stricttreemap_node *node = teds_stricttreemap_tree_get_first(&Z_STRICTTREEMAP_P(object)->tree);
 	if (node) {
 		TEDS_STRICTTREEMAP_NODE_REFCOUNT(node)++;
 	}
@@ -815,13 +795,13 @@ PHP_METHOD(Teds_StrictTreeMap, __unserialize)
 		RETURN_THROWS();
 	}
 	teds_stricttreemap *const intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	teds_stricttreemap_tree *const array = &intern->array;
-	if (UNEXPECTED(!teds_stricttreemap_tree_uninitialized(array))) {
+	teds_stricttreemap_tree *const tree = &intern->tree;
+	if (UNEXPECTED(!teds_stricttreemap_tree_uninitialized(tree))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
 	}
 
-	teds_stricttreemap_tree_set_empty_tree(array);
+	teds_stricttreemap_tree_set_empty_tree(tree);
 
 	zend_string *str;
 	zval key;
@@ -832,7 +812,7 @@ PHP_METHOD(Teds_StrictTreeMap, __unserialize)
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
-			teds_stricttreemap_tree_clear(array);
+			teds_stricttreemap_tree_clear(tree);
 			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StrictTreeMap::__unserialize saw unexpected string key, expected sequence of keys and values", 0);
 			if (nodes != NULL) {
 				while (sorted_nodes_count > 0) {
@@ -857,12 +837,12 @@ PHP_METHOD(Teds_StrictTreeMap, __unserialize)
 					sorted_nodes_count++;
 					continue;
 				}
-				array->root = teds_stricttreemap_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
-				array->nNumOfElements = sorted_nodes_count;
+				tree->root = teds_stricttreemap_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
+				tree->nNumOfElements = sorted_nodes_count;
 				efree(nodes);
 				nodes = NULL;
 			}
-			teds_stricttreemap_tree_insert(array, &key, val, false);
+			teds_stricttreemap_tree_insert(tree, &key, val, false);
 		} else {
 			ZVAL_COPY_VALUE(&key, val);
 			is_key = false;
@@ -870,13 +850,13 @@ PHP_METHOD(Teds_StrictTreeMap, __unserialize)
 	} ZEND_HASH_FOREACH_END();
 
 	if (nodes != NULL) {
-		array->root = teds_stricttreemap_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
-		array->nNumOfElements = sorted_nodes_count;
+		tree->root = teds_stricttreemap_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
+		tree->nNumOfElements = sorted_nodes_count;
 		efree(nodes);
 	}
 }
 
-static bool teds_stricttreemap_tree_insert_from_pair(teds_stricttreemap_tree *array, zval *raw_val)
+static bool teds_stricttreemap_tree_insert_from_pair(teds_stricttreemap_tree *tree, zval *raw_val)
 {
 	ZVAL_DEREF(raw_val);
 	if (UNEXPECTED(Z_TYPE_P(raw_val) != IS_ARRAY)) {
@@ -896,31 +876,31 @@ static bool teds_stricttreemap_tree_insert_from_pair(teds_stricttreemap_tree *ar
 	}
 	ZVAL_DEREF(key);
 	ZVAL_DEREF(value);
-	teds_stricttreemap_tree_insert(array, key, value, false);
+	teds_stricttreemap_tree_insert(tree, key, value, false);
 	return true;
 }
 
-static void teds_stricttreemap_tree_init_from_array_pairs(teds_stricttreemap_tree *array, zend_array *raw_data)
+static void teds_stricttreemap_tree_init_from_array_pairs(teds_stricttreemap_tree *tree, zend_array *raw_data)
 {
 	const uint32_t num_entries = zend_hash_num_elements(raw_data);
 	if (num_entries == 0) {
-		teds_stricttreemap_tree_set_empty_tree(array);
+		teds_stricttreemap_tree_set_empty_tree(tree);
 		return;
 	}
-	teds_stricttreemap_tree_set_empty_tree(array);
+	teds_stricttreemap_tree_set_empty_tree(tree);
 	zval *val;
 	ZEND_HASH_FOREACH_VAL(raw_data, val) {
-		if (!teds_stricttreemap_tree_insert_from_pair(array, val)) {
+		if (!teds_stricttreemap_tree_insert_from_pair(tree, val)) {
 			break;
 		}
 	} ZEND_HASH_FOREACH_END();
 }
 
-static void teds_stricttreemap_tree_init_from_traversable_pairs(teds_stricttreemap_tree *array, zend_object *obj)
+static void teds_stricttreemap_tree_init_from_traversable_pairs(teds_stricttreemap_tree *tree, zend_object *obj)
 {
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
-	teds_stricttreemap_tree_set_empty_tree(array);
+	teds_stricttreemap_tree_set_empty_tree(tree);
 	zval tmp_obj;
 	ZVAL_OBJ(&tmp_obj, obj);
 	iter = ce->get_iterator(ce, &tmp_obj, 0);
@@ -946,7 +926,7 @@ static void teds_stricttreemap_tree_init_from_traversable_pairs(teds_stricttreem
 			break;
 		}
 
-		if (!teds_stricttreemap_tree_insert_from_pair(array, pair)) {
+		if (!teds_stricttreemap_tree_insert_from_pair(tree, pair)) {
 			break;
 		}
 
@@ -967,10 +947,10 @@ static zend_object* create_from_pairs(zval *iterable) {
 	teds_stricttreemap *intern = teds_stricttreemap_from_object(object);
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_stricttreemap_tree_init_from_array_pairs(&intern->array, Z_ARRVAL_P(iterable));
+			teds_stricttreemap_tree_init_from_array_pairs(&intern->tree, Z_ARRVAL_P(iterable));
 			break;
 		case IS_OBJECT:
-			teds_stricttreemap_tree_init_from_traversable_pairs(&intern->array, Z_OBJ_P(iterable));
+			teds_stricttreemap_tree_init_from_traversable_pairs(&intern->tree, Z_OBJ_P(iterable));
 			break;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -997,7 +977,7 @@ PHP_METHOD(Teds_StrictTreeMap, __set_state)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_stricttreemap_new(teds_ce_StrictTreeMap);
 	teds_stricttreemap *intern = teds_stricttreemap_from_object(object);
-	teds_stricttreemap_tree_init_from_array_pairs(&intern->array, array_ht);
+	teds_stricttreemap_tree_init_from_array_pairs(&intern->tree, array_ht);
 
 	RETURN_OBJ(object);
 }
@@ -1008,17 +988,17 @@ PHP_METHOD(Teds_StrictTreeMap, __serialize)
 
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
 
-	uint32_t len = intern->array.nNumOfElements;
+	uint32_t len = intern->tree.nNumOfElements;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
 	zend_array *flat_entries_array = zend_new_array(len * 2);
-	/* Initialize return array */
+	/* Initialize return tree */
 	zend_hash_real_init_packed(flat_entries_array);
 
-	/* Go through entries and add keys and values to the return array */
+	/* Go through entries and add keys and values to the return tree */
 	zval *key, *value;
-	TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(&intern->array, key, value) {
+	TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(&intern->tree, key, value) {
 		Z_TRY_ADDREF_P(key);
 		zend_hash_next_index_insert(flat_entries_array, key);
 		Z_TRY_ADDREF_P(value);
@@ -1033,11 +1013,11 @@ PHP_METHOD(Teds_StrictTreeMap, methodName) \
 { \
        ZEND_PARSE_PARAMETERS_NONE(); \
        const teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS); \
-       if (teds_stricttreemap_tree_empty_size(&intern->array)) { \
+       if (teds_stricttreemap_tree_empty_size(&intern->tree)) { \
                zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty StrictTreeMap", 0); \
                RETURN_THROWS(); \
        } \
-       teds_stricttreemap_node *node = teds_stricttreemap_tree_get_ ## pos(&intern->array); \
+       teds_stricttreemap_node *node = teds_stricttreemap_tree_get_ ## pos(&intern->tree); \
        RETVAL_COPY(&node->propName); \
 }
 
@@ -1051,13 +1031,13 @@ PHP_METHOD(Teds_StrictTreeMap, methodName) \
 { \
 	ZEND_PARSE_PARAMETERS_NONE(); \
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS); \
-	if (teds_stricttreemap_tree_empty_size(&intern->array)) { \
+	if (teds_stricttreemap_tree_empty_size(&intern->tree)) { \
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot " # methodName " from empty StrictTreeMap", 0); \
 		RETURN_THROWS(); \
 	} \
-	teds_stricttreemap_node *node = teds_stricttreemap_tree_get_ ## pos(&intern->array); \
+	teds_stricttreemap_node *node = teds_stricttreemap_tree_get_ ## pos(&intern->tree); \
 	zend_array *result = zend_new_pair(&node->key, &node->value); \
-	teds_stricttreemap_tree_remove_node(&intern->array, node, false); \
+	teds_stricttreemap_tree_remove_node(&intern->tree, node, false); \
 	RETVAL_ARR(result); \
 }
 
@@ -1068,18 +1048,18 @@ PHP_METHOD(Teds_StrictTreeMap, keys)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	uint32_t len = intern->array.nNumOfElements;
+	uint32_t len = intern->tree.nNumOfElements;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
 	zend_array *keys = zend_new_array(len);
-	/* Initialize return array */
+	/* Initialize return tree */
 	zend_hash_real_init_packed(keys);
 
-	/* Go through keys and add values to the return array */
+	/* Go through keys and add values to the return tree */
 	ZEND_HASH_FILL_PACKED(keys) {
 		zval *key;
-		TEDS_STRICTTREEMAP_FOREACH_KEY(&intern->array, key) {
+		TEDS_STRICTTREEMAP_FOREACH_KEY(&intern->tree, key) {
 			Z_TRY_ADDREF_P(key);
 			ZEND_HASH_FILL_ADD(key);
 		} TEDS_STRICTTREEMAP_FOREACH_END();
@@ -1091,18 +1071,18 @@ PHP_METHOD(Teds_StrictTreeMap, values)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	const uint32_t len = intern->array.nNumOfElements;
+	const uint32_t len = intern->tree.nNumOfElements;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
 	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
+	/* Initialize return tree */
 	zend_hash_real_init_packed(values);
 
-	/* Go through values and add values to the return array */
+	/* Go through values and add values to the return tree */
 	ZEND_HASH_FILL_PACKED(values) {
 		zval *value;
-		TEDS_STRICTTREEMAP_FOREACH_VAL(&intern->array, value) {
+		TEDS_STRICTTREEMAP_FOREACH_VAL(&intern->tree, value) {
 			Z_TRY_ADDREF_P(value);
 			ZEND_HASH_FILL_ADD(value);
 		} TEDS_STRICTTREEMAP_FOREACH_END();
@@ -1110,10 +1090,10 @@ PHP_METHOD(Teds_StrictTreeMap, values)
 	RETURN_ARR(values);
 }
 
-static teds_stricttreemap_node *teds_stricttreemap_tree_find_value(const teds_stricttreemap_tree *array, zval *value)
+static teds_stricttreemap_node *teds_stricttreemap_tree_find_value(const teds_stricttreemap_tree *tree, zval *value)
 {
 	teds_stricttreemap_node *it;
-	TEDS_STRICTTREEMAP_FOREACH_NODE(array, it) {
+	TEDS_STRICTTREEMAP_FOREACH_NODE(tree, it) {
 		if (teds_is_identical_inline(value, &it->value)) {
 			return it;
 		}
@@ -1323,7 +1303,6 @@ static zend_always_inline void teds_stricttreemap_tree_replace_node_with_descend
 			parent->right = replacement;
 		}
 	}
-	/* teds_stricttreemap_node_debug_check_linked_to_parent(tree->root); */
 
 	if (parent_of_removed_node) {
 		/* Paths going through the replaced replacement node (black with both nil children)
@@ -1422,8 +1401,8 @@ PHP_METHOD(Teds_StrictTreeMap, offsetGet)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	if (intern->array.nNumOfElements > 0) {
-		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(&intern->array, key);
+	if (intern->tree.nNumOfElements > 0) {
+		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(&intern->tree, key);
 		if (entry) {
 			RETURN_COPY(&entry->value);
 		}
@@ -1442,8 +1421,8 @@ PHP_METHOD(Teds_StrictTreeMap, get)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	if (intern->array.nNumOfElements > 0) {
-		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(&intern->array, key);
+	if (intern->tree.nNumOfElements > 0) {
+		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(&intern->tree, key);
 		if (entry) {
 			RETURN_COPY(&entry->value);
 		}
@@ -1464,7 +1443,7 @@ PHP_METHOD(Teds_StrictTreeMap, offsetSet)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	teds_stricttreemap_tree_insert(&intern->array, key, value, false);
+	teds_stricttreemap_tree_insert(&intern->tree, key, value, false);
 	TEDS_RETURN_VOID();
 }
 
@@ -1476,7 +1455,7 @@ PHP_METHOD(Teds_StrictTreeMap, offsetUnset)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	teds_stricttreemap_tree_remove_key(&intern->array, key);
+	teds_stricttreemap_tree_remove_key(&intern->tree, key);
 	TEDS_RETURN_VOID();
 }
 
@@ -1488,7 +1467,7 @@ PHP_METHOD(Teds_StrictTreeMap, contains)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_value(&intern->array, value);
+	teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_value(&intern->tree, value);
 	RETURN_BOOL(entry != NULL);
 }
 
@@ -1500,28 +1479,28 @@ PHP_METHOD(Teds_StrictTreeMap, containsKey)
 	ZEND_PARSE_PARAMETERS_END();
 
 	const teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	if (intern->array.nNumOfElements > 0) {
-		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(&intern->array, key);
+	if (intern->tree.nNumOfElements > 0) {
+		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(&intern->tree, key);
 		RETURN_BOOL(entry != NULL);
 	}
 	RETURN_FALSE;
 }
 
-static void teds_stricttreemap_tree_return_pairs(teds_stricttreemap_tree *array, zval *return_value)
+static void teds_stricttreemap_tree_return_pairs(teds_stricttreemap_tree *tree, zval *return_value)
 {
-	uint32_t len = array->nNumOfElements;
+	uint32_t len = tree->nNumOfElements;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
 
 	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
+	/* Initialize return tree */
 	zend_hash_real_init_packed(values);
 
-	/* Go through values and add values to the return array */
+	/* Go through values and add values to the return tree */
 	ZEND_HASH_FILL_PACKED(values) {
 		zval *key, *val;
-		TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(array, key, val) {
+		TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(tree, key, val) {
 			zval tmp;
 			Z_TRY_ADDREF_P(key);
 			Z_TRY_ADDREF_P(val);
@@ -1536,21 +1515,21 @@ PHP_METHOD(Teds_StrictTreeMap, toPairs)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	teds_stricttreemap_tree_return_pairs(&intern->array, return_value);
+	teds_stricttreemap_tree_return_pairs(&intern->tree, return_value);
 }
 
 PHP_METHOD(Teds_StrictTreeMap, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_stricttreemap_tree *const array = &Z_STRICTTREEMAP_P(ZEND_THIS)->array;
-	uint32_t len = array->nNumOfElements;
+	teds_stricttreemap_tree *const tree = &Z_STRICTTREEMAP_P(ZEND_THIS)->tree;
+	uint32_t len = tree->nNumOfElements;
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
 	zend_array *values = zend_new_array(len);
 
 	zval *key, *val;
-	TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(array, key, val) {
+	TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(tree, key, val) {
 		Z_TRY_ADDREF_P(val);
 		array_set_zval_key(values, key, val);
 		zval_ptr_dtor_nogc(val);
@@ -1595,7 +1574,7 @@ ZEND_COLD PHP_METHOD(Teds_StrictTreeMap, debugGetTreeRepresentation)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	if (intern->array.nNumOfElements == 0) {
+	if (intern->tree.nNumOfElements == 0) {
 		RETURN_EMPTY_ARRAY();
 	}
 	zend_string *strings[5] = {
@@ -1605,7 +1584,7 @@ ZEND_COLD PHP_METHOD(Teds_StrictTreeMap, debugGetTreeRepresentation)
 		zend_string_init_interned("left", sizeof("left") - 1, 0),
 		zend_string_init_interned("right", sizeof("right") - 1, 0),
 	};
-	teds_stricttreemap_node_debug_representation(return_value, intern->array.root, strings);
+	teds_stricttreemap_node_debug_representation(return_value, intern->tree.root, strings);
 }
 
 /* Returns -1 for unbalanced tree */
@@ -1634,33 +1613,33 @@ ZEND_COLD PHP_METHOD(Teds_StrictTreeMap, debugIsBalanced)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	int result = teds_stricttreemap_node_is_balanced(intern->array.root);
+	int result = teds_stricttreemap_node_is_balanced(intern->tree.root);
 	RETURN_BOOL(result >= 0);
 }
 
-static void teds_stricttreemap_tree_clear(teds_stricttreemap_tree *array) {
-	if (teds_stricttreemap_tree_empty_size(array)) {
+static void teds_stricttreemap_tree_clear(teds_stricttreemap_tree *tree) {
+	if (teds_stricttreemap_tree_empty_size(tree)) {
 		return;
 	}
-	teds_stricttreemap_tree array_copy = *array;
+	teds_stricttreemap_tree array_copy = *tree;
 
-	teds_stricttreemap_tree_set_empty_tree(array);
+	teds_stricttreemap_tree_set_empty_tree(tree);
 
 	teds_stricttreemap_tree_dtor(&array_copy);
-	/* Could call teds_stricttreemap_get_properties but properties array is typically not initialized unless var_dump or other inefficient functionality is used */
+	/* Could call teds_stricttreemap_get_properties but properties tree is typically not initialized unless var_dump or other inefficient functionality is used */
 }
 
 PHP_METHOD(Teds_StrictTreeMap, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_stricttreemap *intern = Z_STRICTTREEMAP_P(ZEND_THIS);
-	teds_stricttreemap_tree_clear(&intern->array);
+	teds_stricttreemap_tree_clear(&intern->tree);
 	TEDS_RETURN_VOID();
 }
 
 static void teds_stricttreemap_write_dimension(zend_object *object, zval *offset_zv, zval *value)
 {
-	teds_stricttreemap_tree *array = teds_stricttreemap_tree_from_object(object);
+	teds_stricttreemap_tree *tree = teds_stricttreemap_tree_from_object(object);
 	if (UNEXPECTED(!offset_zv || Z_TYPE_P(offset_zv) == IS_UNDEF)) {
 		zend_throw_exception(spl_ce_RuntimeException, "Teds\\StrictHashMap does not support appending with []=", 0);
 		return;
@@ -1668,15 +1647,15 @@ static void teds_stricttreemap_write_dimension(zend_object *object, zval *offset
 
 	ZVAL_DEREF(offset_zv);
 	ZVAL_DEREF(value);
-	teds_stricttreemap_tree_insert(array, offset_zv, value, false);
+	teds_stricttreemap_tree_insert(tree, offset_zv, value, false);
 }
 
 static void teds_stricttreemap_unset_dimension(zend_object *object, zval *offset)
 {
-	teds_stricttreemap_tree *array = teds_stricttreemap_tree_from_object(object);
+	teds_stricttreemap_tree *tree = teds_stricttreemap_tree_from_object(object);
 
 	ZVAL_DEREF(offset);
-	teds_stricttreemap_tree_remove_key(array, offset);
+	teds_stricttreemap_tree_remove_key(tree, offset);
 }
 
 static zval *teds_stricttreemap_read_dimension(zend_object *object, zval *offset_zv, int type, zval *rv)
@@ -1690,13 +1669,13 @@ handle_missing_key:
 		return &EG(uninitialized_zval);
 	}
 
-	const teds_stricttreemap_tree *array = teds_stricttreemap_tree_from_object(object);
+	const teds_stricttreemap_tree *tree = teds_stricttreemap_tree_from_object(object);
 	ZVAL_DEREF(offset_zv);
 
 	(void)rv;
 
-	if (array->nNumOfElements > 0) {
-		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(array, offset_zv);
+	if (tree->nNumOfElements > 0) {
+		teds_stricttreemap_node *entry = teds_stricttreemap_tree_find_key(tree, offset_zv);
 		if (entry) {
 			return &entry->value;
 		}

@@ -80,18 +80,14 @@ static zend_always_inline bool teds_bitvector_is_bool(const zval *offset) {
 zend_object_handlers teds_handler_BitVector;
 zend_class_entry *teds_ce_BitVector;
 
-/* This is a placeholder value to distinguish between empty and uninitialized BitVector instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const int8_t empty_entry_list[1];
-
 typedef struct _teds_bitvector_entries {
+	uint8_t *entries_bits;
 	/* This is deliberately a size_t instead of an uint32_t.
 	 * This is memory efficient enough that it's more likely to be used in practice for more than 4 billion values,
 	 * and garbage collection isn't a problem.
-	 * The memory usage in bytes is 1/8th of the bit_capacity (BYTE_OF_BIT_POSITION(bit_capacity). */
+	 * The memory usage in bytes is 1/8th of the bit_capacity (BYTE_OF_BIT_POSITION(bit_capacity)). */
 	size_t bit_size;
 	size_t bit_capacity;
-	uint8_t *entries_bits;
 } teds_bitvector_entries;
 
 typedef struct _teds_bitvector {
@@ -213,7 +209,7 @@ static void teds_bitvector_entries_init_from_traversable(teds_bitvector_entries 
 
 	/* Reindex keys from 0. */
 	while (funcs->valid(iter) == SUCCESS) {
-		if (EG(exception)) {
+		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
 		zval *value_zv = funcs->get_current_data(iter);

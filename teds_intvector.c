@@ -82,10 +82,6 @@ zend_class_entry *teds_ce_IntVector;
 zend_class_entry *teds_ce_SortedIntVectorSet;
 zend_class_entry *teds_ce_ImmutableSortedIntSet;
 
-/* This is a placeholder value to distinguish between empty and uninitialized IntVector instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const int8_t empty_entry_list[1];
-
 #define TEDS_INTVECTOR_TYPE_UNINITIALIZED  0
 #define TEDS_INTVECTOR_TYPE_INT8           1
 #define TEDS_INTVECTOR_TYPE_INT16          2
@@ -118,11 +114,6 @@ static const uint8_t teds_lmv_shift_for_element[TEDS_INTVECTOR_TYPE_COUNT] = {
 };
 
 typedef struct _teds_intvector_entries {
-	/* This is deliberately a size_t instead of an uint32_t.
-	 * This is memory efficient enough that it's more likely to be used in practice for more than 4 billion values,
-	 * and garbage collection isn't a problem. */
-	size_t size;
-	size_t capacity;
 	union {
 		uint8_t     *entries_uint8;
 		int8_t      *entries_int8;
@@ -133,6 +124,11 @@ typedef struct _teds_intvector_entries {
 #endif
 		void        *entries_raw;
 	};
+	/* This is deliberately a size_t instead of an uint32_t.
+	 * This is memory efficient enough that it's more likely to be used in practice for more than 4 billion values,
+	 * and garbage collection isn't a problem. */
+	size_t size;
+	size_t capacity;
 	int8_t type_tag;
 #ifdef TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
 	int8_t is_string_backed; /* For ImmutableSortedIntSet */

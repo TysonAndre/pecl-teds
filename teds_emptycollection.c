@@ -89,6 +89,8 @@ static const zend_object_iterator_funcs teds_emptycollection_it_funcs = {
 };
 static zend_object_iterator *teds_emptycollection_get_iterator(zend_class_entry *ce, zval *object, int byref)
 {
+	(void)ce;
+	(void)object;
 	if (UNEXPECTED(byref)) {
 		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
 		return NULL;

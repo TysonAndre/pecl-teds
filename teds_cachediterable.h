@@ -14,4 +14,6 @@ extern zend_class_entry *teds_ce_CachedIterable;
 
 PHP_MINIT_FUNCTION(teds_cachediterable);
 
+extern int teds_size_t_count_elements(zend_object *object, zend_long *count);
+
 #endif /* TEDS_CACHEDITERABLE_H */

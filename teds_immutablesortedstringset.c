@@ -76,10 +76,10 @@ typedef struct _teds_immutablesortedstringset_substring_info {
 } teds_immutablesortedstringset_substring_info;
 
 typedef struct _teds_immutablesortedstringset_entries {
-	/* Number of elements */
-	uint32_t size;
 	/* Size values referencing a sorted array */
 	teds_immutablesortedstringset_substring_info *substring_infos;
+	/* Number of elements */
+	uint32_t size;
 	/* Pointer into the ZSTR_VAL of a Z_STR that may or may not be refcounted */
 	const char *raw_bytes;
 } teds_immutablesortedstringset_entries;

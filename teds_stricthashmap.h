@@ -72,14 +72,14 @@ typedef struct _teds_stricthashmap_entry {
 
 /* See Zend/zend_types.h for the zend_array layout this is based on. */
 typedef struct _teds_stricthashmap_entries {
-	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
-	uint32_t nNumOfElements; /* Number of elements in this set */
-	uint32_t nTableSize; /* Power of 2 size */
-	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHMAP_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
 	union {
 		teds_stricthashmap_entry *arData;
 		uint32_t *arHash;
 	};
+	uint32_t nNumOfElements; /* Number of elements. a.k.a. count().  */
+	uint32_t nTableSize; /* Power of 2 size, a.k.a. capacity(). */
+	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
+	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHMAP_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
 } teds_stricthashmap_entries;
 
 typedef struct _teds_stricthashmap {
@@ -88,7 +88,6 @@ typedef struct _teds_stricthashmap {
 } teds_stricthashmap;
 
 extern const uint32_t teds_stricthashmap_empty_bucket_list[2];
-#define teds_stricthashmap_empty_entry_list ((teds_stricthashmap_entry *) &teds_stricthashmap_empty_bucket_list[2])
 
 void teds_stricthashmap_entries_init_from_array(teds_stricthashmap_entries *array, zend_array *values);
 
@@ -102,7 +101,7 @@ void teds_stricthashmap_entries_dtor_range(teds_stricthashmap_entry *start, uint
 
 static zend_always_inline void teds_stricthashmap_entries_array_free(teds_stricthashmap_entry *entries, uint32_t capacity) {
 	ZEND_ASSERT(teds_is_pow2(capacity));
-	ZEND_ASSERT(entries != teds_stricthashmap_empty_entry_list);
+	ZEND_ASSERT(entries != empty_entry_list);
 	uint32_t *data = ((uint32_t *)entries) - 2 * capacity;
 	efree(data);
 }
@@ -120,10 +119,10 @@ static zend_always_inline bool teds_stricthashmap_entries_empty_capacity(teds_st
 {
 	ZEND_ASSERT(array->nNumOfElements <= array->nTableSize);
 	if (array->nTableSize > 0) {
-		ZEND_ASSERT(array->arData != teds_stricthashmap_empty_entry_list);
+		ZEND_ASSERT(array->arData != empty_entry_list);
 		return false;
 	}
-	ZEND_ASSERT(array->arData == teds_stricthashmap_empty_entry_list || array->arData == NULL);
+	ZEND_ASSERT(array->arData == empty_entry_list || array->arData == NULL);
 	return true;
 }
 

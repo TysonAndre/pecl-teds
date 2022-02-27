@@ -1,26 +1,20 @@
 --TEST--
-Teds\Deque can be cloned
+Teds\Deque can be cloned after building properties table.
 --FILE--
 <?php
-
-$it = new Teds\Deque([new stdClass(), new ArrayObject()]);
-$it2 = clone $it;
-unset($it);
-foreach ($it2 as $key => $value) {
-    echo "Saw entry:\n";
-    var_dump($key, $value);
-}
-
+$x = new Teds\Deque([new stdClass()]);
+var_dump($x);
+$y = clone $x;
+var_dump($y);
 ?>
 --EXPECT--
-Saw entry:
-int(0)
-object(stdClass)#2 (0) {
+object(Teds\Deque)#1 (1) {
+  [0]=>
+  object(stdClass)#2 (0) {
+  }
 }
-Saw entry:
-int(1)
-object(ArrayObject)#3 (1) {
-  ["storage":"ArrayObject":private]=>
-  array(0) {
+object(Teds\Deque)#3 (1) {
+  [0]=>
+  object(stdClass)#2 (0) {
   }
 }
