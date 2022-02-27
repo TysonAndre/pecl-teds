@@ -497,7 +497,7 @@ PHP_METHOD(Teds_StrictMinHeap, extract) {
 	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
 	const uint32_t len = array->size;
 	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty StrictHeap", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty Teds\\StrictMinHeap", 0);
 		RETURN_THROWS();
 	}
 	RETVAL_COPY_VALUE(&array->entries[0]);
@@ -509,7 +509,7 @@ PHP_METHOD(Teds_StrictMaxHeap, extract) {
 	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
 	const uint32_t len = array->size;
 	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty StrictHeap", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty Teds\\StrictMaxHeap", 0);
 		RETURN_THROWS();
 	}
 	RETVAL_COPY_VALUE(&array->entries[0]);
@@ -522,7 +522,7 @@ PHP_METHOD(Teds_StrictMinHeap, next)
 	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
 	const uint32_t len = array->size;
 	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty StrictHeap", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot remove from empty Teds\\StrictMinHeap", 0);
 		RETURN_THROWS();
 	}
 	zval tmp;
@@ -537,28 +537,13 @@ PHP_METHOD(Teds_StrictMaxHeap, next)
 	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
 	const uint32_t len = array->size;
 	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty StrictHeap", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty Teds\\StrictMaxHeap", 0);
 		RETURN_THROWS();
 	}
 	zval tmp;
 	ZVAL_COPY_VALUE(&tmp, &array->entries[0]);
 	teds_strictheap_entries_remove_top(array, false);
 	zval_ptr_dtor(&tmp);
-}
-
-/* top */
-PHP_METHOD(Teds_StrictMinHeap, top)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictheap *intern = Z_STRICTHEAP_P(ZEND_THIS);
-	const uint32_t len = intern->array.size;
-	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read top of empty StrictHeap", 0);
-		RETURN_THROWS();
-	}
-
-	ZEND_ASSERT(Z_TYPE(intern->array.entries[0]) != IS_UNDEF);
-	RETURN_COPY(&intern->array.entries[0]);
 }
 
 PHP_METHOD(Teds_StrictMinHeap, add)
@@ -587,29 +572,6 @@ PHP_METHOD(Teds_StrictMinHeap, rewind)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 	TEDS_RETURN_VOID();
-}
-
-PHP_METHOD(Teds_StrictMinHeap, toArray)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
-	if (!array->size) {
-		RETURN_EMPTY_ARRAY();
-	}
-	zend_array *values = zend_new_array(array->size);
-
-	/* Go through values and add values to the return array */
-	for (uint32_t i = 0; i < array->size; i++) {
-		zval *key = &array->entries[i];
-		Z_TRY_ADDREF_P(key);
-		array_set_zval_key(values, key, key);
-		zval_ptr_dtor_nogc(key);
-		if (UNEXPECTED(EG(exception))) {
-			zend_array_destroy(values);
-			RETURN_THROWS();
-		}
-	}
-	RETURN_ARR(values);
 }
 
 PHP_MINIT_FUNCTION(teds_strictheap)

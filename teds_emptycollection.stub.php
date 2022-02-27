@@ -66,6 +66,7 @@ enum EmptySequence implements \Iterator, Sequence, \JsonSerializable
     public function last(): never {}
     /**
      * Does nothing, does not throw. This is already empty.
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function clear(): void {}
     // Must be mixed for compatibility with ArrayAccess
@@ -130,12 +131,12 @@ enum EmptySequence implements \Iterator, Sequence, \JsonSerializable
     public function key(): never { }
     /**
      * Does nothing.
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function next(): void { }
     /**
      * Does nothing.
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function rewind(): void { }
 }
@@ -159,7 +160,7 @@ enum EmptyMap implements \Iterator, Map, \JsonSerializable
     public function isEmpty(): bool {}
     /**
      * Removes all elements from the EmptyMap. (no-op)
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function clear(): void {}
 
@@ -184,9 +185,10 @@ enum EmptyMap implements \Iterator, Map, \JsonSerializable
      * Returns the value for the given key.
      * @throws \OutOfBoundsException if $key is not found and $default was not provided.
      */
-    public function offsetGet(mixed $key): mixed {}
+    public function offsetGet(mixed $key): never {}
     /**
      * Returns true if the value for the key exists and is not null
+     * @return false
      * @implementation-alias Teds\EmptySequence::contains
      */
     public function offsetExists(mixed $key): bool {}
@@ -194,28 +196,30 @@ enum EmptyMap implements \Iterator, Map, \JsonSerializable
      * Sets the value at the given key.
      * @implementation-alias Teds\EmptySequence::offsetSet
      */
-    public function offsetSet(mixed $key, mixed $value): void {}
+    public function offsetSet(mixed $key, mixed $value): never {}
     /**
      * No-op for empty map.
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function offsetUnset(mixed $key): void {}
 
     /**
      * Returns true if there exists a value === $value in this EmptyMap.
      * @implementation-alias Teds\EmptySequence::contains
+     * @return false
      */
     public function contains(mixed $value): bool {}
 
     /**
      * Returns true if there exists a key === $key in this EmptyMap.
      * @implementation-alias Teds\EmptySequence::contains
+     * @return false
      */
     public function containsKey(mixed $key): bool {}
 
     /**
      * Returns the value at $key.
-     * @throws \OutOfBoundsException if $key is not found and $default was not provided.
+     * @throws \OutOfBoundsException if $default was not provided.
      */
     public function get(mixed $key, mixed $default = null): mixed {}
 
@@ -240,12 +244,12 @@ enum EmptyMap implements \Iterator, Map, \JsonSerializable
     public function key(): never { }
     /**
      * Does nothing.
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function next(): void { }
     /**
      * Does nothing.
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function rewind(): void { }
 }
@@ -269,7 +273,7 @@ enum EmptySet implements \Iterator, Set, \JsonSerializable
     public function isEmpty(): bool {}
     /**
      * Removes all elements from the EmptySet. (no-op)
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function clear(): void {}
 
@@ -324,12 +328,12 @@ enum EmptySet implements \Iterator, Set, \JsonSerializable
     public function key(): never { }
     /**
      * Does nothing.
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function next(): void { }
     /**
      * Does nothing.
-     * @implementation-alias Teds\EmptySequence::clear
+     * @implementation-alias Teds\StrictMinHeap::rewind
      */
     public function rewind(): void { }
 }

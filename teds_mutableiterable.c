@@ -36,21 +36,6 @@ zend_object_handlers teds_handler_MutableIterable;
 zend_class_entry *teds_ce_MutableIterable;
 
 /** TODO: Does C guarantee that this has the same memory layout as an array of zvals? */
-typedef struct _zval_pair {
-	zval key;
-	zval value;
-} zval_pair;
-
-typedef struct _teds_mutableiterable_entries {
-	zval_pair *entries;
-	uint32_t size;
-	uint32_t capacity;
-} teds_mutableiterable_entries;
-
-typedef struct _teds_mutableiterable {
-	teds_mutableiterable_entries array;
-	zend_object                 std;
-} teds_mutableiterable;
 
 /* Used by InternalIterator returned by MutableIterable->getIterator() */
 typedef struct _teds_mutableiterable_it {
@@ -310,7 +295,7 @@ static void teds_mutableiterable_entries_dtor(teds_mutableiterable_entries *arra
 	}
 }
 
-static HashTable* teds_mutableiterable_get_gc(zend_object *obj, zval **table, int *n)
+HashTable* teds_mutableiterable_get_gc(zend_object *obj, zval **table, int *n)
 {
 	teds_mutableiterable *intern = teds_mutableiterable_from_object(obj);
 
@@ -323,7 +308,7 @@ static HashTable* teds_mutableiterable_get_gc(zend_object *obj, zval **table, in
 	return NULL;
 }
 
-static HashTable* teds_mutableiterable_get_properties(zend_object *obj)
+HashTable* teds_mutableiterable_get_properties(zend_object *obj)
 {
 	/* This is mutable and the size may change. Update or delete elements as needed. */
 	teds_mutableiterable *intern = teds_mutableiterable_from_object(obj);
@@ -333,7 +318,9 @@ static HashTable* teds_mutableiterable_get_properties(zend_object *obj)
 
 	// Note that destructors may mutate the original array,
 	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
-	for (uint32_t i = 0; i < intern->array.size; i++) {
+	uint32_t i = 0;
+	for (; i < intern->array.size; i++) {
+		/* Fetch these every time in case destructors modify the original */
 		zval_pair *entries = intern->array.entries;
 		zval tmp;
 		Z_TRY_ADDREF_P(&entries[i].key);
@@ -343,8 +330,8 @@ static HashTable* teds_mutableiterable_get_properties(zend_object *obj)
 	}
 
 	const uint32_t properties_size = zend_hash_num_elements(ht);
-	if (UNEXPECTED(properties_size > intern->array.size)) {
-		for (uint32_t i = intern->array.size; i < properties_size; i++) {
+	if (UNEXPECTED(properties_size > i)) {
+		for (; i < properties_size; i++) {
 			zend_hash_index_del(ht, i);
 		}
 	}
@@ -358,7 +345,7 @@ static HashTable* teds_mutableiterable_get_properties(zend_object *obj)
 	return ht;
 }
 
-static void teds_mutableiterable_free_storage(zend_object *object)
+void teds_mutableiterable_free_storage(zend_object *object)
 {
 	teds_mutableiterable *intern = teds_mutableiterable_from_object(object);
 	teds_mutableiterable_entries_dtor(&intern->array);
@@ -402,7 +389,7 @@ static zend_object *teds_mutableiterable_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_mutableiterable_count_elements(zend_object *object, zend_long *count)
+int teds_mutableiterable_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_mutableiterable *intern = teds_mutableiterable_from_object(object);
 	*count = intern->array.size;
@@ -442,12 +429,8 @@ PHP_METHOD(Teds_MutableIterable, capacity)
 	RETURN_LONG(intern->array.capacity);
 }
 
-/* Free elements and backing storage of this MutableIterable */
-PHP_METHOD(Teds_MutableIterable, clear)
+void teds_mutableiterable_clear(teds_mutableiterable *intern)
 {
-	ZEND_PARSE_PARAMETERS_NONE();
-
-	teds_mutableiterable *intern = Z_MUTABLEITERABLE_P(ZEND_THIS);
 	if (intern->array.capacity == 0) {
 		/* Nothing to clear */
 		return;
@@ -461,7 +444,12 @@ PHP_METHOD(Teds_MutableIterable, clear)
 	}
 	teds_zval_dtor_range(old_entries, entries_to_remove * 2);
 	efree(old_entries);
-
+}
+/* Free elements and backing storage of this MutableIterable */
+PHP_METHOD(Teds_MutableIterable, clear)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+	teds_mutableiterable_clear(Z_MUTABLEITERABLE_P(ZEND_THIS));
 	TEDS_RETURN_VOID();
 }
 
@@ -1161,7 +1149,7 @@ PHP_METHOD(Teds_MutableIterable, pop)
 	teds_mutableiterable *intern = Z_MUTABLEITERABLE_P(ZEND_THIS);
 	const uint32_t old_size = intern->array.size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\MutableIterable", 0);
+		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot pop from empty %s", ZSTR_VAL(intern->std.ce->name));
 		RETURN_THROWS();
 	}
 	const uint32_t old_capacity = intern->array.capacity;

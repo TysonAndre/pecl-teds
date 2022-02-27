@@ -1,9 +1,17 @@
 #ifndef TEDS_UTIL
 #define TEDS_UTIL
 
-#include "zend_types.h"
+#include "php.h"
+#include "Zend/zend_string.h"
+#include "Zend/zend_types.h"
 #define TEDS_NODE_RED 0
 #define TEDS_NODE_BLACK 1
+
+#if PHP_VERSION_ID < 80200
+#define TEDS_FILL_VAL (&__fill_bkt->val)
+#else
+#define TEDS_FILL_VAL (__fill_val)
+#endif
 
 /*
  * Copied from php's value of HT_MAX_SIZE.
@@ -257,5 +265,16 @@ static zend_always_inline int teds_has_dimension_helper(zval *value, int check_e
 	}
 	return Z_TYPE_P(value) != IS_NULL;
 }
+
+/**
+ * Returns absence of zvals or hash table to garbage collect.
+ * (e.g. for collections that are immutable or made of scalars instead of zvals)
+ */
+HashTable* teds_noop_get_gc(zend_object *obj, zval **table, int *n);
+/**
+ * Returns the immutable empty array in a get_properties handler.
+ * This is useful to keep memory low when a datastructure is guaranteed to be free of cycles (e.g. only scalars, or empty)
+ */
+HashTable* teds_noop_empty_array_get_properties(zend_object *obj);
 
 #endif

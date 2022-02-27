@@ -60,9 +60,7 @@ array(1) {
   [0]=>
   string(5) "TEST2"
 }
-object(Teds\LowMemoryVector)#1 (1) {
-  [0]=>
-  string(5) "TEST2"
+object(Teds\LowMemoryVector)#1 (0) {
 }
 object(Teds\LowMemoryVector)#1 (0) {
 }

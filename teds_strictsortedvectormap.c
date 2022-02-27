@@ -811,7 +811,7 @@ PHP_METHOD(Teds_StrictSortedVectorMap, methodName) \
 	ZEND_PARSE_PARAMETERS_NONE(); \
 	const teds_strictsortedvectormap *intern = Z_STRICTSORTEDVECTORMAP_P(ZEND_THIS); \
 	if (intern->array.size == 0) { \
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty StrictSortedVectorMap", 0); \
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty Teds\\StrictSortedVectorMap", 0); \
 		RETURN_THROWS(); \
 	} \
 	teds_strictsortedvectormap_entry *entries = intern->array.entries; \
@@ -827,7 +827,7 @@ PHP_METHOD(Teds_StrictSortedVectorMap, pop) {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_strictsortedvectormap *intern = Z_STRICTSORTEDVECTORMAP_P(ZEND_THIS);
 	if (intern->array.size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty StrictSortedVectorMap", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\StrictSortedVectorMap", 0);
 		RETURN_THROWS();
 	}
 	teds_strictsortedvectormap_entry *entry = &intern->array.entries[intern->array.size - 1];
@@ -853,7 +853,7 @@ PHP_METHOD(Teds_StrictSortedVectorMap, shift) {
 	teds_strictsortedvectormap *intern = Z_STRICTSORTEDVECTORMAP_P(ZEND_THIS);
 	const uint32_t len = intern->array.size;
 	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty StrictSortedVectorMap", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty Teds\\StrictSortedVectorMap", 0);
 		RETURN_THROWS();
 	}
 	teds_strictsortedvectormap_entry *entry = &intern->array.entries[0];

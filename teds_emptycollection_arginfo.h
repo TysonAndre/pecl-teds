@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: db73d42ccf16d654a2b577469a2fc15f1edf67b3 */
+ * Stub hash: 4bf165d6bf04621c2aff13d8055f2ed4a93c1e31 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_count, 0, 0, IS_LONG, 0)
 ZEND_END_ARG_INFO()
@@ -103,7 +103,7 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_EmptyMap_keys arginfo_class_Teds_EmptySequence_toArray
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetGet, 0, 1, IS_MIXED, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetGet, 0, 1, IS_NEVER, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
@@ -111,7 +111,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetExists
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetSet, 0, 2, IS_VOID, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetSet, 0, 2, IS_NEVER, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
@@ -181,7 +181,7 @@ ZEND_METHOD(Teds_EmptySequence, insert);
 ZEND_METHOD(Teds_EmptySequence, push);
 ZEND_METHOD(Teds_EmptySequence, pop);
 ZEND_METHOD(Teds_EmptySequence, first);
-ZEND_METHOD(Teds_EmptySequence, clear);
+ZEND_METHOD(Teds_StrictMinHeap, rewind);
 ZEND_METHOD(Teds_EmptySequence, offsetGet);
 ZEND_METHOD(Teds_EmptySequence, offsetExists);
 ZEND_METHOD(Teds_EmptySequence, offsetSet);
@@ -209,7 +209,7 @@ static const zend_function_entry class_Teds_EmptySequence_methods[] = {
 	ZEND_MALIAS(Teds_EmptySequence, shift, pop, arginfo_class_Teds_EmptySequence_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptySequence, first, arginfo_class_Teds_EmptySequence_first, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, last, first, arginfo_class_Teds_EmptySequence_last, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_EmptySequence, clear, arginfo_class_Teds_EmptySequence_clear, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, clear, rewind, arginfo_class_Teds_EmptySequence_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptySequence, offsetGet, arginfo_class_Teds_EmptySequence_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptySequence, offsetExists, arginfo_class_Teds_EmptySequence_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, containsKey, offsetExists, arginfo_class_Teds_EmptySequence_containsKey, ZEND_ACC_PUBLIC)
@@ -223,8 +223,8 @@ static const zend_function_entry class_Teds_EmptySequence_methods[] = {
 	ZEND_ME(Teds_EmptySequence, valid, arginfo_class_Teds_EmptySequence_valid, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, current, first, arginfo_class_Teds_EmptySequence_current, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, key, first, arginfo_class_Teds_EmptySequence_key, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, next, clear, arginfo_class_Teds_EmptySequence_next, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, rewind, clear, arginfo_class_Teds_EmptySequence_rewind, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, next, rewind, arginfo_class_Teds_EmptySequence_next, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, rewind, rewind, arginfo_class_Teds_EmptySequence_rewind, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
@@ -232,14 +232,14 @@ static const zend_function_entry class_Teds_EmptySequence_methods[] = {
 static const zend_function_entry class_Teds_EmptyMap_methods[] = {
 	ZEND_MALIAS(Teds_EmptySequence, count, count, arginfo_class_Teds_EmptyMap_count, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, isEmpty, isEmpty, arginfo_class_Teds_EmptyMap_isEmpty, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, clear, clear, arginfo_class_Teds_EmptyMap_clear, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, clear, rewind, arginfo_class_Teds_EmptyMap_clear, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, toArray, toArray, arginfo_class_Teds_EmptyMap_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, values, toArray, arginfo_class_Teds_EmptyMap_values, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, keys, toArray, arginfo_class_Teds_EmptyMap_keys, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptyMap, offsetGet, arginfo_class_Teds_EmptyMap_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, offsetExists, contains, arginfo_class_Teds_EmptyMap_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, offsetSet, offsetSet, arginfo_class_Teds_EmptyMap_offsetSet, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, offsetUnset, clear, arginfo_class_Teds_EmptyMap_offsetUnset, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, offsetUnset, rewind, arginfo_class_Teds_EmptyMap_offsetUnset, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, contains, contains, arginfo_class_Teds_EmptyMap_contains, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, containsKey, contains, arginfo_class_Teds_EmptyMap_containsKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptyMap, get, arginfo_class_Teds_EmptyMap_get, ZEND_ACC_PUBLIC)
@@ -247,8 +247,8 @@ static const zend_function_entry class_Teds_EmptyMap_methods[] = {
 	ZEND_MALIAS(Teds_EmptySequence, valid, valid, arginfo_class_Teds_EmptyMap_valid, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, current, first, arginfo_class_Teds_EmptyMap_current, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, key, first, arginfo_class_Teds_EmptyMap_key, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, next, clear, arginfo_class_Teds_EmptyMap_next, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, rewind, clear, arginfo_class_Teds_EmptyMap_rewind, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, next, rewind, arginfo_class_Teds_EmptyMap_next, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, rewind, rewind, arginfo_class_Teds_EmptyMap_rewind, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
@@ -256,7 +256,7 @@ static const zend_function_entry class_Teds_EmptyMap_methods[] = {
 static const zend_function_entry class_Teds_EmptySet_methods[] = {
 	ZEND_MALIAS(Teds_EmptySequence, count, count, arginfo_class_Teds_EmptySet_count, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, isEmpty, isEmpty, arginfo_class_Teds_EmptySet_isEmpty, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, clear, clear, arginfo_class_Teds_EmptySet_clear, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, clear, rewind, arginfo_class_Teds_EmptySet_clear, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, toArray, toArray, arginfo_class_Teds_EmptySet_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, values, toArray, arginfo_class_Teds_EmptySet_values, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, contains, offsetExists, arginfo_class_Teds_EmptySet_contains, ZEND_ACC_PUBLIC)
@@ -266,8 +266,8 @@ static const zend_function_entry class_Teds_EmptySet_methods[] = {
 	ZEND_MALIAS(Teds_EmptySequence, valid, valid, arginfo_class_Teds_EmptySet_valid, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, current, first, arginfo_class_Teds_EmptySet_current, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, key, first, arginfo_class_Teds_EmptySet_key, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, next, clear, arginfo_class_Teds_EmptySet_next, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_EmptySequence, rewind, clear, arginfo_class_Teds_EmptySet_rewind, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, next, rewind, arginfo_class_Teds_EmptySet_next, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictMinHeap, rewind, rewind, arginfo_class_Teds_EmptySet_rewind, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

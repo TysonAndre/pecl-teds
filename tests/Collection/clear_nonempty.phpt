@@ -193,11 +193,7 @@ object(Teds\ImmutableSortedStringSet)#%d (2) {
 }
 
 Testing Teds\LowMemoryVector
-object(Teds\LowMemoryVector)#%d (2) {
-  [0]=>
-  string(22) "v_Teds\LowMemoryVector"
-  [1]=>
-  string(22) "z_Teds\LowMemoryVector"
+object(Teds\LowMemoryVector)#%d (0) {
 }
 values: array(2) {
   [0]=>

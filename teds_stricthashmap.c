@@ -94,6 +94,7 @@ static zend_always_inline bool teds_stricthashmap_entries_insert(teds_stricthash
 			ZVAL_COPY_VALUE(&old_value, &p->value);
 			ZVAL_COPY(&p->value, value);
 			zval_ptr_dtor(&old_value);
+			array->should_rebuild_properties = true;
 			return false;
 		}
 	}
@@ -111,6 +112,7 @@ add_to_hash:
 	const uint32_t nIndex = h | array->nTableMask;
 	array->nNumUsed++;
 	array->nNumOfElements++;
+	array->should_rebuild_properties = true;
 	TEDS_STRICTHASHMAP_IT_HASH(p) = h;
 	TEDS_STRICTHASHMAP_IT_NEXT(p) = HT_HASH_EX(arData, nIndex);
 	HT_HASH_EX(arData, nIndex) = idx;
@@ -431,43 +433,88 @@ static HashTable* teds_stricthashmap_get_gc(zend_object *obj, zval **table, int 
 	}
 	zend_get_gc_buffer_use(gc_buffer, table, table_count);
 
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
+	return obj->properties;
 }
 
-static HashTable* teds_stricthashmap_get_properties(zend_object *obj)
+static HashTable* teds_stricthashmap_get_and_populate_properties(zend_object *obj)
 {
-	teds_stricthashmap *intern = teds_stricthashmap_from_object(obj);
-	const uint32_t len = intern->array.nNumOfElements;
+	teds_stricthashmap_entries *const array = teds_stricthashmap_entries_from_object(obj);
 	HashTable *ht = zend_std_get_properties(obj);
-	uint32_t old_length = zend_hash_num_elements(ht);
+
+	/* Re-initialize properties array */
+	/*
+	 * Usually, the reference count of the hash table is 1,
+	 * except during cyclic reference cycles.
+	 *
+	 * Maintain the DEBUG invariant that a hash table isn't modified during iteration,
+	 * and avoid unnecessary work rebuilding a hash table for unmodified properties.
+	 *
+	 * See https://github.com/php/php-src/issues/8079 and tests/Deque/var_export_recursion.phpt
+	 * Also see https://github.com/php/php-src/issues/8044 for alternate considered approaches.
+	 */
+	if (!array->should_rebuild_properties) {
+		return ht;
+	}
+	array->should_rebuild_properties = false;
+	const uint32_t len = array->nNumOfElements;
+	const uint32_t old_length = zend_hash_num_elements(ht);
+	if (!len) {
+		if (old_length > 0) {
+			zend_hash_clean(ht);
+		}
+		return ht;
+	}
 	/* Initialize properties array */
 	uint32_t i = 0;
 	zval *key, *value;
-	ZEND_ASSERT(len <= intern->array.nNumUsed);
-	TEDS_STRICTHASHMAP_FOREACH_KEY_VAL(&intern->array, key, value) {
+	ZEND_ASSERT(len <= array->nNumUsed);
+	TEDS_STRICTHASHMAP_FOREACH_CHECK_MODIFY_KEY_VAL(array, key, value) {
 		zval tmp;
 		Z_TRY_ADDREF_P(key);
 		Z_TRY_ADDREF_P(value);
 		ZVAL_ARR(&tmp, zend_new_pair(key, value));
 		zend_hash_index_update(ht, i, &tmp);
+
 		i++;
 	} TEDS_STRICTHASHMAP_FOREACH_END();
 
-	ZEND_ASSERT(i == len);
-
-	for (uint32_t i = len; i < old_length; i++) {
+	for (; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
+
 #if PHP_VERSION_ID >= 80200
 	if (HT_IS_PACKED(ht)) {
 		/* Engine doesn't expect packed array */
 		zend_hash_packed_to_hash(ht);
 	}
 #endif
-
 	return ht;
+}
+
+static zend_array *teds_stricthashmap_entries_to_refcounted_pairs(teds_stricthashmap_entries *array);
+
+static HashTable* teds_stricthashmap_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
+{
+	teds_stricthashmap_entries *array = teds_stricthashmap_entries_from_object(obj);
+	if (!array->nNumOfElements && !obj->properties) {
+		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
+		return (HashTable*)&zend_empty_array;
+	}
+	switch (purpose) {
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+		case ZEND_PROP_PURPOSE_VAR_EXPORT:
+		case ZEND_PROP_PURPOSE_DEBUG: {
+			HashTable *ht = teds_stricthashmap_get_and_populate_properties(obj);
+			GC_TRY_ADDREF(ht);
+			return ht;
+		}
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+			return teds_stricthashmap_entries_to_refcounted_pairs(array);
+		default:
+			ZEND_UNREACHABLE();
+			return NULL;
+	}
 }
 
 static void teds_stricthashmap_free_storage(zend_object *object)
@@ -995,6 +1042,7 @@ static bool teds_stricthashmap_entries_remove_key(teds_stricthashmap_entries *ar
 	}
 
 	array->nNumOfElements--;
+	array->should_rebuild_properties = true;
 	if (array->nNumUsed - 1 == idx) {
 		do {
 			array->nNumUsed--;
@@ -1134,14 +1182,9 @@ PHP_METHOD(Teds_StrictHashMap, containsKey)
 	RETURN_FALSE;
 }
 
-static void teds_stricthashmap_entries_return_pairs(teds_stricthashmap_entries *array, zval *return_value)
+static zend_array *teds_stricthashmap_entries_to_refcounted_pairs(teds_stricthashmap_entries *array)
 {
-	uint32_t len = array->nNumOfElements;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
-	}
-
-	zend_array *values = zend_new_array(len);
+	zend_array *values = zend_new_array(array->nNumOfElements);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);
 
@@ -1156,7 +1199,15 @@ static void teds_stricthashmap_entries_return_pairs(teds_stricthashmap_entries *
 			ZEND_HASH_FILL_ADD(&tmp);
 		} TEDS_STRICTHASHMAP_FOREACH_END();
 	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
+	return values;
+}
+static void teds_stricthashmap_entries_return_pairs(teds_stricthashmap_entries *array, zval *return_value)
+{
+	if (!array->nNumOfElements) {
+		RETURN_EMPTY_ARRAY();
+	}
+
+	RETURN_ARR(teds_stricthashmap_entries_to_refcounted_pairs(array));
 }
 
 PHP_METHOD(Teds_StrictHashMap, toPairs)
@@ -1281,7 +1332,7 @@ PHP_MINIT_FUNCTION(teds_stricthashmap)
 	teds_handler_StrictHashMap.offset          = XtOffsetOf(teds_stricthashmap, std);
 	teds_handler_StrictHashMap.clone_obj       = teds_stricthashmap_clone;
 	teds_handler_StrictHashMap.count_elements  = teds_stricthashmap_count_elements;
-	teds_handler_StrictHashMap.get_properties  = teds_stricthashmap_get_properties;
+	teds_handler_StrictHashMap.get_properties_for = teds_stricthashmap_get_properties_for;
 	teds_handler_StrictHashMap.get_gc          = teds_stricthashmap_get_gc;
 	teds_handler_StrictHashMap.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_StrictHashMap.free_obj        = teds_stricthashmap_free_storage;

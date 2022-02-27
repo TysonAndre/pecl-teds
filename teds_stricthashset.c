@@ -113,6 +113,7 @@ add_to_hash:
 	const uint32_t nIndex = h | array->nTableMask;
 	array->nNumUsed++;
 	array->nNumOfElements++;
+	array->should_rebuild_properties = true;
 	p->h = h;
 	TEDS_STRICTHASHSET_IT_NEXT(p) = HT_HASH_EX(arData, nIndex);
 	HT_HASH_EX(arData, nIndex) = idx;
@@ -131,12 +132,13 @@ typedef struct _teds_stricthashset_it {
 	zend_ulong           current;
 } teds_stricthashset_it;
 
-static zend_always_inline teds_stricthashset *teds_stricthashset_from_obj(zend_object *obj)
+static zend_always_inline teds_stricthashset *teds_stricthashset_from_object(zend_object *obj)
 {
 	return (teds_stricthashset*)((char*)(obj) - XtOffsetOf(teds_stricthashset, std));
 }
 
-#define Z_STRICTHASHSET_P(zv)  teds_stricthashset_from_obj(Z_OBJ_P((zv)))
+#define teds_stricthashset_entries_from_object(obj)  (&teds_stricthashset_from_object((obj))->array)
+#define Z_STRICTHASHSET_P(zv)  teds_stricthashset_from_object(Z_OBJ_P((zv)))
 #define Z_STRICTHASHSET_ENTRIES_P(zv)  (&Z_STRICTHASHSET_P((zv))->array)
 
 static zend_always_inline bool teds_stricthashset_entries_uninitialized(teds_stricthashset_entries *array)
@@ -389,7 +391,7 @@ void teds_stricthashset_entries_dtor(teds_stricthashset_entries *array)
 
 static HashTable* teds_stricthashset_get_gc(zend_object *obj, zval **table, int *table_count)
 {
-	teds_stricthashset *intern = teds_stricthashset_from_obj(obj);
+	teds_stricthashset *intern = teds_stricthashset_from_object(obj);
 	zend_get_gc_buffer *gc_buffer = zend_get_gc_buffer_create();
 	if (intern->array.nNumOfElements > 0) {
 		zval *val;
@@ -400,30 +402,48 @@ static HashTable* teds_stricthashset_get_gc(zend_object *obj, zval **table, int 
 	}
 	zend_get_gc_buffer_use(gc_buffer, table, table_count);
 
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
+	return obj->properties;
 }
 
-static HashTable* teds_stricthashset_get_properties(zend_object *obj)
+static HashTable* teds_stricthashset_get_and_populate_properties(zend_object *obj)
 {
-	teds_stricthashset *intern = teds_stricthashset_from_obj(obj);
-	uint32_t len = intern->array.nNumOfElements;
+	teds_stricthashset_entries *const array = teds_stricthashset_entries_from_object(obj);
 	HashTable *ht = zend_std_get_properties(obj);
-	uint32_t old_length = zend_hash_num_elements(ht);
+
+	/* Re-initialize properties array */
+	/*
+	 * Usually, the reference count of the hash table is 1,
+	 * except during cyclic reference cycles.
+	 *
+	 * Maintain the DEBUG invariant that a hash table isn't modified during iteration,
+	 * and avoid unnecessary work rebuilding a hash table for unmodified properties.
+	 *
+	 * See https://github.com/php/php-src/issues/8079 and tests/Deque/var_export_recursion.phpt
+	 * Also see https://github.com/php/php-src/issues/8044 for alternate considered approaches.
+	 */
+	if (!array->should_rebuild_properties) {
+		return ht;
+	}
+	array->should_rebuild_properties = false;
+	const uint32_t len = array->nNumOfElements;
+	const uint32_t old_length = zend_hash_num_elements(ht);
+	if (!len) {
+		if (old_length > 0) {
+			zend_hash_clean(ht);
+		}
+		return ht;
+	}
 	/* Initialize properties array */
 	uint32_t i = 0;
 	zval *val;
-	ZEND_ASSERT(len <= intern->array.nNumUsed);
-	TEDS_STRICTHASHSET_FOREACH_VAL(&intern->array, val) {
+	ZEND_ASSERT(len <= array->nNumUsed);
+	TEDS_STRICTHASHSET_FOREACH_CHECK_MODIFY_VAL(array, val) {
 		Z_TRY_ADDREF_P(val);
 		zend_hash_index_update(ht, i, val);
 		i++;
 	} TEDS_STRICTHASHSET_FOREACH_END();
 
-	ZEND_ASSERT(i == len);
-
-	for (uint32_t i = len; i < old_length; i++) {
+	for (; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
 
@@ -436,9 +456,35 @@ static HashTable* teds_stricthashset_get_properties(zend_object *obj)
 	return ht;
 }
 
+static zend_array *teds_stricthashset_entries_to_refcounted_array(teds_stricthashset_entries *array);
+
+static HashTable* teds_stricthashset_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
+{
+	teds_stricthashset_entries *array = teds_stricthashset_entries_from_object(obj);
+	if (!array->nNumOfElements && !obj->properties) {
+		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
+		return (HashTable*)&zend_empty_array;
+	}
+	switch (purpose) {
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+		case ZEND_PROP_PURPOSE_VAR_EXPORT:
+		case ZEND_PROP_PURPOSE_DEBUG: {
+			HashTable *ht = teds_stricthashset_get_and_populate_properties(obj);
+			GC_TRY_ADDREF(ht);
+			return ht;
+		}
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+			return teds_stricthashset_entries_to_refcounted_array(array);
+		default:
+			ZEND_UNREACHABLE();
+			return NULL;
+	}
+}
+
 static void teds_stricthashset_free_storage(zend_object *object)
 {
-	teds_stricthashset *intern = teds_stricthashset_from_obj(object);
+	teds_stricthashset *intern = teds_stricthashset_from_object(object);
 	teds_stricthashset_entries_dtor(&intern->array);
 	zend_object_std_dtor(&intern->std);
 }
@@ -456,7 +502,7 @@ static zend_object *teds_stricthashset_new_ex(zend_class_entry *class_type, zend
 	intern->std.handlers = &teds_handler_StrictHashSet;
 
 	if (orig && clone_orig) {
-		teds_stricthashset *other = teds_stricthashset_from_obj(orig);
+		teds_stricthashset *other = teds_stricthashset_from_object(orig);
 		teds_stricthashset_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.arData = NULL;
@@ -484,7 +530,7 @@ static int teds_stricthashset_count_elements(zend_object *object, zend_long *cou
 {
 	teds_stricthashset *intern;
 
-	intern = teds_stricthashset_from_obj(object);
+	intern = teds_stricthashset_from_object(object);
 	*count = intern->array.nNumOfElements;
 	return SUCCESS;
 }
@@ -708,14 +754,14 @@ PHP_METHOD(Teds_StrictHashSet, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_stricthashset_new(teds_ce_StrictHashSet);
-	teds_stricthashset *intern = teds_stricthashset_from_obj(object);
+	teds_stricthashset *intern = teds_stricthashset_from_object(object);
 	teds_stricthashset_entries_init_from_array(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
 }
 
-static zend_array *teds_stricthashset_create_array_copy(teds_stricthashset *intern) {
-	const uint32_t len = intern->array.nNumOfElements;
+static zend_array *teds_stricthashset_entries_to_refcounted_array(teds_stricthashset_entries *array) {
+	const uint32_t len = array->nNumOfElements;
 	zend_array *values = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);
@@ -723,7 +769,7 @@ static zend_array *teds_stricthashset_create_array_copy(teds_stricthashset *inte
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
 		zval *tmp;
-		TEDS_STRICTHASHSET_FOREACH_VAL(&intern->array, tmp) {
+		TEDS_STRICTHASHSET_FOREACH_VAL(array, tmp) {
 			Z_TRY_ADDREF_P(tmp);
 			ZEND_HASH_FILL_ADD(tmp);
 		} TEDS_STRICTHASHSET_FOREACH_END();
@@ -734,13 +780,12 @@ static zend_array *teds_stricthashset_create_array_copy(teds_stricthashset *inte
 PHP_METHOD(Teds_StrictHashSet, values)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_stricthashset *intern = Z_STRICTHASHSET_P(ZEND_THIS);
-	const uint32_t len = intern->array.nNumOfElements;
-	if (!len) {
+	teds_stricthashset_entries *array = Z_STRICTHASHSET_ENTRIES_P(ZEND_THIS);
+	if (!array->nNumOfElements) {
 		/* NOTE: This macro sets immutable gc flags, differently from RETURN_ARR */
 		RETURN_EMPTY_ARRAY();
 	}
-	RETURN_ARR(teds_stricthashset_create_array_copy(intern));
+	RETURN_ARR(teds_stricthashset_entries_to_refcounted_array(array));
 }
 
 PHP_METHOD(Teds_StrictHashSet, toArray)
@@ -799,6 +844,7 @@ static bool teds_stricthashset_entries_remove_key(teds_stricthashset_entries *ar
 	}
 
 	array->nNumOfElements--;
+	array->should_rebuild_properties = true;
 	if (array->nNumUsed - 1 == idx) {
 		do {
 			array->nNumUsed--;
@@ -895,7 +941,7 @@ PHP_MINIT_FUNCTION(teds_stricthashset)
 	teds_handler_StrictHashSet.offset          = XtOffsetOf(teds_stricthashset, std);
 	teds_handler_StrictHashSet.clone_obj       = teds_stricthashset_clone;
 	teds_handler_StrictHashSet.count_elements  = teds_stricthashset_count_elements;
-	teds_handler_StrictHashSet.get_properties  = teds_stricthashset_get_properties;
+	teds_handler_StrictHashSet.get_properties_for = teds_stricthashset_get_properties_for;
 	teds_handler_StrictHashSet.get_gc          = teds_stricthashset_get_gc;
 	teds_handler_StrictHashSet.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_StrictHashSet.free_obj        = teds_stricthashset_free_storage;

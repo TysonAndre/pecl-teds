@@ -27,29 +27,56 @@ final class StrictSortedVectorMap implements \IteratorAggregate, Map, \JsonSeria
 {
     /** Construct the StrictSortedVectorMap from the keys and values of the Traversable/array. */
     public function __construct(iterable $iterator = []) {}
-    /* Returns an iterator over the keys and values of the StrictSortedVectorMap */
+    /**
+     * Returns an iterator over the keys and values of the StrictSortedVectorMap
+     * @implementation-alias Teds\MutableIterable::getIterator
+     */
     public function getIterator(): \InternalIterator {}
-    /** Returns the number of elements in the StrictSortedVectorMap. */
+    /**
+     * Returns the number of elements in the StrictSortedVectorMap.
+     * @implementation-alias Teds\MutableIterable::count
+     */
     public function count(): int {}
-    /** Returns true if there are 0 elements in the StrictSortedVectorMap. */
+    /**
+     * Returns true if there are 0 elements in the StrictSortedVectorMap.
+     * @implementation-alias Teds\MutableIterable::isEmpty
+     */
     public function isEmpty(): bool {}
-    /** Removes all elements from the StrictSortedVectorMap. */
+    /**
+     * Removes all elements from the StrictSortedVectorMap.
+     * @implementation-alias Teds\MutableIterable::clear
+     */
     public function clear(): void {}
-    /** Converts this to [[key1, value1], [key2, value2]] */
+    /**
+     * Converts this to [[key1, value1], [key2, value2]]
+     * @implementation-alias Teds\MutableIterable::toPairs
+     */
     public function toPairs(): array {}
     /** Create this from [[key1, value1], [key2, value2]] */
     public static function fromPairs(iterable $pairs): StrictSortedVectorMap {}
 
+    /**
+     * @implementation-alias Teds\MutableIterable::__serialize
+     */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
     /** Construct the StrictSortedVectorMap from the keys and values of the array ([[key1, value1], [key2, value2]]) */
     public static function __set_state(array $array): StrictSortedVectorMap {}
 
+    /**
+     * @implementation-alias Teds\MutableIterable::toArray
+     */
     public function toArray(): array {}
-    /** Returns a list of the values in order of insertion. */
+    /**
+     * Returns a list of the values sorted by the corresponding key.
+     * @implementation-alias Teds\MutableIterable::values
+     */
     public function values(): array {}
 
-    /** Returns a list of the keys in order of insertion. */
+    /**
+     * Returns a list of the keys sorted by key
+     * @implementation-alias Teds\MutableIterable::keys
+     */
     public function keys(): array {}
 
     // first/last matches array_key_first/last, bottom/top matches use for SplDoublyLinkedList.
@@ -75,18 +102,19 @@ final class StrictSortedVectorMap implements \IteratorAggregate, Map, \JsonSeria
     public function topKey(): mixed {}
 
     /**
-     * Pops the [key, value] entry from the end of the StrictTreeSet.
-     * @throws \UnderflowException if the StrictTreeSet is empty
+     * Pops the [key, value] entry from the end of the StrictSortedVectorMap.
+     * @throws \UnderflowException if the StrictSortedVectorMap is empty
+     * @implementation-alias Teds\MutableIterable::pop
      */
     public function pop(): array {}
     /**
-     * Shifts the [key, value] entry from the front of the StrictTreeSet
-     * @throws \UnderflowException if the StrictTreeSet is empty
+     * Shifts the [key, value] entry from the front of the StrictSortedVectorMap
+     * @throws \UnderflowException if the StrictSortedVectorMap is empty
      */
     public function shift(): mixed {}
     /**
      * Returns the value for the given key.
-     * @throws \UnderflowException if the StrictTreeSet is empty
+     * @throws \UnderflowException if the StrictSortedVectorMap is empty
      * @see StrictSortedVectorMap::get
      */
     public function offsetGet(mixed $key): mixed {}
@@ -111,11 +139,12 @@ final class StrictSortedVectorMap implements \IteratorAggregate, Map, \JsonSeria
 
     /**
      * Returns true if there exists a value === $value in this StrictSortedVectorMap.
-     * @implementation-alias Teds\StrictSortedVectorMap::contains
+     * @implementation-alias Teds\MutableIterable::contains
      */
     public function containsValue(mixed $value): bool {}
     /**
      * Returns true if there exists a value === $value in this StrictSortedVectorMap.
+     * @implementation-alias Teds\MutableIterable::contains
      */
     public function contains(mixed $value): bool {}
 
@@ -129,7 +158,7 @@ final class StrictSortedVectorMap implements \IteratorAggregate, Map, \JsonSeria
 
     /**
      * Returns [[key1, value1], [key2, value2]]
-     * @implementation-alias Teds\StrictSortedVectorMap::toPairs
+     * @implementation-alias Teds\MutableIterable::toPairs
      */
     public function jsonSerialize(): array {}
 }

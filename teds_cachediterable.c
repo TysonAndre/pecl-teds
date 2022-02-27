@@ -349,24 +349,23 @@ static HashTable* teds_cachediterable_get_gc(zend_object *obj, zval **table, int
 		*table_count = (int)(len * 2);
 	}
 
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
+	return obj->properties;
 }
 
 static HashTable* teds_cachediterable_get_properties(zend_object *obj)
 {
 	teds_cachediterable_entries *array = &teds_cachediterable_from_object(obj)->array;
 
-	/* Fetch all of the elements so that properties are only built once and var_export shows the full state. */
+	/* Fetch all of the elements so that properties are only built once and var_export shows the full state.
+	 * If this threw already, stop there without throwing. */
 	teds_cachediterable_entries_fetch_all(array);
 
-	uint32_t len = array->size;
-	HashTable *ht = zend_std_get_properties(obj);
+	const uint32_t len = array->size;
 	if (!len) {
 		/* Nothing to add or remove - this is immutable. */
-		return ht;
+		return (HashTable*)&zend_empty_array;
 	}
+	HashTable *ht = zend_std_get_properties(obj);
 	if (zend_hash_num_elements(ht)) {
 		/* Already built. This is immutable there is no need to rebuild it. */
 		return ht;

@@ -12,6 +12,6 @@
 
 extern zend_class_entry *teds_ce_EmptySequence;
 
-PHP_MINIT_FUNCTION(teds_emptysequence);
+PHP_MINIT_FUNCTION(teds_emptycollection);
 
 #endif	/* TEDS_EMPTYSEQUENCE_H */

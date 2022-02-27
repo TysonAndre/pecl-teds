@@ -267,9 +267,7 @@ HashTable* teds_vector_get_gc(zend_object *obj, zval **table, int *n)
 	*table = intern->array.entries;
 	*n = (int)intern->array.size;
 
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
+	return obj->properties;
 }
 
 static HashTable* teds_vector_get_and_populate_properties(zend_object *obj)
@@ -331,6 +329,7 @@ HashTable* teds_vector_get_properties_for(zend_object *obj, zend_prop_purpose pu
 	teds_vector_entries *array = &teds_vector_from_object(obj)->array;
 	if (!array->size && !obj->properties) {
 		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
+		/* zend_empty_array is flagged as immutable. */
 		return (HashTable*)&zend_empty_array;
 	}
 	switch (purpose) {
@@ -1239,10 +1238,11 @@ PHP_METHOD(Teds_Vector, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	teds_vector *const intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector_entries *const array = &intern->array;
 	const uint32_t old_size = array->size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\Vector", 0);
+		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot pop from empty %s", ZSTR_VAL(intern->std.ce->name));
 		RETURN_THROWS();
 	}
 	const uint32_t old_capacity = array->capacity;
@@ -1263,9 +1263,10 @@ PHP_METHOD(Teds_Vector, first)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	const teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	const teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	const teds_vector_entries *array = &intern->array;
 	if (array->size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read first value of empty Teds\\Vector", 0);
+		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot read first value of empty %s", ZSTR_VAL(intern->std.ce->name));
 		RETURN_THROWS();
 	}
 	RETVAL_COPY(&array->entries[0]);
@@ -1275,10 +1276,11 @@ PHP_METHOD(Teds_Vector, last)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	const teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	const teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	const teds_vector_entries *array = &intern->array;
 	const uint32_t old_size = array->size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read last value of empty Teds\\Vector", 0);
+		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot read last value of empty %s", ZSTR_VAL(intern->std.ce->name));
 		RETURN_THROWS();
 	}
 	RETVAL_COPY(&array->entries[array->size - 1]);
@@ -1288,10 +1290,11 @@ PHP_METHOD(Teds_Vector, shift)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_vector_entries *array = Z_VECTOR_ENTRIES_P(ZEND_THIS);
+	teds_vector *intern = Z_VECTOR_P(ZEND_THIS);
+	teds_vector_entries *array = &intern->array;
 	const uint32_t old_size = array->size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty Teds\\Vector", 0);
+		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot shift from empty %s", ZSTR_VAL(intern->std.ce->name));
 		RETURN_THROWS();
 	}
 	const uint32_t old_capacity = array->capacity;

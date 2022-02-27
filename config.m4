@@ -112,7 +112,7 @@ if test "$PHP_TEDS" != "no"; then
 
   PHP_ADD_BUILD_DIR($abs_builddir/src , 1)
 
-  PHP_TEDS_SRC_FILES="teds.c teds_cachediterable.c teds_immutablesequence.c teds_emptycollection.c teds_immutableiterable.c teds_mutableiterable.c teds_vector.c teds_deque.c teds_stricttreemap.c teds_stricttreeset.c teds_strictheap.c teds_stricthashmap.c teds_stricthashset.c teds_strictsortedvectorset.c teds_strictsortedvectormap.c teds_lowmemoryvector.c teds_intvector.c teds_immutablesortedstringset.c teds_bitvector.c teds_interfaces.c teds_exceptions.c"
+  PHP_TEDS_SRC_FILES="teds.c teds_cachediterable.c teds_immutablesequence.c teds_emptycollection.c teds_immutableiterable.c teds_mutableiterable.c teds_vector.c teds_deque.c teds_stricttreemap.c teds_stricttreeset.c teds_strictheap.c teds_stricthashmap.c teds_stricthashset.c teds_strictsortedvectorset.c teds_strictsortedvectormap.c teds_lowmemoryvector.c teds_intvector.c teds_immutablesortedstringset.c teds_bitvector.c teds_interfaces.c teds_exceptions.c teds_util.c"
 
   PHP_NEW_EXTENSION(teds, $PHP_TEDS_SRC_FILES, $ext_shared)
 fi

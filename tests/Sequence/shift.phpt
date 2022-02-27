@@ -53,15 +53,7 @@ string(2) "v1"
 string(2) "v0"
 
 test_shift_string: Teds\LowMemoryVector:
-object(Teds\LowMemoryVector)#1 (4) {
-  [0]=>
-  string(5) "extra"
-  [1]=>
-  string(2) "v2"
-  [2]=>
-  string(2) "v1"
-  [3]=>
-  string(2) "v0"
+object(Teds\LowMemoryVector)#1 (0) {
 }
 string(5) "extra"
 string(2) "v2"
@@ -98,13 +90,7 @@ int(10)
 int(100)
 
 test_shift_int: Teds\LowMemoryVector:
-object(Teds\LowMemoryVector)#1 (3) {
-  [0]=>
-  int(11)
-  [1]=>
-  int(10)
-  [2]=>
-  int(100)
+object(Teds\LowMemoryVector)#1 (0) {
 }
 int(11)
 int(10)

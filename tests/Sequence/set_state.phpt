@@ -24,7 +24,7 @@ foreach ([
 }
 
 ?>
---EXPECT--
+--EXPECTF--
 Test Teds\Deque
 Teds\Deque::__set_state(array(
 ))
@@ -47,7 +47,7 @@ Teds\Deque::__set_state(array(
     1 => NULL,
   ),
 ))
-object(Teds\Deque)#2 (3) {
+object(Teds\Deque)#%d (3) {
   [0]=>
   string(9) "A LITERAL"
   [1]=>
@@ -60,7 +60,7 @@ object(Teds\Deque)#2 (3) {
   [2]=>
   array(2) {
     [0]=>
-    object(stdClass)#1 (1) {
+    object(stdClass)#%d (1) {
       ["key"]=>
       string(5) "value"
     }
@@ -81,7 +81,7 @@ array(3) {
   [2]=>
   array(2) {
     [0]=>
-    object(stdClass)#1 (1) {
+    object(stdClass)#%d (1) {
       ["key"]=>
       string(5) "value"
     }
@@ -111,7 +111,7 @@ Teds\Vector::__set_state(array(
     1 => NULL,
   ),
 ))
-object(Teds\Vector)#4 (3) {
+object(Teds\Vector)#%d (3) {
   [0]=>
   string(9) "A LITERAL"
   [1]=>
@@ -124,7 +124,7 @@ object(Teds\Vector)#4 (3) {
   [2]=>
   array(2) {
     [0]=>
-    object(stdClass)#3 (1) {
+    object(stdClass)#%d (1) {
       ["key"]=>
       string(5) "value"
     }
@@ -145,7 +145,7 @@ array(3) {
   [2]=>
   array(2) {
     [0]=>
-    object(stdClass)#3 (1) {
+    object(stdClass)#%d (1) {
       ["key"]=>
       string(5) "value"
     }
@@ -161,26 +161,7 @@ key=1 value=["first","x"]
 key=2 value=[{"key":"value"},null]
 Teds\LowMemoryVector::__set_state(array(
 ))
-object(Teds\LowMemoryVector)#1 (3) {
-  [0]=>
-  string(9) "A LITERAL"
-  [1]=>
-  array(2) {
-    [0]=>
-    string(5) "first"
-    [1]=>
-    string(1) "x"
-  }
-  [2]=>
-  array(2) {
-    [0]=>
-    object(stdClass)#2 (1) {
-      ["key"]=>
-      string(5) "value"
-    }
-    [1]=>
-    NULL
-  }
+object(Teds\LowMemoryVector)#%d (0) {
 }
 array(3) {
   [0]=>
@@ -195,7 +176,7 @@ array(3) {
   [2]=>
   array(2) {
     [0]=>
-    object(stdClass)#2 (1) {
+    object(stdClass)#%d (1) {
       ["key"]=>
       string(5) "value"
     }
@@ -225,7 +206,7 @@ Teds\ImmutableSequence::__set_state(array(
     1 => NULL,
   ),
 ))
-object(Teds\ImmutableSequence)#3 (3) {
+object(Teds\ImmutableSequence)#%d (3) {
   [0]=>
   string(9) "A LITERAL"
   [1]=>
@@ -238,7 +219,7 @@ object(Teds\ImmutableSequence)#3 (3) {
   [2]=>
   array(2) {
     [0]=>
-    object(stdClass)#4 (1) {
+    object(stdClass)#%d (1) {
       ["key"]=>
       string(5) "value"
     }
@@ -259,7 +240,7 @@ array(3) {
   [2]=>
   array(2) {
     [0]=>
-    object(stdClass)#4 (1) {
+    object(stdClass)#%d (1) {
       ["key"]=>
       string(5) "value"
     }

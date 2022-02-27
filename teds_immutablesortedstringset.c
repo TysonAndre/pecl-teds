@@ -253,23 +253,6 @@ static void teds_immutablesortedstringset_entries_copy_ctor(teds_immutablesorted
 	}
 }
 
-static HashTable* teds_immutablesortedstringset_get_gc(zend_object *obj, zval **table, int *n)
-{
-	/* Zend/zend_gc.c does not initialize table or n. So we need to set n to 0 at minimum. */
-	*n = 0;
-	(void) table;
-	(void) obj;
-	/* Nothing needs to be garbage collected */
-	return NULL;
-}
-
-static HashTable* teds_immutablesortedstringset_get_properties(zend_object *obj)
-{
-	(void)obj;
-	/* Thankfully, anything using Z_OBJPROP_P for infinite recursion detection (var_export) won't need to worry about infinite recursion, all fields are integers and there are no properties. */
-	return (HashTable*)&zend_empty_array;
-}
-
 static HashTable* teds_immutablesortedstringset_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
 {
 	(void)purpose;
@@ -954,9 +937,9 @@ PHP_MINIT_FUNCTION(teds_immutablesortedstringset)
 	teds_handler_ImmutableSortedStringSet.offset          = XtOffsetOf(teds_immutablesortedstringset, std);
 	teds_handler_ImmutableSortedStringSet.clone_obj       = teds_immutablesortedstringset_clone;
 	teds_handler_ImmutableSortedStringSet.count_elements  = teds_immutablesortedstringset_count_elements;
-	teds_handler_ImmutableSortedStringSet.get_properties  = teds_immutablesortedstringset_get_properties;
+	teds_handler_ImmutableSortedStringSet.get_properties  = teds_noop_empty_array_get_properties;
 	teds_handler_ImmutableSortedStringSet.get_properties_for = teds_immutablesortedstringset_get_properties_for;
-	teds_handler_ImmutableSortedStringSet.get_gc          = teds_immutablesortedstringset_get_gc;
+	teds_handler_ImmutableSortedStringSet.get_gc          = teds_noop_get_gc;
 	teds_handler_ImmutableSortedStringSet.free_obj        = teds_immutablesortedstringset_free_storage;
 
 	/*

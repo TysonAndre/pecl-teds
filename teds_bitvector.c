@@ -265,23 +265,6 @@ static void teds_bitvector_entries_copy_ctor(teds_bitvector_entries *to, const t
 	memcpy(to->entries_bits, from->entries_bits, BYTES_FOR_BIT_SIZE(bit_size));
 }
 
-static HashTable* teds_bitvector_get_gc(zend_object *obj, zval **table, int *n)
-{
-	/* Zend/zend_gc.c does not initialize table or n. So we need to set n to 0 at minimum. */
-	*n = 0;
-	(void) table;
-	(void) obj;
-	/* Nothing needs to be garbage collected */
-	return NULL;
-}
-
-static HashTable* teds_bitvector_get_properties(zend_object *obj)
-{
-	(void)obj;
-	/* Thankfully, anything using Z_OBJPROP_P for infinite recursion detection (var_export) won't need to worry about infinite recursion, all fields are integers and there are no properties. */
-	return (HashTable*)&zend_empty_array;
-}
-
 static HashTable* teds_bitvector_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
 {
 	(void)purpose;
@@ -835,9 +818,8 @@ static zend_array *teds_bitvector_entries_to_refcounted_array(const teds_bitvect
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
 		for (size_t i = 0; i < len; i++) {
-			zval tmp;
-			ZVAL_BOOL(&tmp, ((bit_values[i >> 3] >> (i & 7)) & 1));
-			ZEND_HASH_FILL_ADD(&tmp);
+			ZVAL_BOOL(TEDS_FILL_VAL, ((bit_values[i >> 3] >> (i & 7)) & 1));
+			ZEND_HASH_FILL_NEXT();
 		}
 	} ZEND_HASH_FILL_END();
 	return values;
@@ -1610,9 +1592,9 @@ PHP_MINIT_FUNCTION(teds_bitvector)
 	teds_handler_BitVector.offset          = XtOffsetOf(teds_bitvector, std);
 	teds_handler_BitVector.clone_obj       = teds_bitvector_clone;
 	teds_handler_BitVector.count_elements  = teds_bitvector_count_elements;
-	teds_handler_BitVector.get_properties  = teds_bitvector_get_properties;
+	teds_handler_BitVector.get_properties  = teds_noop_empty_array_get_properties;
 	teds_handler_BitVector.get_properties_for = teds_bitvector_get_properties_for;
-	teds_handler_BitVector.get_gc          = teds_bitvector_get_gc;
+	teds_handler_BitVector.get_gc          = teds_noop_get_gc;
 	teds_handler_BitVector.free_obj        = teds_bitvector_free_storage;
 
 	teds_handler_BitVector.read_dimension  = teds_bitvector_read_dimension;

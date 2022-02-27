@@ -49,66 +49,37 @@ Unserialized: object(Teds\LowMemoryVector)#3 (0) {
 [0]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:2;i:1;s:1:\"\x00\";}"
 
-Unserialized: object(Teds\LowMemoryVector)#3 (1) {
-  [0]=>
-  int(0)
+Unserialized: object(Teds\LowMemoryVector)#3 (0) {
 }
 [null]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:1;i:1;s:2:\"\x01\x03\";}"
 
-Unserialized: object(Teds\LowMemoryVector)#3 (1) {
-  [0]=>
-  NULL
+Unserialized: object(Teds\LowMemoryVector)#3 (0) {
 }
 [127,-128]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:2;i:1;s:2:\"\x7f\x80\";}"
 
-Unserialized: object(Teds\LowMemoryVector)#3 (2) {
-  [0]=>
-  int(127)
-  [1]=>
-  int(-128)
+Unserialized: object(Teds\LowMemoryVector)#3 (0) {
 }
 [256,32767,-32768]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:3;i:1;s:6:\"\x00\x01\xff\x7f\x00\x80\";}"
 
-Unserialized: object(Teds\LowMemoryVector)#3 (3) {
-  [0]=>
-  int(256)
-  [1]=>
-  int(32767)
-  [2]=>
-  int(-32768)
+Unserialized: object(Teds\LowMemoryVector)#3 (0) {
 }
 [32767,-2147483648]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:4;i:1;s:8:\"\xff\x7f\x00\x00\x00\x00\x00\x80\";}"
 
-Unserialized: object(Teds\LowMemoryVector)#3 (2) {
-  [0]=>
-  int(32767)
-  [1]=>
-  int(-2147483648)
+Unserialized: object(Teds\LowMemoryVector)#3 (0) {
 }
 [32767,-2147483648,[]]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:7;i:1;a:3:{i:0;i:32767;i:1;i:-2147483648;i:2;a:0:{}}}"
 
-Unserialized: object(Teds\LowMemoryVector)#3 (3) {
-  [0]=>
-  int(32767)
-  [1]=>
-  int(-2147483648)
-  [2]=>
-  array(0) {
-  }
+Unserialized: object(Teds\LowMemoryVector)#3 (0) {
 }
 ["first","second"]
 "O:20:\"Teds\\LowMemoryVector\":2:{i:0;i:7;i:1;a:2:{i:0;s:5:\"first\";i:1;s:6:\"second\";}}"
 
-Unserialized: object(Teds\LowMemoryVector)#3 (2) {
-  [0]=>
-  string(5) "first"
-  [1]=>
-  string(6) "second"
+Unserialized: object(Teds\LowMemoryVector)#3 (0) {
 }
 Caught Error: Cannot create dynamic property Teds\LowMemoryVector::$dynamicProp
 O:20:"Teds\LowMemoryVector":2:{i:0;i:7;i:1;a:1:{i:0;O:8:"stdClass":0:{}}}
