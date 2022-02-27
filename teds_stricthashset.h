@@ -73,23 +73,22 @@ typedef struct _teds_stricthashset_entry {
 
 /* See Zend/zend_types.h for the zend_array layout this is based on. */
 typedef struct _teds_stricthashset_entries {
-	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
-	uint32_t nNumOfElements; /* Number of elements in this set */
-	uint32_t nTableSize; /* Power of 2 size */
-	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHSET_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
 	union {
 		teds_stricthashset_entry *arData;
 		uint32_t *arHash;
 	};
+	uint32_t nNumOfElements; /* Number of elements in this set, a.k.a. count() */
+	uint32_t nTableSize; /* Power of 2 size, aka capacity() */
+	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
+	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHSET_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
 } teds_stricthashset_entries;
 
 typedef struct _teds_stricthashset {
 	teds_stricthashset_entries	array;
-	zend_object				std;
+	zend_object				    std;
 } teds_stricthashset;
 
 extern const uint32_t teds_stricthashset_empty_bucket_list[2];
-#define teds_stricthashset_empty_entry_list ((teds_stricthashset_entry *) &teds_stricthashset_empty_bucket_list[2])
 
 void teds_stricthashset_entries_init_from_array(teds_stricthashset_entries *array, zend_array *values);
 
@@ -103,7 +102,7 @@ void teds_stricthashset_entries_dtor_range(teds_stricthashset_entry *start, size
 
 static zend_always_inline void teds_stricthashset_entries_array_free(teds_stricthashset_entry *entries, size_t capacity) {
 	ZEND_ASSERT(teds_is_pow2(capacity));
-	ZEND_ASSERT(entries != teds_stricthashset_empty_entry_list);
+	ZEND_ASSERT(entries != empty_entry_list);
 	uint32_t *data = ((uint32_t *)entries) - 2 * capacity;
 	efree(data);
 }
@@ -121,12 +120,11 @@ static zend_always_inline bool teds_stricthashset_entries_empty_capacity(teds_st
 {
 	ZEND_ASSERT(array->nNumOfElements <= array->nTableSize);
 	if (array->nTableSize > 0) {
-		ZEND_ASSERT(array->arData != teds_stricthashset_empty_entry_list);
+		ZEND_ASSERT(array->arData != empty_entry_list);
 		return false;
 	}
-	ZEND_ASSERT(array->arData == teds_stricthashset_empty_entry_list || array->arData == NULL);
+	ZEND_ASSERT(array->arData == empty_entry_list || array->arData == NULL);
 	return true;
 }
-
 
 #endif	/* TEDS_STRICTHASHSET_H */

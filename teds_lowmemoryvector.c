@@ -40,10 +40,6 @@
 zend_object_handlers teds_handler_LowMemoryVector;
 zend_class_entry *teds_ce_LowMemoryVector;
 
-/* This is a placeholder value to distinguish between empty and uninitialized LowMemoryVector instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const zval empty_entry_list[1];
-
 #define _LMV_TYPE_BOOL_BITSET   0
 #define LMV_TYPE_UNINITIALIZED  0
 #define LMV_TYPE_BOOL_OR_NULL   1
@@ -109,8 +105,6 @@ static const uint8_t teds_lmv_shift_for_element[LMV_TYPE_COUNT] = {
 	} while (0)
 
 typedef struct _teds_lowmemoryvector_entries {
-	uint32_t size;
-	uint32_t capacity;
 	union {
 		uint8_t     *entries_uint8;
 		int8_t      *entries_int8;
@@ -124,6 +118,8 @@ typedef struct _teds_lowmemoryvector_entries {
 		zval        *entries_zval;
 		void        *entries_raw;
 	};
+	uint32_t size;
+	uint32_t capacity;
 	int8_t type_tag;
 } teds_lowmemoryvector_entries;
 

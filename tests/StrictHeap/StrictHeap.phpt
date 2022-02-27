@@ -31,7 +31,9 @@ call_user_func(function () {
     foreach (['19', '9', '6', '1a', '2b', '3', '2', false, true, null, 1, 1.5, 2, [1], [0], [2]] as $v) {
         $minHeap->add($v);
     }
+    var_dump($minHeap);
     foreach ($minHeap as $value) { echo "foreach: "; var_dump($value); }
+    var_dump($minHeap);
     echo "Test StrictMaxHeap\n";
     $maxHeap = new Teds\StrictMaxHeap();
     foreach (['19', '9', '6', '1a', '2b', '3', '2', false, true, null, 1, 1.5, 2, [1], [0], [2]] as $v) {
@@ -72,6 +74,49 @@ next: array(1) {
   int(2)
 }
 Test StrictMinHeap
+object(Teds\StrictMinHeap)#2 (16) {
+  [0]=>
+  NULL
+  [1]=>
+  bool(false)
+  [2]=>
+  bool(true)
+  [3]=>
+  int(2)
+  [4]=>
+  string(2) "19"
+  [5]=>
+  int(1)
+  [6]=>
+  string(2) "1a"
+  [7]=>
+  string(1) "2"
+  [8]=>
+  string(1) "9"
+  [9]=>
+  string(2) "2b"
+  [10]=>
+  string(1) "3"
+  [11]=>
+  float(1.5)
+  [12]=>
+  string(1) "6"
+  [13]=>
+  array(1) {
+    [0]=>
+    int(1)
+  }
+  [14]=>
+  array(1) {
+    [0]=>
+    int(0)
+  }
+  [15]=>
+  array(1) {
+    [0]=>
+    int(2)
+  }
+}
 foreach: NULL
 foreach: bool(false)
 foreach: bool(true)
@@ -97,8 +142,51 @@ foreach: array(1) {
   [0]=>
   int(2)
 }
+object(Teds\StrictMinHeap)#2 (0) {
+}
 Test StrictMaxHeap
-object(Teds\StrictMaxHeap)#3 (0) {
+object(Teds\StrictMaxHeap)#3 (16) {
+  [0]=>
+  array(1) {
+    [0]=>
+    int(2)
+  }
+  [1]=>
+  array(1) {
+    [0]=>
+    int(1)
+  }
+  [2]=>
+  string(1) "3"
+  [3]=>
+  array(1) {
+    [0]=>
+    int(0)
+  }
+  [4]=>
+  string(2) "19"
+  [5]=>
+  string(2) "2b"
+  [6]=>
+  string(1) "2"
+  [7]=>
+  string(1) "9"
+  [8]=>
+  bool(true)
+  [9]=>
+  NULL
+  [10]=>
+  int(1)
+  [11]=>
+  float(1.5)
+  [12]=>
+  int(2)
+  [13]=>
+  string(2) "1a"
+  [14]=>
+  bool(false)
+  [15]=>
+  string(1) "6"
 }
 array(1) {
   [0]=>

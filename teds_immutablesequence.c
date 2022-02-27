@@ -36,10 +36,6 @@
 zend_object_handlers teds_handler_ImmutableSequence;
 zend_class_entry *teds_ce_ImmutableSequence;
 
-/* This is a placeholder value to distinguish between empty and uninitialized ImmutableSequence instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const zval empty_entry_list[1];
-
 /* Differs from a Vector in that there is no excess capacity field. */
 typedef struct _teds_immutablesequence_entries {
 	zval *entries;
@@ -47,8 +43,8 @@ typedef struct _teds_immutablesequence_entries {
 } teds_immutablesequence_entries;
 
 typedef struct _teds_immutablesequence {
-	teds_immutablesequence_entries		array;
-	zend_object				std;
+	teds_immutablesequence_entries array;
+	zend_object				       std;
 } teds_immutablesequence;
 
 /* Used by InternalIterator returned by ImmutableSequence->getIterator() */

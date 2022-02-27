@@ -41,15 +41,11 @@ typedef struct _zval_pair {
 	zval value;
 } zval_pair;
 
-/* This is a placeholder value to distinguish between empty and uninitialized CachedIterable instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const zval_pair empty_entry_list[1];
-
 typedef struct _teds_cachediterable_entries {
 	zval_pair            *entries;
-	zend_object_iterator *iter; /* Null if this is done evaluating the Traversable*/
 	uint32_t              size;
 	uint32_t              capacity;
+	zend_object_iterator *iter; /* Null if this is done evaluating the Traversable*/
 	bool                  end_exception;
 	bool                  is_calling_inner;
 } teds_cachediterable_entries;
@@ -414,7 +410,7 @@ static zend_object *teds_cachediterable_new(zend_class_entry *class_type)
 }
 
 
-static int teds_cachediterable_count_elements(zend_object *object, zend_long *count)
+int teds_size_t_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_cachediterable *intern = teds_cachediterable_from_object(object);
 	*count = intern->array.size;
@@ -1046,7 +1042,7 @@ PHP_MINIT_FUNCTION(teds_cachediterable)
 
 	teds_handler_CachedIterable.offset          = XtOffsetOf(teds_cachediterable, std);
 	teds_handler_CachedIterable.clone_obj       = NULL;
-	teds_handler_CachedIterable.count_elements  = teds_cachediterable_count_elements;
+	teds_handler_CachedIterable.count_elements  = teds_size_t_count_elements;
 	teds_handler_CachedIterable.get_properties  = teds_cachediterable_get_properties;
 	teds_handler_CachedIterable.get_gc          = teds_cachediterable_get_gc;
 	teds_handler_CachedIterable.dtor_obj        = zend_objects_destroy_object;

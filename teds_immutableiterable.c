@@ -41,18 +41,14 @@ typedef struct _zval_pair {
 	zval value;
 } zval_pair;
 
-/* This is a placeholder value to distinguish between empty and uninitialized ImmutableIterable instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const zval_pair empty_entry_list[1];
-
 typedef struct _teds_immutableiterable_entries {
-	uint32_t size;
 	zval_pair *entries;
+	uint32_t   size;
 } teds_immutableiterable_entries;
 
 typedef struct _teds_immutableiterable {
-	teds_immutableiterable_entries		array;
-	zend_object				std;
+	teds_immutableiterable_entries array;
+	zend_object				       std;
 } teds_immutableiterable;
 
 /* Used by InternalIterator returned by ImmutableIterable->getIterator() */

@@ -307,7 +307,11 @@ object(Teds\StrictHashSet)#%d (0) {
 }
 
 Testing Teds\StrictMaxHeap
-object(Teds\StrictMaxHeap)#%d (0) {
+object(Teds\StrictMaxHeap)#%d (2) {
+  [0]=>
+  string(20) "z_Teds\StrictMaxHeap"
+  [1]=>
+  string(20) "v_Teds\StrictMaxHeap"
 }
 values: array(2) {
   [0]=>

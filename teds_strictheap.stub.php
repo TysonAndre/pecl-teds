@@ -23,8 +23,10 @@ final class StrictMinHeap implements \Iterator, Collection
 
     public function extract(): mixed {}
 
+    /** @implementation-alias Teds\Vector::count */
     public function count(): int {}
 
+    /** @implementation-alias Teds\Vector::isEmpty */
     public function isEmpty(): bool {}
 
     public function rewind(): void {}
@@ -43,11 +45,15 @@ final class StrictMinHeap implements \Iterator, Collection
 
     public function valid(): bool {}
 
+    /** @implementation-alias Teds\Vector::clear */
     public function clear(): void {}
 
     public static function __set_state(array $state): StrictMinHeap { }
 
-    /** @psalm-return list<mixed> */
+    /**
+     * @implementation-alias Teds\Vector::toArray
+     * @psalm-return list<mixed>
+     */
     public function values(): array {}
 
     /**
@@ -56,9 +62,12 @@ final class StrictMinHeap implements \Iterator, Collection
      */
     public function toArray(): array {}
 
+    /**
+     * @implementation-alias Teds\Vector::contains
+     */
     public function contains(mixed $value): bool {}
 
-    /** @implementation-alias Teds\StrictMinHeap::values */
+    /** @implementation-alias Teds\Vector::toArray */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
 }
@@ -80,10 +89,10 @@ final class StrictMaxHeap implements \Iterator, Collection
 
     public function extract(): mixed {}
 
-    /** @implementation-alias Teds\StrictMinHeap::count */
+    /** @implementation-alias Teds\Vector::count */
     public function count(): int {}
 
-    /** @implementation-alias Teds\StrictMinHeap::isEmpty */
+    /** @implementation-alias Teds\Vector::isEmpty */
     public function isEmpty(): bool {}
 
     /** @implementation-alias Teds\StrictMinHeap::rewind */
@@ -100,12 +109,12 @@ final class StrictMaxHeap implements \Iterator, Collection
     /** @implementation-alias Teds\StrictMinHeap::valid */
     public function valid(): bool {}
 
-    /** @implementation-alias Teds\StrictMinHeap::clear */
+    /** @implementation-alias Teds\Vector::clear */
     public function clear(): void {}
 
     public static function __set_state(array $state): StrictMaxHeap { }
 
-    /** @implementation-alias Teds\StrictMinHeap::values */
+    /** @implementation-alias Teds\Vector::toArray */
     public function values(): array {}
 
     /**
@@ -115,15 +124,10 @@ final class StrictMaxHeap implements \Iterator, Collection
      */
     public function toArray(): array {}
 
-    /**
-     * @implementation-alias Teds\StrictMinHeap::toArray
-     * @psalm-return array mapping entries to themselves or throwing.
-     * @see self::values
-     */
-    /** @implementation-alias Teds\StrictMinHeap::contains */
+    /** @implementation-alias Teds\Vector::contains */
     public function contains(mixed $value): bool {}
 
-    /** @implementation-alias Teds\StrictMinHeap::values */
+    /** @implementation-alias Teds\Vector::toArray */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
 }

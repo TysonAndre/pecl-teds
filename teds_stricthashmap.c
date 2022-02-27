@@ -152,7 +152,7 @@ static bool teds_stricthashmap_entries_uninitialized(teds_stricthashmap_entries 
 	ZEND_ASSERT(array->nTableMask > 0);
 	ZEND_ASSERT(array->nTableMask <= TEDS_STRICTHASHMAP_MIN_MASK);
 #if ZEND_DEBUG
-	if (array->arData == teds_stricthashmap_empty_entry_list) {
+	if (array->arData == empty_entry_list) {
 		ZEND_ASSERT(array->nTableSize == 0 && array->nTableMask == HT_MIN_MASK);
 	} else {
 		ZEND_ASSERT(array->nTableSize > 0);
@@ -167,7 +167,7 @@ static zend_always_inline void teds_stricthashmap_entries_set_empty_entry_list(t
 	array->nNumOfElements = 0;
 	array->nNumUsed = 0;
 	array->nTableSize = 0;
-	array->arData = teds_stricthashmap_empty_entry_list;
+	array->arData = (void *)empty_entry_list;
 	array->nTableMask = TEDS_STRICTHASHMAP_MIN_MASK;
 }
 

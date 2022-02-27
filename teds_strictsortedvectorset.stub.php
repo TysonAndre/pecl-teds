@@ -31,23 +31,35 @@ final class StrictSortedVectorSet implements \IteratorAggregate, Set, \JsonSeria
      * Elements are iterated over in sorted order.
      */
     public function getIterator(): \InternalIterator {}
-    /** Returns the number of values in the StrictSortedVectorSet. */
+    /**
+     * Returns the number of values in the StrictSortedVectorSet.
+     * @implementation-alias Teds\Vector::count
+     */
     public function count(): int {}
-    /** Returns true if there are 0 values in the StrictSortedVectorSet. */
+    /**
+     * Returns true if there are 0 values in the StrictSortedVectorSet.
+     * @implementation-alias Teds\Vector::isEmpty
+     */
     public function isEmpty(): bool {}
-    /** Removes all elements from the StrictSortedVectorSet. */
+    /**
+     * Removes all elements from the StrictSortedVectorSet.
+     * @implementation-alias Teds\Vector::clear
+     */
     public function clear(): void {}
 
     /**
      * Returns a list of the values in order of insertion.
-     * @implementation-alias Teds\StrictSortedVectorSet::values
+     * @implementation-alias Teds\Vector::toArray
      */
     public function __serialize(): array {}
     public function __unserialize(array $data): void {}
     /** Construct the StrictSortedVectorSet from values of the array. */
     public static function __set_state(array $array): StrictSortedVectorSet {}
 
-    /** Returns a list of the unique values in order of insertion. */
+    /**
+     * Returns a list of the unique values in order of insertion.
+     * @implementation-alias Teds\Vector::toArray
+     */
     public function values(): array {}
 
     /** Returns keys mapped to themselves, like iterator_to_array would return. */
@@ -90,7 +102,7 @@ final class StrictSortedVectorSet implements \IteratorAggregate, Set, \JsonSeria
 
     /**
      * Returns [v1, v2, ...]
-     * @implementation-alias Teds\StrictSortedVectorSet::values
+     * @implementation-alias Teds\Vector::toArray
      */
     public function jsonSerialize(): array {}
 }

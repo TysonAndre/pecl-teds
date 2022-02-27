@@ -17,7 +17,7 @@ namespace Teds;
  * This supports amortized constant time pushing and popping onto the front or back of the Deque.
  *
  * Naming is based on https://www.php.net/spldoublylinkedlist
- * and on array_push/pop/unshift/shift.
+ * and on array_push/pop/unshift/shift and array_key_first.
  */
 final class Deque implements \IteratorAggregate, Sequence, \JsonSerializable
 {

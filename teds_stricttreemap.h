@@ -37,15 +37,15 @@ typedef struct _teds_stricttreemap_tree {
 } teds_stricttreemap_tree;
 
 typedef struct _teds_stricttreemap {
-	teds_stricttreemap_tree	array;
-	zend_object					std;
+	teds_stricttreemap_tree	tree;
+	zend_object				std;
 } teds_stricttreemap;
 
-void teds_stricttreemap_tree_init_from_array(teds_stricttreemap_tree *array, zend_array *values);
+void teds_stricttreemap_tree_init_from_array(teds_stricttreemap_tree *tree, zend_array *values);
 
-void teds_stricttreemap_tree_init_from_traversable(teds_stricttreemap_tree *array, zend_object *obj);
+void teds_stricttreemap_tree_init_from_traversable(teds_stricttreemap_tree *tree, zend_object *obj);
 
-void teds_stricttreemap_tree_dtor(teds_stricttreemap_tree *array);
+void teds_stricttreemap_tree_dtor(teds_stricttreemap_tree *tree);
 
 void teds_stricttreemap_tree_dtor_range(teds_stricttreemap_node *start, size_t from, size_t to);
 
@@ -67,7 +67,7 @@ static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_r
 	return node;
 }
 
-static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_next(teds_stricttreemap_node *node)
+static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_next(const teds_stricttreemap_node *node)
 {
 	/**
 	 * The next node of "a" is "b".  The next node of "b" is "c".
@@ -94,7 +94,7 @@ static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_n
 	}
 }
 
-static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_prev(teds_stricttreemap_node *node)
+static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_get_prev(const teds_stricttreemap_node *node)
 {
 	if (node->left) {
 		return teds_stricttreemap_node_get_rightmost(node->left);
@@ -160,14 +160,14 @@ static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_tree_get_l
  *   - if capacity == 0, then entries == NULL
  *   - if capacity > 0, then entries != NULL
  */
-static zend_always_inline bool teds_stricttreemap_tree_empty_size(const teds_stricttreemap_tree *array)
+static zend_always_inline bool teds_stricttreemap_tree_empty_size(const teds_stricttreemap_tree *tree)
 {
-	if (array->nNumOfElements > 0) {
-		ZEND_ASSERT(array->root != NULL);
-		ZEND_ASSERT(array->initialized);
+	if (tree->nNumOfElements > 0) {
+		ZEND_ASSERT(tree->root != NULL);
+		ZEND_ASSERT(tree->initialized);
 		return false;
 	}
-	ZEND_ASSERT(array->root == NULL);
+	ZEND_ASSERT(tree->root == NULL);
 	return true;
 }
 

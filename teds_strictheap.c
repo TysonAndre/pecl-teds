@@ -20,6 +20,7 @@
 #include "php_teds.h"
 #include "teds_strictheap_arginfo.h"
 #include "teds_strictheap.h"
+#include "teds_vector.h"
 #include "teds_util.h"
 #include "teds.h"
 #include "teds_interfaces.h"
@@ -36,24 +37,15 @@ zend_class_entry *teds_ce_StrictMinHeap;
 zend_object_handlers teds_handler_StrictMaxHeap;
 zend_class_entry *teds_ce_StrictMaxHeap;
 
-typedef struct _teds_strictheap_entry {
-	zval key;
-} teds_strictheap_entry;
+#define teds_strictheap_entries_raise_capacity teds_vector_entries_raise_capacity
+#define teds_strictheap_count_elements teds_vector_count_elements
+#define teds_strictheap_clear teds_vector_clear
+#define teds_strictheap_get_properties_for teds_vector_get_properties_for
+#define teds_strictheap_get_gc teds_vector_get_gc
+#define teds_strictheap_free_storage teds_vector_free_storage
 
-/* This is a placeholder value to distinguish between empty and uninitialized StrictHeap instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const teds_strictheap_entry empty_entry_list[1];
-
-typedef struct _teds_strictheap_entries {
-	uint32_t size;
-	uint32_t capacity;
-	teds_strictheap_entry *entries;
-} teds_strictheap_entries;
-
-typedef struct _teds_strictheap {
-	teds_strictheap_entries		array;
-	zend_object				std;
-} teds_strictheap;
+typedef teds_vector_entries teds_strictheap_entries;
+typedef teds_vector teds_strictheap;
 
 /* Helps enforce the invariants in debug mode:
  *   - if capacity == 0, then entries == NULL
@@ -70,17 +62,6 @@ static zend_always_inline bool teds_strictheap_entries_empty_capacity(teds_stric
 	return true;
 }
 
-static void teds_strictheap_entries_raise_capacity(teds_strictheap_entries *array, size_t new_capacity)
-{
-	ZEND_ASSERT(new_capacity > array->capacity);
-	if (teds_strictheap_entries_empty_capacity(array)) {
-		array->entries = safe_emalloc(new_capacity, sizeof(teds_strictheap_entry), 0);
-	} else {
-		array->entries = safe_erealloc(array->entries, new_capacity, sizeof(teds_strictheap_entry), 0);
-	}
-	array->capacity = new_capacity;
-}
-
 static zend_always_inline bool teds_strictheap_should_be_above(zval *a, zval *b, const bool is_min_heap) {
 	zend_long result = teds_stable_compare(a, b);
 	return is_min_heap ? result < 0 : result > 0;
@@ -95,22 +76,21 @@ static zend_always_inline void teds_strictheap_entries_insert(teds_strictheap_en
 		const size_t new_capacity = teds_strictheap_next_pow2_capacity((size_t)offset + 1);
 		teds_strictheap_entries_raise_capacity(array, new_capacity);
 	}
-	teds_strictheap_entry *const entries = array->entries;
+	zval *const entries = array->entries;
 	while (offset > 0) {
 		uint32_t new_offset = offset >> 1;
-		if (teds_strictheap_should_be_above(key, &entries[new_offset].key, is_min_heap)) {
-			ZVAL_COPY_VALUE(&entries[offset].key, &entries[new_offset].key);
+		if (teds_strictheap_should_be_above(key, &entries[new_offset], is_min_heap)) {
+			ZVAL_COPY_VALUE(&entries[offset], &entries[new_offset]);
 			offset = new_offset;
 		} else {
 			break;
 		}
 	}
-	ZVAL_COPY(&entries[offset].key, key);
+	ZVAL_COPY(&entries[offset], key);
 	array->size++;
+	array->should_rebuild_properties = true;
 	ZEND_ASSERT(offset < array->size);
 }
-
-static void teds_strictheap_entries_clear(teds_strictheap_entries *intern);
 
 static teds_strictheap *teds_strictheap_from_object(zend_object *obj)
 {
@@ -131,8 +111,8 @@ static bool teds_strictheap_entries_uninitialized(teds_strictheap_entries *array
 	return false;
 }
 
-static teds_strictheap_entry *teds_strictheap_allocate_entries(size_t capacity) {
-	return safe_emalloc(capacity, sizeof(teds_strictheap_entry), 0);
+static zval *teds_strictheap_allocate_entries(size_t capacity) {
+	return safe_emalloc(capacity, sizeof(zval), 0);
 }
 
 static void teds_strictheap_entries_init_from_array(teds_strictheap_entries *array, zend_array *values, const bool is_min_heap)
@@ -152,7 +132,7 @@ static void teds_strictheap_entries_init_from_array(teds_strictheap_entries *arr
 	} else {
 		array->size = 0;
 		array->capacity = 0;
-		array->entries = (teds_strictheap_entry *)empty_entry_list;
+		array->entries = (zval *)empty_entry_list;
 	}
 }
 
@@ -208,15 +188,15 @@ cleanup_iter:
 /* Copies the range [begin, end) into the strictheap, beginning at `offset`.
  * Does not dtor the existing elements.
  */
-static void teds_strictheap_copy_range(teds_strictheap_entries *array, size_t offset, teds_strictheap_entry *begin, teds_strictheap_entry *end)
+static void teds_strictheap_copy_range(teds_strictheap_entries *array, size_t offset, zval *begin, zval *end)
 {
 	ZEND_ASSERT(offset <= array->size);
 	ZEND_ASSERT(begin <= end);
 	ZEND_ASSERT(array->size - offset >= (size_t)(end - begin));
 
-	teds_strictheap_entry *to = &array->entries[offset];
+	zval *to = &array->entries[offset];
 	while (begin != end) {
-		ZVAL_COPY(&to->key, &begin->key);
+		ZVAL_COPY(to, begin);
 		begin++;
 		to++;
 	}
@@ -228,92 +208,24 @@ static void teds_strictheap_entries_copy_ctor(teds_strictheap_entries *to, teds_
 	if (!size) {
 		to->size = 0;
 		to->capacity = 0;
-		to->entries = (teds_strictheap_entry *)empty_entry_list;
+		to->entries = (zval *)empty_entry_list;
 		return;
 	}
 
 	const size_t capacity = from->capacity;
 	to->size = 0; /* reset size in case emalloc() fails */
 	to->capacity = 0; /* reset size in case emalloc() fails */
-	to->entries = safe_emalloc(capacity, sizeof(teds_strictheap_entry), 0);
+	to->entries = safe_emalloc(capacity, sizeof(zval), 0);
 	to->size = size;
 	to->capacity = capacity;
 
-	teds_strictheap_entry *begin = from->entries, *end = from->entries + size;
+	zval *begin = from->entries, *end = from->entries + size;
 	teds_strictheap_copy_range(to, 0, begin, end);
-}
-
-/* Destructs the entries in the range [from, to).
- * Caller is expected to bounds check.
- */
-static void teds_strictheap_entries_dtor_range(teds_strictheap_entry *start, size_t from, size_t to)
-{
-	teds_strictheap_entry *begin = start + from, *end = start + to;
-	while (begin < end) {
-		zval_ptr_dtor(&begin->key);
-		begin++;
-	}
-}
-
-/* Destructs and frees contents and the array itself.
- * If you want to re-use the array then you need to re-initialize it.
- */
-static void teds_strictheap_entries_dtor(teds_strictheap_entries *array)
-{
-	if (!teds_strictheap_entries_empty_capacity(array)) {
-		teds_strictheap_entries_dtor_range(array->entries, 0, array->size);
-		efree(array->entries);
-	}
-}
-
-static HashTable* teds_strictheap_get_gc(zend_object *obj, zval **table, int *n)
-{
-	teds_strictheap *intern = teds_strictheap_from_object(obj);
-
-	*table = &intern->array.entries[0].key;
-	*n = (int)intern->array.size;
-
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
-}
-
-static HashTable* teds_strictheap_get_properties(zend_object *obj)
-{
-	teds_strictheap *intern = teds_strictheap_from_object(obj);
-	HashTable *ht = zend_std_get_properties(obj);
-
-	/* Re-initialize properties array */
-
-	// Note that destructors may mutate the original array,
-	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
-	for (uint32_t i = 0; i < intern->array.size; i++) {
-		zval *elem = &intern->array.entries[i].key;
-		Z_TRY_ADDREF_P(elem);
-		zend_hash_index_update(ht, i, elem);
-	}
-	const uint32_t properties_size = zend_hash_num_elements(ht);
-	if (UNEXPECTED(properties_size > intern->array.size)) {
-		for (uint32_t i = intern->array.size; i < properties_size; i++) {
-			zend_hash_index_del(ht, i);
-		}
-	}
-
-	return ht;
-}
-
-static void teds_strictheap_free_storage(zend_object *object)
-{
-	teds_strictheap *intern = teds_strictheap_from_object(object);
-	teds_strictheap_entries_dtor(&intern->array);
-	zend_object_std_dtor(&intern->std);
 }
 
 static zend_object *teds_strictheap_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
 {
-	teds_strictheap *intern;
-
-	intern = zend_object_alloc(sizeof(teds_strictheap), class_type);
+	teds_strictheap *intern = zend_object_alloc(sizeof(teds_strictheap), class_type);
 	/* This is a final class */
 	ZEND_ASSERT(class_type == teds_ce_StrictMinHeap || class_type == teds_ce_StrictMaxHeap);
 
@@ -336,7 +248,6 @@ static zend_object *teds_strictheap_new(zend_class_entry *class_type)
 	return teds_strictheap_new_ex(class_type, NULL, 0);
 }
 
-
 static zend_object *teds_strictheap_clone(zend_object *old_object)
 {
 	zend_object *new_object = teds_strictheap_new_ex(old_object->ce, old_object, 1);
@@ -346,31 +257,6 @@ static zend_object *teds_strictheap_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_strictheap_count_elements(zend_object *object, zend_long *count)
-{
-	teds_strictheap *intern;
-
-	intern = teds_strictheap_from_object(object);
-	*count = intern->array.size;
-	return SUCCESS;
-}
-
-/* Get number of entries in this StrictHeap */
-PHP_METHOD(Teds_StrictMinHeap, count)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-
-	RETURN_LONG(Z_STRICTHEAP_ENTRIES_P(ZEND_THIS)->size);
-}
-
-/* Get whether this StrictHeap is empty */
-PHP_METHOD(Teds_StrictMinHeap, isEmpty)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-
-	RETURN_BOOL(Z_STRICTHEAP_ENTRIES_P(ZEND_THIS)->size == 0);
-}
-
 /* Get whether this StrictHeap is not empty */
 PHP_METHOD(Teds_StrictMinHeap, valid)
 {
@@ -378,6 +264,7 @@ PHP_METHOD(Teds_StrictMinHeap, valid)
 
 	RETURN_BOOL(Z_STRICTHEAP_ENTRIES_P(ZEND_THIS)->size != 0);
 }
+
 /* Create this from an iterable */
 PHP_METHOD(Teds_StrictMinHeap, __construct)
 {
@@ -399,7 +286,7 @@ PHP_METHOD(Teds_StrictMinHeap, __construct)
 	if (iterable == NULL) {
 		intern->array.size = 0;
 		intern->array.capacity = 0;
-		intern->array.entries = (teds_strictheap_entry *)empty_entry_list;
+		intern->array.entries = (zval *)empty_entry_list;
 		return;
 	}
 
@@ -435,7 +322,7 @@ PHP_METHOD(Teds_StrictMaxHeap, __construct)
 	if (iterable == NULL) {
 		intern->array.size = 0;
 		intern->array.capacity = 0;
-		intern->array.entries = (teds_strictheap_entry *)empty_entry_list;
+		intern->array.entries = (zval *)empty_entry_list;
 		return;
 	}
 
@@ -459,8 +346,9 @@ PHP_METHOD(Teds_StrictMinHeap, __unserialize)
 		RETURN_THROWS();
 	}
 
-	size_t raw_size = zend_hash_num_elements(raw_data);
-	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
+	const size_t raw_size = zend_hash_num_elements(raw_data);
+	teds_strictheap *const intern = Z_STRICTHEAP_P(ZEND_THIS);
+	teds_strictheap_entries *const array = &intern->array;
 	if (UNEXPECTED(!teds_strictheap_entries_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
@@ -468,14 +356,14 @@ PHP_METHOD(Teds_StrictMinHeap, __unserialize)
 	if (raw_size == 0) {
 		ZEND_ASSERT(array->size == 0);
 		ZEND_ASSERT(array->capacity == 0);
-		array->entries = (teds_strictheap_entry *)empty_entry_list;
+		array->entries = (zval *)empty_entry_list;
 		return;
 	}
 
 	ZEND_ASSERT(array->entries == NULL);
 
 	const size_t capacity = teds_strictheap_next_pow2_capacity(raw_size);
-	teds_strictheap_entry *entries = safe_emalloc(capacity, sizeof(teds_strictheap_entry), 0);
+	zval *entries = safe_emalloc(capacity, sizeof(zval), 0);
 	array->size = 0;
 	array->capacity = capacity;
 	array->entries = entries;
@@ -484,8 +372,8 @@ PHP_METHOD(Teds_StrictMinHeap, __unserialize)
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
-			teds_strictheap_entries_clear(array);
-			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StrictHeap::__unserialize saw unexpected string key, expected sequence of values", 0);
+			teds_strictheap_clear(intern);
+			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StrictMinHeap::__unserialize saw unexpected string key, expected sequence of values", 0);
 			RETURN_THROWS();
 		}
 
@@ -503,7 +391,8 @@ PHP_METHOD(Teds_StrictMaxHeap, __unserialize)
 	}
 
 	size_t raw_size = zend_hash_num_elements(raw_data);
-	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
+	teds_strictheap *const intern = Z_STRICTHEAP_P(ZEND_THIS);
+	teds_strictheap_entries *array = &intern->array;
 	if (UNEXPECTED(!teds_strictheap_entries_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
 		RETURN_THROWS();
@@ -511,14 +400,14 @@ PHP_METHOD(Teds_StrictMaxHeap, __unserialize)
 	if (raw_size == 0) {
 		ZEND_ASSERT(array->size == 0);
 		ZEND_ASSERT(array->capacity == 0);
-		array->entries = (teds_strictheap_entry *)empty_entry_list;
+		array->entries = (zval *)empty_entry_list;
 		return;
 	}
 
 	ZEND_ASSERT(array->entries == NULL);
 
 	const size_t capacity = teds_strictheap_next_pow2_capacity(raw_size);
-	teds_strictheap_entry *entries = safe_emalloc(capacity, sizeof(teds_strictheap_entry), 0);
+	zval *entries = safe_emalloc(capacity, sizeof(zval), 0);
 	array->size = 0;
 	array->capacity = capacity;
 	array->entries = entries;
@@ -527,8 +416,8 @@ PHP_METHOD(Teds_StrictMaxHeap, __unserialize)
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
-			teds_strictheap_entries_clear(array);
-			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StrictHeap::__unserialize saw unexpected string key, expected sequence of values", 0);
+			teds_strictheap_clear(intern);
+			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StrictMaxHeap::__unserialize saw unexpected string key, expected sequence of values", 0);
 			RETURN_THROWS();
 		}
 
@@ -567,10 +456,11 @@ PHP_METHOD(Teds_StrictMaxHeap, __set_state)
 /* Shifts values. Callers should adjust size and handle zval reference counting. */
 static zend_always_inline void teds_strictheap_entries_remove_top(teds_strictheap_entries *const array, const bool is_min_heap)
 {
-	teds_strictheap_entry *const entries = array->entries;
+	zval *const entries = array->entries;
 	ZEND_ASSERT(array->size > 0);
 	const uint32_t len = --array->size;
-	teds_strictheap_entry *replacement = &entries[len];
+	array->should_rebuild_properties = true;
+	zval *replacement = &entries[len];
 	uint32_t offset = 0;
 
 
@@ -582,24 +472,24 @@ static zend_always_inline void teds_strictheap_entries_remove_top(teds_stricthea
 		if (new_offset >= len) {
 			break;
 		}
-		teds_strictheap_entry *new_entry = &entries[new_offset];
+		zval *new_entry = &entries[new_offset];
 		if (new_offset + 1 < len) {
-			if (teds_strictheap_should_be_above(&(new_entry + 1)->key, &new_entry->key, is_min_heap)) {
+			if (teds_strictheap_should_be_above(new_entry + 1, new_entry, is_min_heap)) {
 				new_offset++;
 				new_entry++;
 			}
 		}
-		if (!teds_strictheap_should_be_above(&new_entry->key, &replacement->key, is_min_heap)) {
+		if (!teds_strictheap_should_be_above(new_entry, replacement, is_min_heap)) {
 			break;
 		}
 		//fprintf(stderr, "Copy entry %d from %d\n", offset, (int)(new_entry - entries));
-		ZEND_ASSERT(Z_TYPE(new_entry->key) != IS_UNDEF);
-		ZVAL_COPY_VALUE(&entries[offset].key, &new_entry->key);
+		ZEND_ASSERT(Z_TYPE_P(new_entry) != IS_UNDEF);
+		ZVAL_COPY_VALUE(&entries[offset], new_entry);
 		offset = new_offset;
 	}
 	//fprintf(stderr, "Copy replacement %d to %d\n", (int)(replacement - entries), (int)offset);
-	ZEND_ASSERT(Z_TYPE(replacement->key) != IS_UNDEF);
-	ZVAL_COPY_VALUE(&entries[offset].key, &replacement->key);
+	ZEND_ASSERT(Z_TYPE_P(replacement) != IS_UNDEF);
+	ZVAL_COPY_VALUE(&entries[offset], replacement);
 }
 
 PHP_METHOD(Teds_StrictMinHeap, extract) {
@@ -610,7 +500,7 @@ PHP_METHOD(Teds_StrictMinHeap, extract) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty StrictHeap", 0);
 		RETURN_THROWS();
 	}
-	RETVAL_COPY_VALUE(&array->entries[0].key);
+	RETVAL_COPY_VALUE(&array->entries[0]);
 	teds_strictheap_entries_remove_top(array, true);
 }
 
@@ -622,7 +512,7 @@ PHP_METHOD(Teds_StrictMaxHeap, extract) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty StrictHeap", 0);
 		RETURN_THROWS();
 	}
-	RETVAL_COPY_VALUE(&array->entries[0].key);
+	RETVAL_COPY_VALUE(&array->entries[0]);
 	teds_strictheap_entries_remove_top(array, false);
 }
 
@@ -636,7 +526,7 @@ PHP_METHOD(Teds_StrictMinHeap, next)
 		RETURN_THROWS();
 	}
 	zval tmp;
-	ZVAL_COPY_VALUE(&tmp, &array->entries[0].key);
+	ZVAL_COPY_VALUE(&tmp, &array->entries[0]);
 	teds_strictheap_entries_remove_top(array, true);
 	zval_ptr_dtor(&tmp);
 }
@@ -651,7 +541,7 @@ PHP_METHOD(Teds_StrictMaxHeap, next)
 		RETURN_THROWS();
 	}
 	zval tmp;
-	ZVAL_COPY_VALUE(&tmp, &array->entries[0].key);
+	ZVAL_COPY_VALUE(&tmp, &array->entries[0]);
 	teds_strictheap_entries_remove_top(array, false);
 	zval_ptr_dtor(&tmp);
 }
@@ -663,12 +553,12 @@ PHP_METHOD(Teds_StrictMinHeap, top)
 	teds_strictheap *intern = Z_STRICTHEAP_P(ZEND_THIS);
 	const uint32_t len = intern->array.size;
 	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot extract from empty StrictHeap", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot read top of empty StrictHeap", 0);
 		RETURN_THROWS();
 	}
 
-	ZEND_ASSERT(Z_TYPE(intern->array.entries[0].key) != IS_UNDEF);
-	RETURN_COPY(&intern->array.entries[0].key);
+	ZEND_ASSERT(Z_TYPE(intern->array.entries[0]) != IS_UNDEF);
+	RETURN_COPY(&intern->array.entries[0]);
 }
 
 PHP_METHOD(Teds_StrictMinHeap, add)
@@ -699,53 +589,6 @@ PHP_METHOD(Teds_StrictMinHeap, rewind)
 	TEDS_RETURN_VOID();
 }
 
-static void teds_strictheap_entries_clear(teds_strictheap_entries *array) {
-	if (teds_strictheap_entries_empty_capacity(array)) {
-		return;
-	}
-	teds_strictheap_entry *entries = array->entries;
-	uint32_t size = array->size;
-	array->entries = (teds_strictheap_entry *)empty_entry_list;
-	array->size = 0;
-	array->capacity = 0;
-
-	teds_strictheap_entries_dtor_range(entries, 0, size);
-	efree(entries);
-	/* Could call teds_strictheap_get_properties but properties array is typically not initialized unless var_dump or other inefficient functionality is used */
-}
-
-PHP_METHOD(Teds_StrictMinHeap, clear)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictheap_entries_clear(Z_STRICTHEAP_ENTRIES_P(ZEND_THIS));
-	TEDS_RETURN_VOID();
-}
-
-PHP_METHOD(Teds_StrictMinHeap, values)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
-	uint32_t len = array->size;
-	if (!len) {
-		RETURN_EMPTY_ARRAY();
-	}
-	/* sizeof(teds_strictheap_entry) === sizeof(zval) */
-	teds_strictheap_entry *entries = array->entries;
-	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(values);
-
-	/* Go through values and add values to the return array */
-	ZEND_HASH_FILL_PACKED(values) {
-		for (uint32_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i].key;
-			Z_TRY_ADDREF_P(tmp);
-			ZEND_HASH_FILL_ADD(tmp);
-		}
-	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
-}
-
 PHP_METHOD(Teds_StrictMinHeap, toArray)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -753,12 +596,11 @@ PHP_METHOD(Teds_StrictMinHeap, toArray)
 	if (!array->size) {
 		RETURN_EMPTY_ARRAY();
 	}
-	/* sizeof(teds_strictheap_entry) === sizeof(zval) */
 	zend_array *values = zend_new_array(array->size);
 
 	/* Go through values and add values to the return array */
 	for (uint32_t i = 0; i < array->size; i++) {
-		zval *key = &array->entries[i].key;
+		zval *key = &array->entries[i];
 		Z_TRY_ADDREF_P(key);
 		array_set_zval_key(values, key, key);
 		zval_ptr_dtor_nogc(key);
@@ -768,19 +610,6 @@ PHP_METHOD(Teds_StrictMinHeap, toArray)
 		}
 	}
 	RETURN_ARR(values);
-}
-
-PHP_METHOD(Teds_StrictMinHeap, contains)
-{
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictheap_entries *array = Z_STRICTHEAP_ENTRIES_P(ZEND_THIS);
-
-	zval *value;
-	ZEND_PARSE_PARAMETERS_START(1, 1)
-		Z_PARAM_ZVAL(value)
-	ZEND_PARSE_PARAMETERS_END();
-
-	RETVAL_BOOL(teds_zval_range_contains(value, (zval*) array->entries, array->size));
 }
 
 PHP_MINIT_FUNCTION(teds_strictheap)
@@ -794,7 +623,7 @@ PHP_MINIT_FUNCTION(teds_strictheap)
 	teds_handler_StrictMinHeap.offset          = XtOffsetOf(teds_strictheap, std);
 	teds_handler_StrictMinHeap.clone_obj       = teds_strictheap_clone;
 	teds_handler_StrictMinHeap.count_elements  = teds_strictheap_count_elements;
-	teds_handler_StrictMinHeap.get_properties  = teds_strictheap_get_properties;
+	teds_handler_StrictMinHeap.get_properties_for  = teds_strictheap_get_properties_for;
 	teds_handler_StrictMinHeap.get_gc          = teds_strictheap_get_gc;
 	teds_handler_StrictMinHeap.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_StrictMinHeap.free_obj        = teds_strictheap_free_storage;
@@ -809,7 +638,7 @@ PHP_MINIT_FUNCTION(teds_strictheap)
 	teds_handler_StrictMaxHeap.offset          = XtOffsetOf(teds_strictheap, std);
 	teds_handler_StrictMaxHeap.clone_obj       = teds_strictheap_clone;
 	teds_handler_StrictMaxHeap.count_elements  = teds_strictheap_count_elements;
-	//teds_handler_StrictMaxHeap.get_properties  = teds_strictheap_get_properties;
+	teds_handler_StrictMaxHeap.get_properties_for  = teds_strictheap_get_properties_for;
 	teds_handler_StrictMaxHeap.get_gc          = teds_strictheap_get_gc;
 	teds_handler_StrictMaxHeap.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_StrictMaxHeap.free_obj        = teds_strictheap_free_storage;

@@ -41,19 +41,15 @@ typedef struct _teds_strictsortedvectormap_entry {
 	zval value;
 } teds_strictsortedvectormap_entry;
 
-/* This is a placeholder value to distinguish between empty and uninitialized StrictSortedVectorMap instances.
- * Compilers require at least one element. Make this constant - reads/writes should be impossible. */
-static const teds_strictsortedvectormap_entry empty_entry_list[1];
-
 typedef struct _teds_strictsortedvectormap_entries {
+	teds_strictsortedvectormap_entry *entries;
 	uint32_t size;
 	uint32_t capacity;
-	teds_strictsortedvectormap_entry *entries;
 } teds_strictsortedvectormap_entries;
 
 typedef struct _teds_strictsortedvectormap {
-	teds_strictsortedvectormap_entries		array;
-	zend_object				std;
+	teds_strictsortedvectormap_entries	array;
+	zend_object							std;
 } teds_strictsortedvectormap;
 
 static zend_always_inline bool teds_strictsortedvectormap_entries_insert(teds_strictsortedvectormap_entries *array, zval *key, zval *value, bool probably_largest);

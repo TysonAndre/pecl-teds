@@ -25,6 +25,7 @@ typedef struct _teds_stricttreeset_node {
 	uint8_t color;
 } teds_stricttreeset_node;
 
+/* TODO move color into high bit of Z_EXTRA and benchmark? */
 #define TEDS_STRICTTREESET_NODE_REFCOUNT(node) Z_EXTRA((node)->key)
 #define TEDS_STRICTTREESET_NODE_COLOR(node) ((node)->color)
 #define TEDS_STRICTTREESET_NODE_COLOR_NULLABLE(node) ((node) != NULL ? TEDS_STRICTTREESET_NODE_COLOR(node) : TEDS_NODE_BLACK)
@@ -36,15 +37,15 @@ typedef struct _teds_stricttreeset_tree {
 } teds_stricttreeset_tree;
 
 typedef struct _teds_stricttreeset {
-	teds_stricttreeset_tree	array;
-	zend_object					std;
+	teds_stricttreeset_tree	tree;
+	zend_object				std;
 } teds_stricttreeset;
 
-void teds_stricttreeset_tree_init_from_array(teds_stricttreeset_tree *array, zend_array *values);
+void teds_stricttreeset_tree_init_from_array(teds_stricttreeset_tree *tree, zend_array *values);
 
-void teds_stricttreeset_tree_init_from_traversable(teds_stricttreeset_tree *array, zend_object *obj);
+void teds_stricttreeset_tree_init_from_traversable(teds_stricttreeset_tree *tree, zend_object *obj);
 
-void teds_stricttreeset_tree_dtor(teds_stricttreeset_tree *array);
+void teds_stricttreeset_tree_dtor(teds_stricttreeset_tree *tree);
 
 void teds_stricttreeset_tree_dtor_range(teds_stricttreeset_node *start, size_t from, size_t to);
 
@@ -84,7 +85,7 @@ static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_tree_get_l
 	return teds_stricttreeset_node_get_rightmost(it);
 }
 
-static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_next(teds_stricttreeset_node *node)
+static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_next(const teds_stricttreeset_node *node)
 {
 	/**
 	 * The next node of "a" is "b".  The next node of "b" is "c".
@@ -111,7 +112,7 @@ static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_n
 	}
 }
 
-static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_prev(teds_stricttreeset_node *node)
+static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_prev(const teds_stricttreeset_node *node)
 {
 	if (node->left) {
 		return teds_stricttreeset_node_get_rightmost(node->left);
@@ -148,14 +149,14 @@ static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_get_p
  *   - if capacity == 0, then entries == NULL
  *   - if capacity > 0, then entries != NULL
  */
-static zend_always_inline bool teds_stricttreeset_tree_empty_size(const teds_stricttreeset_tree *array)
+static zend_always_inline bool teds_stricttreeset_tree_empty_size(const teds_stricttreeset_tree *tree)
 {
-	if (array->nNumOfElements > 0) {
-		ZEND_ASSERT(array->root != NULL);
-		ZEND_ASSERT(array->initialized);
+	if (tree->nNumOfElements > 0) {
+		ZEND_ASSERT(tree->root != NULL);
+		ZEND_ASSERT(tree->initialized);
 		return false;
 	}
-	ZEND_ASSERT(array->root == NULL);
+	ZEND_ASSERT(tree->root == NULL);
 	return true;
 }
 
