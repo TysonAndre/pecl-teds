@@ -90,8 +90,10 @@ typedef struct _teds_stricthashset {
 
 extern const uint32_t teds_stricthashset_empty_bucket_list[2];
 
+/* These are also used for Teds\unique_values() */
 void teds_stricthashset_entries_init_from_array(teds_stricthashset_entries *array, zend_array *values);
 
+/* These are also used for Teds\unique_values() */
 void teds_stricthashset_entries_init_from_traversable(teds_stricthashset_entries *array, zend_object *obj);
 
 teds_stricthashset_entry *teds_stricthashset_entries_find_key(const teds_stricthashset_entries *array, zval *key, zend_ulong h);

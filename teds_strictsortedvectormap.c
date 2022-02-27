@@ -331,6 +331,12 @@ static HashTable* teds_strictsortedvectormap_get_properties(zend_object *obj)
 	for (uint32_t i = len; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
+#if PHP_VERSION_ID >= 80200
+	if (HT_IS_PACKED(ht)) {
+		/* Engine doesn't expect packed array */
+		zend_hash_packed_to_hash(ht);
+	}
+#endif
 
 	return ht;
 }
@@ -1177,6 +1183,9 @@ static void teds_strictsortedvectormap_clear(teds_strictsortedvectormap *intern)
 	intern->array.entries = (teds_strictsortedvectormap_entry *)empty_entry_list;
 	intern->array.size = 0;
 	intern->array.capacity = 0;
+	if (intern->std.properties) {
+		zend_hash_clean(intern->std.properties);
+	}
 
 	teds_strictsortedvectormap_entries_dtor_range(entries, 0, size);
 	efree(entries);

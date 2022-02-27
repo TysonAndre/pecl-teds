@@ -44,9 +44,6 @@ zend_class_entry *teds_ce_StrictHashMap;
 // #define TEDS_HASH(zval) ((zval).u2.extra)
 #define TEDS_STRICTHASHMAP_IT_HASH(entry) ((entry)->value.u2.extra)
 
-/* Need at least 2 for iteration base cases */
-const uint32_t teds_stricthashmap_empty_bucket_list[2] = { TEDS_STRICTHASHMAP_INVALID_INDEX, TEDS_STRICTHASHMAP_INVALID_INDEX };
-
 static void teds_stricthashmap_entries_grow(teds_stricthashmap_entries *array);
 static void teds_stricthashmap_entries_set_capacity(teds_stricthashmap_entries *array, uint32_t new_capacity);
 
@@ -124,7 +121,7 @@ add_to_hash:
 	return true;
 }
 
-static void teds_stricthashmap_entries_clear(teds_stricthashmap_entries *array);
+static void teds_stricthashmap_clear(teds_stricthashmap *array);
 
 /* Used by InternalIterator returned by StrictHashMap->getIterator() */
 typedef struct _teds_stricthashmap_it {
@@ -218,8 +215,9 @@ void teds_stricthashmap_entries_init_from_array(teds_stricthashmap_entries *arra
 	}
 }
 
-void teds_stricthashmap_entries_init_from_traversable(teds_stricthashmap_entries *array, zend_object *obj)
+void teds_stricthashmap_entries_init_from_traversable(teds_stricthashmap *intern, zend_object *obj)
 {
+	teds_stricthashmap_entries *array = &intern->array;
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
 	teds_stricthashmap_entries_set_empty_entry_list(array);
@@ -280,7 +278,7 @@ cleanup_iter:
 		zend_iterator_dtor(iter);
 	}
 	if (UNEXPECTED(EG(exception))) {
-		teds_stricthashmap_entries_clear(array);
+		teds_stricthashmap_clear(intern);
 	}
 }
 
@@ -462,6 +460,12 @@ static HashTable* teds_stricthashmap_get_properties(zend_object *obj)
 	for (uint32_t i = len; i < old_length; i++) {
 		zend_hash_index_del(ht, i);
 	}
+#if PHP_VERSION_ID >= 80200
+	if (HT_IS_PACKED(ht)) {
+		/* Engine doesn't expect packed array */
+		zend_hash_packed_to_hash(ht);
+	}
+#endif
 
 	return ht;
 }
@@ -569,7 +573,7 @@ PHP_METHOD(Teds_StrictHashMap, __construct)
 			teds_stricthashmap_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
 			return;
 		case IS_OBJECT:
-			teds_stricthashmap_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
+			teds_stricthashmap_entries_init_from_traversable(intern, Z_OBJ_P(iterable));
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -727,7 +731,7 @@ PHP_METHOD(Teds_StrictHashMap, __unserialize)
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
-			teds_stricthashmap_entries_clear(array);
+			teds_stricthashmap_clear(intern);
 			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StrictHashMap::__unserialize saw unexpected string key, expected sequence of keys and values", 0);
 			RETURN_THROWS();
 		}
@@ -786,8 +790,9 @@ static void teds_stricthashmap_entries_init_from_array_pairs(teds_stricthashmap_
 	} ZEND_HASH_FOREACH_END();
 }
 
-static void teds_stricthashmap_entries_init_from_traversable_pairs(teds_stricthashmap_entries *array, zend_object *obj)
+static void teds_stricthashmap_entries_init_from_traversable_pairs(teds_stricthashmap *intern, zend_object *obj)
 {
+	teds_stricthashmap_entries *array = &intern->array;
 	zend_class_entry *ce = obj->ce;
 	zend_object_iterator *iter;
 	teds_stricthashmap_entries_set_empty_entry_list(array);
@@ -830,6 +835,9 @@ static void teds_stricthashmap_entries_init_from_traversable_pairs(teds_strictha
 	if (iter) {
 		zend_iterator_dtor(iter);
 	}
+	if (UNEXPECTED(EG(exception))) {
+		teds_stricthashmap_clear(intern);
+	}
 }
 
 static zend_object* create_from_pairs(zval *iterable) {
@@ -840,7 +848,7 @@ static zend_object* create_from_pairs(zval *iterable) {
 			teds_stricthashmap_entries_init_from_array_pairs(&intern->array, Z_ARRVAL_P(iterable));
 			break;
 		case IS_OBJECT:
-			teds_stricthashmap_entries_init_from_traversable_pairs(&intern->array, Z_OBJ_P(iterable));
+			teds_stricthashmap_entries_init_from_traversable_pairs(intern, Z_OBJ_P(iterable));
 			break;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -1180,13 +1188,17 @@ PHP_METHOD(Teds_StrictHashMap, toArray)
 	RETURN_ARR(values);
 }
 
-static void teds_stricthashmap_entries_clear(teds_stricthashmap_entries *array) {
+static void teds_stricthashmap_clear(teds_stricthashmap *intern) {
+	teds_stricthashmap_entries *array = &intern->array;
 	if (teds_stricthashmap_entries_empty_capacity(array)) {
 		return;
 	}
 	teds_stricthashmap_entries array_copy = *array;
 
 	teds_stricthashmap_entries_set_empty_entry_list(array);
+	if (intern->std.properties) {
+		zend_hash_clean(intern->std.properties);
+	}
 
 	teds_stricthashmap_entries_dtor(&array_copy);
 	/* Could call teds_stricthashmap_get_properties but properties array is typically not initialized unless var_dump or other inefficient functionality is used */
@@ -1195,8 +1207,7 @@ static void teds_stricthashmap_entries_clear(teds_stricthashmap_entries *array) 
 PHP_METHOD(Teds_StrictHashMap, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_stricthashmap *intern = Z_STRICTHASHMAP_P(ZEND_THIS);
-	teds_stricthashmap_entries_clear(&intern->array);
+	teds_stricthashmap_clear(Z_STRICTHASHMAP_P(ZEND_THIS));
 	TEDS_RETURN_VOID();
 }
 

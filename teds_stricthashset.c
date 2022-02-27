@@ -122,6 +122,7 @@ add_to_hash:
 }
 
 
+static void teds_stricthashset_clear(teds_stricthashset *intern);
 static void teds_stricthashset_entries_clear(teds_stricthashset_entries *array);
 
 /* Used by InternalIterator returned by StrictHashSet->getIterator() */
@@ -426,6 +427,12 @@ static HashTable* teds_stricthashset_get_properties(zend_object *obj)
 		zend_hash_index_del(ht, i);
 	}
 
+#if PHP_VERSION_ID >= 80200
+	if (HT_IS_PACKED(ht)) {
+		/* Engine doesn't expect packed array */
+		zend_hash_packed_to_hash(ht);
+	}
+#endif
 	return ht;
 }
 
@@ -514,25 +521,25 @@ PHP_METHOD(Teds_StrictHashSet, __construct)
 		Z_PARAM_ITERABLE(iterable)
 	ZEND_PARSE_PARAMETERS_END();
 
-	teds_stricthashset *intern = Z_STRICTHASHSET_P(ZEND_THIS);
+	teds_stricthashset_entries *array = Z_STRICTHASHSET_ENTRIES_P(ZEND_THIS);
 
-	if (UNEXPECTED(!teds_stricthashset_entries_uninitialized(&intern->array))) {
+	if (UNEXPECTED(!teds_stricthashset_entries_uninitialized(array))) {
 		zend_throw_exception(spl_ce_RuntimeException, "Called Teds\\StrictHashSet::__construct twice", 0);
 		/* called __construct() twice, bail out */
 		RETURN_THROWS();
 	}
 
 	if (iterable == NULL) {
-		teds_stricthashset_entries_set_empty_entry_list(&intern->array);
+		teds_stricthashset_entries_set_empty_entry_list(array);
 		return;
 	}
 
 	switch (Z_TYPE_P(iterable)) {
 		case IS_ARRAY:
-			teds_stricthashset_entries_init_from_array(&intern->array, Z_ARRVAL_P(iterable));
+			teds_stricthashset_entries_init_from_array(array, Z_ARRVAL_P(iterable));
 			return;
 		case IS_OBJECT:
-			teds_stricthashset_entries_init_from_traversable(&intern->array, Z_OBJ_P(iterable));
+			teds_stricthashset_entries_init_from_traversable(array, Z_OBJ_P(iterable));
 			return;
 		EMPTY_SWITCH_DEFAULT_CASE();
 	}
@@ -683,7 +690,7 @@ PHP_METHOD(Teds_StrictHashSet, __unserialize)
 
 	ZEND_HASH_FOREACH_STR_KEY_VAL(raw_data, str, val) {
 		if (UNEXPECTED(str)) {
-			teds_stricthashset_entries_clear(&intern->array);
+			teds_stricthashset_entries_clear(array);
 			zend_throw_exception(spl_ce_UnexpectedValueException, "Teds\\StrictHashSet::__unserialize saw unexpected string key, expected sequence of values", 0);
 			RETURN_THROWS();
 		}
@@ -850,8 +857,21 @@ static void teds_stricthashset_entries_clear(teds_stricthashset_entries *array) 
 		return;
 	}
 	teds_stricthashset_entries array_copy = *array;
+	teds_stricthashset_entries_set_empty_entry_list(array);
+	teds_stricthashset_entries_dtor(&array_copy);
+}
+
+static void teds_stricthashset_clear(teds_stricthashset *intern) {
+	teds_stricthashset_entries *array = &intern->array;
+	if (teds_stricthashset_entries_empty_capacity(array)) {
+		return;
+	}
+	teds_stricthashset_entries array_copy = *array;
 
 	teds_stricthashset_entries_set_empty_entry_list(array);
+	if (intern->std.properties) {
+		zend_hash_clean(intern->std.properties);
+	}
 
 	teds_stricthashset_entries_dtor(&array_copy);
 	/* Could call teds_stricthashset_get_properties but properties array is typically not initialized unless var_dump or other inefficient functionality is used */
@@ -860,8 +880,7 @@ static void teds_stricthashset_entries_clear(teds_stricthashset_entries *array) 
 PHP_METHOD(Teds_StrictHashSet, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_stricthashset *intern = Z_STRICTHASHSET_P(ZEND_THIS);
-	teds_stricthashset_entries_clear(&intern->array);
+	teds_stricthashset_clear(Z_STRICTHASHSET_P(ZEND_THIS));
 	TEDS_RETURN_VOID();
 }
 

@@ -435,19 +435,17 @@ PHP_METHOD(Teds_Vector, capacity)
 
 void teds_vector_clear(teds_vector *intern) {
 	if (teds_vector_entries_empty_capacity(&intern->array)) {
-		if (intern->std.properties) {
-			zend_hash_clean(intern->std.properties);
-		}
 		return;
 	}
 	const uint32_t old_size = intern->array.size;
 	zval *const old_entries = intern->array.entries;
 	teds_vector_set_empty_list_and_clear_properties(intern);
 	ZEND_ASSERT(old_entries != NULL && old_entries != empty_entry_list);
-	if (old_entries) {
-		teds_zval_dtor_range(old_entries, old_size);
-		efree(old_entries);
+	if (intern->std.properties) {
+		zend_hash_clean(intern->std.properties);
 	}
+	teds_zval_dtor_range(old_entries, old_size);
+	efree(old_entries);
 }
 
 /* Free elements and backing storage of this vector */

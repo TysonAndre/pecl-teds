@@ -336,29 +336,34 @@ static void teds_lowmemoryvector_entries_copy_ctor(teds_lowmemoryvector_entries 
 /* Destructs and frees contents but not the array itself.
  * If you want to re-use the array then you need to re-initialize it.
  */
-static void teds_lowmemoryvector_entries_dtor(teds_lowmemoryvector_entries *array)
+static void teds_lowmemoryvector_clear(teds_lowmemoryvector *intern)
 {
-	if (!teds_lowmemoryvector_entries_empty_capacity(array)) {
-		/* Get state before replacing entries with empty entry list in case of side effects of destructors */
-		zval *const entries = array->entries_zval;
-		const uint8_t type_tag = array->type_tag;
-		const size_t size = array->size;
-
-		/* Replace entries with empty entry list */
-		teds_lowmemoryvector_entries_set_empty_list(array);
-
-		/* Free the elements */
-		if (type_tag > LMV_TYPE_LAST_NONREFCOUNTED) {
-			ZEND_ASSERT(type_tag == LMV_TYPE_ZVAL);
-
-			zval *it = entries;
-			array->entries_zval = NULL;
-			for (zval *const end = it + size; it < end; it++) {
-				zval_ptr_dtor(it);
-			}
-		}
-		efree(entries);
+	teds_lowmemoryvector_entries *array = &intern->array;
+	if (teds_lowmemoryvector_entries_empty_capacity(array)) {
+		return;
 	}
+	/* Get state before replacing entries with empty entry list in case of side effects of destructors */
+	zval *const entries = array->entries_zval;
+	const uint8_t type_tag = array->type_tag;
+	const size_t size = array->size;
+
+	/* Replace entries with empty entry list */
+	teds_lowmemoryvector_entries_set_empty_list(array);
+	if (intern->std.properties) {
+		zend_hash_clean(intern->std.properties);
+	}
+
+	/* Free the elements */
+	if (type_tag > LMV_TYPE_LAST_NONREFCOUNTED) {
+		ZEND_ASSERT(type_tag == LMV_TYPE_ZVAL);
+
+		zval *it = entries;
+		array->entries_zval = NULL;
+		for (zval *const end = it + size; it < end; it++) {
+			zval_ptr_dtor(it);
+		}
+	}
+	efree(entries);
 }
 
 static HashTable* teds_lowmemoryvector_get_gc(zend_object *obj, zval **table, int *n)
@@ -455,8 +460,8 @@ static HashTable* teds_lowmemoryvector_get_properties_for(zend_object *obj, zend
 static void teds_lowmemoryvector_free_storage(zend_object *object)
 {
 	teds_lowmemoryvector *intern = teds_lowmemoryvector_from_object(object);
-	teds_lowmemoryvector_entries_dtor(&intern->array);
-	zend_object_std_dtor(&intern->std);
+	teds_lowmemoryvector_clear(intern);
+	zend_object_std_dtor(object);
 }
 
 static zend_object *teds_lowmemoryvector_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
@@ -562,7 +567,7 @@ PHP_METHOD(Teds_LowMemoryVector, __construct)
 PHP_METHOD(Teds_LowMemoryVector, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_lowmemoryvector_entries_dtor(Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS));
+	teds_lowmemoryvector_clear(Z_LOWMEMORYVECTOR_P(ZEND_THIS));
 	TEDS_RETURN_VOID();
 }
 

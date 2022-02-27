@@ -34,6 +34,7 @@ typedef struct _teds_stricttreeset_tree {
 	struct _teds_stricttreeset_node *root;
 	uint32_t nNumOfElements;
 	bool initialized;
+	bool should_rebuild_properties;
 } teds_stricttreeset_tree;
 
 typedef struct _teds_stricttreeset {

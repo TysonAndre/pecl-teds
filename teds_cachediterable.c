@@ -358,6 +358,7 @@ static HashTable* teds_cachediterable_get_properties(zend_object *obj)
 {
 	teds_cachediterable_entries *array = &teds_cachediterable_from_object(obj)->array;
 
+	/* Fetch all of the elements so that properties are only built once and var_export shows the full state. */
 	teds_cachediterable_entries_fetch_all(array);
 
 	uint32_t len = array->size;
@@ -381,6 +382,12 @@ static HashTable* teds_cachediterable_get_properties(zend_object *obj)
 		ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
 		zend_hash_index_update(ht, i, &tmp);
 	}
+#if PHP_VERSION_ID >= 80200
+	if (HT_IS_PACKED(ht)) {
+		/* Engine doesn't expect packed array */
+		zend_hash_packed_to_hash(ht);
+	}
+#endif
 
 	return ht;
 }

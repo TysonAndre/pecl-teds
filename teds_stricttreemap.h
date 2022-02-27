@@ -33,6 +33,7 @@ typedef struct _teds_stricttreemap_node {
 typedef struct _teds_stricttreemap_tree {
 	struct _teds_stricttreemap_node *root;
 	uint32_t nNumOfElements;
+	bool should_rebuild_properties;
 	bool initialized;
 } teds_stricttreemap_tree;
 
