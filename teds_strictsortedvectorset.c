@@ -517,61 +517,6 @@ PHP_METHOD(Teds_StrictSortedVectorSet, toArray)
 	RETURN_ARR(values);
 }
 
-#define IMPLEMENT_READ_OFFSET_PHP_METHOD(methodName, index) \
-PHP_METHOD(Teds_StrictSortedVectorSet, methodName) \
-{ \
-	ZEND_PARSE_PARAMETERS_NONE(); \
-	const teds_strictsortedvectorset *intern = Z_STRICTSORTEDVECTORSET_P(ZEND_THIS); \
-	if (intern->array.size == 0) { \
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot read " # methodName " of empty StrictSortedVectorSet", 0); \
-		RETURN_THROWS(); \
-	} \
-	zval *entries = intern->array.entries; \
-	RETVAL_COPY(&entries[(index)]); \
-}
-
-IMPLEMENT_READ_OFFSET_PHP_METHOD(first, 0)
-IMPLEMENT_READ_OFFSET_PHP_METHOD(last, intern->array.size - 1)
-
-PHP_METHOD(Teds_StrictSortedVectorSet, pop) {
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictsortedvectorset *intern = Z_STRICTSORTEDVECTORSET_P(ZEND_THIS);
-	if (intern->array.size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty StrictSortedVectorSet", 0);
-		RETURN_THROWS();
-	}
-	zval *entry = &intern->array.entries[intern->array.size - 1];
-	RETVAL_COPY_VALUE(entry);
-	intern->array.size--;
-	intern->array.should_rebuild_properties = true;
-}
-
-/* Shifts values. Callers should adjust size and handle zval reference counting. */
-static void teds_strictsortedvectorset_entries_remove_entry(zval *entries, uint32_t len, zval *entry)
-{
-	zval *end = entries + len - 1;
-	ZEND_ASSERT(entry <= end);
-	/* Move entries */
-	for (; entry < end; ) {
-		ZVAL_COPY_VALUE(entry, &entry[1]);
-		entry++;
-	}
-}
-
-PHP_METHOD(Teds_StrictSortedVectorSet, shift) {
-	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictsortedvectorset *intern = Z_STRICTSORTEDVECTORSET_P(ZEND_THIS);
-	const uint32_t len = intern->array.size;
-	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty StrictSortedVectorSet", 0);
-		RETURN_THROWS();
-	}
-	zval *entry = &intern->array.entries[0];
-	RETVAL_COPY_VALUE(entry);
-	teds_strictsortedvectorset_entries_remove_entry(entry, len, entry);
-	intern->array.size--;
-}
-
 static teds_strictsortedvectorset_search_result teds_strictsortedvectorset_entries_sorted_search_for_key(const teds_strictsortedvectorset_entries *array, zval *key)
 {
 	/* Currently, this is a binary search in an array, but later it would be a tree lookup. */
@@ -653,11 +598,7 @@ static bool teds_strictsortedvectorset_entries_remove_key(teds_strictsortedvecto
 	ZVAL_COPY_VALUE(&old_key, entry);
 	zval *end = array->entries + array->size - 1;
 	ZEND_ASSERT(entry <= end);
-	for (; entry < end; ) {
-		zval *next = &entry[1];
-		ZVAL_COPY_VALUE(entry, next);
-		entry = next;
-	}
+	memmove(entry, entry + 1, (end - entry) * sizeof(zval));
 	array->size--;
 	array->should_rebuild_properties = true;
 

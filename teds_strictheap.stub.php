@@ -19,6 +19,7 @@ final class StrictMinHeap implements \Iterator, Collection
 
     public function add(mixed $value): void {}
 
+    /** @implementation-alias Teds\Vector::first */
     public function top(): mixed {}
 
     public function extract(): mixed {}
@@ -29,15 +30,18 @@ final class StrictMinHeap implements \Iterator, Collection
     /** @implementation-alias Teds\Vector::isEmpty */
     public function isEmpty(): bool {}
 
+    /**
+     * This is a no-op.
+     */
     public function rewind(): void {}
 
     /**
-     * @implementation-alias Teds\StrictMinHeap::top
+     * @implementation-alias Teds\Vector::first
      */
     public function current(): mixed {}
 
     /**
-     * @implementation-alias Teds\StrictMinHeap::top
+     * @implementation-alias Teds\Vector::first
      */
     public function key(): mixed {}
 
@@ -59,6 +63,7 @@ final class StrictMinHeap implements \Iterator, Collection
     /**
      * @psalm-return array mapping entries to themselves or throwing.
      * @see self::values
+     * @implementation-alias Teds\StrictSortedVectorSet::toArray
      */
     public function toArray(): array {}
 
@@ -84,7 +89,7 @@ final class StrictMaxHeap implements \Iterator, Collection
 
     public function add(mixed $value): void {}
 
-    /** @implementation-alias Teds\StrictMinHeap::top */
+    /** @implementation-alias Teds\Vector::first */
     public function top(): mixed {}
 
     public function extract(): mixed {}
@@ -95,13 +100,16 @@ final class StrictMaxHeap implements \Iterator, Collection
     /** @implementation-alias Teds\Vector::isEmpty */
     public function isEmpty(): bool {}
 
-    /** @implementation-alias Teds\StrictMinHeap::rewind */
+    /**
+     * This is a no-op.
+     * @implementation-alias Teds\StrictMinHeap::rewind
+     */
     public function rewind(): void {}
 
-    /** @implementation-alias Teds\StrictMinHeap::top */
+    /** @implementation-alias Teds\Vector::first */
     public function current(): mixed {}
 
-    /** @implementation-alias Teds\StrictMinHeap::top */
+    /** @implementation-alias Teds\Vector::first */
     public function key(): mixed {}
 
     public function next(): void {}
@@ -120,7 +128,7 @@ final class StrictMaxHeap implements \Iterator, Collection
     /**
      * @psalm-return array mapping entries to themselves or throwing.
      * @see self::values
-     * @implementation-alias Teds\StrictMinHeap::toArray
+     * @implementation-alias Teds\StrictSortedVectorSet::toArray
      */
     public function toArray(): array {}
 

@@ -527,9 +527,7 @@ static HashTable* teds_stricttreemap_get_gc(zend_object *obj, zval **table, int 
 	/* Overwrites table and table_count. The caller of get_gc does not initialize these. */
 	zend_get_gc_buffer_use(gc_buffer, table, table_count);
 
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
+	return obj->properties;
 }
 
 static HashTable* teds_stricttreemap_get_and_populate_properties(zend_object *obj)

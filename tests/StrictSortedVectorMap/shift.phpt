@@ -46,9 +46,9 @@ v2,v3,v4
 ["k3","v3"]
 ["k2","v2"]
 Empty
-shift: Caught: Cannot shift from empty StrictSortedVectorMap
-pop: Caught: Cannot pop from empty StrictSortedVectorMap
-first: Caught: Cannot read first of empty StrictSortedVectorMap
-last: Caught: Cannot read last of empty StrictSortedVectorMap
+shift: Caught: Cannot shift from empty Teds\StrictSortedVectorMap
+pop: Caught: Cannot pop from empty Teds\StrictSortedVectorMap
+first: Caught: Cannot read first of empty Teds\StrictSortedVectorMap
+last: Caught: Cannot read last of empty Teds\StrictSortedVectorMap
 object(Teds\StrictSortedVectorMap)#1 (0) {
 }

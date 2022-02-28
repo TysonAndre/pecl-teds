@@ -125,6 +125,7 @@
    <file name="teds_stricttreeset.h" role="src" />
    <file name="teds_stricttreeset.stub.php" role="src" />
    <file name="teds.stub.php" role="src" />
+   <file name="teds_util.c" role="src" />
    <file name="teds_util.h" role="src" />
    <file name="teds_vector_arginfo.h" role="src" />
    <file name="teds_vector.c" role="src" />

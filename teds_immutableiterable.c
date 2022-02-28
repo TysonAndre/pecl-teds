@@ -288,12 +288,12 @@ static HashTable* teds_immutableiterable_get_gc(zend_object *obj, zval **table, 
 static HashTable* teds_immutableiterable_get_properties(zend_object *obj)
 {
 	teds_immutableiterable *intern = teds_immutableiterable_from_object(obj);
-	uint32_t len = intern->array.size;
-	HashTable *ht = zend_std_get_properties(obj);
+	const uint32_t len = intern->array.size;
 	if (!len) {
 		/* Nothing to add or remove - this is immutable. */
-		return ht;
+		return (HashTable*)&zend_empty_array;
 	}
+	HashTable *ht = zend_std_get_properties(obj);
 	if (zend_hash_num_elements(ht)) {
 		/* Already built. This is immutable there is no need to rebuild it. */
 		return ht;

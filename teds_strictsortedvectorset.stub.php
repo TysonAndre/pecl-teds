@@ -65,24 +65,34 @@ final class StrictSortedVectorSet implements \IteratorAggregate, Set, \JsonSeria
     /** Returns keys mapped to themselves, like iterator_to_array would return. */
     public function toArray(): array {}
 
-    /** Returns the first value, throws if empty. */
+    /**
+     * Returns the first value, throws if empty.
+     * @implementation-alias Teds\Vector::first
+     */
     public function first(): mixed {}
-    /** @implementation-alias Teds\StrictSortedVectorSet::first */
+    /** @implementation-alias Teds\Vector::first */
     public function bottom(): mixed {}
 
-    /** Returns the last value, throws if empty */
+    /**
+     * Returns the last value, throws if empty
+     * @implementation-alias Teds\Vector::last
+     */
     public function last(): mixed {}
-    /** @implementation-alias Teds\StrictSortedVectorSet::last */
+    /**
+     * @implementation-alias Teds\Vector::last
+     */
     public function top(): mixed {}
 
     /**
      * Pops a value from the end of the StrictSortedVectorSet.
      * @throws \UnderflowException if the StrictSortedVectorSet is empty
+     * @implementation-alias Teds\Vector::pop
      */
     public function pop(): mixed {}
     /**
      * Shifts a value from the front of the StrictSortedVectorSet
      * @throws \UnderflowException if the StrictSortedVectorSet is empty
+     * @implementation-alias Teds\Vector::shift
      */
     public function shift(): mixed {}
     /**

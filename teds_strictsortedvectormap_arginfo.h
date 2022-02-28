@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 091e8a081cd12ea0d9eb756c4b349c42b8a01082 */
+ * Stub hash: 5324838f41d765ad3b32b288c78d0e872d45353f */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
@@ -95,47 +95,47 @@ ZEND_END_ARG_INFO()
 
 
 ZEND_METHOD(Teds_StrictSortedVectorMap, __construct);
-ZEND_METHOD(Teds_StrictSortedVectorMap, getIterator);
-ZEND_METHOD(Teds_StrictSortedVectorMap, count);
-ZEND_METHOD(Teds_StrictSortedVectorMap, isEmpty);
-ZEND_METHOD(Teds_StrictSortedVectorMap, clear);
-ZEND_METHOD(Teds_StrictSortedVectorMap, toPairs);
+ZEND_METHOD(Teds_MutableIterable, getIterator);
+ZEND_METHOD(Teds_MutableIterable, count);
+ZEND_METHOD(Teds_MutableIterable, isEmpty);
+ZEND_METHOD(Teds_MutableIterable, clear);
+ZEND_METHOD(Teds_MutableIterable, toPairs);
 ZEND_METHOD(Teds_StrictSortedVectorMap, fromPairs);
-ZEND_METHOD(Teds_StrictSortedVectorMap, __serialize);
+ZEND_METHOD(Teds_MutableIterable, __serialize);
 ZEND_METHOD(Teds_StrictSortedVectorMap, __unserialize);
 ZEND_METHOD(Teds_StrictSortedVectorMap, __set_state);
-ZEND_METHOD(Teds_StrictSortedVectorMap, toArray);
-ZEND_METHOD(Teds_StrictSortedVectorMap, values);
-ZEND_METHOD(Teds_StrictSortedVectorMap, keys);
+ZEND_METHOD(Teds_MutableIterable, toArray);
+ZEND_METHOD(Teds_MutableIterable, values);
+ZEND_METHOD(Teds_MutableIterable, keys);
 ZEND_METHOD(Teds_StrictSortedVectorMap, first);
 ZEND_METHOD(Teds_StrictSortedVectorMap, firstKey);
 ZEND_METHOD(Teds_StrictSortedVectorMap, last);
 ZEND_METHOD(Teds_StrictSortedVectorMap, lastKey);
-ZEND_METHOD(Teds_StrictSortedVectorMap, pop);
+ZEND_METHOD(Teds_MutableIterable, pop);
 ZEND_METHOD(Teds_StrictSortedVectorMap, shift);
 ZEND_METHOD(Teds_StrictSortedVectorMap, offsetGet);
 ZEND_METHOD(Teds_StrictSortedVectorMap, offsetExists);
 ZEND_METHOD(Teds_StrictSortedVectorMap, offsetSet);
 ZEND_METHOD(Teds_StrictSortedVectorMap, offsetUnset);
 ZEND_METHOD(Teds_StrictSortedVectorMap, get);
-ZEND_METHOD(Teds_StrictSortedVectorMap, contains);
+ZEND_METHOD(Teds_MutableIterable, contains);
 ZEND_METHOD(Teds_StrictSortedVectorMap, containsKey);
 
 
 static const zend_function_entry class_Teds_StrictSortedVectorMap_methods[] = {
 	ZEND_ME(Teds_StrictSortedVectorMap, __construct, arginfo_class_Teds_StrictSortedVectorMap___construct, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, getIterator, arginfo_class_Teds_StrictSortedVectorMap_getIterator, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, count, arginfo_class_Teds_StrictSortedVectorMap_count, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, isEmpty, arginfo_class_Teds_StrictSortedVectorMap_isEmpty, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, clear, arginfo_class_Teds_StrictSortedVectorMap_clear, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, toPairs, arginfo_class_Teds_StrictSortedVectorMap_toPairs, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, getIterator, getIterator, arginfo_class_Teds_StrictSortedVectorMap_getIterator, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, count, count, arginfo_class_Teds_StrictSortedVectorMap_count, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, isEmpty, isEmpty, arginfo_class_Teds_StrictSortedVectorMap_isEmpty, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, clear, clear, arginfo_class_Teds_StrictSortedVectorMap_clear, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, toPairs, toPairs, arginfo_class_Teds_StrictSortedVectorMap_toPairs, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, fromPairs, arginfo_class_Teds_StrictSortedVectorMap_fromPairs, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, __serialize, arginfo_class_Teds_StrictSortedVectorMap___serialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, __serialize, __serialize, arginfo_class_Teds_StrictSortedVectorMap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, __unserialize, arginfo_class_Teds_StrictSortedVectorMap___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, __set_state, arginfo_class_Teds_StrictSortedVectorMap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, toArray, arginfo_class_Teds_StrictSortedVectorMap_toArray, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, values, arginfo_class_Teds_StrictSortedVectorMap_values, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, keys, arginfo_class_Teds_StrictSortedVectorMap_keys, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, toArray, toArray, arginfo_class_Teds_StrictSortedVectorMap_toArray, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, values, values, arginfo_class_Teds_StrictSortedVectorMap_values, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, keys, keys, arginfo_class_Teds_StrictSortedVectorMap_keys, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, first, arginfo_class_Teds_StrictSortedVectorMap_first, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StrictSortedVectorMap, bottom, first, arginfo_class_Teds_StrictSortedVectorMap_bottom, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, firstKey, arginfo_class_Teds_StrictSortedVectorMap_firstKey, ZEND_ACC_PUBLIC)
@@ -144,17 +144,17 @@ static const zend_function_entry class_Teds_StrictSortedVectorMap_methods[] = {
 	ZEND_MALIAS(Teds_StrictSortedVectorMap, top, last, arginfo_class_Teds_StrictSortedVectorMap_top, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, lastKey, arginfo_class_Teds_StrictSortedVectorMap_lastKey, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StrictSortedVectorMap, topKey, lastKey, arginfo_class_Teds_StrictSortedVectorMap_topKey, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, pop, arginfo_class_Teds_StrictSortedVectorMap_pop, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, pop, pop, arginfo_class_Teds_StrictSortedVectorMap_pop, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, shift, arginfo_class_Teds_StrictSortedVectorMap_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, offsetGet, arginfo_class_Teds_StrictSortedVectorMap_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, offsetExists, arginfo_class_Teds_StrictSortedVectorMap_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, offsetSet, arginfo_class_Teds_StrictSortedVectorMap_offsetSet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, offsetUnset, arginfo_class_Teds_StrictSortedVectorMap_offsetUnset, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, get, arginfo_class_Teds_StrictSortedVectorMap_get, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_StrictSortedVectorMap, containsValue, contains, arginfo_class_Teds_StrictSortedVectorMap_containsValue, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, contains, arginfo_class_Teds_StrictSortedVectorMap_contains, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, containsValue, contains, arginfo_class_Teds_StrictSortedVectorMap_containsValue, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, contains, contains, arginfo_class_Teds_StrictSortedVectorMap_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, containsKey, arginfo_class_Teds_StrictSortedVectorMap_containsKey, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_StrictSortedVectorMap, jsonSerialize, toPairs, arginfo_class_Teds_StrictSortedVectorMap_jsonSerialize, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_MutableIterable, jsonSerialize, toPairs, arginfo_class_Teds_StrictSortedVectorMap_jsonSerialize, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

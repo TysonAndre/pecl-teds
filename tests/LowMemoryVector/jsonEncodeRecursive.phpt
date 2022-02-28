@@ -29,15 +29,11 @@ test();
 --EXPECT--
 JSON: [null]
 Saw key 0
-object(Teds\LowMemoryVector)#1 (1) {
-  [0]=>
-  *RECURSION*
+object(Teds\LowMemoryVector)#1 (0) {
 }
 array(1) {
   [0]=>
-  object(Teds\LowMemoryVector)#1 (1) {
-    [0]=>
-    *RECURSION*
+  object(Teds\LowMemoryVector)#1 (0) {
   }
 }
 O:20:"Teds\LowMemoryVector":2:{i:0;i:7;i:1;a:1:{i:0;r:1;}}

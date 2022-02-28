@@ -216,8 +216,8 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-first() Caught UnderflowException: Cannot read first of empty StrictSortedVectorMap
-last() Caught UnderflowException: Cannot read last of empty StrictSortedVectorMap
+first() Caught UnderflowException: Cannot read first of empty Teds\StrictSortedVectorMap
+last() Caught UnderflowException: Cannot read last of empty Teds\StrictSortedVectorMap
 object(Teds\StrictSortedVectorMap)#%d (0) {
 }
 Testing Teds\StrictSortedVectorSet
@@ -226,8 +226,8 @@ values: array(0) {
 toArray: array(0) {
 }
 clear: NULL
-first() Caught UnderflowException: Cannot read first of empty StrictSortedVectorSet
-last() Caught UnderflowException: Cannot read last of empty StrictSortedVectorSet
+first() Caught UnderflowException: Cannot read first value of empty Teds\StrictSortedVectorSet
+last() Caught UnderflowException: Cannot read last value of empty Teds\StrictSortedVectorSet
 object(Teds\StrictSortedVectorSet)#%d (0) {
 }
 Testing Teds\StrictTreeMap

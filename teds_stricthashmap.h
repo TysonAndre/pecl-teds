@@ -52,6 +52,16 @@ PHP_MINIT_FUNCTION(teds_stricthashmap);
 		k = _key; \
 		v = &_p->value;
 
+#define TEDS_STRICTHASHMAP_FOREACH_CHECK_MODIFY_KEY_VAL(_stricthashmap, k, v) do { \
+	const teds_stricthashmap_entries *const __stricthashmap = (_stricthashmap); \
+	uint32_t _i = 0; \
+	for (; _i < __stricthashmap->nNumUsed; _i++) { \
+		teds_stricthashmap_entry *_p = &(__stricthashmap->arData[_i]); \
+		zval *_key = &_p->key; \
+		if (Z_TYPE_P(_key) == IS_UNDEF) { continue; } \
+		k = _key; \
+		v = &_p->value;
+
 #define TEDS_STRICTHASHMAP_FOREACH_VAL(stricthashmap, v) TEDS_STRICTHASHMAP_FOREACH(stricthashmap) \
 		v = &_p->value;
 
@@ -80,6 +90,7 @@ typedef struct _teds_stricthashmap_entries {
 	uint32_t nTableSize; /* Power of 2 size, a.k.a. capacity(). */
 	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
 	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHMAP_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
+	bool should_rebuild_properties;
 } teds_stricthashmap_entries;
 
 typedef struct _teds_stricthashmap {

@@ -86,18 +86,7 @@ Insert invalid caught OutOfBoundsException: Index out of range
 New size=7
 [100,{},{},101,102,103,104]
 [100,{},102,103,104]
-object(Teds\LowMemoryVector)#%d (5) {
-  [0]=>
-  int(100)
-  [1]=>
-  object(stdClass)#%d (0) {
-  }
-  [2]=>
-  int(102)
-  [3]=>
-  int(103)
-  [4]=>
-  int(104)
+object(Teds\LowMemoryVector)#%d (0) {
 }
 Test Teds\IntVector
 Insert invalid caught OutOfBoundsException: Index out of range

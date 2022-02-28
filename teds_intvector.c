@@ -32,13 +32,6 @@
 
 #include <stdbool.h>
 
-#ifndef WORDS_BIGENDIAN
-/* The layout of serialized data is the same as native layout on little-endian, allowing this to avoid an extra copy */
-#define TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING 1
-#else
-#define TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING 0
-#endif
-
 #define TEDS_IMMUTABLESORTEDINTSET_BYTE_THRESHOLD (1 << 13)
 
 #define TEDS_IMMUTABLESORTEDINTSET_THROW_UNSUPPORTEDOPERATIONEXCEPTION() TEDS_THROW_UNSUPPORTEDOPERATIONEXCEPTION("Teds\\ImmutableSortedIntSet is immutable")
@@ -129,10 +122,8 @@ typedef struct _teds_intvector_entries {
 	 * and garbage collection isn't a problem. */
 	size_t size;
 	size_t capacity;
-	int8_t type_tag;
-#ifdef TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
-	int8_t is_string_backed; /* For ImmutableSortedIntSet */
-#endif
+	uint8_t type_tag;
+	bool is_string_backed; /* For ImmutableSortedIntSet */
 } teds_intvector_entries;
 
 typedef struct _teds_intvector {
@@ -215,9 +206,7 @@ static uint8_t teds_intvector_entries_compute_memory_per_element(const teds_intv
 	return teds_lmv_memory_per_element[array->type_tag];
 }
 
-#if TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
 #define TEDS_IMMUTABLESORTEDINTVECTOR_OFFSET (XtOffsetOf(zend_string, val))
-#endif
 
 static zend_always_inline void *teds_intvector_emalloc_byte_array(size_t nmembers, size_t bytes_per_element) {
 	return safe_emalloc(nmembers, bytes_per_element, 0);
@@ -386,7 +375,6 @@ static void teds_intvector_free_storage(zend_object *object)
 	zend_object_std_dtor(&intern->std);
 }
 
-#if TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
 static zend_always_inline zend_string *teds_immutablesortedintset_entries_get_backing_zend_string(const teds_intvector_entries *array) {
 	ZEND_ASSERT(array->size <= array->capacity);
 	if (array->size == 0) {
@@ -405,7 +393,6 @@ static zend_always_inline zend_string *teds_immutablesortedintset_entries_get_ba
 	ZEND_ASSERT(ZSTR_LEN(result) > 0);
 	return result;
 }
-#endif
 
 static void teds_immutablesortedintset_entries_clear(teds_intvector_entries *array)
 {
@@ -415,13 +402,10 @@ static void teds_immutablesortedintset_entries_clear(teds_intvector_entries *arr
 	}
 	ZEND_ASSERT(array->entries_raw != NULL && array->entries_raw != empty_entry_list);
 
-#if TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
 	if (array->is_string_backed) {
 		zend_string *backing_string = teds_immutablesortedintset_entries_get_backing_zend_string(array);
 		zend_string_release(backing_string);
-	} else
-#endif
-	{
+	} else {
 		efree(array->entries_raw);
 	}
 	array->size = 0;
@@ -720,7 +704,6 @@ static void teds_immutablesortedintset_entries_sort_and_deduplicate(teds_intvect
 {
 	const uint8_t type_tag = array->type_tag;
 	teds_intvector_entries_sort_and_deduplicate(array);
-#if TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
 	if (array->is_string_backed) {
 		zend_string *str = teds_immutablesortedintset_entries_get_backing_zend_string(array);
 		if (!ZSTR_IS_INTERNED(str)) {
@@ -729,7 +712,6 @@ static void teds_immutablesortedintset_entries_sort_and_deduplicate(teds_intvect
 			ZEND_ASSERT(ZSTR_LEN(str) == array->size * teds_lmv_memory_per_element[type_tag]);
 		}
 	}
-#endif
 }
 
 PHP_METHOD(Teds_ImmutableSortedIntSet, __construct)
@@ -901,7 +883,7 @@ static void teds_intvector_entries_unserialize_from_string(teds_intvector_entrie
 #ifdef WORDS_BIGENDIAN
 			/* TODO: Can probably optimize this for big endian with C restrict keyword to indicate memory doesn't overlap? */
 			if (type_tag != TEDS_INTVECTOR_TYPE_INT8) {
-				if (type_tag == TEDS_INTVECTOR_TYPE_INT64) {
+				if (type_tag == TEDS_INTVECTOR_TYPE_INT32 + 1) {
 					uint64_t *dst = (uint64_t *)values;
 					const uint64_t *src = (const uint64_t *)strval;
 					const uint64_t *const end = src + num_elements;
@@ -940,7 +922,6 @@ static void teds_intvector_entries_unserialize_from_string(teds_intvector_entrie
 	}
 }
 
-#if TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
 static void teds_immutablesortedintset_entries_unserialize_from_string(teds_intvector_entries *array, zend_string *src_str, const uint8_t type_tag)
 {
 	ZEND_ASSERT(type_tag < TEDS_INTVECTOR_TYPE_COUNT);
@@ -967,12 +948,11 @@ static void teds_immutablesortedintset_entries_unserialize_from_string(teds_intv
 #ifdef WORDS_BIGENDIAN
 			/* TODO: Can probably optimize this with C restrict keyword to indicate memory doesn't overlap? */
 			if (type_tag != TEDS_INTVECTOR_TYPE_INT8) {
-				zend_string *result = zend_string_alloc(str_byte_length, 0);
-				uint8_t *values = ZSTR_VAL(result);
+				uint8_t *const values = emalloc(str_byte_length);
 				array->entries_int8 = values;
 				if (type_tag == TEDS_INTVECTOR_TYPE_INT64) {
 					uint64_t *dst = (uint64_t *)values;
-					const uint64_t *src = (const uint64_t *)strval;
+					const uint64_t *src = (const uint64_t *)ZSTR_VAL(src_str);
 					const uint64_t *const end = src + num_elements;
 					for (;src < end; src++, dst++) {
 						/* This compiles down to a bswap assembly instruction in optimized builds */
@@ -980,7 +960,7 @@ static void teds_immutablesortedintset_entries_unserialize_from_string(teds_intv
 					}
 				} else if (type_tag == TEDS_INTVECTOR_TYPE_INT32) {
 					uint32_t *dst = (uint32_t *)values;
-					const uint32_t *src = (const uint32_t *)strval;
+					const uint32_t *src = (const uint32_t *)ZSTR_VAL(src_str);
 					const uint32_t *const end = src + num_elements;
 					for (;src < end; src++, dst++) {
 						/* This compiles down to a bswap assembly instruction in optimized builds */
@@ -988,7 +968,7 @@ static void teds_immutablesortedintset_entries_unserialize_from_string(teds_intv
 					}
 				} else if (type_tag == TEDS_INTVECTOR_TYPE_INT16) {
 					uint16_t *dst = (uint16_t *)values;
-					const uint16_t *src = (const uint16_t *)strval;
+					const uint16_t *src = (const uint16_t *)ZSTR_VAL(src_str);
 					const uint16_t *const end = src + num_elements;
 					for (;src < end; src++, dst++) {
 						/* This compiles down to a bswap assembly instruction in optimized builds */
@@ -997,7 +977,7 @@ static void teds_immutablesortedintset_entries_unserialize_from_string(teds_intv
 				} else {
 					ZEND_UNREACHABLE();
 				}
-				values[str_byte_length] = '\0';
+				ZEND_ASSERT(!array->is_string_backed);
 				return;
 			}
 #endif
@@ -1023,7 +1003,6 @@ static void teds_immutablesortedintset_entries_unserialize_from_string(teds_intv
 			ZEND_UNREACHABLE();
 	}
 }
-#endif
 
 PHP_METHOD(Teds_IntVector, __unserialize)
 {
@@ -1042,26 +1021,26 @@ PHP_METHOD(Teds_IntVector, __unserialize)
 	}
 
 	if (UNEXPECTED(zend_hash_num_elements(raw_data) != 2)) {
-		zend_throw_exception(spl_ce_RuntimeException, "IntVector unexpected __unserialize data: expected exactly 2 values", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\IntVector unexpected __unserialize data: expected exactly 2 values", 0);
 		RETURN_THROWS();
 	}
 	const zval *type_tag_zval = zend_hash_index_find(raw_data, 0);
 	if (UNEXPECTED(type_tag_zval == NULL || Z_TYPE_P(type_tag_zval) != IS_LONG)) {
-		zend_throw_exception(spl_ce_RuntimeException, "IntVector unserialize got invalid type tag, expected int", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\IntVector unserialize got invalid type tag, expected int", 0);
 		RETURN_THROWS();
 	}
 	const zend_ulong type_tag = Z_LVAL_P(type_tag_zval);
 	if (UNEXPECTED(type_tag >= TEDS_INTVECTOR_TYPE_COUNT)) {
-		zend_throw_exception_ex(spl_ce_RuntimeException, 0, "IntVector unserialize got unsupported type tag %d", (int)type_tag);
+		zend_throw_exception_ex(spl_ce_RuntimeException, 0, "Teds\\IntVector unserialize got unsupported type tag %d", (int)type_tag);
 		RETURN_THROWS();
 	}
 	const zval *raw_zval = zend_hash_index_find(raw_data, 1);
 	if (UNEXPECTED(raw_zval == NULL)) {
-		zend_throw_exception(spl_ce_RuntimeException, "IntVector missing data to unserialize", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\IntVector missing data to unserialize", 0);
 		RETURN_THROWS();
 	}
 	if (Z_TYPE_P(raw_zval) != IS_STRING) {
-		zend_throw_exception(spl_ce_RuntimeException, "IntVector expected string for binary data", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\IntVector expected string for binary data", 0);
 		RETURN_THROWS();
 	}
 	const size_t str_byte_length = Z_STRLEN_P(raw_zval);
@@ -1111,7 +1090,10 @@ PHP_METHOD(Teds_SortedIntVectorSet, __unserialize)
 	const size_t str_byte_length = Z_STRLEN_P(raw_zval);
 	const char *strval = Z_STRVAL_P(raw_zval);
 	teds_intvector_entries_unserialize_from_string(array, strval, str_byte_length, type_tag);
-	if (!teds_intvector_entries_is_sorted(type_tag, strval, array->size)) {
+	if (UNEXPECTED(EG(exception))) {
+		RETURN_THROWS();
+	}
+	if (!teds_intvector_entries_is_sorted(type_tag, array->entries_uint8, array->size)) {
 		zend_throw_exception(spl_ce_RuntimeException, "Teds\\SortedIntVectorSet expected sorted values in __unserialize", 0);
 		RETURN_THROWS();
 	}
@@ -1126,7 +1108,7 @@ PHP_METHOD(Teds_ImmutableSortedIntSet, __unserialize)
 	}
 	teds_intvector_entries *array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
 	if (UNEXPECTED(!teds_intvector_entries_uninitialized(array))) {
-		zend_throw_exception(spl_ce_RuntimeException, "Already unserialized", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\ImmutableSortedIntSet Already unserialized", 0);
 		RETURN_THROWS();
 	}
 	if (zend_hash_num_elements(raw_data) == 0) {
@@ -1135,37 +1117,36 @@ PHP_METHOD(Teds_ImmutableSortedIntSet, __unserialize)
 	}
 
 	if (UNEXPECTED(zend_hash_num_elements(raw_data) != 2)) {
-		zend_throw_exception(spl_ce_RuntimeException, "ImmutableSortedIntSet unexpected __unserialize data: expected exactly 2 values", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\ImmutableSortedIntSet unexpected __unserialize data: expected exactly 2 values", 0);
 		RETURN_THROWS();
 	}
 	const zval *type_tag_zval = zend_hash_index_find(raw_data, 0);
 	if (UNEXPECTED(type_tag_zval == NULL || Z_TYPE_P(type_tag_zval) != IS_LONG)) {
-		zend_throw_exception(spl_ce_RuntimeException, "ImmutableSortedIntSet unserialize got invalid type tag, expected int", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\ImmutableSortedIntSet unserialize got invalid type tag, expected int", 0);
 		RETURN_THROWS();
 	}
 	const zend_ulong type_tag = Z_LVAL_P(type_tag_zval);
 	if (UNEXPECTED(type_tag >= TEDS_INTVECTOR_TYPE_COUNT)) {
-		zend_throw_exception_ex(spl_ce_RuntimeException, 0, "ImmutableSortedIntSet unserialize got unsupported type tag %d", (int)type_tag);
+		zend_throw_exception_ex(spl_ce_RuntimeException, 0, "Teds\\ImmutableSortedIntSet unserialize got unsupported type tag %d", (int)type_tag);
 		RETURN_THROWS();
 	}
 	const zval *raw_zval = zend_hash_index_find(raw_data, 1);
 	if (UNEXPECTED(raw_zval == NULL)) {
-		zend_throw_exception(spl_ce_RuntimeException, "ImmutableSortedIntSet missing data to unserialize", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\ImmutableSortedIntSet missing data to unserialize", 0);
 		RETURN_THROWS();
 	}
 	if (Z_TYPE_P(raw_zval) != IS_STRING) {
-		zend_throw_exception(spl_ce_RuntimeException, "ImmutableSortedIntSet expected string for binary data", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\ImmutableSortedIntSet expected string for binary data", 0);
 		RETURN_THROWS();
 	}
 	zend_string *raw_zstr = Z_STR_P(raw_zval);
-#if TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
 	/* This may or may not set is_string_backed based on the length of raw_zstr and the number of bytes */
 	teds_immutablesortedintset_entries_unserialize_from_string(array, raw_zstr, type_tag);
-#else
-	teds_intvector_entries_unserialize_from_string(array, ZSTR_VAL(raw_zstr), ZSTR_LEN(raw_zstr), type_tag);
-#endif
+	if (UNEXPECTED(EG(exception))) {
+		RETURN_THROWS();
+	}
 	if (!teds_intvector_entries_is_sorted(type_tag, array->entries_uint8, array->size)) {
-		zend_throw_exception(spl_ce_RuntimeException, "Teds\\SortedIntVectorSet expected sorted values in __unserialize", 0);
+		zend_throw_exception(spl_ce_RuntimeException, "Teds\\ImmutableSortedIntSet expected sorted values in __unserialize", 0);
 		RETURN_THROWS();
 	}
 	/* FIXME Throw if not sorted */
@@ -1201,8 +1182,7 @@ static zend_string *teds_intvector_entries_create_new_serialized_string(const te
 	switch (array->type_tag) {
 #define TEDS_INTVECTOR__INT_CODEGEN(TEDS_INTVECTOR_TYPE_X, intx_t, entries_intx) \
 		case TEDS_INTVECTOR_TYPE_X: \
-			return teds_create_string_from_##entries_intx((const char *)array->entries_int8, len); \
-			break;
+			return teds_create_string_from_##entries_intx((const char *)array->entries_int8, len);
 TEDS_INTVECTOR__GENERATE_INT_CASES()
 #undef TEDS_INTVECTOR__INT_CODEGEN
 
@@ -1237,21 +1217,17 @@ PHP_METHOD(Teds_ImmutableSortedIntSet, __serialize)
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	const teds_intvector_entries *const array = Z_INTVECTOR_ENTRIES_P(ZEND_THIS);
-	const size_t len = array->size;
-	if (len == 0) {
+	if (!array->size) {
 		RETURN_EMPTY_ARRAY();
 	}
 	zval tmp;
 	const uint8_t type_tag = array->type_tag;
 	ZEND_ASSERT(type_tag < TEDS_INTVECTOR_TYPE_COUNT);
 	/* FIXME WORDS_BIGENDIAN handling */
-#if TEDS_IMMUTABLESORTEDINTSET_USES_ZEND_STRING
 	if (array->is_string_backed) {
 		zend_string *str = teds_immutablesortedintset_entries_get_backing_zend_string(array);
 		ZVAL_STR_COPY(&tmp, str);
-	} else
-#endif
-	{
+	} else {
 		zend_string *str = teds_intvector_entries_create_new_serialized_string(array);
 		ZVAL_STR(&tmp, str);
 	}

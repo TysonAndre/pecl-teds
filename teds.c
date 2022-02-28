@@ -1112,7 +1112,7 @@ PHP_MINIT_FUNCTION(teds)
 	PHP_MINIT(teds_deque)(INIT_FUNC_ARGS_PASSTHRU);
 #if PHP_VERSION_ID >= 80100
 	/* This uses php 8.1 enums */
-	PHP_MINIT(teds_emptysequence)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(teds_emptycollection)(INIT_FUNC_ARGS_PASSTHRU);
 #endif
 	PHP_MINIT(teds_immutableiterable)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(teds_immutablesequence)(INIT_FUNC_ARGS_PASSTHRU);

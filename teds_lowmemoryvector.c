@@ -373,7 +373,6 @@ static HashTable* teds_lowmemoryvector_get_gc(zend_object *obj, zval **table, in
 	uint32_t len = array->size;
 	if (len == 0 || array->type_tag <= LMV_TYPE_LAST_GC_NO_SIDE_EFFECTS) {
 		*n = 0;
-		/* Deliberately return null if obj->properties has not yet been instantiated */
 		return obj->properties;
 	}
 	ZEND_ASSERT(array->type_tag == LMV_TYPE_ZVAL);
@@ -381,54 +380,17 @@ static HashTable* teds_lowmemoryvector_get_gc(zend_object *obj, zval **table, in
 	*n = (int)len;
 	*table = array->entries_zval;
 
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
 	return obj->properties;
 }
 
 static HashTable* teds_lowmemoryvector_get_properties(zend_object *obj)
 {
 	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(obj)->array;
-	if (!array->size && !obj->properties) {
-		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
+	if (!array->size) {
+		/* Similar to ext/ffi/ffi.c zend_fake_get_properties. */
 		return (HashTable*)&zend_empty_array;
 	}
-	HashTable *ht = zend_std_get_properties(obj);
-
-	/* XXX Here, we deliberately don't support leaking properties to var_export. The entire point is low memory. */
-	/* Related to https://github.com/php/php-src/issues/8044 */
-
-	/*
-	 * Re-initialize properties array.
-	 *
-	 * Note that destructors may mutate the original array,
-	 * so we fetch the size and circular buffer (and type tag) each time to avoid invalid memory accesses.
-	 *
-	 * json_encode needs distinct results of `*get_properties` (Z_OBJPROP) to detect infinite recursion.
-	 * var_export needs `*get_properties_for` to return the same array every time to detect infinite recursion.
-	 * var_dump is doing yet another different thing, and calling `Z_PROTECT_RECURSION(zval *struct)` to set the GC_FLAGS
-	 * on the object?
-	 *
-	 * Garbage collection needs to get this property array to detect reference cycles because this also has references.
-	 * But the point is to reduce memory usage, anyway.
-	 *
-	 * There's the option of allocating a **different** table for var_export to use, exclusively,
-	 * and letting var_dump/var_export use their hash table detection?
-	for (uint32_t i = 0; i < array->size; i++) {
-		zval tmp;
-		zval *elem = teds_lowmemoryvector_entries_read_offset(array, i, &tmp);
-		Z_TRY_ADDREF_P(elem);
-		zend_hash_index_update(ht, i, elem);
-	}
-	uint32_t properties_size = zend_hash_num_elements(ht);
-	if (UNEXPECTED(properties_size > array->size)) {
-		for (uint32_t i = array->size; i < properties_size; i++) {
-			zend_hash_index_del(ht, i);
-		}
-	}
-	 */
-
-	return ht;
+	return zend_std_get_properties(obj);
 }
 
 static HashTable* teds_lowmemoryvector_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
@@ -439,14 +401,15 @@ static HashTable* teds_lowmemoryvector_get_properties_for(zend_object *obj, zend
 		return (HashTable*)&zend_empty_array;
 	}
 	switch (purpose) {
-		case ZEND_PROP_PURPOSE_DEBUG:
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
-		case ZEND_PROP_PURPOSE_JSON:
 			return teds_lowmemoryvector_entries_to_refcounted_array(array);
+		case ZEND_PROP_PURPOSE_JSON:
+		case ZEND_PROP_PURPOSE_DEBUG:
 		case ZEND_PROP_PURPOSE_VAR_EXPORT: {
-			/* var_export uses get_properties_for for infinite recursion detection rather than get_properties(Z_OBJPROP).
-			 * or checking for recursion on the object itself (php_var_dump) */
+			/* XXX Here, we deliberately don't support leaking properties to var_export. The entire point is low memory. */
+			/* Related to https://github.com/php/php-src/issues/8044 */
+			/* Returning a brand new refcounted array every time would cause problems with debug output for circular data structures in var_export/debug_zval_dump. */
 			HashTable *ht = teds_lowmemoryvector_get_properties(obj);
 			GC_TRY_ADDREF(ht);
 			return ht;
@@ -997,6 +960,8 @@ PHP_METHOD(Teds_LowMemoryVector, __serialize)
 			break;
 		}
 
+#ifdef WORDS_BIGENDIAN
+
 #define LMV_INT_CODEGEN(LMV_TYPE_X, intx_t, entries_intx) \
 		case LMV_TYPE_X: \
 			ZVAL_STR(&tmp, teds_create_string_from_##entries_intx((const char *)array->entries_int8, len)); \
@@ -1007,6 +972,16 @@ LMV_GENERATE_INT_CASES()
 		case LMV_TYPE_DOUBLE:
 			ZVAL_STR(&tmp, teds_create_string_from_entries_double((const char *)array->entries_double, len));
 			break;
+#else
+		/* Little-endian: Copy bytes directly. */
+#define LMV_INT_CODEGEN(LMV_TYPE_X, intx_t, entries_intx) \
+		case LMV_TYPE_X:
+LMV_GENERATE_INT_CASES()
+#undef LMV_INT_CODEGEN
+		case LMV_TYPE_DOUBLE:
+			ZVAL_STR(&tmp, zend_string_init((const char *)array->entries_int8, array->size << teds_lmv_shift_for_element[type_tag], 0));
+			break;
+#endif
 
 		case LMV_TYPE_ZVAL: {
 			zend_array *values = teds_new_array_check_overflow(len);
@@ -1070,9 +1045,7 @@ static zend_array *teds_lowmemoryvector_entries_to_refcounted_array(const teds_l
 			case LMV_TYPE_BOOL_OR_NULL: {
 				const uint8_t *const entries = array->entries_uint8;
 				for (uint32_t i = 0; i < len; i++) {
-					zval tmp;
-					teds_lowmemoryvector_entries_set_type(&tmp, entries[i]);
-					ZEND_HASH_FILL_SET(&tmp);
+					teds_lowmemoryvector_entries_set_type(TEDS_FILL_VAL, entries[i]);
 					ZEND_HASH_FILL_NEXT();
 				}
 				break;

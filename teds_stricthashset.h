@@ -40,6 +40,14 @@ PHP_MINIT_FUNCTION(teds_stricthashset);
 #define TEDS_STRICTHASHSET_INVALID_INDEX ((uint32_t) -1)
 
 /* Based on ZEND_HASH_MAP_FOREACH_FROM */
+#define TEDS_STRICTHASHSET_FOREACH_CHECK_MODIFY_VAL(_stricthashset, v) do { \
+	const teds_stricthashset_entries *const __stricthashset = (_stricthashset); \
+	uint32_t _i = 0; \
+	for (; _i < __stricthashset->nNumUsed; _i++) { \
+		teds_stricthashset_entry *_p = &(__stricthashset->arData[_i]); \
+		v = &_p->key; \
+		if (Z_TYPE_P(v) == IS_UNDEF) { continue; }
+
 #define TEDS_STRICTHASHSET_FOREACH(_stricthashset) do { \
 	const teds_stricthashset_entries *const __stricthashset = (_stricthashset); \
 	teds_stricthashset_entry *_p = __stricthashset->arData; \
@@ -81,6 +89,7 @@ typedef struct _teds_stricthashset_entries {
 	uint32_t nTableSize; /* Power of 2 size, aka capacity() */
 	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
 	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHSET_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
+	bool should_rebuild_properties;
 } teds_stricthashset_entries;
 
 typedef struct _teds_stricthashset {

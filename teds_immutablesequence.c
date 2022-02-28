@@ -262,11 +262,11 @@ static HashTable* teds_immutablesequence_get_properties(zend_object *obj)
 {
 	teds_immutablesequence *intern = teds_immutablesequence_from_object(obj);
 	const uint32_t len = intern->array.size;
-	HashTable *ht = zend_std_get_properties(obj);
 	if (!len) {
 		/* Nothing to add or remove - this is immutable. */
-		return ht;
+		return (HashTable*)&zend_empty_array;
 	}
+	HashTable *ht = zend_std_get_properties(obj);
 	if (zend_hash_num_elements(ht)) {
 		/* Already built. Because this is immutable there is no need to rebuild it. */
 		return ht;

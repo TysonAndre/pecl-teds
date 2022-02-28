@@ -13,4 +13,4 @@ call_user_func(function () {
 });
 ?>
 --EXPECT--
-Caught RuntimeException: IntVector unserialize got invalid type tag, expected int
+Caught RuntimeException: Teds\IntVector unserialize got invalid type tag, expected int

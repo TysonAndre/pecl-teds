@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: f4db9933d019dc09ff81fec34f2ff16fb739278e */
+ * Stub hash: 900417fcee104b28d6f6bf0de7f7c7d4ade5e03f */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictMinHeap___construct, 0, 0, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, values, IS_ITERABLE, 0, "[]")
@@ -93,7 +93,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_METHOD(Teds_StrictMinHeap, __construct);
 ZEND_METHOD(Teds_StrictMinHeap, add);
-ZEND_METHOD(Teds_StrictMinHeap, top);
+ZEND_METHOD(Teds_Vector, first);
 ZEND_METHOD(Teds_StrictMinHeap, extract);
 ZEND_METHOD(Teds_Vector, count);
 ZEND_METHOD(Teds_Vector, isEmpty);
@@ -103,7 +103,7 @@ ZEND_METHOD(Teds_StrictMinHeap, valid);
 ZEND_METHOD(Teds_Vector, clear);
 ZEND_METHOD(Teds_StrictMinHeap, __set_state);
 ZEND_METHOD(Teds_Vector, toArray);
-ZEND_METHOD(Teds_StrictMinHeap, toArray);
+ZEND_METHOD(Teds_StrictSortedVectorSet, toArray);
 ZEND_METHOD(Teds_Vector, contains);
 ZEND_METHOD(Teds_StrictMinHeap, __unserialize);
 ZEND_METHOD(Teds_StrictMaxHeap, __construct);
@@ -117,19 +117,19 @@ ZEND_METHOD(Teds_StrictMaxHeap, __unserialize);
 static const zend_function_entry class_Teds_StrictMinHeap_methods[] = {
 	ZEND_ME(Teds_StrictMinHeap, __construct, arginfo_class_Teds_StrictMinHeap___construct, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMinHeap, add, arginfo_class_Teds_StrictMinHeap_add, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictMinHeap, top, arginfo_class_Teds_StrictMinHeap_top, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, top, first, arginfo_class_Teds_StrictMinHeap_top, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMinHeap, extract, arginfo_class_Teds_StrictMinHeap_extract, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, count, count, arginfo_class_Teds_StrictMinHeap_count, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, isEmpty, isEmpty, arginfo_class_Teds_StrictMinHeap_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMinHeap, rewind, arginfo_class_Teds_StrictMinHeap_rewind, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_StrictMinHeap, current, top, arginfo_class_Teds_StrictMinHeap_current, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_StrictMinHeap, key, top, arginfo_class_Teds_StrictMinHeap_key, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, current, first, arginfo_class_Teds_StrictMinHeap_current, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, key, first, arginfo_class_Teds_StrictMinHeap_key, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMinHeap, next, arginfo_class_Teds_StrictMinHeap_next, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMinHeap, valid, arginfo_class_Teds_StrictMinHeap_valid, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, clear, clear, arginfo_class_Teds_StrictMinHeap_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMinHeap, __set_state, arginfo_class_Teds_StrictMinHeap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_MALIAS(Teds_Vector, values, toArray, arginfo_class_Teds_StrictMinHeap_values, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictMinHeap, toArray, arginfo_class_Teds_StrictMinHeap_toArray, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorSet, toArray, toArray, arginfo_class_Teds_StrictMinHeap_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, contains, contains, arginfo_class_Teds_StrictMinHeap_contains, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, __serialize, toArray, arginfo_class_Teds_StrictMinHeap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMinHeap, __unserialize, arginfo_class_Teds_StrictMinHeap___unserialize, ZEND_ACC_PUBLIC)
@@ -140,19 +140,19 @@ static const zend_function_entry class_Teds_StrictMinHeap_methods[] = {
 static const zend_function_entry class_Teds_StrictMaxHeap_methods[] = {
 	ZEND_ME(Teds_StrictMaxHeap, __construct, arginfo_class_Teds_StrictMaxHeap___construct, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMaxHeap, add, arginfo_class_Teds_StrictMaxHeap_add, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_StrictMinHeap, top, top, arginfo_class_Teds_StrictMaxHeap_top, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, top, first, arginfo_class_Teds_StrictMaxHeap_top, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMaxHeap, extract, arginfo_class_Teds_StrictMaxHeap_extract, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, count, count, arginfo_class_Teds_StrictMaxHeap_count, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, isEmpty, isEmpty, arginfo_class_Teds_StrictMaxHeap_isEmpty, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StrictMinHeap, rewind, rewind, arginfo_class_Teds_StrictMaxHeap_rewind, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_StrictMinHeap, current, top, arginfo_class_Teds_StrictMaxHeap_current, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_StrictMinHeap, key, top, arginfo_class_Teds_StrictMaxHeap_key, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, current, first, arginfo_class_Teds_StrictMaxHeap_current, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, key, first, arginfo_class_Teds_StrictMaxHeap_key, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMaxHeap, next, arginfo_class_Teds_StrictMaxHeap_next, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StrictMinHeap, valid, valid, arginfo_class_Teds_StrictMaxHeap_valid, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, clear, clear, arginfo_class_Teds_StrictMaxHeap_clear, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMaxHeap, __set_state, arginfo_class_Teds_StrictMaxHeap___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_MALIAS(Teds_Vector, values, toArray, arginfo_class_Teds_StrictMaxHeap_values, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_StrictMinHeap, toArray, toArray, arginfo_class_Teds_StrictMaxHeap_toArray, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorSet, toArray, toArray, arginfo_class_Teds_StrictMaxHeap_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, contains, contains, arginfo_class_Teds_StrictMaxHeap_contains, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, __serialize, toArray, arginfo_class_Teds_StrictMaxHeap___serialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictMaxHeap, __unserialize, arginfo_class_Teds_StrictMaxHeap___unserialize, ZEND_ACC_PUBLIC)

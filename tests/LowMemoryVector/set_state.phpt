@@ -25,26 +25,7 @@ var_dump((array)$it);
 key=0 value="A LITERAL"
 key=1 value=["first","x"]
 key=2 value=[{"key":"value"},null]
-object(Teds\LowMemoryVector)#2 (3) {
-  [0]=>
-  string(9) "A LITERAL"
-  [1]=>
-  array(2) {
-    [0]=>
-    string(5) "first"
-    [1]=>
-    string(1) "x"
-  }
-  [2]=>
-  array(2) {
-    [0]=>
-    object(stdClass)#1 (1) {
-      ["key"]=>
-      string(5) "value"
-    }
-    [1]=>
-    NULL
-  }
+object(Teds\LowMemoryVector)#2 (0) {
 }
 array(3) {
   [0]=>

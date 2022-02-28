@@ -116,12 +116,7 @@ array(2) {
   }
 }
 Test Teds\LowMemoryVector
-object(Teds\LowMemoryVector)#1 (2) {
-  [0]=>
-  string(22) "v_Teds\LowMemoryVector"
-  [1]=>
-  object(stdClass)#2 (0) {
-  }
+object(Teds\LowMemoryVector)#1 (0) {
 }
 array(2) {
   [0]=>

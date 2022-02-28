@@ -37,6 +37,7 @@ expect_throws(fn() => $it->get(-1));
 expect_throws(fn() => $it->offsetGet(1));
 expect_throws(fn() => $it->offsetGet('1'));
 expect_throws(fn() => $it->offsetGet('invalid'));
+// @phan-suppress-next-line PhanTypeMismatchArgumentInternalReal
 expect_throws(fn() => $it->get('invalid'));
 expect_throws(fn() => $it[['invalid']]);
 expect_throws(fn() => $it->offsetUnset(PHP_INT_MAX));
@@ -85,10 +86,7 @@ Caught OutOfBoundsException: Index out of range
 Caught OutOfBoundsException: Index out of range
 object(InternalIterator)#%d (0) {
 }
-object(Teds\LowMemoryVector)#%d (1) {
-  [0]=>
-  object(stdClass)#%d (0) {
-  }
+object(Teds\LowMemoryVector)#%d (0) {
 }
 object(Teds\LowMemoryVector)#%d (0) {
 }
