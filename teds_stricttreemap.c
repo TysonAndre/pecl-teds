@@ -600,7 +600,8 @@ static HashTable* teds_stricttreemap_get_properties_for(zend_object *obj, zend_p
 	teds_stricttreemap_tree *tree = teds_stricttreemap_tree_from_object(obj);
 	if (!tree->nNumOfElements && !obj->properties) {
 		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
-		return (HashTable*)&zend_empty_array;
+		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
+		return NULL;
 	}
 	switch (purpose) {
 		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */

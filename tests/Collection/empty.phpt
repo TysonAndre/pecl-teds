@@ -14,6 +14,7 @@ function test_empty_implementation(string $class_name) {
         var_dump($collection->values());
         echo "toArray: ";
         var_dump($collection->toArray());
+        debug_zval_dump($collection);
         echo "clear: ";
         try {
             var_dump($collection->clear());
@@ -69,6 +70,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\BitVector)#%d (0) refcount(2){
+}
 clear: NULL
 first() Caught UnderflowException: Cannot read first bit of empty Teds\BitVector
 last() Caught UnderflowException: Cannot read last bit of empty Teds\BitVector
@@ -78,6 +81,8 @@ Testing Teds\Deque
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\Deque)#%d (0) refcount(2){
 }
 clear: NULL
 first() Caught UnderflowException: Cannot read first value of empty Teds\Deque
@@ -89,6 +94,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\CachedIterable)#%d (0) refcount(2){
+}
 clear: Caught Teds\CachedIterable does not support clear - it is immutable
 first() Caught Error: Call to undefined method Teds\CachedIterable::first()
 last() Caught Error: Call to undefined method Teds\CachedIterable::last()
@@ -98,6 +105,8 @@ Testing Teds\ImmutableIterable
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\ImmutableIterable)#%d (0) refcount(2){
 }
 clear: Caught Teds\ImmutableIterable does not support clear - it is immutable
 first() Caught Error: Call to undefined method Teds\ImmutableIterable::first()
@@ -109,6 +118,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\ImmutableSequence)#%d (0) refcount(2){
+}
 clear: Caught Teds\ImmutableSequence is immutable
 first() Caught UnderflowException: Cannot get first element of empty Teds\ImmutableSequence
 last() Caught UnderflowException: Cannot get last element of empty Teds\ImmutableSequence
@@ -118,6 +129,8 @@ Testing Teds\ImmutableSortedIntSet
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\ImmutableSortedIntSet)#%d (0) refcount(2){
 }
 clear: Caught Teds\ImmutableSortedIntSet is immutable
 first() Caught UnderflowException: Cannot read first value of empty Teds\IntVector
@@ -129,6 +142,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\ImmutableSortedStringSet)#%d (0) refcount(2){
+}
 clear: Caught Teds\ImmutableSortedStringSet is immutable
 first() Caught UnderflowException: Cannot read first value of empty Teds\ImmutableSortedStringSet
 last() Caught UnderflowException: Cannot read last value of empty Teds\ImmutableSortedStringSet
@@ -138,6 +153,8 @@ Testing Teds\IntVector
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\IntVector)#%d (0) refcount(2){
 }
 clear: NULL
 first() Caught UnderflowException: Cannot read first value of empty Teds\IntVector
@@ -149,6 +166,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\SortedIntVectorSet)#%d (0) refcount(2){
+}
 clear: NULL
 first() Caught UnderflowException: Cannot read first value of empty Teds\IntVector
 last() Caught UnderflowException: Cannot read last value of empty Teds\IntVector
@@ -158,6 +177,8 @@ Testing Teds\LowMemoryVector
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\LowMemoryVector)#%d (0) refcount(2){
 }
 clear: NULL
 first() Caught UnderflowException: Cannot read first value of empty Teds\LowMemoryVector
@@ -169,6 +190,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\MutableIterable)#%d (0) refcount(2){
+}
 clear: NULL
 first() Caught Error: Call to undefined method Teds\MutableIterable::first()
 last() Caught Error: Call to undefined method Teds\MutableIterable::last()
@@ -178,6 +201,8 @@ Testing Teds\StrictHashMap
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\StrictHashMap)#%d (0) refcount(2){
 }
 clear: NULL
 first() Caught Error: Call to undefined method Teds\StrictHashMap::first()
@@ -189,6 +214,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\StrictHashSet)#%d (0) refcount(2){
+}
 clear: NULL
 first() Caught Error: Call to undefined method Teds\StrictHashSet::first()
 last() Caught Error: Call to undefined method Teds\StrictHashSet::last()
@@ -199,6 +226,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\StrictMaxHeap)#%d (0) refcount(2){
+}
 clear: NULL
 object(Teds\StrictMaxHeap)#%d (0) {
 }
@@ -207,6 +236,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\StrictMinHeap)#%d (0) refcount(2){
+}
 clear: NULL
 object(Teds\StrictMinHeap)#%d (0) {
 }
@@ -214,6 +245,8 @@ Testing Teds\StrictSortedVectorMap
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\StrictSortedVectorMap)#%d (0) refcount(2){
 }
 clear: NULL
 first() Caught UnderflowException: Cannot read first of empty Teds\StrictSortedVectorMap
@@ -225,6 +258,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\StrictSortedVectorSet)#%d (0) refcount(2){
+}
 clear: NULL
 first() Caught UnderflowException: Cannot read first value of empty Teds\StrictSortedVectorSet
 last() Caught UnderflowException: Cannot read last value of empty Teds\StrictSortedVectorSet
@@ -234,6 +269,8 @@ Testing Teds\StrictTreeMap
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\StrictTreeMap)#%d (0) refcount(2){
 }
 clear: NULL
 first() Caught UnderflowException: Cannot read first of empty StrictTreeMap
@@ -245,6 +282,8 @@ values: array(0) {
 }
 toArray: array(0) {
 }
+object(Teds\StrictTreeSet)#%d (0) refcount(2){
+}
 clear: NULL
 first() Caught UnderflowException: Cannot read first value of empty StrictTreeSet
 last() Caught UnderflowException: Cannot read last value of empty StrictTreeSet
@@ -254,6 +293,8 @@ Testing Teds\Vector
 values: array(0) {
 }
 toArray: array(0) {
+}
+object(Teds\Vector)#%d (0) refcount(2){
 }
 clear: NULL
 first() Caught UnderflowException: Cannot read first value of empty Teds\Vector

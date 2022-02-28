@@ -19,6 +19,7 @@
 
 #include "php_teds.h"
 #include "teds.h"
+#include "teds_mutableiterable.h"
 #include "teds_util.h"
 #include "teds_interfaces.h"
 #include "teds_immutableiterable_arginfo.h"
@@ -34,12 +35,6 @@
 
 zend_object_handlers teds_handler_ImmutableIterable;
 zend_class_entry *teds_ce_ImmutableIterable;
-
-/** TODO: Does C guarantee that this has the same memory layout as an array of zvals? */
-typedef struct _zval_pair {
-	zval key;
-	zval value;
-} zval_pair;
 
 typedef struct _teds_immutableiterable_entries {
 	zval_pair *entries;
@@ -285,22 +280,10 @@ static HashTable* teds_immutableiterable_get_gc(zend_object *obj, zval **table, 
 	return NULL;
 }
 
-static HashTable* teds_immutableiterable_get_properties(zend_object *obj)
+void teds_build_properties_for_immutable_zval_pairs(HashTable *ht, zval_pair *entries, const uint32_t len)
 {
-	teds_immutableiterable *intern = teds_immutableiterable_from_object(obj);
-	const uint32_t len = intern->array.size;
-	if (!len) {
-		/* Nothing to add or remove - this is immutable. */
-		return (HashTable*)&zend_empty_array;
-	}
-	HashTable *ht = zend_std_get_properties(obj);
-	if (zend_hash_num_elements(ht)) {
-		/* Already built. This is immutable there is no need to rebuild it. */
-		return ht;
-	}
 	ZEND_ASSERT(len <= TEDS_MAX_ZVAL_PAIR_COUNT);
 
-	zval_pair *entries = intern->array.entries;
 	/* Initialize properties array */
 	for (uint32_t i = 0; i < len; i++) {
 		zval tmp;
@@ -315,7 +298,23 @@ static HashTable* teds_immutableiterable_get_properties(zend_object *obj)
 		zend_hash_packed_to_hash(ht);
 	}
 #endif
+}
 
+static HashTable* teds_immutableiterable_get_properties(zend_object *obj)
+{
+	teds_immutableiterable *intern = teds_immutableiterable_from_object(obj);
+	const uint32_t len = intern->array.size;
+	if (!len) {
+		/* Nothing to add or remove - this is immutable. */
+		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
+		return NULL;
+	}
+	HashTable *ht = zend_std_get_properties(obj);
+	if (zend_hash_num_elements(ht)) {
+		/* Already built. This is immutable there is no need to rebuild it. */
+		return ht;
+	}
+	teds_build_properties_for_immutable_zval_pairs(ht, intern->array.entries, len);
 	return ht;
 }
 

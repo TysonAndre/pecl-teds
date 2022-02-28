@@ -24,6 +24,8 @@
 #include "teds_cachediterable_arginfo.h"
 #include "teds_cachediterable.h"
 #include "teds_exceptions.h"
+#include "teds_mutableiterable.h"
+#include "teds_immutableiterable.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
 #include "ext/spl/spl_exceptions.h"
@@ -34,12 +36,6 @@
 
 zend_object_handlers teds_handler_CachedIterable;
 zend_class_entry *teds_ce_CachedIterable;
-
-/** TODO: Does C guarantee that this has the same memory layout as an array of zvals? */
-typedef struct _zval_pair {
-	zval key;
-	zval value;
-} zval_pair;
 
 typedef struct _teds_cachediterable_entries {
 	zval_pair            *entries;
@@ -363,31 +359,15 @@ static HashTable* teds_cachediterable_get_properties(zend_object *obj)
 	const uint32_t len = array->size;
 	if (!len) {
 		/* Nothing to add or remove - this is immutable. */
-		return (HashTable*)&zend_empty_array;
+		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
+		return NULL;
 	}
 	HashTable *ht = zend_std_get_properties(obj);
 	if (zend_hash_num_elements(ht)) {
 		/* Already built. This is immutable there is no need to rebuild it. */
 		return ht;
 	}
-	ZEND_ASSERT(len <= TEDS_MAX_ZVAL_PAIR_COUNT);
-
-	zval_pair *entries = array->entries;
-	/* Initialize properties array */
-	for (uint32_t i = 0; i < len; i++) {
-		zval tmp;
-		Z_TRY_ADDREF_P(&entries[i].key);
-		Z_TRY_ADDREF_P(&entries[i].value);
-		ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
-		zend_hash_index_update(ht, i, &tmp);
-	}
-#if PHP_VERSION_ID >= 80200
-	if (HT_IS_PACKED(ht)) {
-		/* Engine doesn't expect packed array */
-		zend_hash_packed_to_hash(ht);
-	}
-#endif
-
+	teds_build_properties_for_immutable_zval_pairs(ht, array->entries, len);
 	return ht;
 }
 
@@ -827,7 +807,7 @@ PHP_METHOD(Teds_CachedIterable, keyAt)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_cachediterable_entries *array = Z_CACHEDITERABLE_ENTRIES_P(ZEND_THIS);
-	uint32_t len = array->size;
+	const uint32_t len = array->size;
 	if ((zend_ulong) offset >= len) {
 		if (!teds_cachediterable_entries_ensure_offset_exists(array, (size_t)offset)) {
 			if (!EG(exception)) {
@@ -847,7 +827,7 @@ PHP_METHOD(Teds_CachedIterable, valueAt)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_cachediterable_entries *array = Z_CACHEDITERABLE_ENTRIES_P(ZEND_THIS);
-	uint32_t len = array->size;
+	const uint32_t len = array->size;
 	if ((zend_ulong) offset >= len) {
 		if (!teds_cachediterable_entries_ensure_offset_exists(array, (size_t)offset)) {
 			if (!EG(exception)) {
