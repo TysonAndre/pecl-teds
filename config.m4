@@ -47,10 +47,13 @@ if test "$PHP_TEDS" != "no"; then
 #error PHP < 8
 #endif
   ]])],[
-  AC_MSG_RESULT([PHP 8])
+  AC_MSG_RESULT([PHP 8+])
   ],[
   AC_MSG_ERROR([teds requires php 8.0+])
   ])
+
+  AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
+                        [CFLAGS="$CFLAGS -fvisibility=hidden"])
 
   dnl Remove this code block if the library supports pkg-config.
   dnl --with-teds -> check with-path

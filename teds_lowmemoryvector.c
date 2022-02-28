@@ -1096,7 +1096,7 @@ PHP_METHOD(Teds_LowMemoryVector, toArray)
 	RETURN_ARR(teds_lowmemoryvector_entries_to_refcounted_array(array));
 }
 
-static zend_always_inline void teds_lowmemoryvector_get_value_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
+static void teds_lowmemoryvector_get_value_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
 {
 	teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(zval_this);
 	if (UNEXPECTED(!teds_offset_within_size_t(offset, array->size))) {
@@ -1373,7 +1373,7 @@ PHP_METHOD(Teds_LowMemoryVector, contains)
 	RETURN_FALSE;
 }
 
-static zend_always_inline void teds_lowmemoryvector_entries_set_value_at_offset(teds_lowmemoryvector_entries *array, zend_long offset, const zval *value, bool is_update) {
+static void teds_lowmemoryvector_entries_set_value_at_offset(teds_lowmemoryvector_entries *array, zend_long offset, const zval *value, bool is_update) {
 	if (is_update) {
 		teds_lowmemoryvector_entries_update_type_tag(array, value);
 	}
@@ -1446,7 +1446,7 @@ PHP_METHOD(Teds_LowMemoryVector, offsetSet)
 	TEDS_RETURN_VOID();
 }
 
-static zend_always_inline void teds_lowmemoryvector_entries_copy_offset(const teds_lowmemoryvector_entries *array, const uint32_t offset, zval *dst, const bool increase_refcount, const bool remove)
+static void teds_lowmemoryvector_entries_copy_offset(const teds_lowmemoryvector_entries *array, const uint32_t offset, zval *dst, const bool increase_refcount, const bool remove)
 {
 	ZEND_ASSERT(remove ? array->size < array->capacity : array->size <= array->capacity);
 	ZEND_ASSERT(remove ? offset <= array->size : offset < array->size);
@@ -1497,154 +1497,198 @@ LMV_GENERATE_INT_CASES();
 			ZEND_UNREACHABLE();
 	}
 }
-
-static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds_lowmemoryvector_entries *array, const zval *val)
+static void teds_lowmemoryvector_entries_init_type_tag(teds_lowmemoryvector_entries *array, const zval *val)
 {
+	ZEND_ASSERT(teds_lowmemoryvector_entries_empty_capacity(array));
+	switch (Z_TYPE_P(val)) {
+		case IS_NULL:
+		case IS_FALSE:
+		case IS_TRUE:
+			array->type_tag = LMV_TYPE_BOOL_OR_NULL;
+			return;
+		case IS_LONG: {
+			if (Z_LVAL_P(val) != (int8_t)Z_LVAL_P(val)) {
+#ifdef LMV_TYPE_INT64
+				if (Z_LVAL_P(val) != (int32_t)Z_LVAL_P(val)) {
+					array->type_tag = LMV_TYPE_INT64;
+					return;
+				}
+#endif
+				if (Z_LVAL_P(val) != (int16_t)Z_LVAL_P(val)) {
+					array->type_tag = LMV_TYPE_INT32;
+					return;
+				}
+				array->type_tag = LMV_TYPE_INT16;
+				return;
+			}
+			array->type_tag = LMV_TYPE_INT8;
+			return;
+		}
+		case IS_DOUBLE:
+			array->type_tag = LMV_TYPE_DOUBLE;
+			return;
+		default:
+			array->type_tag = LMV_TYPE_ZVAL;
+			return;
+	}
+}
+
+static zend_never_inline void teds_lowmemoryvector_entries_promote_bool_or_null_to_zval(teds_lowmemoryvector_entries *array, const zval *val) {
+	array->type_tag = LMV_TYPE_ZVAL;
+	uint8_t *const original_types = array->entries_uint8;
+	const uint8_t *src = original_types;
+	const size_t size = array->size;
+	const size_t capacity = size >= 2 ? size * 2 : 4;
+	array->capacity = capacity;
+	zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0);
+	const zval *const end = entries_zval + size;
+	zval *dst = entries_zval;
+	array->entries_zval = entries_zval;
+	for (; dst < end; dst++, src++) {
+		teds_lowmemoryvector_entries_set_type(dst, *src);
+	}
+	if (array->capacity > 0) {
+		efree(original_types);
+	}
+	return;
+}
+
+static zend_never_inline void teds_lowmemoryvector_entries_promote_double_to_zval(teds_lowmemoryvector_entries *array, const zval *val)
+{
+	array->type_tag = LMV_TYPE_ZVAL;
+	double *const original_entries = array->entries_double;
+	const double *src = original_entries;
+	const size_t size = array->size;
+	const size_t capacity = size >= 2 ? size * 2 : 4;
+	array->capacity = capacity;
+	zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0);
+	const zval *const end = entries_zval + size;
+	zval *dst = entries_zval;
+	array->entries_zval = entries_zval;
+	for (; dst < end; dst++, src++) {
+		ZVAL_DOUBLE(dst, *src);
+	}
+	if (array->capacity > 0) {
+		efree(original_entries);
+	}
+}
 
 #define TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(intx_t) do {  \
 		if (EXPECTED(Z_LVAL_P(val) == (intx_t) Z_LVAL_P(val))) { return; } \
 	} while (0)
 
+#define TEDS_PROMOTE_INT_TO_ZVAL_AND_RETURN(intx_t, entries_intx) do {\
+	array->type_tag = LMV_TYPE_ZVAL; \
+	intx_t *const original_entries = array->entries_intx; \
+	const intx_t *src = original_entries; \
+	const uint32_t size = array->size; \
+	const uint32_t old_capacity = array->capacity; \
+	const uint32_t capacity = old_capacity >= 4 ? old_capacity : 4; \
+	zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0); \
+	if (old_capacity > 0) { \
+		const zval *const end = entries_zval + size; \
+		zval *dst = entries_zval; \
+		array->entries_zval = entries_zval; \
+		for (; dst < end; dst++, src++) { \
+			ZVAL_LONG(dst, *src); \
+		} \
+		efree(original_entries); \
+	} \
+	return; \
+} while (0)
+
 #define TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(intx_t, entries_intx) do {\
 		if (UNEXPECTED(Z_TYPE_P(val) != IS_LONG)) { \
-			array->type_tag = LMV_TYPE_ZVAL; \
-			intx_t *const original_entries = array->entries_intx; \
-			const intx_t *src = original_entries; \
-			const uint32_t size = array->size; \
-			const uint32_t old_capacity = array->capacity; \
-			const uint32_t capacity = old_capacity >= 4 ? old_capacity : 4; \
-			zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0); \
-			if (old_capacity > 0) { \
-				const zval *const end = entries_zval + size; \
-				zval *dst = entries_zval; \
-				array->entries_zval = entries_zval; \
-				for (; dst < end; dst++, src++) { \
-					ZVAL_LONG(dst, *src); \
-				} \
-				efree(original_entries); \
-			} \
-			return; \
+			TEDS_PROMOTE_INT_TO_ZVAL_AND_RETURN(intx_t, entries_intx); \
 		} \
 	} while (0)
 
+static zend_never_inline void teds_lowmemoryvector_entries_promote_int8(teds_lowmemoryvector_entries *array, const zval *val)
+{
+	TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int8_t, entries_int8);
+
+#ifdef LMV_TYPE_INT64
+	if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
+		TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int64_t, entries_int64, LMV_TYPE_INT64);
+		return;
+	}
+#endif
+	if (Z_LVAL_P(val) != (int16_t) Z_LVAL_P(val)) {
+		TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int32_t, entries_int32, LMV_TYPE_INT32);
+		return;
+	}
+	TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int16_t, entries_int16, LMV_TYPE_INT16);
+}
+
+static zend_never_inline void teds_lowmemoryvector_entries_promote_int16(teds_lowmemoryvector_entries *array, const zval *val)
+{
+	TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int16_t, entries_int16);
+	TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(int16_t);
+
+#ifdef LMV_TYPE_INT64
+	if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
+		TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int64_t, entries_int64, LMV_TYPE_INT64);
+	}
+#endif
+	TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int32_t, entries_int32, LMV_TYPE_INT32);
+}
+
+static zend_never_inline void teds_lowmemoryvector_entries_promote_int32(teds_lowmemoryvector_entries *array, const zval *val)
+{
+	TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int32_t, entries_int32);
+#ifdef LMV_TYPE_INT64
+	if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
+		TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int32_t, entries_int32, int64_t, entries_int64, LMV_TYPE_INT64);
+	}
+#endif
+}
+#ifdef LMV_TYPE_INT64
+static zend_never_inline void teds_lowmemoryvector_entries_promote_int64_to_zval(teds_lowmemoryvector_entries *array, const zval *val)
+{
+	TEDS_PROMOTE_INT_TO_ZVAL_AND_RETURN(int64_t, entries_int64);
+}
+#endif
+
+static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds_lowmemoryvector_entries *array, const zval *val)
+{
 
 	ZEND_ASSERT(Z_TYPE_P(val) >= IS_NULL && Z_TYPE_P(val) <= IS_RESOURCE);
 	switch (array->type_tag) {
 		case LMV_TYPE_UNINITIALIZED:
-			ZEND_ASSERT(teds_lowmemoryvector_entries_empty_capacity(array));
-			switch (Z_TYPE_P(val)) {
-				case IS_NULL:
-				case IS_FALSE:
-				case IS_TRUE:
-					array->type_tag = LMV_TYPE_BOOL_OR_NULL;
-					return;
-				case IS_LONG: {
-					if (Z_LVAL_P(val) != (int8_t)Z_LVAL_P(val)) {
-#ifdef LMV_TYPE_INT64
-						if (Z_LVAL_P(val) != (int32_t)Z_LVAL_P(val)) {
-							array->type_tag = LMV_TYPE_INT64;
-							return;
-						}
-#endif
-						if (Z_LVAL_P(val) != (int16_t)Z_LVAL_P(val)) {
-							array->type_tag = LMV_TYPE_INT32;
-							return;
-						}
-						array->type_tag = LMV_TYPE_INT16;
-						return;
-					}
-					array->type_tag = LMV_TYPE_INT8;
-					return;
-				}
-				case IS_DOUBLE:
-					array->type_tag = LMV_TYPE_DOUBLE;
-					return;
-				default:
-					array->type_tag = LMV_TYPE_ZVAL;
-					return;
-			}
+			teds_lowmemoryvector_entries_init_type_tag(array, val);
+			return;
 		case LMV_TYPE_BOOL_OR_NULL:
 			if (UNEXPECTED(Z_TYPE_P(val) > IS_TRUE)) {
-				array->type_tag = LMV_TYPE_ZVAL;
-				uint8_t *const original_types = array->entries_uint8;
-				const uint8_t *src = original_types;
-				const size_t size = array->size;
-				const size_t capacity = size >= 2 ? size * 2 : 4;
-				array->capacity = capacity;
-				zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0);
-				const zval *const end = entries_zval + size;
-				zval *dst = entries_zval;
-				array->entries_zval = entries_zval;
-				for (; dst < end; dst++, src++) {
-					teds_lowmemoryvector_entries_set_type(dst, *src);
-				}
-				if (array->capacity > 0) {
-					efree(original_types);
-				}
-				return;
+				teds_lowmemoryvector_entries_promote_bool_or_null_to_zval(array, val);
 			}
 			return;
 		case LMV_TYPE_INT8:
-			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int8_t, entries_int8);
-			TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(int8_t);
-
-#ifdef LMV_TYPE_INT64
-			if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
-				TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int64_t, entries_int64, LMV_TYPE_INT64);
-				return;
+			if (UNEXPECTED(Z_TYPE_P(val) != IS_LONG || Z_LVAL_P(val) != (int8_t)Z_LVAL_P(val))) {
+				teds_lowmemoryvector_entries_promote_int8(array, val);
 			}
-#endif
-			if (Z_LVAL_P(val) != (int16_t) Z_LVAL_P(val)) {
-				TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int32_t, entries_int32, LMV_TYPE_INT32);
-				return;
-			}
-			TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int16_t, entries_int16, LMV_TYPE_INT16);
 			return;
 		case LMV_TYPE_INT16:
-			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int16_t, entries_int16);
-			TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(int16_t);
-
-#ifdef LMV_TYPE_INT64
-			if (Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val)) {
-				TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int64_t, entries_int64, LMV_TYPE_INT64);
+			if (UNEXPECTED(Z_TYPE_P(val) != IS_LONG || Z_LVAL_P(val) != (int16_t)Z_LVAL_P(val))) {
+				teds_lowmemoryvector_entries_promote_int16(array, val);
 			}
-#endif
-			TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int32_t, entries_int32, LMV_TYPE_INT32);
 			return;
 		case LMV_TYPE_INT32:
-			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int32_t, entries_int32);
-
-#ifdef LMV_TYPE_INT64
-			if (UNEXPECTED(Z_LVAL_P(val) != (int32_t) Z_LVAL_P(val))) {
-				TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN(int32_t, entries_int32, int64_t, entries_int64, LMV_TYPE_INT64);
+			if (UNEXPECTED(Z_TYPE_P(val) != IS_LONG || Z_LVAL_P(val) != (int32_t)Z_LVAL_P(val))) {
+				teds_lowmemoryvector_entries_promote_int32(array, val);
 			}
-#endif
 			return;
 #ifdef LMV_TYPE_INT64
 		case LMV_TYPE_INT64:
-			TEDS_CHECK_PROMOTE_INT_TO_ZVAL_AND_RETURN(int64_t, entries_int64);
+			if (UNEXPECTED(Z_TYPE_P(val) != IS_LONG)) {
+				teds_lowmemoryvector_entries_promote_int64_to_zval(array, val);
+			}
 			return;
 #endif
 
 #undef TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN
 		case LMV_TYPE_DOUBLE:
 			if (UNEXPECTED(Z_TYPE_P(val) != IS_DOUBLE)) {
-				array->type_tag = LMV_TYPE_ZVAL;
-				double *const original_entries = array->entries_double;
-				const double *src = original_entries;
-				const size_t size = array->size;
-				const size_t capacity = size >= 2 ? size * 2 : 4;
-				array->capacity = capacity;
-				zval *const entries_zval = safe_emalloc(capacity, sizeof(zval), 0);
-				const zval *const end = entries_zval + size;
-				zval *dst = entries_zval;
-				array->entries_zval = entries_zval;
-				for (; dst < end; dst++, src++) {
-					ZVAL_DOUBLE(dst, *src);
-				}
-				if (array->capacity > 0) {
-					efree(original_entries);
-				}
+				teds_lowmemoryvector_entries_promote_double_to_zval(array, val);
 			}
 			return;
 		case LMV_TYPE_ZVAL:

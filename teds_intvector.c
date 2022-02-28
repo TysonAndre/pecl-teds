@@ -142,7 +142,7 @@ typedef struct _teds_intvector_it {
 static void teds_intvector_entries_raise_capacity(teds_intvector_entries *intern, const size_t new_capacity);
 static zend_always_inline void teds_intvector_entries_push(teds_intvector_entries *array, const zend_long value, const bool check_capacity);
 static zend_always_inline void teds_intvector_entries_update_type_tag(teds_intvector_entries *array, const zend_long val);
-static zend_always_inline void teds_intvector_entries_copy_offset(const teds_intvector_entries *array, const size_t offset, zval *dst, bool remove);
+static void teds_intvector_entries_copy_offset(const teds_intvector_entries *array, const size_t offset, zval *dst, bool remove);
 static zend_always_inline zval *teds_intvector_entries_read_offset(const teds_intvector_entries *intern, const size_t offset, zval *tmp);
 static void teds_intvector_entries_init_from_array_values(teds_intvector_entries *array, zend_array *raw_data);
 static zend_array *teds_intvector_entries_to_refcounted_array(const teds_intvector_entries *array);
@@ -1756,7 +1756,7 @@ static zend_always_inline zval *teds_intvector_entries_read_offset(const teds_in
 		return; \
 	} while (0)
 
-static zend_always_inline void teds_intvector_entries_init_type_tag(teds_intvector_entries *array, const zend_long val) {
+static void teds_intvector_entries_init_type_tag(teds_intvector_entries *array, const zend_long val) {
 	if (val != (int8_t)val) {
 #ifdef TEDS_INTVECTOR_TYPE_INT64
 		if (val != (int32_t)val) {
@@ -1774,6 +1774,37 @@ static zend_always_inline void teds_intvector_entries_init_type_tag(teds_intvect
 	array->type_tag = TEDS_INTVECTOR_TYPE_INT8;
 }
 
+static zend_never_inline void teds_intvector_entries_promote_type_tag_int8(teds_intvector_entries *array, const zend_long val) {
+#ifdef TEDS_INTVECTOR_TYPE_INT64
+	if (val != (int32_t) val) {
+		TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int64_t, entries_int64, TEDS_INTVECTOR_TYPE_INT64);
+		return;
+	}
+#endif
+	if (val != (int16_t) val) {
+		TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int32_t, entries_int32, TEDS_INTVECTOR_TYPE_INT32);
+		return;
+	}
+	TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int16_t, entries_int16, TEDS_INTVECTOR_TYPE_INT16);
+}
+
+static zend_never_inline void teds_intvector_entries_promote_type_tag_int16(teds_intvector_entries *array, const zend_long val)
+{
+#ifdef TEDS_INTVECTOR_TYPE_INT64
+	if (val != (int32_t) val) {
+		TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int64_t, entries_int64, TEDS_INTVECTOR_TYPE_INT64);
+	}
+#endif
+	TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int32_t, entries_int32, TEDS_INTVECTOR_TYPE_INT32);
+}
+
+#ifdef TEDS_INTVECTOR_TYPE_INT64
+static zend_never_inline void teds_intvector_entries_promote_type_tag_int32(teds_intvector_entries *array)
+{
+	TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int32_t, entries_int32, int64_t, entries_int64, TEDS_INTVECTOR_TYPE_INT64);
+}
+#endif
+
 static zend_always_inline void teds_intvector_entries_update_type_tag(teds_intvector_entries *array, const zend_long val)
 {
 #define TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(intx_t) do {  \
@@ -1787,42 +1818,20 @@ static zend_always_inline void teds_intvector_entries_update_type_tag(teds_intve
 		}
 		case TEDS_INTVECTOR_TYPE_INT8:
 			TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(int8_t);
-
-#ifdef TEDS_INTVECTOR_TYPE_INT64
-			if (val != (int32_t) val) {
-				TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int64_t, entries_int64, TEDS_INTVECTOR_TYPE_INT64);
-				return;
-			}
-#endif
-			if (val != (int16_t) val) {
-				TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int32_t, entries_int32, TEDS_INTVECTOR_TYPE_INT32);
-				return;
-			}
-			TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int8_t, entries_int8, int16_t, entries_int16, TEDS_INTVECTOR_TYPE_INT16);
+			teds_intvector_entries_promote_type_tag_int8(array, val);
 			return;
 		case TEDS_INTVECTOR_TYPE_INT16:
 			TEDS_RETURN_IF_LVAL_FITS_IN_TYPE(int16_t);
-
-#ifdef TEDS_INTVECTOR_TYPE_INT64
-			if (val != (int32_t) val) {
-				TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int64_t, entries_int64, TEDS_INTVECTOR_TYPE_INT64);
-			}
-#endif
-			TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int16_t, entries_int16, int32_t, entries_int32, TEDS_INTVECTOR_TYPE_INT32);
+			teds_intvector_entries_promote_type_tag_int16(array, val);
 			return;
 		case TEDS_INTVECTOR_TYPE_INT32:
-
 #ifdef TEDS_INTVECTOR_TYPE_INT64
 			if (UNEXPECTED(val != (int32_t) val)) {
-				TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN(int32_t, entries_int32, int64_t, entries_int64, TEDS_INTVECTOR_TYPE_INT64);
+				teds_intvector_entries_promote_type_tag_int32(array);
 			}
-#endif
-			return;
-#ifdef TEDS_INTVECTOR_TYPE_INT64
 		case TEDS_INTVECTOR_TYPE_INT64:
-			return;
 #endif
-
+			return;
 #undef TEDS_INTVECTOR_PROMOTE_INT_TYPE_AND_RETURN
 		default:
 			ZEND_UNREACHABLE();
