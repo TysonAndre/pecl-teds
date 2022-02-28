@@ -388,7 +388,9 @@ static HashTable* teds_lowmemoryvector_get_properties(zend_object *obj)
 	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(obj)->array;
 	if (!array->size) {
 		/* Similar to ext/ffi/ffi.c zend_fake_get_properties. */
-		return (HashTable*)&zend_empty_array;
+		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
+		/* This may be null if not yet initialized. */
+		return obj->properties;
 	}
 	return zend_std_get_properties(obj);
 }
@@ -398,7 +400,8 @@ static HashTable* teds_lowmemoryvector_get_properties_for(zend_object *obj, zend
 	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(obj)->array;
 	if (!array->size && !obj->properties) {
 		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
-		return (HashTable*)&zend_empty_array;
+		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
+		return NULL;
 	}
 	switch (purpose) {
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
@@ -411,7 +414,7 @@ static HashTable* teds_lowmemoryvector_get_properties_for(zend_object *obj, zend
 			/* Related to https://github.com/php/php-src/issues/8044 */
 			/* Returning a brand new refcounted array every time would cause problems with debug output for circular data structures in var_export/debug_zval_dump. */
 			HashTable *ht = teds_lowmemoryvector_get_properties(obj);
-			GC_TRY_ADDREF(ht);
+			if (ht) { GC_TRY_ADDREF(ht); }
 			return ht;
 	    }
 		default:
