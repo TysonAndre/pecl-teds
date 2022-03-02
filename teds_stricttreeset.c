@@ -778,7 +778,7 @@ static const zend_object_iterator_funcs teds_stricttreeset_it_funcs = {
 	teds_stricttreeset_it_move_forward,
 	teds_stricttreeset_it_rewind,
 	NULL,
-	NULL, /* get_gc */
+	teds_internaliterator_get_gc,
 };
 
 

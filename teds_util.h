@@ -277,4 +277,6 @@ HashTable* teds_noop_get_gc(zend_object *obj, zval **table, int *n);
  */
 HashTable* teds_noop_empty_array_get_properties(zend_object *obj);
 
+HashTable *teds_internaliterator_get_gc(zend_object_iterator *iter, zval **table, int *n);
+
 #endif

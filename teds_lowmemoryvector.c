@@ -120,6 +120,7 @@ typedef struct _teds_lowmemoryvector_entries {
 	};
 	uint32_t size;
 	uint32_t capacity;
+	teds_intrusive_dllist active_iterators;
 	int8_t type_tag;
 } teds_lowmemoryvector_entries;
 
@@ -134,6 +135,7 @@ typedef struct _teds_lowmemoryvector_it {
 	size_t               current;
 	/* Temporary memory location to store the most recent get_current_value() result */
 	zval                 tmp;
+	teds_intrusive_dllist_node dllist_node;
 } teds_lowmemoryvector_it;
 
 static void teds_lowmemoryvector_entries_raise_capacity(teds_lowmemoryvector_entries *intern, const size_t new_capacity);
@@ -186,6 +188,16 @@ static ZEND_COLD void teds_error_noreturn_max_lowmemoryvector_capacity()
 static zend_always_inline teds_lowmemoryvector *teds_lowmemoryvector_from_object(zend_object *obj)
 {
 	return (teds_lowmemoryvector*)((char*)(obj) - XtOffsetOf(teds_lowmemoryvector, std));
+}
+
+static zend_always_inline zend_object *teds_lowmemoryvector_to_object(teds_lowmemoryvector_entries *array)
+{
+	return (zend_object*)((char*)(array) + XtOffsetOf(teds_lowmemoryvector, std));
+}
+
+static zend_always_inline teds_lowmemoryvector_it *teds_lowmemoryvector_it_from_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_lowmemoryvector_it*)((char*)(node) - XtOffsetOf(teds_lowmemoryvector_it, dllist_node));
 }
 
 #define Z_LOWMEMORYVECTOR_P(zv)  (teds_lowmemoryvector_from_object(Z_OBJ_P((zv))))
@@ -546,6 +558,7 @@ PHP_METHOD(Teds_LowMemoryVector, getIterator)
 
 static void teds_lowmemoryvector_it_dtor(zend_object_iterator *iter)
 {
+	teds_intrusive_dllist_remove(&Z_LOWMEMORYVECTOR_ENTRIES_P(&iter->data)->active_iterators, &((teds_lowmemoryvector_it*)iter)->dllist_node);
 	zval_ptr_dtor(&iter->data);
 }
 
@@ -600,9 +613,56 @@ static const zend_object_iterator_funcs teds_lowmemoryvector_it_funcs = {
 	teds_lowmemoryvector_it_move_forward,
 	teds_lowmemoryvector_it_rewind,
 	NULL,
-	NULL, /* get_gc */
+	NULL,
 };
 
+static void teds_lowmemoryvector_adjust_iterators_before_remove(teds_lowmemoryvector_entries *array, teds_intrusive_dllist_node *node, const size_t removed_offset)
+{
+	const size_t old_size = array->size;
+	const zend_object *const obj = teds_lowmemoryvector_to_object(array);
+	ZEND_ASSERT(removed_offset < old_size);
+	do {
+		teds_lowmemoryvector_it *it = teds_lowmemoryvector_it_from_node(node);
+		if (Z_OBJ(it->intern.data) == obj) {
+			if (it->current >= removed_offset && it->current < old_size) {
+				it->current--;
+			}
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
+static zend_always_inline void teds_lowmemoryvector_maybe_adjust_iterators_before_remove(teds_lowmemoryvector_entries *array, const size_t removed_offset)
+{
+	teds_intrusive_dllist_node *iterator = array->active_iterators.first;
+	if (UNEXPECTED(iterator)) {
+		teds_lowmemoryvector_adjust_iterators_before_remove(array, iterator, removed_offset);
+	}
+}
+
+static void teds_lowmemoryvector_adjust_iterators_before_insert(teds_lowmemoryvector_entries *const array, teds_intrusive_dllist_node *node, const size_t inserted_offset, const uint32_t n)
+{
+	const zend_object *const obj = teds_lowmemoryvector_to_object(array);
+	do {
+		teds_lowmemoryvector_it *it = teds_lowmemoryvector_it_from_node(node);
+		if (Z_OBJ(it->intern.data) == obj) {
+			if (it->current >= inserted_offset) {
+				it->current += n;
+			}
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
+static zend_always_inline void teds_lowmemoryvector_maybe_adjust_iterators_before_insert(teds_lowmemoryvector_entries *array, const size_t insert_offset, const uint32_t n)
+{
+	teds_intrusive_dllist_node *iterator = array->active_iterators.first;
+	if (UNEXPECTED(iterator)) {
+		teds_lowmemoryvector_adjust_iterators_before_insert(array, iterator, insert_offset, n);
+	}
+}
 
 zend_object_iterator *teds_lowmemoryvector_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
@@ -619,8 +679,10 @@ zend_object_iterator *teds_lowmemoryvector_get_iterator(zend_class_entry *ce, zv
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
+	zend_object *obj = Z_OBJ_P(object);
+	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_lowmemoryvector_it_funcs;
+	teds_intrusive_dllist_prepend(&teds_lowmemoryvector_from_object(obj)->array.active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }
@@ -1536,7 +1598,7 @@ static void teds_lowmemoryvector_entries_init_type_tag(teds_lowmemoryvector_entr
 	}
 }
 
-static zend_never_inline void teds_lowmemoryvector_entries_promote_bool_or_null_to_zval(teds_lowmemoryvector_entries *array, const zval *val) {
+static zend_never_inline void teds_lowmemoryvector_entries_promote_bool_or_null_to_zval(teds_lowmemoryvector_entries *array) {
 	array->type_tag = LMV_TYPE_ZVAL;
 	uint8_t *const original_types = array->entries_uint8;
 	const uint8_t *src = original_types;
@@ -1556,7 +1618,7 @@ static zend_never_inline void teds_lowmemoryvector_entries_promote_bool_or_null_
 	return;
 }
 
-static zend_never_inline void teds_lowmemoryvector_entries_promote_double_to_zval(teds_lowmemoryvector_entries *array, const zval *val)
+static zend_never_inline void teds_lowmemoryvector_entries_promote_double_to_zval(teds_lowmemoryvector_entries *array)
 {
 	array->type_tag = LMV_TYPE_ZVAL;
 	double *const original_entries = array->entries_double;
@@ -1646,7 +1708,7 @@ static zend_never_inline void teds_lowmemoryvector_entries_promote_int32(teds_lo
 #endif
 }
 #ifdef LMV_TYPE_INT64
-static zend_never_inline void teds_lowmemoryvector_entries_promote_int64_to_zval(teds_lowmemoryvector_entries *array, const zval *val)
+static zend_never_inline void teds_lowmemoryvector_entries_promote_int64_to_zval(teds_lowmemoryvector_entries *array)
 {
 	TEDS_PROMOTE_INT_TO_ZVAL_AND_RETURN(int64_t, entries_int64);
 }
@@ -1662,7 +1724,7 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 			return;
 		case LMV_TYPE_BOOL_OR_NULL:
 			if (UNEXPECTED(Z_TYPE_P(val) > IS_TRUE)) {
-				teds_lowmemoryvector_entries_promote_bool_or_null_to_zval(array, val);
+				teds_lowmemoryvector_entries_promote_bool_or_null_to_zval(array);
 			}
 			return;
 		case LMV_TYPE_INT8:
@@ -1683,7 +1745,7 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 #ifdef LMV_TYPE_INT64
 		case LMV_TYPE_INT64:
 			if (UNEXPECTED(Z_TYPE_P(val) != IS_LONG)) {
-				teds_lowmemoryvector_entries_promote_int64_to_zval(array, val);
+				teds_lowmemoryvector_entries_promote_int64_to_zval(array);
 			}
 			return;
 #endif
@@ -1691,7 +1753,7 @@ static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds
 #undef TEDS_LMV_PROMOTE_INT_TYPE_AND_RETURN
 		case LMV_TYPE_DOUBLE:
 			if (UNEXPECTED(Z_TYPE_P(val) != IS_DOUBLE)) {
-				teds_lowmemoryvector_entries_promote_double_to_zval(array, val);
+				teds_lowmemoryvector_entries_promote_double_to_zval(array);
 			}
 			return;
 		case LMV_TYPE_ZVAL:
@@ -1791,6 +1853,7 @@ PHP_METHOD(Teds_LowMemoryVector, unshift)
 	if (new_size >= array->capacity) {
 		teds_lowmemoryvector_entries_raise_capacity(array, new_size > 3 ? new_size + (new_size >> 1) : 4);
 	}
+	teds_lowmemoryvector_maybe_adjust_iterators_before_insert(array, 0, argc);
 
 	uint8_t *const raw_bytes = array->entries_uint8;
 	memmove(raw_bytes + argc * (size_t) memory_per_element, raw_bytes, memory_per_element * old_size);
@@ -1831,6 +1894,7 @@ PHP_METHOD(Teds_LowMemoryVector, insert)
 	if (new_size >= array->capacity) {
 		teds_lowmemoryvector_entries_raise_capacity(array, new_size > 3 ? new_size + (new_size >> 1) : 4);
 	}
+	teds_lowmemoryvector_maybe_adjust_iterators_before_insert(array, offset, argc);
 
 	uint8_t *const raw_bytes = array->entries_uint8;
 	uint8_t *const insert_start = raw_bytes + ((size_t) offset) * memory_per_element;
@@ -1905,6 +1969,9 @@ PHP_METHOD(Teds_LowMemoryVector, shift)
 	const size_t old_capacity = array->capacity;
 	uint8_t *const entries_uint8 = array->entries_uint8;
 	const uint8_t bytes_per_element = teds_lowmemoryvector_entries_compute_memory_per_element(array);
+
+	teds_lowmemoryvector_maybe_adjust_iterators_before_remove(array, 0);
+
 	teds_lowmemoryvector_entries_copy_offset(array, 0, return_value, false, true);
 	array->size--;
 	memmove(entries_uint8, entries_uint8 + bytes_per_element, bytes_per_element * (old_size - 1));
@@ -1937,10 +2004,13 @@ PHP_METHOD(Teds_LowMemoryVector, offsetUnset)
 	const uint8_t bytes_per_element = teds_lowmemoryvector_entries_compute_memory_per_element(array);
 	uint8_t *const entries_uint8 = array->entries_uint8;
 	const size_t new_size = old_size - 1;
+
+	teds_lowmemoryvector_maybe_adjust_iterators_before_remove(array, offset);
+
+	array->size = new_size;
 	zval removed_zval;
 	teds_lowmemoryvector_entries_copy_offset(array, offset, &removed_zval, false, true);
 
-	array->size = new_size;
 	uint8_t *const dst = entries_uint8 + ((size_t)offset) * bytes_per_element;
 
 	memmove(
@@ -1955,6 +2025,7 @@ PHP_METHOD(Teds_LowMemoryVector, offsetUnset)
 			teds_lowmemoryvector_entries_shrink_capacity(array, new_size, capacity, array->entries_raw);
 		}
 	}
+
 	zval_ptr_dtor(&removed_zval);
 
 	TEDS_RETURN_VOID();

@@ -15,3 +15,11 @@ HashTable* teds_noop_get_gc(zend_object *obj, zval **table, int *n) {
 	/* Nothing needs to be garbage collected */
 	return NULL;
 }
+
+HashTable *teds_internaliterator_get_gc(zend_object_iterator *iter, zval **table, int *n)
+{
+	*table = &iter->data;
+	*n = 1;
+	return NULL;
+}
+

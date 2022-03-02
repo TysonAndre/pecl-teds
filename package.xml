@@ -32,6 +32,7 @@
 * Add `Teds\Sequence::insert(int $offset, mixed ...$values)` to the Sequence interfaces and implementations
 * Add first/last to the `Teds\Sequence` interface.
 * Fix edge cases with var_export/var_dump and cyclic data structures in debug builds and php 8.2.0-dev.
+* Make iteration account for offsetUnset/insert/shift/unshift in Sequences.
  </notes>
  <contents>
   <dir name="/">
@@ -83,6 +84,7 @@
    <file name="teds_interfaces.c" role="src" />
    <file name="teds_interfaces.h" role="src" />
    <file name="teds_interfaces.stub.php" role="src" />
+   <file name="teds_internaliterator.h" role="src" />
    <file name="teds_intvector_arginfo.h" role="src" />
    <file name="teds_intvector.c" role="src" />
    <file name="teds_intvector.h" role="src" />
@@ -190,6 +192,7 @@
     <file name="Deque/toArray.phpt" role="test" />
     <file name="Deque/unserialize.phpt" role="test" />
     <file name="Deque/unshift.phpt" role="test" />
+    <file name="Deque/var_export_recursion.phpt" role="test" />
     <file name="EmptyMap/EmptyMap.phpt" role="test" />
     <file name="EmptySequence/EmptySequence.phpt" role="test" />
     <file name="EmptySet/EmptySet.phpt" role="test" />
@@ -268,6 +271,8 @@
     <file name="Sequence/clear.phpt" role="test" />
     <file name="Sequence/contains.phpt" role="test" />
     <file name="Sequence/insert.phpt" role="test" />
+    <file name="Sequence/insert_iteration.phpt" role="test" />
+    <file name="Sequence/insert_foreach.phpt" role="test" />
     <file name="Sequence/set.phpt" role="test" />
     <file name="Sequence/set_state.phpt" role="test" />
     <file name="Sequence/shift.phpt" role="test" />

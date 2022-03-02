@@ -27,6 +27,7 @@
 #include "ext/json/php_json.h"
 #include "teds_util.h"
 #include "teds_interfaces.h"
+#include "teds_internaliterator.h"
 #include "teds_exceptions.h"
 
 #include <stdbool.h>
@@ -50,6 +51,7 @@ typedef struct _teds_deque_entries {
 	 * This is a uint64_t to work consistently and avoid easily overflowing 4 billion on 32-bit builds.
 	 */
 	uint64_t iteration_offset;
+	teds_intrusive_dllist active_iterators;
 	/* The offset of the start of the deque in the circular buffer. */
 	uint32_t offset;
 	/* Whether this should rebuild properties if get_properties_for is called. Workaround for Zend engine doing the infinite recursion detection on the properties table. */
@@ -98,6 +100,7 @@ typedef struct _teds_deque_it {
 	zend_object_iterator intern;
 	/* This starts at iteration_offset and increases by one when next() is called. */
 	uint64_t current;
+	teds_intrusive_dllist_node dllist_node;
 } teds_deque_it;
 
 static zend_always_inline void teds_deque_entries_push_back(teds_deque_entries *array, zval *value);
@@ -107,6 +110,16 @@ static void teds_deque_entries_shrink_capacity(teds_deque_entries *array, const 
 static zend_always_inline teds_deque *teds_deque_from_object(zend_object *obj)
 {
 	return (teds_deque*)((char*)(obj) - XtOffsetOf(teds_deque, std));
+}
+
+static zend_always_inline zend_object *teds_deque_to_object(teds_deque_entries *array)
+{
+	return (zend_object*)((char*)(array) + XtOffsetOf(teds_deque, std));
+}
+
+static zend_always_inline teds_deque_it *teds_deque_it_from_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_deque_it*)((char*)(node) - XtOffsetOf(teds_deque_it, dllist_node));
 }
 
 #define teds_deque_entries_from_object(obj) (&teds_deque_from_object((obj))->array)
@@ -546,6 +559,8 @@ PHP_METHOD(Teds_Deque, getIterator)
 
 static void teds_deque_it_dtor(zend_object_iterator *iter)
 {
+	teds_intrusive_dllist_node *node = &((teds_deque_it*)iter)->dllist_node;
+	teds_intrusive_dllist_remove(&Z_DEQUE_ENTRIES_P(&iter->data)->active_iterators, node);
 	zval_ptr_dtor(&iter->data);
 }
 
@@ -609,7 +624,7 @@ static const zend_object_iterator_funcs teds_deque_it_funcs = {
 	teds_deque_it_move_forward,
 	teds_deque_it_rewind,
 	NULL,
-	NULL, /* get_gc */
+	teds_internaliterator_get_gc,
 };
 
 
@@ -624,8 +639,10 @@ zend_object_iterator *teds_deque_get_iterator(zend_class_entry *ce, zval *object
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
+	zend_object *obj = Z_OBJ_P(object);
+	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_deque_it_funcs;
+	teds_intrusive_dllist_prepend(&teds_deque_entries_from_object(obj)->active_iterators, &iterator->dllist_node);
 
 	(void) ce;
 
@@ -1119,7 +1136,39 @@ PHP_METHOD(Teds_Deque, unshift)
 	TEDS_RETURN_VOID();
 }
 
-static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entries *const array, const uint32_t insert_offset, uint32_t argc, const zval *args) {
+static void teds_deque_adjust_iterators_before_remove(teds_deque_entries *array, teds_intrusive_dllist_node *node, const uint32_t removed_offset) {
+	const zend_object *const obj = teds_deque_to_object(array);
+	const uint32_t old_size = array->size;
+	ZEND_ASSERT(removed_offset < old_size);
+	do {
+		teds_deque_it *it = teds_deque_it_from_node(node);
+		if (Z_OBJ(it->intern.data) == obj) {
+			if (it->current >= removed_offset && it->current < old_size) {
+				it->current--;
+			}
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
+static void teds_deque_adjust_iterators_before_insert(teds_deque_entries *const array, teds_intrusive_dllist_node *node, const uint32_t inserted_offset, uint32_t n) {
+	const zend_object *const obj = teds_deque_to_object(array);
+	const uint32_t old_size = array->size;
+	ZEND_ASSERT(inserted_offset <= old_size);
+	do {
+		teds_deque_it *it = teds_deque_it_from_node(node);
+		if (Z_OBJ(it->intern.data) == obj) {
+			if (it->current >= inserted_offset && it->current < old_size) {
+				it->current += n;
+			}
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
+static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entries *const array, const uint32_t inserted_offset, uint32_t argc, const zval *args) {
 	const uint32_t old_size = array->size;
 	const size_t new_size = old_size + argc;
 	uint32_t mask = array->mask;
@@ -1133,12 +1182,16 @@ static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entri
 	}
 	const uint32_t offset = array->offset;
 	zval *const circular_buffer = array->circular_buffer;
+	teds_intrusive_dllist_node *iterator = array->active_iterators.first;
+	if (UNEXPECTED(iterator)) {
+		teds_deque_adjust_iterators_before_insert(array, iterator, inserted_offset, argc);
+	}
 
 	/* Move elements to the end of the deque */
 	/* TODO move the start instead when there are less elements. */
 	uint32_t src_offset = (offset + old_size) & mask; /* Masked in do-while loop. */
 	uint32_t dst_offset = src_offset + argc;
-	const uint32_t src_end = (offset + insert_offset) & mask;
+	const uint32_t src_end = (offset + inserted_offset) & mask;
 
 	while (src_offset != src_end) {
 		src_offset = (src_offset - 1) & mask;
@@ -1147,7 +1200,7 @@ static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entri
 		ZVAL_COPY_VALUE(&circular_buffer[dst_offset], &circular_buffer[src_offset]);
 	}
 
-	dst_offset = (offset + insert_offset) & mask;
+	dst_offset = (offset + inserted_offset) & mask;
 	do {
 		zval *dest = &circular_buffer[dst_offset];
 		ZVAL_COPY(dest, args);
@@ -1167,39 +1220,44 @@ static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entri
 PHP_METHOD(Teds_Deque, insert)
 {
 	const zval *args;
-	zend_long insert_offset;
+	zend_long inserted_offset;
 	uint32_t argc;
 
 	ZEND_PARSE_PARAMETERS_START(1, -1)
-		Z_PARAM_LONG(insert_offset)
+		Z_PARAM_LONG(inserted_offset)
 		Z_PARAM_VARIADIC('+', args, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_deque_entries *array = Z_DEQUE_ENTRIES_P(ZEND_THIS);
-	if (UNEXPECTED(((zend_ulong) insert_offset) > array->size)) {
+	if (UNEXPECTED(((zend_ulong) inserted_offset) > array->size)) {
 		teds_throw_invalid_sequence_index_exception();
 		TEDS_RETURN_VOID();
 	}
-	ZEND_ASSERT(insert_offset >= 0);
+	ZEND_ASSERT(inserted_offset >= 0);
 
 	if (UNEXPECTED(argc == 0)) {
 		TEDS_RETURN_VOID();
 	}
-	teds_deque_entries_insert_values(array, insert_offset, argc, args);
+	teds_deque_entries_insert_values(array, inserted_offset, argc, args);
 	TEDS_RETURN_VOID();
 }
 
-static zend_always_inline void teds_deque_entries_remove_offset(teds_deque_entries *const array, const uint32_t remove_offset) {
+static zend_always_inline void teds_deque_entries_remove_offset(teds_deque_entries *const array, const uint32_t removed_offset) {
 	const uint32_t old_size = array->size;
 	uint32_t mask = array->mask;
-	ZEND_ASSERT(remove_offset < old_size);
+	ZEND_ASSERT(removed_offset < old_size);
 
 	const uint32_t offset = array->offset;
 	zval *const circular_buffer = array->circular_buffer;
 
 	/* Move elements from the end of the deque to replace the removed element */
 	/* TODO: Remove from the front instead if there are fewer elements to remove, adjust iteration_offset */
-	uint32_t it_offset = (offset + remove_offset) & mask;
+	uint32_t it_offset = (offset + removed_offset) & mask;
+
+	teds_intrusive_dllist_node *iterator = array->active_iterators.first;
+	if (UNEXPECTED(iterator)) {
+		teds_deque_adjust_iterators_before_remove(array, iterator, removed_offset);
+	}
 	zval removed_val;
 	ZVAL_COPY_VALUE(&removed_val, &circular_buffer[it_offset]);
 	const uint32_t it_end = (offset + old_size - 1) & mask;

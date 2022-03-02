@@ -10,6 +10,8 @@
 #ifndef PHP_TEDS_H
 # define PHP_TEDS_H
 
+#include "teds_internaliterator.h"
+
 #if SIZEOF_ZEND_LONG > SIZEOF_SIZE_T
 // See php-src/Zend/zend_range_check.h
 // > Furthermore, by the current design, size_t can always
@@ -20,6 +22,8 @@
 /** Module entry of teds. */
 extern zend_module_entry teds_module_entry;
 #define phpext_teds_ptr &teds_module_entry
+
+struct _teds_intrusive_dllist;
 
 PHP_MINIT_FUNCTION(teds);
 

@@ -410,7 +410,7 @@ static const zend_object_iterator_funcs teds_strictsortedvectorset_it_funcs = {
 	teds_strictsortedvectorset_it_move_forward,
 	teds_strictsortedvectorset_it_rewind,
 	NULL,
-	NULL, /* get_gc */
+	teds_internaliterator_get_gc,
 };
 
 

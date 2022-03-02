@@ -559,13 +559,6 @@ static void teds_cachediterable_it_move_forward(zend_object_iterator *iter)
 	((teds_cachediterable_it*)iter)->current++;
 }
 
-static HashTable *teds_cachediterable_it_get_gc(zend_object_iterator *iter, zval **table, int *n)
-{
-	*table = &iter->data;
-	*n = 1;
-	return NULL;
-}
-
 /* iterator handler table */
 static const zend_object_iterator_funcs teds_cachediterable_it_funcs = {
 	teds_cachediterable_it_dtor,
@@ -575,7 +568,7 @@ static const zend_object_iterator_funcs teds_cachediterable_it_funcs = {
 	teds_cachediterable_it_move_forward,
 	teds_cachediterable_it_rewind,
 	NULL,
-	teds_cachediterable_it_get_gc, /* get_gc */
+	teds_internaliterator_get_gc, /* get_gc */
 };
 
 
