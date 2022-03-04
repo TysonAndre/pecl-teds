@@ -10,6 +10,8 @@
 #ifndef TEDS_VECTOR_H
 #define TEDS_VECTOR_H
 
+#include "teds_internaliterator.h"
+
 extern zend_class_entry *teds_ce_Vector;
 
 PHP_MINIT_FUNCTION(teds_vector);
@@ -18,6 +20,7 @@ typedef struct _teds_vector_entries {
 	zval *entries;
 	uint32_t size;
 	uint32_t capacity;
+	teds_intrusive_dllist active_iterators;
 	bool should_rebuild_properties;
 } teds_vector_entries;
 
@@ -30,6 +33,7 @@ typedef struct _teds_vector {
 typedef struct _teds_vector_it {
 	zend_object_iterator intern;
 	uint32_t             current;
+	teds_intrusive_dllist_node dllist_node;
 } teds_vector_it;
 
 void teds_vector_entries_raise_capacity(teds_vector_entries *array, const size_t new_capacity);

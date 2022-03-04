@@ -122,6 +122,7 @@ typedef struct _teds_intvector_entries {
 	 * and garbage collection isn't a problem. */
 	size_t size;
 	size_t capacity;
+	teds_intrusive_dllist active_iterators;
 	uint8_t type_tag;
 	bool is_string_backed; /* For ImmutableSortedIntSet */
 } teds_intvector_entries;
@@ -137,6 +138,7 @@ typedef struct _teds_intvector_it {
 	size_t               current;
 	/* Temporary memory location to store the most recent get_current_value() result */
 	zval                 tmp;
+	teds_intrusive_dllist_node dllist_node;
 } teds_intvector_it;
 
 static void teds_intvector_entries_raise_capacity(teds_intvector_entries *intern, const size_t new_capacity);
@@ -172,6 +174,16 @@ static ZEND_COLD void teds_error_noreturn_max_intvector_capacity()
 static zend_always_inline teds_intvector *teds_intvector_from_object(zend_object *obj)
 {
 	return (teds_intvector*)((char*)(obj) - XtOffsetOf(teds_intvector, std));
+}
+
+static zend_always_inline zend_object *teds_intvector_to_object(teds_intvector_entries *array)
+{
+	return (zend_object*)((char*)(array) + XtOffsetOf(teds_intvector, std));
+}
+
+static zend_always_inline teds_intvector_it *teds_intvector_it_from_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_intvector_it*)((char*)(node) - XtOffsetOf(teds_intvector_it, dllist_node));
 }
 #define teds_intvector_entries_from_object(obj) (&teds_intvector_from_object((obj))->array)
 
@@ -767,6 +779,7 @@ PHP_METHOD(Teds_IntVector, getIterator)
 
 static void teds_intvector_it_dtor(zend_object_iterator *iter)
 {
+	teds_intrusive_dllist_remove(&Z_INTVECTOR_ENTRIES_P(&iter->data)->active_iterators, &((teds_intvector_it*)iter)->dllist_node);
 	zval_ptr_dtor(&iter->data);
 }
 
@@ -826,9 +839,58 @@ static const zend_object_iterator_funcs teds_intvector_it_funcs = {
 	teds_intvector_it_move_forward,
 	teds_intvector_it_rewind,
 	NULL,
-	NULL, /* get_gc */
+	teds_internaliterator_get_gc,
 };
 
+static void teds_intvector_adjust_iterators_before_remove(teds_intvector_entries *array, teds_intrusive_dllist_node *node, const size_t removed_offset)
+{
+	const zend_object *const obj = teds_intvector_to_object(array);
+	const size_t old_size = array->size;
+	ZEND_ASSERT(removed_offset < old_size);
+	do {
+		teds_intvector_it *it = teds_intvector_it_from_node(node);
+		if (Z_OBJ(it->intern.data) == obj) {
+			if (it->current >= removed_offset && it->current < old_size) {
+				it->current--;
+			}
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
+static zend_always_inline void teds_intvector_maybe_adjust_iterators_before_remove(teds_intvector_entries *array, const size_t removed_offset)
+{
+	teds_intrusive_dllist_node *iterator = array->active_iterators.first;
+	if (UNEXPECTED(iterator)) {
+		teds_intvector_adjust_iterators_before_remove(array, iterator, removed_offset);
+	}
+}
+
+static void teds_intvector_adjust_iterators_before_insert(teds_intvector_entries *const array, teds_intrusive_dllist_node *node, const size_t inserted_offset, const uint32_t n)
+{
+	const zend_object *const obj = teds_intvector_to_object(array);
+	const size_t old_size = array->size;
+	ZEND_ASSERT(inserted_offset <= old_size);
+	do {
+		teds_intvector_it *it = teds_intvector_it_from_node(node);
+		if (Z_OBJ(it->intern.data) == obj) {
+			if (it->current >= inserted_offset && it->current < old_size) {
+				it->current += n;
+			}
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
+static zend_always_inline void teds_intvector_maybe_adjust_iterators_before_insert(teds_intvector_entries *array, const size_t insert_offset, const uint32_t n)
+{
+	teds_intrusive_dllist_node *iterator = array->active_iterators.first;
+	if (UNEXPECTED(iterator)) {
+		teds_intvector_adjust_iterators_before_insert(array, iterator, insert_offset, n);
+	}
+}
 
 zend_object_iterator *teds_intvector_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
@@ -845,8 +907,10 @@ zend_object_iterator *teds_intvector_get_iterator(zend_class_entry *ce, zval *ob
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
+	zend_object *obj = Z_OBJ_P(object);
+	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_intvector_it_funcs;
+	teds_intrusive_dllist_prepend(&teds_intvector_entries_from_object(obj)->active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }
@@ -2063,8 +2127,12 @@ PHP_METHOD(Teds_IntVector, unshift)
 	if (new_size > array->capacity) {
 		teds_intvector_entries_raise_capacity(array, new_size > 2 ? new_size * 2 : 4);
 	}
+
 	const uint8_t bytes_per_element = teds_intvector_entries_compute_memory_per_element(array);
 	uint8_t *const entries_uint8 = array->entries_uint8;
+
+	teds_intvector_maybe_adjust_iterators_before_insert(array, 0, argc);
+
 	memmove(entries_uint8 + argc * bytes_per_element, entries_uint8, bytes_per_element * old_size);
 	array->size = new_size;
 	for (uint32_t i = 0; i < argc; i++) {
@@ -2122,6 +2190,9 @@ PHP_METHOD(Teds_IntVector, insert)
 
 	uint8_t *const raw_bytes = array->entries_uint8;
 	uint8_t *const insert_start = raw_bytes + ((size_t) offset) * memory_per_element;
+
+	teds_intvector_maybe_adjust_iterators_before_insert(array, offset, argc);
+
 	memmove(insert_start + argc * (size_t) memory_per_element, insert_start, memory_per_element * (old_size - offset));
 	array->size = new_size;
 	for (uint32_t i = 0; i < argc; i++) {
@@ -2224,6 +2295,9 @@ PHP_METHOD(Teds_IntVector, shift)
 	const size_t old_capacity = array->capacity;
 	const uint8_t bytes_per_element = teds_intvector_entries_compute_memory_per_element(array);
 	uint8_t *const entries_uint8 = array->entries_uint8;
+
+	teds_intvector_maybe_adjust_iterators_before_remove(array, 0);
+
 	teds_intvector_entries_copy_offset(array, 0, return_value, true);
 	array->size--;
 	memmove(entries_uint8, entries_uint8 + bytes_per_element, bytes_per_element + (old_size - 1));
@@ -2256,6 +2330,9 @@ PHP_METHOD(Teds_IntVector, offsetUnset)
 	const uint8_t bytes_per_element = teds_intvector_entries_compute_memory_per_element(array);
 	uint8_t *const entries_uint8 = array->entries_uint8;
 	const size_t new_size = old_size - 1;
+
+	teds_intvector_maybe_adjust_iterators_before_remove(array, offset);
+
 	array->size = new_size;
 	uint8_t *const dst = entries_uint8 + ((size_t)offset) * bytes_per_element;
 	memmove(

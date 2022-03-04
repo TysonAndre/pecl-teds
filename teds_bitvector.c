@@ -88,6 +88,7 @@ typedef struct _teds_bitvector_entries {
 	 * The memory usage in bytes is 1/8th of the bit_capacity (BYTE_OF_BIT_POSITION(bit_capacity)). */
 	size_t bit_size;
 	size_t bit_capacity;
+	teds_intrusive_dllist active_iterators;
 } teds_bitvector_entries;
 
 typedef struct _teds_bitvector {
@@ -101,6 +102,7 @@ typedef struct _teds_bitvector_it {
 	size_t               current;
 	/* Temporary memory location to store the most recent get_current_value() result */
 	zval                 tmp;
+	teds_intrusive_dllist_node dllist_node;
 } teds_bitvector_it;
 
 static void teds_bitvector_entries_raise_capacity(teds_bitvector_entries *intern, const size_t new_capacity);
@@ -122,6 +124,16 @@ static ZEND_COLD void teds_error_noreturn_max_bitvector_capacity()
 static zend_always_inline teds_bitvector *teds_bitvector_from_object(zend_object *obj)
 {
 	return (teds_bitvector*)((char*)(obj) - XtOffsetOf(teds_bitvector, std));
+}
+
+static zend_always_inline zend_object *teds_bitvector_to_object(teds_bitvector_entries *array)
+{
+	return (zend_object*)((char*)(array) + XtOffsetOf(teds_bitvector, std));
+}
+
+static zend_always_inline teds_bitvector_it *teds_bitvector_it_from_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_bitvector_it*)((char*)(node) - XtOffsetOf(teds_bitvector_it, dllist_node));
 }
 
 #define Z_BITVECTOR_P(zv)  (teds_bitvector_from_object(Z_OBJ_P((zv))))
@@ -465,6 +477,8 @@ PHP_METHOD(Teds_BitVector, getIterator)
 
 static void teds_bitvector_it_dtor(zend_object_iterator *iter)
 {
+	teds_intrusive_dllist_node *node = &((teds_bitvector_it*)iter)->dllist_node;
+	teds_intrusive_dllist_remove(&Z_BITVECTOR_ENTRIES_P(&iter->data)->active_iterators, node);
 	zval_ptr_dtor(&iter->data);
 }
 
@@ -526,6 +540,55 @@ static const zend_object_iterator_funcs teds_bitvector_it_funcs = {
 	NULL, /* get_gc */
 };
 
+static void teds_bitvector_adjust_iterators_before_remove(teds_bitvector_entries *array, teds_intrusive_dllist_node *node, const size_t removed_offset)
+{
+	const size_t old_size = array->bit_size;
+	const zend_object *const obj = teds_bitvector_to_object(array);
+	ZEND_ASSERT(removed_offset < old_size);
+	do {
+		teds_bitvector_it *it = teds_bitvector_it_from_node(node);
+		if (Z_OBJ(it->intern.data) == obj) {
+			if (it->current >= removed_offset && it->current < old_size) {
+				it->current--;
+			}
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
+static zend_always_inline void teds_bitvector_maybe_adjust_iterators_before_remove(teds_bitvector_entries *array, const size_t removed_offset)
+{
+	teds_intrusive_dllist_node *iterator = array->active_iterators.first;
+	if (UNEXPECTED(iterator)) {
+		teds_bitvector_adjust_iterators_before_remove(array, iterator, removed_offset);
+	}
+}
+
+static void teds_bitvector_adjust_iterators_before_insert(teds_bitvector_entries *const array, teds_intrusive_dllist_node *node, const size_t inserted_offset, const uint32_t n)
+{
+	const zend_object *const obj = teds_bitvector_to_object(array);
+	const size_t old_size = array->bit_size;
+	ZEND_ASSERT(inserted_offset <= old_size);
+	do {
+		teds_bitvector_it *it = teds_bitvector_it_from_node(node);
+		if (Z_OBJ(it->intern.data) == obj) {
+			if (it->current >= inserted_offset && it->current < old_size) {
+				it->current += n;
+			}
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
+static zend_always_inline void teds_bitvector_maybe_adjust_iterators_before_insert(teds_bitvector_entries *const array, const size_t inserted_offset, const uint32_t n)
+{
+	teds_intrusive_dllist_node *iterator = array->active_iterators.first;
+	if (UNEXPECTED(iterator)) {
+		teds_bitvector_adjust_iterators_before_insert(array, iterator, inserted_offset, n);
+	}
+}
 
 zend_object_iterator *teds_bitvector_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
 {
@@ -542,8 +605,11 @@ zend_object_iterator *teds_bitvector_get_iterator(zend_class_entry *ce, zval *ob
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
+	zend_object *obj = Z_OBJ_P(object);
+	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_bitvector_it_funcs;
+
+	teds_intrusive_dllist_prepend(&teds_bitvector_from_object(obj)->array.active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }
@@ -1285,6 +1351,7 @@ PHP_METHOD(Teds_BitVector, unshift)
 	}
 
 	/* TODO: Optimize this for large varargs case */
+	teds_bitvector_maybe_adjust_iterators_before_insert(array, 0, argc);
 	for (uint32_t i = 0; i < argc; i++) {
 		zend_long new_value;
 		TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
@@ -1295,18 +1362,18 @@ PHP_METHOD(Teds_BitVector, unshift)
 
 PHP_METHOD(Teds_BitVector, insert)
 {
-	zend_long offset;
+	zend_long inserted_offset;
 	const zval *args;
 	uint32_t argc;
 
 	ZEND_PARSE_PARAMETERS_START(1, -1)
-		Z_PARAM_LONG(offset);
+		Z_PARAM_LONG(inserted_offset);
 		Z_PARAM_VARIADIC('+', args, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
 	teds_bitvector_entries *array = Z_BITVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->bit_size;
-	if (UNEXPECTED((zend_ulong) offset > array->bit_size || offset < 0)) {
+	if (UNEXPECTED((zend_ulong) inserted_offset > array->bit_size || inserted_offset < 0)) {
 		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
@@ -1321,10 +1388,11 @@ PHP_METHOD(Teds_BitVector, insert)
 	}
 
 	/* TODO: Optimize this for large varargs case */
+	teds_bitvector_maybe_adjust_iterators_before_insert(array, inserted_offset, argc);
 	for (uint32_t i = 0; i < argc; i++) {
 		zend_long new_value;
 		TEDS_BITVECTOR_VALUE_TO_BOOL_OR_THROW(new_value, (&args[i]));
-		teds_bitvector_entries_insert_single(array, offset + i, new_value);
+		teds_bitvector_entries_insert_single(array, inserted_offset + i, new_value);
 	}
 	TEDS_RETURN_VOID();
 }
@@ -1443,6 +1511,7 @@ static zend_always_inline void teds_bitvector_entries_unset_offset(teds_bitvecto
 	uint8_t *const entries_bits = array->entries_bits;
 	ZEND_ASSERT(array->bit_size <= array->bit_capacity);
 	ZEND_ASSERT(offset_bit < array->bit_size);
+	teds_bitvector_maybe_adjust_iterators_before_remove(array, offset_bit);
 	array->bit_size--;
 	/* Number of bytes *after* removing the last byte, minus 1 */
 	const size_t last_byte_offset = array->bit_size >> 3;
@@ -1478,6 +1547,7 @@ PHP_METHOD(Teds_BitVector, shift)
 	}
 	/* Remove the least significant bit and replace it */
 	ZVAL_BOOL(return_value, array->entries_bits[0] & 1);
+	teds_bitvector_maybe_adjust_iterators_before_remove(array, 0);
 	teds_bitvector_entries_shift(array);
 
 	const size_t capacity = teds_bitvector_compute_next_valid_capacity(old_size);

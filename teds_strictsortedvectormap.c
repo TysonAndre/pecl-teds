@@ -535,7 +535,7 @@ static const zend_object_iterator_funcs teds_strictsortedvectormap_it_funcs = {
 	teds_strictsortedvectormap_it_move_forward,
 	teds_strictsortedvectormap_it_rewind,
 	NULL,
-	NULL, /* get_gc */
+	teds_internaliterator_get_gc,
 };
 
 zend_object_iterator *teds_strictsortedvectormap_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
