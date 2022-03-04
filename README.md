@@ -20,6 +20,66 @@ make install
 
 On Windows, see https://wiki.php.net/internals/windows/stepbystepbuild_sdk_2 instead
 
+## Overview
+`Teds` contains the following types of `Teds\Collection` instances as well as various [iterable functionality](#iterable-functions):
+
+### Teds\Sequence - A Collection of values with keys 0..n-1
+
+`Teds\Sequence` is an interface representing a Collection of values with keys `0..n-1` and no gaps. (also known as a list in other languages)
+It is implemented by the following classes.
+
+- `Teds\Vector` - a memory-efficient representation of a list of values that can easily grow/shrink.
+- `Teds\Deque` - a memory-efficient representation of a list of values with amortized constant time push/pop/unshift/shift.
+
+`Teds` also includes several specializations of `Teds\Sequence` for memory-efficiency:
+
+- `Teds\IntVector` - a memory-efficient specialization of lists of integers, typically with faster serialization requiring less memory.
+- `Teds\LowMemoryVector` - exposes the same API as `Teds\Vector` but uses less memory for specializations (exclusively bool/null, exclusively integers, exclusively floats)
+- `Teds\BitVector` - exposes the same API as `Teds\Vector` but uses significantly less memory for booleans. Provides ways to read/write raw bytes/words.
+
+And immutable versions:
+
+- `Teds\ImmutableSequence` - represents
+- `Teds\EmptySequence::INSTANCE` (PHP 8.1+, uses enum) - represents an immutable empty sequence.
+
+### Teds\Set - a Collection of unique values
+
+The `Teds\Set` interface is implemented by the following classes:
+
+- `Teds\StrictHashSet` - a hash table based set of unique values providing efficient average-time lookup/insertion/removal. Uses `Teds\strict_hash`.
+- `Teds\StrictTreeSet` - a binary tree-based set of **sorted** unique values providing good worst-case time. Uses `Teds\stable_compare` for stable ordering.
+- `Teds\StrictSortedVectorSet` - provides a similar API to `Teds\StrictTreeSet` but is represented internally as a Vector. This has reduced memory usage and faster construction time and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
+
+Some specializations are provided for reduced memory usage:
+
+- `Teds\SortedIntVectorSet` - a mustable sorted set of integers, represented internally as a Vector. This has reduced memory usage and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
+
+`Teds` also provides immutable specializations of common data types offering faster serialization/unserialization:
+
+- `Teds\ImmutableSortedStringSet` - a sorted set of strings sorted by strcmp.
+- `Teds\ImmutableSortedIntSet` - a sorted set of integers.
+- `Teds\EmptySet::INSTANCE` (PHP 8.1+, uses enum) - represents an immutable empty set.
+
+
+### Teds\Map - a Collection mapping unique keys to values
+
+The `Teds\Map` interface is implemented by the following classes:
+
+- `Teds\StrictHashMap` - a hash table based map of unique keys to values providing efficient average-time lookup/insertion/removal. Uses `Teds\strict_hash`.
+- `Teds\StrictTreeMap` - a binary tree-based map of **sorted** unique keys to values providing slower average-case time but good worst-case time. Uses `Teds\stable_compare` for stable ordering.
+- `Teds\StrictSortedVectorMap` - provides a similar API to `Teds\StrictTreeMap` but is represented internally like a Vector. This has reduced memory usage and faster construction time and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
+
+`Teds` also provides the following map types:
+
+- `Teds\EmptyMap::INSTANCE` (PHP 8.1+, uses enum) - represents an immutable empty map.
+
+### Teds\Collections - others
+
+- `Teds\StrictMinHeap` and `Teds\StrictMaxHeap` are heaps where elements can be added (allowing duplicates) and are removed in order (or reverse order) of `Teds\stable_compare`.
+- `Teds\CachedIterable` is a `Collection` that lazily evaluates iterables such as Generators and stores the exact keys and values to allow future retrieval and iteration.
+- `Teds\ImmutableIterable` is a `Collection` that eagerly evaluates iterables such as Generators and stores the exact keys and values to allow future retrieval and iteration.
+- `Teds\MutableIterable` is a `Collection` that allows construction and modification of iterables, setting keys and values and allowing duplicate keys in any order.
+
 ## Functionality
 
 ### Teds\ImmutableIterable
