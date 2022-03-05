@@ -35,14 +35,6 @@
 zend_object_handlers teds_handler_MutableIterable;
 zend_class_entry *teds_ce_MutableIterable;
 
-/** TODO: Does C guarantee that this has the same memory layout as an array of zvals? */
-
-/* Used by InternalIterator returned by MutableIterable->getIterator() */
-typedef struct _teds_mutableiterable_it {
-	zend_object_iterator intern;
-	uint32_t             current;
-} teds_mutableiterable_it;
-
 /*
  * If a size this large is encountered, assume the allocation will likely fail or
  * future changes to the capacity will overflow.
@@ -555,17 +547,18 @@ PHP_METHOD(Teds_MutableIterable, getIterator)
 	zend_create_internal_iterator_zval(return_value, ZEND_THIS);
 }
 
-static void teds_mutableiterable_it_dtor(zend_object_iterator *iter)
+void teds_mutableiterable_it_dtor(zend_object_iterator *iter)
 {
+	teds_intrusive_dllist_remove(&Z_MUTABLEITERABLE_ENTRIES_P(&iter->data)->active_iterators, &((teds_mutableiterable_it*)iter)->dllist_node);
 	zval_ptr_dtor(&iter->data);
 }
 
-static void teds_mutableiterable_it_rewind(zend_object_iterator *iter)
+void teds_mutableiterable_it_rewind(zend_object_iterator *iter)
 {
 	((teds_mutableiterable_it*)iter)->current = 0;
 }
 
-static int teds_mutableiterable_it_valid(zend_object_iterator *iter)
+int teds_mutableiterable_it_valid(zend_object_iterator *iter)
 {
 	teds_mutableiterable_it     *iterator = (teds_mutableiterable_it*)iter;
 	teds_mutableiterable *object   = Z_MUTABLEITERABLE_P(&iter->data);
@@ -648,10 +641,13 @@ zend_object_iterator *teds_mutableiterable_get_iterator(zend_class_entry *ce, zv
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
+	zend_object *obj = Z_OBJ_P(object);
+	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_mutableiterable_it_funcs;
 
 	(void) ce;
+
+	teds_intrusive_dllist_prepend(&teds_mutableiterable_from_object(obj)->array.active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }

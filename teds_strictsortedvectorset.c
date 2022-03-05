@@ -73,8 +73,13 @@ static bool teds_strictsortedvectorset_entries_insert(teds_strictsortedvectorset
 		teds_strictsortedvectorset_entries_raise_capacity(array, new_capacity);
 		entry = array->entries + new_offset;
 	}
+	zval *entries = array->entries;
 
-	for (zval *it = array->entries + array->size; it > entry; it--) {
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_vector_adjust_iterators_before_insert(array, array->active_iterators.first, entry - entries, 1);
+	}
+
+	for (zval *it = entries + array->size; it > entry; it--) {
 		ZVAL_COPY_VALUE(&it[0], &it[-1]);
 	}
 
@@ -85,17 +90,14 @@ static bool teds_strictsortedvectorset_entries_insert(teds_strictsortedvectorset
 }
 
 /* Used by InternalIterator returned by StrictSortedVectorSet->getIterator() */
-typedef struct _teds_strictsortedvectorset_it {
-	zend_object_iterator intern;
-	zend_long            current;
-} teds_strictsortedvectorset_it;
+typedef teds_vector_it teds_strictsortedvectorset_it;
 
-static teds_strictsortedvectorset *teds_strictsortedvectorset_from_obj(zend_object *obj)
+static teds_strictsortedvectorset *teds_strictsortedvectorset_from_object(zend_object *obj)
 {
 	return (teds_strictsortedvectorset*)((char*)(obj) - XtOffsetOf(teds_strictsortedvectorset, std));
 }
 
-#define Z_STRICTSORTEDVECTORSET_P(zv)  teds_strictsortedvectorset_from_obj(Z_OBJ_P((zv)))
+#define Z_STRICTSORTEDVECTORSET_P(zv)  teds_strictsortedvectorset_from_object(Z_OBJ_P((zv)))
 #define Z_STRICTSORTEDVECTORSET_ENTRIES_P(zv)  (&Z_STRICTSORTEDVECTORSET_P((zv))->array)
 
 /* Helps enforce the invariants in debug mode:
@@ -267,7 +269,7 @@ static zend_object *teds_strictsortedvectorset_new_ex(zend_class_entry *class_ty
 	intern->std.handlers = &teds_handler_StrictSortedVectorSet;
 
 	if (orig && clone_orig) {
-		teds_strictsortedvectorset *other = teds_strictsortedvectorset_from_obj(orig);
+		teds_strictsortedvectorset *other = teds_strictsortedvectorset_from_object(orig);
 		teds_strictsortedvectorset_entries_copy_ctor(&intern->array, &other->array);
 	} else {
 		intern->array.entries = NULL;
@@ -334,28 +336,6 @@ PHP_METHOD(Teds_StrictSortedVectorSet, getIterator)
 	zend_create_internal_iterator_zval(return_value, ZEND_THIS);
 }
 
-static void teds_strictsortedvectorset_it_dtor(zend_object_iterator *iter)
-{
-	zval_ptr_dtor(&iter->data);
-}
-
-static void teds_strictsortedvectorset_it_rewind(zend_object_iterator *iter)
-{
-	((teds_strictsortedvectorset_it*)iter)->current = 0;
-}
-
-static int teds_strictsortedvectorset_it_valid(zend_object_iterator *iter)
-{
-	teds_strictsortedvectorset_it     *iterator = (teds_strictsortedvectorset_it*)iter;
-	teds_strictsortedvectorset *object   = Z_STRICTSORTEDVECTORSET_P(&iter->data);
-
-	if (iterator->current >= 0 && ((zend_ulong) iterator->current) < object->array.size) {
-		return SUCCESS;
-	}
-
-	return FAILURE;
-}
-
 static zval *teds_strictsortedvectorset_read_offset_helper(teds_strictsortedvectorset *intern, size_t offset)
 {
 	/* we have to return NULL on error here to avoid memleak because of
@@ -365,20 +345,6 @@ static zval *teds_strictsortedvectorset_read_offset_helper(teds_strictsortedvect
 		return NULL;
 	} else {
 		return &intern->array.entries[offset];
-	}
-}
-
-static zval *teds_strictsortedvectorset_it_get_current_data(zend_object_iterator *iter)
-{
-	teds_strictsortedvectorset_it     *iterator = (teds_strictsortedvectorset_it*)iter;
-	teds_strictsortedvectorset *object   = Z_STRICTSORTEDVECTORSET_P(&iter->data);
-
-	zval *data = teds_strictsortedvectorset_read_offset_helper(object, iterator->current);
-
-	if (UNEXPECTED(data == NULL)) {
-		return &EG(uninitialized_zval);
-	} else {
-		return data;
 	}
 }
 
@@ -396,19 +362,14 @@ static void teds_strictsortedvectorset_it_get_current_key(zend_object_iterator *
 	}
 }
 
-static void teds_strictsortedvectorset_it_move_forward(zend_object_iterator *iter)
-{
-	((teds_strictsortedvectorset_it*)iter)->current++;
-}
-
 /* iterator handler table */
 static const zend_object_iterator_funcs teds_strictsortedvectorset_it_funcs = {
-	teds_strictsortedvectorset_it_dtor,
-	teds_strictsortedvectorset_it_valid,
-	teds_strictsortedvectorset_it_get_current_data,
-	teds_strictsortedvectorset_it_get_current_key,
-	teds_strictsortedvectorset_it_move_forward,
-	teds_strictsortedvectorset_it_rewind,
+	teds_vector_it_dtor,
+	teds_vector_it_valid,
+	teds_vector_it_get_current_data,
+	teds_strictsortedvectorset_it_get_current_key, /* Yields the set value as a key as well ($value => $value) */
+	teds_vector_it_move_forward,
+	teds_vector_it_rewind,
 	NULL,
 	teds_internaliterator_get_gc,
 };
@@ -428,8 +389,11 @@ zend_object_iterator *teds_strictsortedvectorset_get_iterator(zend_class_entry *
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
+	zend_object *obj = Z_OBJ_P(object);
+	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_strictsortedvectorset_it_funcs;
+
+	teds_intrusive_dllist_prepend(&teds_strictsortedvectorset_from_object(obj)->array.active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }
@@ -486,7 +450,7 @@ PHP_METHOD(Teds_StrictSortedVectorSet, __set_state)
 		Z_PARAM_ARRAY_HT(array_ht)
 	ZEND_PARSE_PARAMETERS_END();
 	zend_object *object = teds_strictsortedvectorset_new(teds_ce_StrictSortedVectorSet);
-	teds_strictsortedvectorset *intern = teds_strictsortedvectorset_from_obj(object);
+	teds_strictsortedvectorset *intern = teds_strictsortedvectorset_from_object(object);
 	teds_strictsortedvectorset_entries_init_from_array(&intern->array, array_ht);
 
 	RETURN_OBJ(object);
@@ -593,10 +557,13 @@ static bool teds_strictsortedvectorset_entries_remove_key(teds_strictsortedvecto
 	if (!lookup.found) {
 		return false;
 	}
+	zval *const entries = array->entries;
+	teds_vector_maybe_adjust_iterators_before_remove(array, lookup.entry - entries);
+
 	zval *entry = lookup.entry;
 	zval old_key;
 	ZVAL_COPY_VALUE(&old_key, entry);
-	zval *end = array->entries + array->size - 1;
+	zval *end = entries + array->size - 1;
 	ZEND_ASSERT(entry <= end);
 	memmove(entry, entry + 1, (end - entry) * sizeof(zval));
 	array->size--;
