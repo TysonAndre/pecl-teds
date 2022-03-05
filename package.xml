@@ -249,8 +249,10 @@
     <file name="Map/clear.phpt" role="test" />
     <file name="Map/contains.phpt" role="test" />
     <file name="Map/from_pairs.phpt" role="test" />
-    <file name="Map/iteration.phpt" role="test" />
     <file name="Map/gc.phpt" role="test" />
+    <file name="Map/iteration.phpt" role="test" />
+    <file name="Map/iteration_repack.phpt" role="test" />
+    <file name="Map/iteration_repack_single.phpt" role="test" />
     <file name="Map/offset.phpt" role="test" />
     <file name="Map/referenceShorthand.phpt" role="test" />
     <file name="Map/remove.phpt" role="test" />
@@ -278,6 +280,8 @@
     <file name="Set/floatKey.phpt" role="test" />
     <file name="Set/gc.phpt" role="test" />
     <file name="Set/iteration.phpt" role="test" />
+    <file name="Set/iteration_repack.phpt" role="test" />
+    <file name="Set/iteration_repack_single.phpt" role="test" />
     <file name="Set/serialization.phpt" role="test" />
     <file name="Set/set_state.phpt" role="test" />
     <file name="SortedIntVectorSet/addRemove.phpt" role="test" />

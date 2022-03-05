@@ -89,6 +89,8 @@ typedef struct _teds_stricthashset_entries {
 	uint32_t nTableSize; /* Power of 2 size, aka capacity() */
 	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
 	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHSET_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
+	teds_intrusive_dllist active_iterators;
+	/* TODO could track uint32_t firstUsed for cases where removal of first is common, e.g. LRU caches */
 	bool should_rebuild_properties;
 } teds_stricthashset_entries;
 

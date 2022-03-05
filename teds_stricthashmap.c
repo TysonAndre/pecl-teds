@@ -8,7 +8,7 @@
 */
 
 /* This is based on teds_immutableiterable.c and Zend/zend_hash.c
- * TODO: associate StrictHashMap with linked list of iterators
+ * - This associates the StrictHashSet with linked list of iterators so that hash table repacking works
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -47,6 +47,18 @@ zend_class_entry *teds_ce_StrictHashMap;
 static void teds_stricthashmap_entries_grow(teds_stricthashmap_entries *array);
 static void teds_stricthashmap_entries_set_capacity(teds_stricthashmap_entries *array, uint32_t new_capacity);
 
+/* Used by InternalIterator returned by StrictHashMap->getIterator() */
+typedef struct _teds_stricthashmap_it {
+	zend_object_iterator       intern;
+	teds_intrusive_dllist_node dllist_node;
+	uint32_t                   current;
+} teds_stricthashmap_it;
+
+static zend_always_inline teds_stricthashmap_it *teds_stricthashmap_it_from_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_stricthashmap_it*)((char*)(node) - XtOffsetOf(teds_stricthashmap_it, dllist_node));
+}
+
 static ZEND_NORETURN ZEND_COLD void teds_error_noreturn_max_stricthashmap_capacity(void) {
 	zend_error_noreturn(E_ERROR, "exceeded max valid Teds\\StrictHashMap capacity");
 }
@@ -80,7 +92,7 @@ static zend_always_inline bool teds_stricthashmap_entries_insert(teds_stricthash
 	ZEND_ASSERT(Z_TYPE_P(key) != IS_UNDEF);
 	ZEND_ASSERT(Z_TYPE_P(value) != IS_UNDEF);
 
-	const zend_ulong h = teds_strict_hash_uint32_t(key);
+	const uint32_t h = teds_strict_hash_uint32_t(key);
 
 	if (UNEXPECTED(array->nTableSize == 0)) {
 		teds_stricthashmap_entries_set_capacity(array, TEDS_STRICTHASHMAP_MIN_CAPACITY);
@@ -124,12 +136,6 @@ add_to_hash:
 }
 
 static void teds_stricthashmap_clear(teds_stricthashmap *array);
-
-/* Used by InternalIterator returned by StrictHashMap->getIterator() */
-typedef struct _teds_stricthashmap_it {
-	zend_object_iterator intern;
-	uint32_t             current;
-} teds_stricthashmap_it;
 
 static zend_always_inline teds_stricthashmap *teds_stricthashmap_from_object(zend_object *obj)
 {
@@ -324,10 +330,71 @@ static void teds_stricthashmap_entries_rehash_inplace(teds_stricthashmap_entries
 	ZEND_ASSERT(ht->nNumUsed == ht->nNumOfElements);
 }
 
+static void teds_stricthashmap_iterators_reset(teds_intrusive_dllist_node *dllist_node)
+{
+	do {
+		teds_stricthashmap_it *const it = teds_stricthashmap_it_from_node(dllist_node);
+		if (it->current != (uint32_t) -1) {
+			it->current = 0;
+		}
+
+		dllist_node = dllist_node->next;
+	} while (dllist_node != NULL);
+}
+
+static zend_always_inline void teds_stricthashmap_iterators_maybe_reset(teds_stricthashmap_entries *array)
+{
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_stricthashmap_iterators_reset(array->active_iterators.first);
+	}
+}
+
+static void teds_stricthashmap_iterators_move_before_pack(teds_stricthashmap_entries *array, teds_intrusive_dllist_node *dllist_node)
+{
+	const uint32_t nNumUsed = array->nNumUsed;
+	const teds_stricthashmap_entry *const entries = array->arData;
+	ZEND_ASSERT(array->nNumOfElements <= array->nNumUsed);
+	do {
+		teds_stricthashmap_it *const it = teds_stricthashmap_it_from_node(dllist_node);
+		const uint32_t old_position = it->current;
+		// fprintf(stderr, "old_position=%d\n", old_position);
+		if (old_position >= nNumUsed) {
+			it->current = array->nNumOfElements;
+			continue;
+		}
+		// old_position < nNumUsed
+		uint32_t new_current = (uint32_t) -1;
+		for (uint32_t i = 0; i <= old_position; i++) {
+			if (!Z_ISUNDEF(entries[i].key)) {
+				new_current++;
+			}
+		}
+		// fprintf(stderr, "new_current=%d\n", new_current);
+		it->current = new_current;
+		ZEND_ASSERT(new_current + 1 <= array->nNumOfElements);
+
+		dllist_node = dllist_node->next;
+	} while (dllist_node != NULL);
+}
+
+static void teds_stricthashmap_iterators_shift_to_new_end(teds_stricthashmap_entries *array, teds_intrusive_dllist_node *dllist_node, const uint32_t removed_idx)
+{
+	const uint32_t nNumUsed = array->nNumUsed;
+	ZEND_ASSERT(removed_idx >= nNumUsed);
+	do {
+		teds_stricthashmap_it *const it = teds_stricthashmap_it_from_node(dllist_node);
+		if (it->current >= nNumUsed) {
+			/* Move iterators to their new positions. Iterators where key() would be the removed key are shifted to the previous key (removed_idx - 1), which may be before the start of the data (in which case calling next() would make it valid again) */
+			it->current = (it->current >= removed_idx ? nNumUsed - 1 : nNumUsed);
+		}
+		dllist_node = dllist_node->next;
+	} while (dllist_node != NULL);
+}
 
 static void teds_stricthashmap_entries_grow(teds_stricthashmap_entries *array)
 {
 	if (teds_stricthashmap_entries_empty_capacity(array)) {
+		teds_stricthashmap_iterators_maybe_reset(array);
 		array->arData = teds_stricthashmap_alloc_entries(TEDS_STRICTHASHMAP_MIN_CAPACITY);
 		array->nTableSize = TEDS_STRICTHASHMAP_MIN_CAPACITY;
 		array->nTableMask = TEDS_STRICTHASHMAP_SIZE_TO_MASK(TEDS_STRICTHASHMAP_MIN_CAPACITY);
@@ -335,9 +402,17 @@ static void teds_stricthashmap_entries_grow(teds_stricthashmap_entries *array)
 	}
 
 	ZEND_ASSERT(array->nNumUsed >= array->nNumOfElements);
-	if (array->nNumUsed > array->nNumOfElements + (array->nNumOfElements >> 5)) { /* additional term is there to amortize the cost of compaction */
-		teds_stricthashmap_entries_rehash_inplace(array);
-		return;
+	if (array->nNumUsed > array->nNumOfElements) {
+		// fprintf(stderr, "nNumUsed=%u nNumOfElements=%u first=%p\n", array->nNumUsed, array->nNumOfElements, array->active_iterators.first);
+		if (UNEXPECTED(array->active_iterators.first)) {
+			teds_stricthashmap_iterators_move_before_pack(array, array->active_iterators.first);
+		}
+
+		if (array->nNumUsed > array->nNumOfElements + (array->nNumOfElements >> 5)) { /* additional term is there to amortize the cost of compaction */
+			/* At least 1 of 33 values are unused. Based on zend_hash.c */
+			teds_stricthashmap_entries_rehash_inplace(array);
+			return;
+		}
 	}
 	ZEND_ASSERT(teds_is_pow2(array->nTableSize));
 	if (UNEXPECTED(array->nTableSize >= TEDS_MAX_ZVAL_PAIR_COUNT / 2)) {
@@ -636,6 +711,7 @@ PHP_METHOD(Teds_StrictHashMap, getIterator)
 
 static void teds_stricthashmap_it_dtor(zend_object_iterator *iter)
 {
+	teds_intrusive_dllist_remove(&Z_STRICTHASHMAP_ENTRIES_P(&iter->data)->active_iterators, &((teds_stricthashmap_it*)iter)->dllist_node);
 	zval_ptr_dtor(&iter->data);
 }
 
@@ -646,20 +722,12 @@ static void teds_stricthashmap_it_rewind(zend_object_iterator *iter)
 
 static int teds_stricthashmap_it_valid(zend_object_iterator *iter)
 {
-	teds_stricthashmap_it     *iterator = (teds_stricthashmap_it*)iter;
-	teds_stricthashmap *object   = Z_STRICTHASHMAP_P(&iter->data);
+	teds_stricthashmap_it    *iterator = (teds_stricthashmap_it*)iter;
+	const teds_stricthashmap *object   = Z_STRICTHASHMAP_P(&iter->data);
 
-	while (1) {
-		if (iterator->current >= object->array.nNumUsed) {
-			return FAILURE;
-		}
-		zval *v = &object->array.arData[iterator->current].key;
-		if (Z_TYPE_P(v) != IS_UNDEF) {
-			ZEND_ASSERT(Z_TYPE(object->array.arData[iterator->current].value) != IS_UNDEF);
-			return SUCCESS;
-		}
-		iterator->current++;
-	}
+	ZEND_ASSERT((object->array.nNumUsed > 0) == (object->array.nNumOfElements > 0));
+
+	return iterator->current < object->array.nNumUsed ? SUCCESS : FAILURE;
 }
 
 static teds_stricthashmap_entry *teds_stricthashmap_it_read_offset_helper(const teds_stricthashmap *intern, teds_stricthashmap_it *iterator)
@@ -736,9 +804,12 @@ zend_object_iterator *teds_stricthashmap_get_iterator(zend_class_entry *ce, zval
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
+	zend_object *obj = Z_OBJ_P(object);
+	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_stricthashmap_it_funcs;
 	(void) ce;
+
+	teds_intrusive_dllist_prepend(&teds_stricthashmap_entries_from_object(obj)->active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }
@@ -1048,6 +1119,10 @@ static bool teds_stricthashmap_entries_remove_key(teds_stricthashmap_entries *ar
 		do {
 			array->nNumUsed--;
 		} while (array->nNumUsed > 0 && (UNEXPECTED(Z_TYPE(array->arData[array->nNumUsed-1].key) == IS_UNDEF)));
+
+		if (UNEXPECTED(array->active_iterators.first)) {
+			teds_stricthashmap_iterators_shift_to_new_end(array, array->active_iterators.first, idx);
+		}
 	}
 	zval old_key;
 	zval old_value;
@@ -1259,7 +1334,9 @@ static void teds_stricthashmap_clear(teds_stricthashmap *intern) {
 PHP_METHOD(Teds_StrictHashMap, clear)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_stricthashmap_clear(Z_STRICTHASHMAP_P(ZEND_THIS));
+	teds_stricthashmap *intern = Z_STRICTHASHMAP_P(ZEND_THIS);
+	teds_stricthashmap_iterators_maybe_reset(&intern->array);
+	teds_stricthashmap_clear(intern);
 	TEDS_RETURN_VOID();
 }
 

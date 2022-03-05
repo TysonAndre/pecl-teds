@@ -90,6 +90,7 @@ typedef struct _teds_stricthashmap_entries {
 	uint32_t nTableSize; /* Power of 2 size, a.k.a. capacity(). */
 	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
 	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHMAP_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
+	teds_intrusive_dllist active_iterators;
 	bool should_rebuild_properties;
 } teds_stricthashmap_entries;
 
