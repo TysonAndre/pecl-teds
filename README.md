@@ -220,7 +220,7 @@ The [`Teds\StrictHashSet` API](./teds_stricthashset.stub.php) implementation is 
 NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) have the same hashes and are treated as the same entries, because `0.0 === -0.0` in php.
 NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`, despite having `NAN !== $x` in php for any $x, including `NAN`. This is done to avoid duplicate or unremovable entries.
 
-**Iteration on hash maps/sets is a work in progress.** Iteration will not work as expected if the hash table is rehashed due to insertions/removals during iteration.
+Removing an entry from a hash map/set will move iterators pointing to that entry to the entry prior to the removed entry.
 
 ### Teds\StrictMinHeap and Teds\StrictMaxHeap
 

@@ -601,8 +601,8 @@ void teds_vector_it_rewind(zend_object_iterator *iter)
 
 int teds_vector_it_valid(zend_object_iterator *iter)
 {
-	teds_vector_it     *iterator = (teds_vector_it*)iter;
-	teds_vector *object   = Z_VECTOR_P(&iter->data);
+	teds_vector_it *iterator = (teds_vector_it*)iter;
+	teds_vector    *object   = Z_VECTOR_P(&iter->data);
 
 	return iterator->current < object->array.size ? SUCCESS : FAILURE;
 }
