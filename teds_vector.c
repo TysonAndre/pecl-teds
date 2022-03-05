@@ -588,27 +588,23 @@ PHP_METHOD(Teds_Vector, getIterator)
 	zend_create_internal_iterator_zval(return_value, ZEND_THIS);
 }
 
-static void teds_vector_it_dtor(zend_object_iterator *iter)
+void teds_vector_it_dtor(zend_object_iterator *iter)
 {
 	teds_intrusive_dllist_remove(&Z_VECTOR_ENTRIES_P(&iter->data)->active_iterators, &((teds_vector_it*)iter)->dllist_node);
 	zval_ptr_dtor(&iter->data);
 }
 
-static void teds_vector_it_rewind(zend_object_iterator *iter)
+void teds_vector_it_rewind(zend_object_iterator *iter)
 {
 	((teds_vector_it*)iter)->current = 0;
 }
 
-static int teds_vector_it_valid(zend_object_iterator *iter)
+int teds_vector_it_valid(zend_object_iterator *iter)
 {
 	teds_vector_it     *iterator = (teds_vector_it*)iter;
 	teds_vector *object   = Z_VECTOR_P(&iter->data);
 
-	if (iterator->current < object->array.size) {
-		return SUCCESS;
-	}
-
-	return FAILURE;
+	return iterator->current < object->array.size ? SUCCESS : FAILURE;
 }
 
 static zval *teds_vector_read_offset_helper(teds_vector *intern, size_t offset)
@@ -623,7 +619,7 @@ static zval *teds_vector_read_offset_helper(teds_vector *intern, size_t offset)
 	}
 }
 
-static zval *teds_vector_it_get_current_data(zend_object_iterator *iter)
+zval *teds_vector_it_get_current_data(zend_object_iterator *iter)
 {
 	teds_vector_it     *iterator = (teds_vector_it*)iter;
 	teds_vector *object   = Z_VECTOR_P(&iter->data);
@@ -650,7 +646,7 @@ static void teds_vector_it_get_current_key(zend_object_iterator *iter, zval *key
 	}
 }
 
-static void teds_vector_it_move_forward(zend_object_iterator *iter)
+void teds_vector_it_move_forward(zend_object_iterator *iter)
 {
 	((teds_vector_it*)iter)->current++;
 }
@@ -1175,55 +1171,37 @@ PHP_METHOD(Teds_Vector, push)
 	TEDS_RETURN_VOID();
 }
 
-static void teds_vector_adjust_iterators_before_remove(teds_vector_entries *array, teds_intrusive_dllist_node *node, const uint32_t removed_offset)
+void teds_vector_adjust_iterators_before_remove(teds_vector_entries *array, teds_intrusive_dllist_node *node, const uint32_t removed_offset)
 {
 	const zend_object *const obj = teds_vector_to_object(array);
 	const uint32_t old_size = array->size;
 	ZEND_ASSERT(removed_offset < old_size);
 	do {
 		teds_vector_it *it = teds_vector_it_from_node(node);
-		if (Z_OBJ(it->intern.data) == obj) {
-			if (it->current >= removed_offset) {
-				it->current--;
-			}
+		ZEND_ASSERT(Z_OBJ(it->intern.data) == obj);
+		if (it->current >= removed_offset && it->current < old_size) {
+			it->current--;
 		}
 		ZEND_ASSERT(node != node->next);
 		node = node->next;
 	} while (node != NULL);
 }
 
-static zend_always_inline void teds_vector_maybe_adjust_iterators_before_remove(teds_vector_entries *array, const uint32_t removed_offset)
-{
-	if (UNEXPECTED(array->active_iterators.first)) {
-		teds_vector_adjust_iterators_before_remove(array, array->active_iterators.first, removed_offset);
-	}
-}
-
-static void teds_vector_adjust_iterators_before_insert(teds_vector_entries *const array, teds_intrusive_dllist_node *node, const uint32_t inserted_offset, const uint32_t n)
+void teds_vector_adjust_iterators_before_insert(teds_vector_entries *const array, teds_intrusive_dllist_node *node, const uint32_t inserted_offset, const uint32_t n)
 {
 	const uint32_t old_size = array->size;
 	const zend_object *const obj = teds_vector_to_object(array);
 	ZEND_ASSERT(inserted_offset <= old_size);
 	do {
 		teds_vector_it *it = teds_vector_it_from_node(node);
-		if (Z_OBJ(it->intern.data) == obj) {
-			if (it->current >= inserted_offset && it->current < old_size) {
-				it->current += n;
-			}
+		ZEND_ASSERT(Z_OBJ(it->intern.data) == obj);
+		if (it->current >= inserted_offset && it->current < old_size) {
+			it->current += n;
 		}
 		ZEND_ASSERT(node != node->next);
 		node = node->next;
 	} while (node != NULL);
 }
-
-static zend_always_inline void teds_vector_maybe_adjust_iterators_before_insert(teds_vector_entries *const array, const uint32_t inserted_offset, const uint32_t n)
-{
-	ZEND_ASSERT(inserted_offset <= array->size);
-	if (UNEXPECTED(array->active_iterators.first)) {
-		teds_vector_adjust_iterators_before_insert(array, array->active_iterators.first, inserted_offset, n);
-	}
-}
-
 
 PHP_METHOD(Teds_Vector, unshift)
 {
@@ -1464,7 +1442,6 @@ PHP_METHOD(Teds_Vector, offsetUnset)
 		}
 	}
 	zval_ptr_dtor(&old_value);
-
 }
 
 static void teds_vector_write_dimension(zend_object *object, zval *offset_zv, zval *value)

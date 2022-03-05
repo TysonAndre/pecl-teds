@@ -26,12 +26,12 @@ foreach ($deque as $key => $value) {
 }
 
 echo "Test shift out of bounds\n";
-$deque = new Teds\Deque([mut('a1'), mut('b1'), mut('c1')]);
+$deque = new Teds\Deque([mut('a1'), mut('b1'), mut('c1'), mut('d1')]);
 foreach ($deque as $key => $value) {
-    $deque->shift();
-    $deque->shift();
+    var_dump($deque->shift());
+    var_dump($deque->shift());
     echo "Saw $key: $value\n";
-    // iteration stops early because iteration position is now out of bounds.
+    // iteration does not stop early, iterator points to just before start of Deque
 }
 var_dump($deque);
 
@@ -83,10 +83,13 @@ string(2) "a_"
 Shifting 0 b_
 string(2) "b_"
 Test shift out of bounds
+string(2) "a1"
+string(2) "b1"
 Saw 0: a1
-object(Teds\Deque)#2 (1) {
-  [0]=>
-  string(2) "c1"
+string(2) "c1"
+string(2) "d1"
+Saw 0: c1
+object(Teds\Deque)#2 (0) {
 }
 Test iteration behavior
 {"valid":true,"key":0,"value":"a1"}

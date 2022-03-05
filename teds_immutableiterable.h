@@ -10,7 +10,7 @@
 #ifndef TEDS_IMMUTABLEITERABLE_H
 #define TEDS_IMMUTABLEITERABLE_H
 
-#include "teds_mutableiterable.h"
+#include "teds_zval_pair.h"
 
 extern zend_class_entry *teds_ce_ImmutableIterable;
 

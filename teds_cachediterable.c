@@ -24,7 +24,6 @@
 #include "teds_cachediterable_arginfo.h"
 #include "teds_cachediterable.h"
 #include "teds_exceptions.h"
-#include "teds_mutableiterable.h"
 #include "teds_immutableiterable.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"

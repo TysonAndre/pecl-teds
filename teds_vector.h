@@ -44,4 +44,26 @@ HashTable* teds_vector_get_gc(zend_object *obj, zval **table, int *n);
 void teds_vector_free_storage(zend_object *object);
 zend_object_iterator *teds_vector_get_iterator(zend_class_entry *ce, zval *object, int by_ref);
 
+void teds_vector_adjust_iterators_before_remove(teds_vector_entries *array, teds_intrusive_dllist_node *node, const uint32_t removed_offset);
+static zend_always_inline void teds_vector_maybe_adjust_iterators_before_remove(teds_vector_entries *array, const uint32_t removed_offset)
+{
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_vector_adjust_iterators_before_remove(array, array->active_iterators.first, removed_offset);
+	}
+}
+void teds_vector_adjust_iterators_before_insert(teds_vector_entries *const array, teds_intrusive_dllist_node *node, const uint32_t inserted_offset, const uint32_t n);
+static zend_always_inline void teds_vector_maybe_adjust_iterators_before_insert(teds_vector_entries *const array, const uint32_t inserted_offset, const uint32_t n)
+{
+	ZEND_ASSERT(inserted_offset <= array->size);
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_vector_adjust_iterators_before_insert(array, array->active_iterators.first, inserted_offset, n);
+	}
+}
+
+void teds_vector_it_dtor(zend_object_iterator *iter);
+void teds_vector_it_rewind(zend_object_iterator *iter);
+int teds_vector_it_valid(zend_object_iterator *iter);
+void teds_vector_it_move_forward(zend_object_iterator *iter);
+zval *teds_vector_it_get_current_data(zend_object_iterator *iter);
+
 #endif	/* TEDS_VECTOR_H */

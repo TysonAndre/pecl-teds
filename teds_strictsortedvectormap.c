@@ -24,6 +24,7 @@
 #include "teds_util.h"
 #include "teds_interfaces.h"
 #include "teds_exceptions.h"
+#include "teds_mutableiterable.h"
 #include "teds.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
@@ -36,30 +37,25 @@
 zend_object_handlers teds_handler_StrictSortedVectorMap;
 zend_class_entry *teds_ce_StrictSortedVectorMap;
 
-typedef struct _teds_strictsortedvectormap_entry {
-	zval key;
-	zval value;
-} teds_strictsortedvectormap_entry;
+typedef zval_pair teds_strictsortedvectormap_entry;
+typedef teds_mutableiterable_entries teds_strictsortedvectormap_entries;
+typedef teds_mutableiterable teds_strictsortedvectormap;
 
-typedef struct _teds_strictsortedvectormap_entries {
-	teds_strictsortedvectormap_entry *entries;
-	uint32_t size;
-	uint32_t capacity;
-} teds_strictsortedvectormap_entries;
+/* Used by InternalIterator returned by StrictSortedVectorMap->getIterator() */
+typedef teds_mutableiterable_it teds_strictsortedvectormap_it;
 
-typedef struct _teds_strictsortedvectormap {
-	teds_strictsortedvectormap_entries	array;
-	zend_object							std;
-} teds_strictsortedvectormap;
+static zend_always_inline zend_object *teds_strictsortedvectormap_to_object(teds_strictsortedvectormap_entries *array)
+{
+	return (zend_object*)((char*)(array) + XtOffsetOf(teds_strictsortedvectormap, std));
+}
+
+static zend_always_inline teds_strictsortedvectormap_it *teds_strictsortedvectormap_it_from_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_strictsortedvectormap_it*)((char*)(node) - XtOffsetOf(teds_strictsortedvectormap_it, dllist_node));
+}
 
 static zend_always_inline bool teds_strictsortedvectormap_entries_insert(teds_strictsortedvectormap_entries *array, zval *key, zval *value, bool probably_largest);
 static void teds_strictsortedvectormap_clear(teds_strictsortedvectormap *intern);
-
-/* Used by InternalIterator returned by StrictSortedVectorMap->getIterator() */
-typedef struct _teds_strictsortedvectormap_it {
-	zend_object_iterator intern;
-	zend_long            current;
-} teds_strictsortedvectormap_it;
 
 static teds_strictsortedvectormap *teds_strictsortedvectormap_from_object(zend_object *obj)
 {
@@ -72,7 +68,7 @@ static teds_strictsortedvectormap_entries *teds_strictsortedvectormap_entries_fr
 }
 
 #define Z_STRICTSORTEDVECTORMAP_P(zv)  teds_strictsortedvectormap_from_object(Z_OBJ_P((zv)))
-#define Z_STRICTSORTEDVECTORMAP_ENTRIES_P(zv)  &(teds_strictsortedvectormap_from_object(Z_OBJ_P((zv)))->array)
+#define Z_STRICTSORTEDVECTORMAP_ENTRIES_P(zv)  (&teds_strictsortedvectormap_from_object(Z_OBJ_P((zv)))->array)
 
 /* Helps enforce the invariants in debug mode:
  *   - if capacity == 0, then entries == NULL
@@ -459,103 +455,44 @@ PHP_METHOD(Teds_StrictSortedVectorMap, getIterator)
 	zend_create_internal_iterator_zval(return_value, ZEND_THIS);
 }
 
-static void teds_strictsortedvectormap_it_dtor(zend_object_iterator *iter)
+void teds_strictsortedvectormap_adjust_iterators_before_remove(teds_strictsortedvectormap_entries *array, teds_intrusive_dllist_node *node, const uint32_t removed_offset)
 {
-	zval_ptr_dtor(&iter->data);
+	const zend_object *const obj = teds_strictsortedvectormap_to_object(array);
+	const uint32_t old_size = array->size;
+	ZEND_ASSERT(removed_offset < old_size);
+	do {
+		teds_strictsortedvectormap_it *it = teds_strictsortedvectormap_it_from_node(node);
+		ZEND_ASSERT(Z_OBJ(it->intern.data) == obj);
+		if (it->current >= removed_offset && it->current < old_size) {
+			it->current--;
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
 }
 
-static void teds_strictsortedvectormap_it_rewind(zend_object_iterator *iter)
+void teds_strictsortedvectormap_adjust_iterators_before_insert(teds_strictsortedvectormap_entries *const array, teds_intrusive_dllist_node *node, const uint32_t inserted_offset)
 {
-	((teds_strictsortedvectormap_it*)iter)->current = 0;
+	const uint32_t old_size = array->size;
+	const zend_object *const obj = teds_strictsortedvectormap_to_object(array);
+	ZEND_ASSERT(inserted_offset <= old_size);
+	do {
+		teds_strictsortedvectormap_it *it = teds_strictsortedvectormap_it_from_node(node);
+		ZEND_ASSERT(Z_OBJ(it->intern.data) == obj);
+		if (it->current >= inserted_offset && it->current < old_size) {
+			it->current++;
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
 }
 
-static int teds_strictsortedvectormap_it_valid(zend_object_iterator *iter)
+static zend_always_inline void teds_strictsortedvectormap_maybe_adjust_iterators_before_insert(teds_strictsortedvectormap_entries *const array, const uint32_t inserted_offset)
 {
-	teds_strictsortedvectormap_it     *iterator = (teds_strictsortedvectormap_it*)iter;
-	teds_strictsortedvectormap *object   = Z_STRICTSORTEDVECTORMAP_P(&iter->data);
-
-	if (iterator->current >= 0 && ((zend_ulong) iterator->current) < object->array.size) {
-		return SUCCESS;
+	ZEND_ASSERT(inserted_offset <= array->size);
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_strictsortedvectormap_adjust_iterators_before_insert(array, array->active_iterators.first, inserted_offset);
 	}
-
-	return FAILURE;
-}
-
-static teds_strictsortedvectormap_entry *teds_strictsortedvectormap_it_read_offset_helper(teds_strictsortedvectormap *intern, size_t offset)
-{
-	/* we have to return NULL on error here to avoid memleak because of
-	 * ZE duplicating uninitialized_zval_ptr */
-	if (UNEXPECTED(offset >= intern->array.size)) {
-		zend_throw_exception(spl_ce_OutOfBoundsException, "Iterator out of range", 0);
-		return NULL;
-	} else {
-		return &intern->array.entries[offset];
-	}
-}
-
-static zval *teds_strictsortedvectormap_it_get_current_data(zend_object_iterator *iter)
-{
-	teds_strictsortedvectormap_it     *iterator = (teds_strictsortedvectormap_it*)iter;
-	teds_strictsortedvectormap *object   = Z_STRICTSORTEDVECTORMAP_P(&iter->data);
-
-	teds_strictsortedvectormap_entry *data = teds_strictsortedvectormap_it_read_offset_helper(object, iterator->current);
-
-	if (UNEXPECTED(data == NULL)) {
-		return &EG(uninitialized_zval);
-	} else {
-		return &data->value;
-	}
-}
-
-static void teds_strictsortedvectormap_it_get_current_key(zend_object_iterator *iter, zval *key)
-{
-	teds_strictsortedvectormap_it     *iterator = (teds_strictsortedvectormap_it*)iter;
-	teds_strictsortedvectormap *object   = Z_STRICTSORTEDVECTORMAP_P(&iter->data);
-
-	teds_strictsortedvectormap_entry *data = teds_strictsortedvectormap_it_read_offset_helper(object, iterator->current);
-
-	if (data == NULL) {
-		ZVAL_NULL(key);
-	} else {
-		ZVAL_COPY(key, &data->key);
-	}
-}
-
-static void teds_strictsortedvectormap_it_move_forward(zend_object_iterator *iter)
-{
-	((teds_strictsortedvectormap_it*)iter)->current++;
-}
-
-/* iterator handler table */
-static const zend_object_iterator_funcs teds_strictsortedvectormap_it_funcs = {
-	teds_strictsortedvectormap_it_dtor,
-	teds_strictsortedvectormap_it_valid,
-	teds_strictsortedvectormap_it_get_current_data,
-	teds_strictsortedvectormap_it_get_current_key,
-	teds_strictsortedvectormap_it_move_forward,
-	teds_strictsortedvectormap_it_rewind,
-	NULL,
-	teds_internaliterator_get_gc,
-};
-
-zend_object_iterator *teds_strictsortedvectormap_get_iterator(zend_class_entry *ce, zval *object, int by_ref)
-{
-	(void)ce;
-	teds_strictsortedvectormap_it *iterator;
-
-	if (UNEXPECTED(by_ref)) {
-		zend_throw_error(NULL, "An iterator cannot be used with foreach by reference");
-		return NULL;
-	}
-
-	iterator = emalloc(sizeof(teds_strictsortedvectormap_it));
-
-	zend_iterator_init((zend_object_iterator*)iterator);
-
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
-	iterator->intern.funcs = &teds_strictsortedvectormap_it_funcs;
-
-	return &iterator->intern;
 }
 
 PHP_METHOD(Teds_StrictSortedVectorMap, __unserialize)
@@ -841,25 +778,24 @@ static void teds_strictsortedvectormap_remove_entry(teds_strictsortedvectormap_e
 	teds_strictsortedvectormap_entry *end = entries + len - 1;
 	ZEND_ASSERT(entry <= end);
 	/* Move entries */
-	for (; entry < end; ) {
-		ZVAL_COPY_VALUE(&entry->key, &entry[1].key);
-		ZVAL_COPY_VALUE(&entry->value, &entry[1].value);
-		entry++;
-	}
+	memmove(entry, entry + 1, (end - entry) * sizeof(teds_strictsortedvectormap_entry));
 }
 
 PHP_METHOD(Teds_StrictSortedVectorMap, shift) {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictsortedvectormap *intern = Z_STRICTSORTEDVECTORMAP_P(ZEND_THIS);
-	const uint32_t len = intern->array.size;
+	teds_strictsortedvectormap_entries *array = Z_STRICTSORTEDVECTORMAP_ENTRIES_P(ZEND_THIS);
+	const uint32_t len = array->size;
 	if (len == 0) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty Teds\\StrictSortedVectorMap", 0);
 		RETURN_THROWS();
 	}
-	teds_strictsortedvectormap_entry *entry = &intern->array.entries[0];
+	teds_strictsortedvectormap_entry *entry = &array->entries[0];
 	RETVAL_ARR(zend_new_pair(&entry->key, &entry->value));
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_strictsortedvectormap_adjust_iterators_before_remove(array, array->active_iterators.first, 0);
+	}
 	teds_strictsortedvectormap_remove_entry(entry, len, entry);
-	intern->array.size--;
+	array->size--;
 }
 
 typedef struct _teds_strictsortedvectormap_search_result {
@@ -951,6 +887,7 @@ static void teds_strictsortedvectormap_entries_remove_key(teds_strictsortedvecto
 	if (len == 0) {
 		return;
 	}
+	teds_strictsortedvectormap_entry *entries = array->entries;
 	teds_strictsortedvectormap_search_result lookup = teds_strictsortedvectormap_entries_sorted_search_for_key(array, key);
 	if (!lookup.found) {
 		return;
@@ -960,7 +897,10 @@ static void teds_strictsortedvectormap_entries_remove_key(teds_strictsortedvecto
 	zval old_value;
 	ZVAL_COPY_VALUE(&old_key, &entry->key);
 	ZVAL_COPY_VALUE(&old_value, &entry->value);
-	teds_strictsortedvectormap_remove_entry(array->entries, len, entry);
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_strictsortedvectormap_adjust_iterators_before_remove(array, array->active_iterators.first, entry - entries);
+	}
+	teds_strictsortedvectormap_remove_entry(entries, len, entry);
 	array->size--;
 
 	zval_ptr_dtor(&old_key);
@@ -1042,18 +982,19 @@ static zend_always_inline bool teds_strictsortedvectormap_entries_insert(teds_st
 	}
 	/* Reallocate and insert (insertion sort) */
 	teds_strictsortedvectormap_entry *entry = result.entry;
+	const uint32_t insertion_offset = result.entry - array->entries;
+	ZEND_ASSERT(insertion_offset <= array->size);
 	if (array->size >= array->capacity) {
-		const uint32_t new_offset = result.entry - array->entries;
 		ZEND_ASSERT(array->size == array->capacity);
 		const uint32_t new_capacity = teds_strictsortedvectormap_next_pow2_capacity(array->size + 1);
 		teds_strictsortedvectormap_entries_raise_capacity(array, new_capacity);
-		entry = array->entries + new_offset;
+		entry = array->entries + insertion_offset;
 	}
 
-	for (teds_strictsortedvectormap_entry *it = array->entries + array->size; it > entry; it--) {
-		ZVAL_COPY_VALUE(&it[0].key, &it[-1].key);
-		ZVAL_COPY_VALUE(&it[0].value, &it[-1].value);
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_strictsortedvectormap_adjust_iterators_before_insert(array, array->active_iterators.first, insertion_offset);
 	}
+	memmove(entry + 1, entry, (array->size - insertion_offset) * sizeof(teds_strictsortedvectormap_entry));
 
 	array->size++;
 	ZVAL_COPY(&entry->key, key);
@@ -1280,7 +1221,7 @@ PHP_MINIT_FUNCTION(teds_strictsortedvectormap)
 	teds_handler_StrictSortedVectorMap.unset_dimension = teds_strictsortedvectormap_unset_dimension;
 
 	teds_ce_StrictSortedVectorMap->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
-	teds_ce_StrictSortedVectorMap->get_iterator = teds_strictsortedvectormap_get_iterator;
+	teds_ce_StrictSortedVectorMap->get_iterator = teds_mutableiterable_get_iterator;
 
 	return SUCCESS;
 }

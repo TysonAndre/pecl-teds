@@ -19,7 +19,6 @@
 
 #include "php_teds.h"
 #include "teds.h"
-#include "teds_mutableiterable.h"
 #include "teds_util.h"
 #include "teds_interfaces.h"
 #include "teds_immutableiterable_arginfo.h"
