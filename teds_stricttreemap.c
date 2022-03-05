@@ -61,7 +61,6 @@ static zend_always_inline teds_stricttreemap_node *teds_stricttreemap_node_alloc
 	n->parent = parent;
 	ZVAL_COPY(&n->key, key);
 	ZVAL_COPY(&n->value, value);
-	TEDS_STRICTTREEMAP_NODE_REFCOUNT(n) = 1;
 	TEDS_STRICTTREEMAP_NODE_COLOR(n) = TEDS_NODE_RED;
 	return n;
 }
@@ -176,13 +175,8 @@ static zend_always_inline void teds_stricttreemap_tree_rebalance_after_insert(te
 
 static zend_always_inline void teds_stricttreemap_node_release(teds_stricttreemap_node *node) {
 	ZEND_ASSERT(node != NULL);
-	ZEND_ASSERT(TEDS_STRICTTREEMAP_NODE_REFCOUNT(node) > 0);
-	if (EXPECTED(TEDS_STRICTTREEMAP_NODE_REFCOUNT(node) == 1)) {
-		ZEND_ASSERT(Z_ISUNDEF(node->key));
-		efree_size(node, sizeof(teds_stricttreemap_node));
-	} else {
-		--TEDS_STRICTTREEMAP_NODE_REFCOUNT(node);
-	}
+	ZEND_ASSERT(!Z_ISUNDEF(node->key));
+	efree_size(node, sizeof(teds_stricttreemap_node));
 }
 
 /* Returns true if a new entry was added to the map, false if updated. Based on _zend_hash_add_or_update_i. */
@@ -258,7 +252,9 @@ static void teds_stricttreemap_tree_clear(teds_stricttreemap_tree *tree);
 /* Used by InternalIterator returned by StrictTreeMap->getIterator() */
 typedef struct _teds_stricttreemap_it {
 	zend_object_iterator       intern;
-	teds_stricttreemap_node *node;
+	teds_stricttreemap_node   *node;
+	teds_intrusive_dllist_node dllist_node;
+	bool is_before_first;
 } teds_stricttreemap_it;
 
 static zend_always_inline teds_stricttreemap *teds_stricttreemap_from_object(zend_object *obj)
@@ -270,6 +266,12 @@ static zend_always_inline teds_stricttreemap_tree *teds_stricttreemap_tree_from_
 {
 	return &teds_stricttreemap_from_object(obj)->tree;
 }
+
+static zend_always_inline teds_stricttreemap_it *teds_stricttreemap_it_from_dllist_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_stricttreemap_it*)((char*)(node) - XtOffsetOf(teds_stricttreemap_it, dllist_node));
+}
+
 
 #define Z_STRICTTREEMAP_P(zv)  teds_stricttreemap_from_object(Z_OBJ_P((zv)))
 #define Z_STRICTTREEMAP_TREE_P(zv)  (&teds_stricttreemap_from_object(Z_OBJ_P((zv)))->tree)
@@ -490,7 +492,6 @@ static void teds_stricttreemap_node_dtor(teds_stricttreemap_node *node)
 	while (node != NULL) {
 		teds_stricttreemap_node_dtor(node->left);
 		zval_ptr_dtor(&node->key);
-		ZVAL_UNDEF(&node->key);
 		zval_ptr_dtor(&node->value);
 		teds_stricttreemap_node *right = node->right;
 		teds_stricttreemap_node_release(node);
@@ -559,13 +560,11 @@ static HashTable* teds_stricttreemap_get_and_populate_properties(zend_object *ob
 		GC_DELREF(ht);
 	}
 
-	// Note that destructors may mutate the original array,
-	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
+	// Note that destructors may mutate the original array.
+	// FIXME create a temporary buffer.
 	uint32_t i = 0;
 	zval *key, *value;
 	TEDS_STRICTTREEMAP_FOREACH_KEY_VAL(tree, key, value) {
-		TEDS_STRICTTREEMAP_NODE_REFCOUNT(_p)++;
-
 		zval tmp;
 		Z_TRY_ADDREF_P(key);
 		Z_TRY_ADDREF_P(value);
@@ -573,7 +572,6 @@ static HashTable* teds_stricttreemap_get_and_populate_properties(zend_object *ob
 		zend_hash_index_update(ht, i, &tmp);
 
 		i++;
-		teds_stricttreemap_node_release(_p);
 	} TEDS_STRICTTREEMAP_FOREACH_END();
 
 	const uint32_t properties_size = zend_hash_num_elements(ht);
@@ -738,34 +736,20 @@ PHP_METHOD(Teds_StrictTreeMap, getIterator)
 
 static void teds_stricttreemap_it_dtor(zend_object_iterator *iter)
 {
-	teds_stricttreemap_node *node = ((teds_stricttreemap_it*)iter)->node;
-	if (node) {
-		teds_stricttreemap_node_release(node);
-		((teds_stricttreemap_it*)iter)->node = NULL;
-	}
+	teds_intrusive_dllist_remove(&Z_STRICTTREEMAP_TREE_P(&iter->data)->active_iterators, &((teds_stricttreemap_it*)iter)->dllist_node);
 	zval_ptr_dtor(&iter->data);
 }
 
 static void teds_stricttreemap_it_rewind(zend_object_iterator *iter)
 {
 	teds_stricttreemap *object   = Z_STRICTTREEMAP_P(&iter->data);
-	teds_stricttreemap_node *const orig_node = ((teds_stricttreemap_it*)iter)->node;
-	teds_stricttreemap_node *const new_node = teds_stricttreemap_tree_get_first(&object->tree);
-	if (new_node == orig_node) {
-		return;
-	}
+	teds_stricttreemap_node *new_node = teds_stricttreemap_tree_get_first(&object->tree);
 	((teds_stricttreemap_it*)iter)->node = new_node;
-	if (new_node != NULL) {
-		TEDS_STRICTTREEMAP_NODE_REFCOUNT(new_node)++;
-	}
-	if (orig_node != NULL) {
-		teds_stricttreemap_node_release(orig_node);
-	}
+	((teds_stricttreemap_it*)iter)->is_before_first = new_node == NULL;
 }
 
-static zend_always_inline bool teds_stricttreemap_node_valid(teds_stricttreemap_node *node) {
-	/* TODO: Mark key as invalid when removing? */
-	return node != NULL && !Z_ISUNDEF(node->key);
+static zend_always_inline bool teds_stricttreemap_node_valid(const teds_stricttreemap_node *node) {
+	return node != NULL;
 }
 
 static int teds_stricttreemap_it_valid(zend_object_iterator *iter)
@@ -796,16 +780,19 @@ static void teds_stricttreemap_it_get_current_key(zend_object_iterator *iter, zv
 
 static void teds_stricttreemap_it_move_forward(zend_object_iterator *iter)
 {
-	teds_stricttreemap_node *const node = ((teds_stricttreemap_it*)iter)->node;
+	teds_stricttreemap_it *tree_iter = (teds_stricttreemap_it *)iter;
+	const teds_stricttreemap_node *const node = tree_iter->node;
 	if (!teds_stricttreemap_node_valid(node)) {
+		if (tree_iter->is_before_first) {
+			teds_stricttreemap_tree *tree = Z_STRICTTREEMAP_TREE_P(&iter->data);
+			tree_iter->node = teds_stricttreemap_tree_get_first(tree);
+			tree_iter->is_before_first = false;
+		}
 		return;
 	}
 	teds_stricttreemap_node *const next = teds_stricttreemap_node_get_next(node);
-	((teds_stricttreemap_it*)iter)->node = next;
-	if (next) {
-		TEDS_STRICTTREEMAP_NODE_REFCOUNT(next)++;
-	}
-	teds_stricttreemap_node_release(node);
+	tree_iter->node = next;
+	ZEND_ASSERT(!tree_iter->is_before_first);
 }
 
 /* iterator handler table */
@@ -837,12 +824,10 @@ zend_object_iterator *teds_stricttreemap_get_iterator(zend_class_entry *ce, zval
 	zend_object *obj = Z_OBJ_P(object);
 	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_stricttreemap_it_funcs;
-	teds_stricttreemap_node *node = teds_stricttreemap_tree_get_first(&Z_STRICTTREEMAP_P(object)->tree);
-	if (node) {
-		TEDS_STRICTTREEMAP_NODE_REFCOUNT(node)++;
-	}
-	iterator->node = node;
+	iterator->node = teds_stricttreemap_tree_get_first(&Z_STRICTTREEMAP_P(object)->tree);
 	(void) ce;
+
+	teds_intrusive_dllist_prepend(&teds_stricttreemap_tree_from_object(obj)->active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }
@@ -886,7 +871,6 @@ PHP_METHOD(Teds_StrictTreeMap, __unserialize)
 					teds_stricttreemap_node *n = nodes[--sorted_nodes_count];
 					zval_ptr_dtor(&n->key);
 					zval_ptr_dtor(&n->value);
-					ZVAL_UNDEF(&n->key);
 					teds_stricttreemap_node_release(n);
 				}
 				efree(nodes);
@@ -1379,7 +1363,29 @@ static zend_always_inline void teds_stricttreemap_tree_replace_node_with_descend
 	}
 }
 
+static void teds_stricttreemap_tree_adjust_iterators_before_remove(teds_intrusive_dllist_node *dllist_node, const teds_stricttreemap_node *const tree_node)
+{
+	ZEND_ASSERT(tree_node != NULL);
+	do {
+		teds_stricttreemap_it *it = teds_stricttreemap_it_from_dllist_node(dllist_node);
+		if (it->node == tree_node) {
+			teds_stricttreemap_node *prev = teds_stricttreemap_node_get_prev(tree_node);
+			it->node = prev;
+			it->is_before_first = prev == NULL;
+		}
+
+		dllist_node = dllist_node->next;
+	} while (dllist_node != NULL);
+}
+
+static zend_always_inline void teds_stricttreemap_tree_maybe_adjust_iterators_before_remove(teds_stricttreemap_tree *tree, teds_stricttreemap_node *const node) {
+	if (UNEXPECTED(tree->active_iterators.first)) {
+		teds_stricttreemap_tree_adjust_iterators_before_remove(tree->active_iterators.first, node);
+	}
+}
+
 static zend_always_inline void teds_stricttreemap_tree_remove_node(teds_stricttreemap_tree *tree, teds_stricttreemap_node *const node, bool free_zvals) {
+	teds_stricttreemap_tree_maybe_adjust_iterators_before_remove(tree, node);
 	if (!node->left) {
 		/* If a valid red-black tree has only 1 child,
 		 * then that child is guaranteed to be red, so that the number of black nodes on paths on both sides are equal. */
@@ -1423,7 +1429,6 @@ static zend_always_inline void teds_stricttreemap_tree_remove_node(teds_stricttr
 		zval_ptr_dtor(&node->key);
 		zval_ptr_dtor(&node->value);
 	}
-	ZVAL_UNDEF(&node->key);
 	teds_stricttreemap_node_release(node);
 }
 

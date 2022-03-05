@@ -60,7 +60,6 @@ static zend_always_inline teds_stricttreeset_node *teds_stricttreeset_node_alloc
 	teds_stricttreeset_node *n = emalloc(sizeof(teds_stricttreeset_node));
 	n->parent = parent;
 	ZVAL_COPY(&n->key, key);
-	TEDS_STRICTTREESET_NODE_REFCOUNT(n) = 1;
 	TEDS_STRICTTREESET_NODE_COLOR(n) = TEDS_NODE_RED;
 	return n;
 }
@@ -175,13 +174,8 @@ static zend_always_inline void teds_stricttreeset_tree_rebalance_after_insert(te
 
 static zend_always_inline void teds_stricttreeset_node_release(teds_stricttreeset_node *node) {
 	ZEND_ASSERT(node != NULL);
-	ZEND_ASSERT(TEDS_STRICTTREESET_NODE_REFCOUNT(node) > 0);
-	if (EXPECTED(TEDS_STRICTTREESET_NODE_REFCOUNT(node) == 1)) {
-		ZEND_ASSERT(Z_ISUNDEF(node->key));
-		efree_size(node, sizeof(teds_stricttreeset_node));
-	} else {
-		--TEDS_STRICTTREESET_NODE_REFCOUNT(node);
-	}
+	ZEND_ASSERT(!Z_ISUNDEF(node->key));
+	efree_size(node, sizeof(teds_stricttreeset_node));
 }
 
 /* Returns true if a new entry was added to the set, false if updated. Based on _zend_hash_add_or_update_i. */
@@ -249,7 +243,10 @@ static void teds_stricttreeset_tree_clear(teds_stricttreeset_tree *tree);
 /* Used by InternalIterator returned by StrictTreeSet->getIterator() */
 typedef struct _teds_stricttreeset_it {
 	zend_object_iterator       intern;
-	teds_stricttreeset_node *node;
+	teds_stricttreeset_node   *node;
+	/* Connects to other active iterators */
+	teds_intrusive_dllist_node dllist_node;
+	bool is_before_first;
 } teds_stricttreeset_it;
 
 static zend_always_inline teds_stricttreeset *teds_stricttreeset_from_object(zend_object *obj)
@@ -257,7 +254,12 @@ static zend_always_inline teds_stricttreeset *teds_stricttreeset_from_object(zen
 	return (teds_stricttreeset*)((char*)(obj) - XtOffsetOf(teds_stricttreeset, std));
 }
 
-#define teds_stricttreeset_tree_from_object(obj)  &(teds_stricttreeset_from_object((obj))->tree)
+static zend_always_inline teds_stricttreeset_it *teds_stricttreeset_it_from_dllist_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_stricttreeset_it*)((char*)(node) - XtOffsetOf(teds_stricttreeset_it, dllist_node));
+}
+
+#define teds_stricttreeset_tree_from_object(obj) (&teds_stricttreeset_from_object((obj))->tree)
 #define Z_STRICTTREESET_P(zv)  teds_stricttreeset_from_object(Z_OBJ_P((zv)))
 #define Z_STRICTTREESET_TREE_P(zv) (&Z_STRICTTREESET_P((zv))->tree)
 
@@ -456,11 +458,13 @@ static void teds_stricttreeset_node_dtor(teds_stricttreeset_node *node)
 {
 	/* Free keys in sorted order */
 	while (node != NULL) {
+		/* Free the left side */
 		teds_stricttreeset_node_dtor(node->left);
+		/* Free the current node */
 		teds_stricttreeset_node *right = node->right;
 		zval_ptr_dtor(&node->key);
-		ZVAL_UNDEF(&node->key);
 		teds_stricttreeset_node_release(node);
+		/* Free the right side in the next iteration */
 		node = right;
 	}
 }
@@ -524,18 +528,14 @@ static HashTable* teds_stricttreeset_get_and_populate_properties(zend_object *ob
 		GC_DELREF(ht);
 	}
 
-	// Note that destructors may mutate the original array,
-	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
+	// Note that destructors may mutate the original array.
+	// FIXME copy to a temporary buffer
 	uint32_t i = 0;
 	zval *elem;
 	TEDS_STRICTTREESET_FOREACH_KEY(tree, elem) {
-		TEDS_STRICTTREESET_NODE_REFCOUNT(_p)++;
-
 		Z_TRY_ADDREF_P(elem);
 		zend_hash_index_update(ht, i, elem);
 		i++;
-
-		teds_stricttreeset_node_release(_p);
 	} TEDS_STRICTTREESET_FOREACH_END();
 
 	const uint32_t properties_size = zend_hash_num_elements(ht);
@@ -699,34 +699,20 @@ PHP_METHOD(Teds_StrictTreeSet, getIterator)
 
 static void teds_stricttreeset_it_dtor(zend_object_iterator *iter)
 {
-	teds_stricttreeset_node *node = ((teds_stricttreeset_it*)iter)->node;
-	if (node) {
-		teds_stricttreeset_node_release(node);
-		((teds_stricttreeset_it*)iter)->node = NULL;
-	}
+	teds_intrusive_dllist_remove(&Z_STRICTTREESET_TREE_P(&iter->data)->active_iterators, &((teds_stricttreeset_it*)iter)->dllist_node);
 	zval_ptr_dtor(&iter->data);
 }
 
 static void teds_stricttreeset_it_rewind(zend_object_iterator *iter)
 {
 	teds_stricttreeset *object   = Z_STRICTTREESET_P(&iter->data);
-	teds_stricttreeset_node *const orig_node = ((teds_stricttreeset_it*)iter)->node;
 	teds_stricttreeset_node *const new_node = teds_stricttreeset_tree_get_first(&object->tree);
-	if (new_node == orig_node) {
-		return;
-	}
 	((teds_stricttreeset_it*)iter)->node = new_node;
-	if (new_node != NULL) {
-		TEDS_STRICTTREESET_NODE_REFCOUNT(new_node)++;
-	}
-	if (orig_node != NULL) {
-		teds_stricttreeset_node_release(orig_node);
-	}
+	((teds_stricttreeset_it*)iter)->is_before_first = new_node == NULL;
 }
 
-static zend_always_inline bool teds_stricttreeset_node_valid(teds_stricttreeset_node *node) {
-	/* TODO: Mark key as invalid when removing? */
-	return node != NULL && !Z_ISUNDEF(node->key);
+static zend_always_inline bool teds_stricttreeset_node_valid(const teds_stricttreeset_node *node) {
+	return node != NULL;
 }
 
 static int teds_stricttreeset_it_valid(zend_object_iterator *iter)
@@ -757,16 +743,19 @@ static void teds_stricttreeset_it_get_current_key(zend_object_iterator *iter, zv
 
 static void teds_stricttreeset_it_move_forward(zend_object_iterator *iter)
 {
-	teds_stricttreeset_node *const node = ((teds_stricttreeset_it*)iter)->node;
+	teds_stricttreeset_it *tree_iter = (teds_stricttreeset_it *)iter;
+	const teds_stricttreeset_node *const node = tree_iter->node;
 	if (!teds_stricttreeset_node_valid(node)) {
+		if (tree_iter->is_before_first) {
+			teds_stricttreeset_tree *tree = Z_STRICTTREESET_TREE_P(&iter->data);
+			tree_iter->node = teds_stricttreeset_tree_get_first(tree);
+			tree_iter->is_before_first = false;
+		}
 		return;
 	}
 	teds_stricttreeset_node *const next = teds_stricttreeset_node_get_next(node);
-	((teds_stricttreeset_it*)iter)->node = next;
-	if (next) {
-		TEDS_STRICTTREESET_NODE_REFCOUNT(next)++;
-	}
-	teds_stricttreeset_node_release(node);
+	tree_iter->node = next;
+	ZEND_ASSERT(!tree_iter->is_before_first);
 }
 
 /* iterator handler table */
@@ -795,14 +784,14 @@ zend_object_iterator *teds_stricttreeset_get_iterator(zend_class_entry *ce, zval
 
 	zend_iterator_init((zend_object_iterator*)iterator);
 
-	ZVAL_OBJ_COPY(&iterator->intern.data, Z_OBJ_P(object));
+	zend_object *obj = Z_OBJ_P(object);
+	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_stricttreeset_it_funcs;
 	teds_stricttreeset_node *node = teds_stricttreeset_tree_get_first(&Z_STRICTTREESET_P(object)->tree);
-	if (node) {
-		TEDS_STRICTTREESET_NODE_REFCOUNT(node)++;
-	}
 	iterator->node = node;
 	(void) ce;
+
+	teds_intrusive_dllist_prepend(&teds_stricttreeset_tree_from_object(obj)->active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }
@@ -842,7 +831,6 @@ PHP_METHOD(Teds_StrictTreeSet, __unserialize)
 				while (sorted_nodes_count > 0) {
 					teds_stricttreeset_node *n = nodes[--sorted_nodes_count];
 					zval_ptr_dtor(&n->key);
-					ZVAL_UNDEF(&n->key);
 					teds_stricttreeset_node_release(n);
 				}
 				efree(nodes);
@@ -851,7 +839,7 @@ PHP_METHOD(Teds_StrictTreeSet, __unserialize)
 		}
 
 		if (nodes != NULL) {
-			if (sorted_nodes_count == 0 || teds_stable_compare(val, &prev->key) > 0) {
+			if (EXPECTED(sorted_nodes_count == 0 || teds_stable_compare(val, &prev->key) > 0)) {
 				prev = teds_stricttreeset_node_alloc(val, NULL);
 				nodes[sorted_nodes_count] = prev;
 				sorted_nodes_count++;
@@ -860,6 +848,7 @@ PHP_METHOD(Teds_StrictTreeSet, __unserialize)
 			tree->root = teds_stricttreeset_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
 			tree->nNumOfElements = sorted_nodes_count;
 			efree(nodes);
+			/* With nodes being NULL, sorted_nodes_count is no longer read from */
 			nodes = NULL;
 		}
 		teds_stricttreeset_tree_insert(tree, val, false);
@@ -1182,7 +1171,30 @@ static zend_always_inline void teds_stricttreeset_tree_replace_node_with_descend
 	}
 }
 
+static void teds_stricttreeset_tree_adjust_iterators_before_remove(teds_intrusive_dllist_node *dllist_node, const teds_stricttreeset_node *const tree_node)
+{
+	ZEND_ASSERT(tree_node != NULL);
+	do {
+		teds_stricttreeset_it *it = teds_stricttreeset_it_from_dllist_node(dllist_node);
+		if (it->node == tree_node) {
+			teds_stricttreeset_node *prev = teds_stricttreeset_node_get_prev(tree_node);
+			it->node = prev;
+			it->is_before_first = prev == NULL;
+		}
+
+		dllist_node = dllist_node->next;
+	} while (dllist_node != NULL);
+}
+
+static zend_always_inline void teds_stricttreeset_tree_maybe_adjust_iterators_before_remove(teds_stricttreeset_tree *tree, teds_stricttreeset_node *const node) {
+	if (UNEXPECTED(tree->active_iterators.first)) {
+		teds_stricttreeset_tree_adjust_iterators_before_remove(tree->active_iterators.first, node);
+	}
+}
+
 static zend_always_inline void teds_stricttreeset_tree_remove_node(teds_stricttreeset_tree *tree, teds_stricttreeset_node *const node, bool free_zvals) {
+	teds_stricttreeset_tree_maybe_adjust_iterators_before_remove(tree, node);
+
 	if (!node->left) {
 		/* If a valid red-black tree has only 1 child,
 		 * then that child is guaranteed to be red, so that the number of black nodes on paths on both sides are equal. */
@@ -1225,7 +1237,6 @@ static zend_always_inline void teds_stricttreeset_tree_remove_node(teds_stricttr
 	if (free_zvals) {
 		zval_ptr_dtor(&node->key);
 	}
-	ZVAL_UNDEF(&node->key);
 	teds_stricttreeset_node_release(node);
 }
 

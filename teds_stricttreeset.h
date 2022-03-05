@@ -12,6 +12,8 @@
 
 PHP_MINIT_FUNCTION(teds_stricttreeset);
 
+#include "teds_internaliterator.h"
+
 typedef struct _teds_stricttreeset_node {
 	zval key;
 	union {
@@ -22,16 +24,15 @@ typedef struct _teds_stricttreeset_node {
 		struct _teds_stricttreeset_node *children[2];
 	};
 	struct _teds_stricttreeset_node *parent;
-	uint8_t color;
 } teds_stricttreeset_node;
 
 /* TODO move color into high bit of Z_EXTRA and benchmark? */
-#define TEDS_STRICTTREESET_NODE_REFCOUNT(node) Z_EXTRA((node)->key)
-#define TEDS_STRICTTREESET_NODE_COLOR(node) ((node)->color)
+#define TEDS_STRICTTREESET_NODE_COLOR(node) Z_EXTRA((node)->key)
 #define TEDS_STRICTTREESET_NODE_COLOR_NULLABLE(node) ((node) != NULL ? TEDS_STRICTTREESET_NODE_COLOR(node) : TEDS_NODE_BLACK)
 
 typedef struct _teds_stricttreeset_tree {
 	struct _teds_stricttreeset_node *root;
+	teds_intrusive_dllist active_iterators;
 	uint32_t nNumOfElements;
 	bool initialized;
 	bool should_rebuild_properties;

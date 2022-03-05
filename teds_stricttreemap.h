@@ -26,15 +26,15 @@ typedef struct _teds_stricttreemap_node {
 	struct _teds_stricttreemap_node *parent;
 } teds_stricttreemap_node;
 
-#define TEDS_STRICTTREEMAP_NODE_REFCOUNT(node) Z_EXTRA((node)->key)
 #define TEDS_STRICTTREEMAP_NODE_COLOR(node) Z_EXTRA((node)->value)
 #define TEDS_STRICTTREEMAP_NODE_COLOR_NULLABLE(node) ((node) != NULL ? TEDS_STRICTTREEMAP_NODE_COLOR(node) : TEDS_NODE_BLACK)
 
 typedef struct _teds_stricttreemap_tree {
 	struct _teds_stricttreemap_node *root;
-	uint32_t nNumOfElements;
-	bool should_rebuild_properties;
-	bool initialized;
+	teds_intrusive_dllist            active_iterators;
+	uint32_t                         nNumOfElements;
+	bool                             should_rebuild_properties;
+	bool                             initialized;
 } teds_stricttreemap_tree;
 
 typedef struct _teds_stricttreemap {

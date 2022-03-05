@@ -40,4 +40,8 @@ string(4) "k_35"
 ["k_20","k_30","k_25","k_35"]
 Test Teds\StrictTreeSet
 string(3) "k_0"
-["k_20","k_30"]
+string(4) "k_20"
+string(4) "k_25"
+string(4) "k_30"
+string(4) "k_35"
+["k_20","k_25","k_30","k_35"]
