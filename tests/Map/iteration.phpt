@@ -43,5 +43,9 @@ count=4
 [["k_20","k_200"],["k_30",false],["k_25","k_123"],["k_35",{}]]
 Test Teds\StrictTreeMap
 key: "k_0", value: {}
-count=2
-[["k_20","k_200"],["k_30",false]]
+key: "k_20", value: "k_200"
+key: "k_25", value: "k_123"
+key: "k_30", value: false
+key: "k_35", value: {}
+count=4
+[["k_20","k_200"],["k_25","k_123"],["k_30",false],["k_35",{}]]

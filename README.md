@@ -194,7 +194,7 @@ Much more efficient in memory usage and random access than SplDoublyLinkedList.
 
 (Also similar to `Ds\Deque`)
 
-### Teds\StrictTreeMap
+### Teds\StrictTreeMap and Teds\StrictTreeSet
 
 [`Teds\StrictTreeMap` API](./teds_stricthashmap.stub.php)
 
@@ -202,7 +202,7 @@ This is a map where entries for keys of any type can be inserted if `Teds\stable
 
 This currently uses a balanced [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) to ensure logarithmic time is needed for insertions/removals/lookups.
 
-Iteration will stop if the current key of an iterator is removed.
+Removing a `Teds\StrictTreeMap`/`Teds\StrictTreeSet` entry will move iterators pointing to that entries to the entry before the removed entry (as of 1.2.1).
 
 This uses [`Teds\stable_compare`](#stable-comparison) internally.
 
@@ -212,15 +212,15 @@ The [`Teds\StrictTreeSet` API](./teds_stricttreeset.stub.php) implementation is 
 
 [`Teds\StrictHashMap` API](./teds_stricthashmap.stub.php)
 
-**This is a work in progress.** Iteration will not work as expected if the hash table is rehashed due to insertions/removals during iteration.
-
 This is a map where entries for keys of any type can be inserted if they are `!==` to other keys.
 This uses [`Teds\strict_hash`](#strict-hashing) internally.
 
 The [`Teds\StrictHashSet` API](./teds_stricthashset.stub.php) implementation is similar, but does not associate values with keys and does not implement ArrayAccess and uses different method names.
 
 NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) have the same hashes and are treated as the same entries, because `0.0 === -0.0` in php.
-NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`, despite having `NAN !== $x` in php for any $x, including NAN. This is done to avoid duplicate or unremovable entries.
+NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`, despite having `NAN !== $x` in php for any $x, including `NAN`. This is done to avoid duplicate or unremovable entries.
+
+**Iteration on hash maps/sets is a work in progress.** Iteration will not work as expected if the hash table is rehashed due to insertions/removals during iteration.
 
 ### Teds\StrictMinHeap and Teds\StrictMaxHeap
 
