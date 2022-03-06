@@ -46,7 +46,7 @@ Test n=2
     "left": {
         "key": 0,
         "value": "v0",
-        "red": false,
+        "red": true,
         "left": [],
         "right": []
     },
@@ -59,7 +59,7 @@ Test n=2
     "left": {
         "key": 0,
         "value": "v0",
-        "red": false,
+        "red": true,
         "left": [],
         "right": []
     },

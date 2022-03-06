@@ -1079,7 +1079,7 @@ static void teds_lowmemoryvector_entries_init_from_array_values(teds_lowmemoryve
 	/* TODO: Can probably precompute capacity to avoid reallocations in common case where type tag doesn't change */
 	zval *val;
 	ZEND_HASH_FOREACH_VAL(raw_data, val) {
-		teds_lowmemoryvector_entries_push(array, val, 1);
+		teds_lowmemoryvector_entries_push(array, val, true);
 	} ZEND_HASH_FOREACH_END();
 }
 

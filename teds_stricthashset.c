@@ -172,6 +172,7 @@ static zend_always_inline void teds_stricthashset_entries_set_empty_entry_list(t
 {
 	array->nNumOfElements = 0;
 	array->nNumUsed = 0;
+	array->nFirstUsed = 0;
 	array->nTableSize = 0;
 	array->arData = (void  *)empty_entry_list;
 	array->nTableMask = TEDS_STRICTHASHSET_MIN_MASK;
@@ -201,6 +202,7 @@ void teds_stricthashset_entries_init_from_array(teds_stricthashset_entries *arra
 		/* Avoid allocating too much if there are duplicates? */
 		array->nNumOfElements = 0; /* reset size in case emalloc() fails */
 		array->nNumUsed = 0;
+		array->nFirstUsed = 0;
 		array->nTableSize = 0;
 		teds_stricthashset_entries_set_capacity(array, TEDS_STRICTHASHSET_MIN_CAPACITY);
 		/* NOTE: Unlike StrictHashMap's init_from_array, where keys are unique, this is creating a StrictHashSet from the values of the array */
@@ -267,14 +269,26 @@ static void teds_stricthashset_entries_rehash_inplace(teds_stricthashset_entries
 {
 	//fprintf(stderr, "Rehash inplace %d %d\n", (int)ht->nNumOfElements, (int)ht->nTableSize);
 	ZEND_ASSERT(ht->nNumOfElements > 0);
+	ZEND_ASSERT(ht->nNumOfElements < ht->nNumUsed);
+	ZEND_ASSERT(ht->nFirstUsed < ht->nNumUsed);
 
 	HT_HASH_RESET(ht);
 	uint32_t i = 0;
 	teds_stricthashset_entry *p = ht->arData;
 	do {
 		if (Z_TYPE(p->key) == IS_UNDEF) {
+			ZEND_ASSERT(i < ht->nNumUsed);
+			ZEND_ASSERT(ht->nFirstUsed > 0 ? i == 0 : i > 0);
+			/* j is initially the number of elements before the first gap */
 			uint32_t j = i;
+			/* q is the pointer where the repacked entries will be written to, without gaps */
 			teds_stricthashset_entry *q = p;
+
+			if (i == 0) {
+				i = ht->nFirstUsed - 1;
+				p += i;
+			}
+			ZEND_ASSERT(j <= i);
 
 			while (++i < ht->nNumUsed) {
 				p++;
@@ -288,6 +302,7 @@ static void teds_stricthashset_entries_rehash_inplace(teds_stricthashset_entries
 					j++;
 				}
 			}
+			ZEND_ASSERT(j == ht->nNumOfElements);
 			ht->nNumUsed = j;
 			break;
 		}
@@ -296,6 +311,7 @@ static void teds_stricthashset_entries_rehash_inplace(teds_stricthashset_entries
 		HT_HASH(ht, nIndex) = i;
 		p++;
 	} while (++i < ht->nNumUsed);
+	ht->nFirstUsed = 0;
 
 	ZEND_ASSERT(ht->nNumUsed == ht->nNumOfElements);
 }
@@ -392,6 +408,7 @@ static void teds_stricthashset_entries_grow(teds_stricthashset_entries *array)
 		return;
 	}
 	const uint32_t new_capacity = array->nTableSize * 2;
+	teds_stricthashset_entry *const orig_entries = array->arData;
 	teds_stricthashset_entry *const new_entries = teds_stricthashset_alloc_entries(new_capacity);
 	teds_stricthashset_entry *old_entry;
 	teds_stricthashset_entry *it = new_entries;
@@ -411,12 +428,13 @@ static void teds_stricthashset_entries_grow(teds_stricthashset_entries *array)
 		i++;
 	} TEDS_STRICTHASHSET_FOREACH_END();
 	ZEND_ASSERT(it - new_entries == array->nNumOfElements);
-	array->nNumUsed = array->nNumOfElements;
-	teds_stricthashset_free_entries(array->arData, array->nTableSize);
-	array->arData = new_entries;
+	teds_stricthashset_free_entries(orig_entries, array->nTableSize);
 
+	array->arData = new_entries;
+	array->nNumUsed = array->nNumOfElements;
 	array->nTableSize = new_capacity;
 	array->nTableMask = new_mask;
+	array->nFirstUsed = 0;
 }
 
 static void teds_stricthashset_entries_set_capacity(teds_stricthashset_entries *array, uint32_t new_capacity)
@@ -442,7 +460,7 @@ static void teds_stricthashset_entries_copy_ctor(teds_stricthashset_entries *to,
 	const uint32_t capacity = from->nTableSize;
 	teds_stricthashset_entries_set_capacity(to, capacity);
 
-	/* TODO optimize this */
+	/* TODO optimize this case of cloning. */
 	zval *val;
 	TEDS_STRICTHASHSET_FOREACH_VAL(from, val) {
 		teds_stricthashset_entries_insert(to, val, true);
@@ -687,12 +705,13 @@ static void teds_stricthashset_it_rewind(zend_object_iterator *iter)
 
 static int teds_stricthashset_it_valid(zend_object_iterator *iter)
 {
-	teds_stricthashset_it    *iterator = (teds_stricthashset_it*)iter;
-	const teds_stricthashset *object   = Z_STRICTHASHSET_P(&iter->data);
+	const teds_stricthashset_it      *iterator = (teds_stricthashset_it*)iter;
+	const teds_stricthashset_entries *array   = Z_STRICTHASHSET_ENTRIES_P(&iter->data);
 
-	ZEND_ASSERT((object->array.nNumUsed > 0) == (object->array.nNumOfElements > 0));
+	ZEND_ASSERT((array->nNumUsed > 0) == (array->nNumOfElements > 0));
+	ZEND_ASSERT(array->nFirstUsed <= array->nNumUsed);
 
-	return iterator->current < object->array.nNumUsed ? SUCCESS : FAILURE;
+	return iterator->current < array->nNumUsed && iterator->current >= array->nFirstUsed ? SUCCESS : FAILURE;
 }
 
 static teds_stricthashset_entry *teds_stricthashset_it_read_offset_helper(teds_stricthashset *intern, teds_stricthashset_it *iterator)
@@ -739,8 +758,22 @@ static void teds_stricthashset_it_get_current_key(zend_object_iterator *iter, zv
 
 static void teds_stricthashset_it_move_forward(zend_object_iterator *iter)
 {
-	((teds_stricthashset_it*)iter)->current++;
-	teds_stricthashset_it_valid(iter);
+	teds_stricthashset_it *it = (teds_stricthashset_it*) iter;
+	const teds_stricthashset_entries *array   = Z_STRICTHASHSET_ENTRIES_P(&iter->data);
+	if (it->current + 1 <= array->nFirstUsed) { /* Check for -1 (just before start of array) */
+		it->current = array->nFirstUsed;
+	} else if (it->current >= array->nNumUsed) {
+		ZEND_ASSERT(it->current == array->nNumUsed);
+		it->current = array->nNumUsed;
+	} else {
+		/* Move to the next valid position */
+		while (Z_ISUNDEF(array->arData[it->current].key)) {
+			it->current++;
+			ZEND_ASSERT(it->current < array->nNumUsed);
+		}
+		it->current++;
+		ZEND_ASSERT(it->current <= array->nNumUsed);
+	}
 }
 
 /* iterator handler table */
@@ -774,7 +807,10 @@ zend_object_iterator *teds_stricthashset_get_iterator(zend_class_entry *ce, zval
 	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
 	iterator->intern.funcs = &teds_stricthashset_it_funcs;
 
-	teds_intrusive_dllist_prepend(&teds_stricthashset_entries_from_object(obj)->active_iterators, &iterator->dllist_node);
+	teds_stricthashset_entries *const array = teds_stricthashset_entries_from_object(obj);
+	iterator->current = array->nFirstUsed;
+
+	teds_intrusive_dllist_prepend(&array->active_iterators, &iterator->dllist_node);
 
 	return &iterator->intern;
 }
@@ -902,6 +938,7 @@ static bool teds_stricthashset_entries_remove_key(teds_stricthashset_entries *ar
 	uint32_t i = HT_HASH(array, nIndex);
 	teds_stricthashset_entry *prev = NULL;
 
+	/* The index of the removed entry */
 	const uint32_t idx = entry - entries;
 	if (i != idx) {
 		prev = &array->arData[i];
@@ -927,9 +964,22 @@ static bool teds_stricthashset_entries_remove_key(teds_stricthashset_entries *ar
 			teds_stricthashset_iterators_shift_to_new_end(array, array->active_iterators.first, idx);
 		}
 	}
+	if (array->nFirstUsed == idx) {
+		if (array->nNumOfElements == 0) {
+			ZEND_ASSERT(array->nNumUsed == 0);
+			array->nFirstUsed = 0;
+		} else {
+			ZEND_ASSERT(array->nFirstUsed < array->nNumUsed);
+			do {
+				array->nFirstUsed++;
+			} while (array->nFirstUsed < array->nNumUsed && (UNEXPECTED(Z_ISUNDEF(array->arData[array->nFirstUsed].key))));
+			ZEND_ASSERT(array->nFirstUsed < array->nNumUsed);
+		}
+	}
 	zval old_key;
 	ZVAL_COPY_VALUE(&old_key, &entry->key);
 	ZEND_ASSERT(array->nNumOfElements <= array->nNumUsed);
+	ZEND_ASSERT(array->nFirstUsed < array->nNumUsed || (array->nFirstUsed == array->nNumUsed && array->nNumOfElements == 0));
 	ZVAL_UNDEF(&entry->key);
 
 	/* Destructors may have side effects, run those last */

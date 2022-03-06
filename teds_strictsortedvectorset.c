@@ -9,7 +9,6 @@
 
 /* This is based on teds_immutableiterable.c.
  * Instead of a C array of zvals, this is based on a C array of zvals.
- * - TODO: associate StrictSortedVectorSet with linked list of iterators
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -130,22 +129,82 @@ static zend_always_inline zval *teds_strictsortedvectorset_allocate_entries(size
 	return safe_emalloc(capacity, sizeof(zval), 0);
 }
 
+static bool teds_strictsortedvectorset_entries_is_sorted(zval *entries, const uint32_t size)
+{
+	for (size_t i = 1; i < size; i++) {
+		if (teds_stable_compare(&entries[i - 1], &entries[i]) >= 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static void teds_strictsortedvectorset_entries_sort_and_deduplicate(teds_strictsortedvectorset_entries *array)
+{
+	const uint32_t size = array->size;
+	if (size < 2) {
+		return;
+	}
+	zval *entries = array->entries;
+	if (teds_strictsortedvectorset_entries_is_sorted(entries, array->size)) {
+		return;
+	}
+	qsort(entries, size, sizeof(zval), teds_stable_compare_wrap);
+	for (uint32_t i = 1; i < size; i++) {
+		int result = teds_stable_compare(&entries[i - 1], &entries[i]);
+		if (result >= 0) {
+			/* Remove duplicates */
+			ZEND_ASSERT(result == 0);
+			zval_ptr_dtor(&entries[i]);
+			uint32_t new_size = i;
+			zval *last = &entries[i - 1];
+			i++;
+			for (; i < size; i++) {
+				result = teds_stable_compare(&entries[new_size - 1], &entries[i]);
+				ZEND_ASSERT(result <= 0);
+				if (result < 0) {
+					ZVAL_COPY_VALUE(&entries[new_size], &entries[i]);
+					new_size++;
+				} else {
+					zval_ptr_dtor(&entries[i]);
+				}
+			}
+			array->size = new_size;
+			array->capacity = new_size;
+			array->entries = safe_erealloc(entries, new_size, sizeof(zval), 0);
+			return;
+		}
+	}
+	/* There were no duplicates */
+}
+
 static void teds_strictsortedvectorset_entries_init_from_array(teds_strictsortedvectorset_entries *array, zend_array *values)
 {
-	zend_long size = zend_hash_num_elements(values);
+	const uint32_t size = zend_hash_num_elements(values);
 	if (size > 0) {
 		zval *val;
 		zval *entries;
-		zend_long capacity = teds_strictsortedvectorset_next_pow2_capacity(size);
+		size_t capacity = size;
 
 		array->size = 0; /* reset size in case emalloc() fails */
 		array->capacity = 0;
-		array->entries = entries = teds_strictsortedvectorset_allocate_entries(capacity);
+		array->entries = entries = teds_strictsortedvectorset_allocate_entries(size);
+		uint32_t i = 0;
+		zval *dst = entries;
 		array->capacity = size;
 		ZEND_HASH_FOREACH_VAL(values, val) {
-			ZVAL_DEREF(val);
-			teds_strictsortedvectorset_entries_insert(array, val, false);
+			ZVAL_COPY_DEREF(&entries[i], val);
+			i++;
 		} ZEND_HASH_FOREACH_END();
+
+		ZEND_ASSERT(i == size);
+		array->size = size;
+		array->capacity = size;
+		array->should_rebuild_properties = true;
+
+		if (size > 1) {
+			teds_strictsortedvectorset_entries_sort_and_deduplicate(array);
+		}
 	} else {
 		array->size = 0;
 		array->capacity = 0;
@@ -211,6 +270,9 @@ static void teds_strictsortedvectorset_entries_init_from_traversable(teds_strict
 	array->size = size;
 	array->capacity = capacity;
 	array->entries = entries;
+	if (size > 1) {
+		teds_strictsortedvectorset_entries_sort_and_deduplicate(array);
+	}
 cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);

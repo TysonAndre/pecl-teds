@@ -204,5 +204,6 @@ static zend_always_inline uint32_t teds_strict_hash_uint32_t(zval *value) {
 }
 
 zend_long teds_stable_compare(const zval *v1, const zval *v2);
+int teds_stable_compare_wrap(const void *v1, const void *v2);
 
 #endif	/* TEDS_H */

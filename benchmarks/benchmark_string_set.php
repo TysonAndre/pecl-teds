@@ -323,98 +323,99 @@ Results for php 8.2.0-dev debug=false with opcache enabled=true
 (Note that unserializers pass the array of mixed values to Vector::__unserialize so it is slower to unserialize than the array of values)
 (This is creating sets of keys such as 411284887_1068724585.1335968403 and looking up the last element in the set once)
 Repeatedly unserializing, searching, reserializing with in_array():         n=       1 iterations= 4000000 memory=     432 bytes
- => total time = 1.593 seconds unserialize+free time=0.907 reserialize time = 0.378 search time=0.3080 result=4000000
+ => total time = 1.751 seconds unserialize+free time=0.993 reserialize time = 0.416 search time=0.3414 result=4000000
  => serialized memory=      49 bytes (      57 compressed bytes)
 Repeatedly unserializing, searching, reserialize associative array:         n=       1 iterations= 4000000 memory=     432 bytes
- => total time = 1.584 seconds unserialize+free time=0.984 reserialize time = 0.386 search time=0.2140 result=4000000
+ => total time = 1.702 seconds unserialize+free time=1.060 reserialize time = 0.412 search time=0.2302 result=4000000
  => serialized memory=      49 bytes (      57 compressed bytes)
-Repeatedly unserializing, searching, reserializing Vector:                  n=       1 iterations= 4000000 memory=     128 bytes
- => total time = 2.411 seconds unserialize+free time=1.482 reserialize time = 0.679 search time=0.2510 result=4000000
+Repeatedly unserializing, searching, reserializing Vector:                  n=       1 iterations= 4000000 memory=     152 bytes
+ => total time = 2.674 seconds unserialize+free time=1.657 reserialize time = 0.739 search time=0.2788 result=4000000
  => serialized memory=      66 bytes (      73 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictHashSet            n=       1 iterations= 4000000 memory=     376 bytes
- => total time = 2.657 seconds unserialize+free time=1.678 reserialize time = 0.703 search time=0.2758 result=4000000
+Repeatedly unserializing, searching, reserializing StrictHashSet            n=       1 iterations= 4000000 memory=     392 bytes
+ => total time = 2.946 seconds unserialize+free time=1.863 reserialize time = 0.791 search time=0.2924 result=4000000
  => serialized memory=      73 bytes (      81 compressed bytes)
 Repeatedly unserializing, searching, reserializing StrictTreeSet            n=       1 iterations= 4000000 memory=     160 bytes
- => total time = 2.514 seconds unserialize+free time=1.569 reserialize time = 0.682 search time=0.2630 result=4000000
+ => total time = 2.726 seconds unserialize+free time=1.689 reserialize time = 0.759 search time=0.2778 result=4000000
  => serialized memory=      73 bytes (      79 compressed bytes)
 Repeatedly unserializing, searching, reserializing ImmutableSortedStringSet n=       1 iterations= 4000000 memory=     136 bytes
- => total time = 2.572 seconds unserialize+free time=1.592 reserialize time = 0.721 search time=0.2584 result=4000000
+ => total time = 2.854 seconds unserialize+free time=1.767 reserialize time = 0.798 search time=0.2890 result=4000000
  => serialized memory=      89 bytes (      97 compressed bytes)
 
 Repeatedly unserializing, searching, reserializing with in_array():         n=       4 iterations= 1000000 memory=     608 bytes
- => total time = 0.611 seconds unserialize+free time=0.352 reserialize time = 0.164 search time=0.0951 result=1000000
+ => total time = 0.667 seconds unserialize+free time=0.383 reserialize time = 0.178 search time=0.1054 result=1000000
  => serialized memory=     178 bytes (     121 compressed bytes)
 Repeatedly unserializing, searching, reserialize associative array:         n=       4 iterations= 1000000 memory=     608 bytes
- => total time = 0.641 seconds unserialize+free time=0.419 reserialize time = 0.167 search time=0.0555 result=1000000
+ => total time = 0.706 seconds unserialize+free time=0.460 reserialize time = 0.184 search time=0.0615 result=1000000
  => serialized memory=     178 bytes (     119 compressed bytes)
-Repeatedly unserializing, searching, reserializing Vector:                  n=       4 iterations= 1000000 memory=     352 bytes
- => total time = 0.830 seconds unserialize+free time=0.509 reserialize time = 0.244 search time=0.0762 result=1000000
+Repeatedly unserializing, searching, reserializing Vector:                  n=       4 iterations= 1000000 memory=     376 bytes
+ => total time = 0.914 seconds unserialize+free time=0.562 reserialize time = 0.273 search time=0.0791 result=1000000
  => serialized memory=     195 bytes (     142 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictHashSet            n=       4 iterations= 1000000 memory=     552 bytes
- => total time = 0.911 seconds unserialize+free time=0.595 reserialize time = 0.246 search time=0.0693 result=1000000
+Repeatedly unserializing, searching, reserializing StrictHashSet            n=       4 iterations= 1000000 memory=     568 bytes
+ => total time = 1.017 seconds unserialize+free time=0.657 reserialize time = 0.287 search time=0.0736 result=1000000
  => serialized memory=     202 bytes (     150 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictTreeSet            n=       4 iterations= 1000000 memory=     480 bytes
- => total time = 0.914 seconds unserialize+free time=0.593 reserialize time = 0.250 search time=0.0716 result=1000000
+Repeatedly unserializing, searching, reserializing StrictTreeSet            n=       4 iterations= 1000000 memory=     456 bytes
+ => total time = 1.009 seconds unserialize+free time=0.647 reserialize time = 0.289 search time=0.0734 result=1000000
  => serialized memory=     202 bytes (     146 compressed bytes)
 Repeatedly unserializing, searching, reserializing ImmutableSortedStringSet n=       4 iterations= 1000000 memory=     256 bytes
- => total time = 0.675 seconds unserialize+free time=0.420 reserialize time = 0.183 search time=0.0713 result=1000000
+ => total time = 0.750 seconds unserialize+free time=0.468 reserialize time = 0.204 search time=0.0784 result=1000000
  => serialized memory=     186 bytes (     157 compressed bytes)
 
 Repeatedly unserializing, searching, reserializing with in_array():         n=       8 iterations=  500000 memory=     832 bytes
- => total time = 0.455 seconds unserialize+free time=0.259 reserialize time = 0.136 search time=0.0593 result=500000
+ => total time = 0.512 seconds unserialize+free time=0.288 reserialize time = 0.156 search time=0.0684 result=500000
  => serialized memory=     347 bytes (     194 compressed bytes)
 Repeatedly unserializing, searching, reserialize associative array:         n=       8 iterations=  500000 memory=     832 bytes
- => total time = 0.493 seconds unserialize+free time=0.321 reserialize time = 0.144 search time=0.0279 result=500000
+ => total time = 0.631 seconds unserialize+free time=0.410 reserialize time = 0.185 search time=0.0361 result=500000
  => serialized memory=     347 bytes (     194 compressed bytes)
-Repeatedly unserializing, searching, reserializing Vector:                  n=       8 iterations=  500000 memory=     640 bytes
- => total time = 0.571 seconds unserialize+free time=0.341 reserialize time = 0.183 search time=0.0468 result=500000
+Repeatedly unserializing, searching, reserializing Vector:                  n=       8 iterations=  500000 memory=     664 bytes
+ => total time = 0.651 seconds unserialize+free time=0.388 reserialize time = 0.212 search time=0.0503 result=500000
  => serialized memory=     364 bytes (     216 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictHashSet            n=       8 iterations=  500000 memory=     776 bytes
- => total time = 0.653 seconds unserialize+free time=0.425 reserialize time = 0.191 search time=0.0364 result=500000
+Repeatedly unserializing, searching, reserializing StrictHashSet            n=       8 iterations=  500000 memory=     792 bytes
+ => total time = 0.704 seconds unserialize+free time=0.455 reserialize time = 0.212 search time=0.0369 result=500000
  => serialized memory=     371 bytes (     223 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictTreeSet            n=       8 iterations=  500000 memory=     896 bytes
- => total time = 0.664 seconds unserialize+free time=0.420 reserialize time = 0.191 search time=0.0542 result=500000
+Repeatedly unserializing, searching, reserializing StrictTreeSet            n=       8 iterations=  500000 memory=     840 bytes
+ => total time = 0.723 seconds unserialize+free time=0.457 reserialize time = 0.217 search time=0.0491 result=500000
  => serialized memory=     371 bytes (     223 compressed bytes)
 Repeatedly unserializing, searching, reserializing ImmutableSortedStringSet n=       8 iterations=  500000 memory=     448 bytes
- => total time = 0.369 seconds unserialize+free time=0.223 reserialize time = 0.108 search time=0.0380 result=500000
+ => total time = 0.408 seconds unserialize+free time=0.246 reserialize time = 0.120 search time=0.0422 result=500000
  => serialized memory=     311 bytes (     223 compressed bytes)
 
 Repeatedly unserializing, searching, reserializing with in_array():         n=    1024 iterations=    8000 memory=   99512 bytes
- => total time = 0.571 seconds unserialize+free time=0.314 reserialize time = 0.208 search time=0.0495 result=8000
+ => total time = 0.623 seconds unserialize+free time=0.342 reserialize time = 0.227 search time=0.0534 result=8000
  => serialized memory=   45435 bytes (   20838 compressed bytes)
 Repeatedly unserializing, searching, reserialize associative array:         n=    1024 iterations=    8000 memory=   99512 bytes
- => total time = 0.715 seconds unserialize+free time=0.507 reserialize time = 0.207 search time=0.0006 result=8000
+ => total time = 0.784 seconds unserialize+free time=0.556 reserialize time = 0.228 search time=0.0007 result=8000
  => serialized memory=   45435 bytes (   20826 compressed bytes)
-Repeatedly unserializing, searching, reserializing Vector:                  n=    1024 iterations=    8000 memory=   74936 bytes
- => total time = 0.603 seconds unserialize+free time=0.340 reserialize time = 0.220 search time=0.0441 result=8000
+Repeatedly unserializing, searching, reserializing Vector:                  n=    1024 iterations=    8000 memory=   74960 bytes
+ => total time = 0.641 seconds unserialize+free time=0.374 reserialize time = 0.241 search time=0.0255 result=8000
  => serialized memory=   45452 bytes (   20870 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictHashSet            n=    1024 iterations=    8000 memory=   91328 bytes
- => total time = 0.708 seconds unserialize+free time=0.490 reserialize time = 0.217 search time=0.0012 result=8000
+Repeatedly unserializing, searching, reserializing StrictHashSet            n=    1024 iterations=    8000 memory=   91344 bytes
+ => total time = 0.785 seconds unserialize+free time=0.545 reserialize time = 0.239 search time=0.0012 result=8000
  => serialized memory=   45459 bytes (   20885 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictTreeSet            n=    1024 iterations=    8000 memory=  107704 bytes
- => total time = 0.764 seconds unserialize+free time=0.511 reserialize time = 0.251 search time=0.0019 result=8000
+Repeatedly unserializing, searching, reserializing StrictTreeSet            n=    1024 iterations=    8000 memory=   99520 bytes
+ => total time = 0.833 seconds unserialize+free time=0.557 reserialize time = 0.274 search time=0.0022 result=8000
  => serialized memory=   45459 bytes (   20579 compressed bytes)
 Repeatedly unserializing, searching, reserializing ImmutableSortedStringSet n=    1024 iterations=    8000 memory=   41024 bytes
- => total time = 0.074 seconds unserialize+free time=0.059 reserialize time = 0.014 search time=0.0009 result=8000
+ => total time = 0.074 seconds unserialize+free time=0.062 reserialize time = 0.011 search time=0.0010 result=8000
  => serialized memory=   32260 bytes (   17058 compressed bytes)
 
 Repeatedly unserializing, searching, reserializing with in_array():         n=  262144 iterations=      20 memory=25483880 bytes
- => total time = 0.793 seconds unserialize+free time=0.323 reserialize time = 0.414 search time=0.0559 result=20
+ => total time = 0.863 seconds unserialize+free time=0.346 reserialize time = 0.457 search time=0.0596 result=20
  => serialized memory=12326247 bytes ( 5159034 compressed bytes)
 Repeatedly unserializing, searching, reserialize associative array:         n=  262144 iterations=      20 memory=25483880 bytes
- => total time = 1.251 seconds unserialize+free time=0.707 reserialize time = 0.544 search time=0.0000 result=20
+ => total time = 1.338 seconds unserialize+free time=0.740 reserialize time = 0.598 search time=0.0000 result=20
  => serialized memory=12326247 bytes ( 5158975 compressed bytes)
-Repeatedly unserializing, searching, reserializing Vector:                  n=  262144 iterations=      20 memory=19192424 bytes
- => total time = 0.994 seconds unserialize+free time=0.437 reserialize time = 0.509 search time=0.0486 result=20
+Repeatedly unserializing, searching, reserializing Vector:                  n=  262144 iterations=      20 memory=19192448 bytes
+ => total time = 1.052 seconds unserialize+free time=0.468 reserialize time = 0.545 search time=0.0390 result=20
  => serialized memory=12326264 bytes ( 5159066 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictHashSet            n=  262144 iterations=      20 memory=23386736 bytes
- => total time = 1.151 seconds unserialize+free time=0.665 reserialize time = 0.487 search time=0.0000 result=20
+Repeatedly unserializing, searching, reserializing StrictHashSet            n=  262144 iterations=      20 memory=23386752 bytes
+ => total time = 1.207 seconds unserialize+free time=0.704 reserialize time = 0.503 search time=0.0000 result=20
  => serialized memory=12326271 bytes ( 5159076 compressed bytes)
-Repeatedly unserializing, searching, reserializing StrictTreeSet            n=  262144 iterations=      20 memory=27581008 bytes
- => total time = 3.166 seconds unserialize+free time=1.856 reserialize time = 1.310 search time=0.0001 result=20
+Repeatedly unserializing, searching, reserializing StrictTreeSet            n=  262144 iterations=      20 memory=25483864 bytes
+ => total time = 3.087 seconds unserialize+free time=1.787 reserialize time = 1.300 search time=0.0001 result=20
  => serialized memory=12326271 bytes ( 4847122 compressed bytes)
 Repeatedly unserializing, searching, reserializing ImmutableSortedStringSet n=  262144 iterations=      20 memory=10342512 bytes
- => total time = 0.202 seconds unserialize+free time=0.125 reserialize time = 0.077 search time=0.0000 result=20
+ => total time = 0.216 seconds unserialize+free time=0.132 reserialize time = 0.084 search time=0.0000 result=20
  => serialized memory= 8243104 bytes ( 3940007 compressed bytes)
+
 
 */

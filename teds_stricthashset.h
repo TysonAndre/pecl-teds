@@ -42,7 +42,8 @@ PHP_MINIT_FUNCTION(teds_stricthashset);
 /* Based on ZEND_HASH_MAP_FOREACH_FROM */
 #define TEDS_STRICTHASHSET_FOREACH_CHECK_MODIFY_VAL(_stricthashset, v) do { \
 	const teds_stricthashset_entries *const __stricthashset = (_stricthashset); \
-	uint32_t _i = 0; \
+	uint32_t _i = __stricthashset->nFirstUsed; \
+	ZEND_ASSERT(i <= __stricthashset->nNumUsed); \
 	for (; _i < __stricthashset->nNumUsed; _i++) { \
 		teds_stricthashset_entry *_p = &(__stricthashset->arData[_i]); \
 		v = &_p->key; \
@@ -50,8 +51,10 @@ PHP_MINIT_FUNCTION(teds_stricthashset);
 
 #define TEDS_STRICTHASHSET_FOREACH(_stricthashset) do { \
 	const teds_stricthashset_entries *const __stricthashset = (_stricthashset); \
-	teds_stricthashset_entry *_p = __stricthashset->arData; \
-	teds_stricthashset_entry *const _end = _p + __stricthashset->nNumUsed; \
+	teds_stricthashset_entry *_p = __stricthashset->arData + __stricthashset->nFirstUsed; \
+	teds_stricthashset_entry *const _end = __stricthashset->arData + __stricthashset->nNumUsed; \
+	ZEND_ASSERT(__stricthashset->nFirstUsed <= __stricthashset->nNumUsed); \
+	ZEND_ASSERT(_p <= _end); \
 	for (; _p != _end; _p++) { \
 		zval *_z = &_p->key; \
 		if (Z_TYPE_P(_z) == IS_UNDEF) { continue; }
@@ -59,7 +62,8 @@ PHP_MINIT_FUNCTION(teds_stricthashset);
 #define TEDS_STRICTHASHSET_FOREACH_VAL_ASSERT_NO_GAPS(_stricthashset, v) do { \
 	const teds_stricthashset_entries *const __stricthashset = (_stricthashset); \
 	teds_stricthashset_entry *_p = __stricthashset->arData; \
-	teds_stricthashset_entry *const _end = _p + __stricthashset->nNumUsed; \
+	teds_stricthashset_entry *const _end = __stricthashset->arData + __stricthashset->nNumUsed; \
+	ZEND_ASSERT(__stricthashset->nFirstUsed == 0); \
 	for (; _p != _end; _p++) { \
 		v = &_p->key; \
 		ZEND_ASSERT(Z_TYPE_P(v) != IS_UNDEF);
@@ -85,11 +89,12 @@ typedef struct _teds_stricthashset_entries {
 		teds_stricthashset_entry *arData;
 		uint32_t *arHash;
 	};
+	teds_intrusive_dllist active_iterators;
 	uint32_t nNumOfElements; /* Number of elements in this set, a.k.a. count() */
 	uint32_t nTableSize; /* Power of 2 size, aka capacity() */
 	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
 	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHSET_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
-	teds_intrusive_dllist active_iterators;
+	uint32_t nFirstUsed; /* The offset of the first bucket used. */
 	/* TODO could track uint32_t firstUsed for cases where removal of first is common, e.g. LRU caches */
 	bool should_rebuild_properties;
 } teds_stricthashset_entries;
@@ -129,7 +134,7 @@ static zend_always_inline void teds_stricthashset_entries_release(teds_stricthas
  *   - if capacity == 0, then entries == NULL
  *   - if capacity > 0, then entries != NULL
  */
-static zend_always_inline bool teds_stricthashset_entries_empty_capacity(teds_stricthashset_entries *array)
+static zend_always_inline bool teds_stricthashset_entries_empty_capacity(const teds_stricthashset_entries *array)
 {
 	ZEND_ASSERT(array->nNumOfElements <= array->nTableSize);
 	if (array->nTableSize > 0) {

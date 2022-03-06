@@ -183,7 +183,6 @@ static zend_always_inline bool teds_stricttreeset_tree_insert(teds_stricttreeset
 {
 	ZEND_ASSERT(Z_TYPE_P(key) != IS_UNDEF);
 
-	/* TODO optimize */
 	teds_stricttreeset_node *it = tree->root;
 	if (it == NULL) {
 		/* Initialize this tree as a new binary search tree of size 1 */
@@ -318,10 +317,10 @@ static teds_stricttreeset_node *teds_stricttreeset_node_build_tree_from_sorted_n
 	ZEND_ASSERT(n >= 1);
 	int leaf_depth = 1;
 	uint32_t i = n + 1;
-	/* for n = 1..2, leaf_depth is 1 (first layer is black) */
-	/* for n = 3..6, leaf_depth is 2 (first 2 layers are black) */
-	/* for n = 7..14, leaf_depth is 3 */
-	while (i >= 3) {
+	/* for n = 0..2,  i=1..3,  leaf_depth is 1 (first layer is black) */
+	/* for n = 3..6,  i=4..7,  leaf_depth is 2 (first 2 layers are black) */
+	/* for n = 7..14, i=8..15, leaf_depth is 3 */
+	while (i >= 4) {
 		leaf_depth++;
 		i >>= 1;
 	}
