@@ -203,6 +203,7 @@ static void teds_strictsortedvectormap_entries_init_from_traversable(teds_strict
 			zval_ptr_dtor(&key);
 			break;
 		}
+		ZVAL_DEREF(value);
 
 		/* TODO Optimize for StrictSortedVectorMap as well, would need to preserve insertion order. Probably possible by using zval.extra. */
 		teds_strictsortedvectormap_entries_insert(array, &key, value, false);
@@ -764,14 +765,18 @@ IMPLEMENT_READ_OFFSET_PHP_METHOD(lastKey, intern->array.size - 1, key)
 
 PHP_METHOD(Teds_StrictSortedVectorMap, pop) {
 	ZEND_PARSE_PARAMETERS_NONE();
-	teds_strictsortedvectormap *intern = Z_STRICTSORTEDVECTORMAP_P(ZEND_THIS);
-	if (intern->array.size == 0) {
+	teds_strictsortedvectormap_entries *array = Z_STRICTSORTEDVECTORMAP_ENTRIES_P(ZEND_THIS);
+	const uint32_t old_size = array->size;
+	if (old_size == 0) {
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\StrictSortedVectorMap", 0);
 		RETURN_THROWS();
 	}
-	teds_strictsortedvectormap_entry *entry = &intern->array.entries[intern->array.size - 1];
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_strictsortedvectormap_adjust_iterators_before_remove(array, array->active_iterators.first, old_size - 1);
+	}
+	teds_strictsortedvectormap_entry *entry = &array->entries[old_size - 1];
 	RETVAL_ARR(zend_new_pair(&entry->key, &entry->value));
-	intern->array.size--;
+	array->size--;
 }
 
 /* Shifts values. Callers should adjust size and handle zval reference counting. */
@@ -971,6 +976,8 @@ PHP_METHOD(Teds_StrictSortedVectorMap, get)
 }
 
 static zend_always_inline bool teds_strictsortedvectormap_entries_insert(teds_strictsortedvectormap_entries *array, zval *key, zval *value, bool probably_largest) {
+	TEDS_ASSERT_ZVAL_IS_VALUE_TYPE(key);
+	TEDS_ASSERT_ZVAL_IS_VALUE_TYPE(value);
 	teds_strictsortedvectormap_search_result result = probably_largest
 		? teds_strictsortedvectormap_entries_sorted_search_for_key_probably_largest(array, key)
 		: teds_strictsortedvectormap_entries_sorted_search_for_key(array, key);

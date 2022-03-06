@@ -27,7 +27,7 @@ struct _teds_intrusive_dllist;
 
 PHP_MINIT_FUNCTION(teds);
 
-# define PHP_TEDS_VERSION "1.2.2"
+# define PHP_TEDS_VERSION "1.2.3"
 
 # if defined(ZTS) && defined(COMPILE_DL_TEDS)
 ZEND_TSRMLS_CACHE_EXTERN()

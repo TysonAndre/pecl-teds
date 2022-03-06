@@ -97,6 +97,7 @@ static zend_always_inline bool teds_stricthashset_entries_insert(teds_stricthash
 {
 	teds_stricthashset_entry *p;
 	ZEND_ASSERT(Z_TYPE_P(key) != IS_UNDEF);
+	ZEND_ASSERT(Z_TYPE_P(key) != IS_REFERENCE);
 
 	const uint32_t h = teds_strict_hash_uint32_t(key);
 
@@ -207,6 +208,7 @@ void teds_stricthashset_entries_init_from_array(teds_stricthashset_entries *arra
 		teds_stricthashset_entries_set_capacity(array, TEDS_STRICTHASHSET_MIN_CAPACITY);
 		/* NOTE: Unlike StrictHashMap's init_from_array, where keys are unique, this is creating a StrictHashSet from the values of the array */
 		ZEND_HASH_FOREACH_VAL(values, val)  {
+			ZVAL_DEREF(val);
 			teds_stricthashset_entries_insert(array, val, false);
 		} ZEND_HASH_FOREACH_END();
 	} else {

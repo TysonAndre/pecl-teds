@@ -49,6 +49,16 @@ static zend_always_inline teds_mutableiterable *teds_mutableiterable_from_object
 	return (teds_mutableiterable*)((char*)(obj) - XtOffsetOf(teds_mutableiterable, std));
 }
 
+static zend_always_inline zend_object *teds_mutableiterable_to_object(teds_mutableiterable_entries *array)
+{
+	return (zend_object*)((char*)(array) + XtOffsetOf(teds_mutableiterable, std));
+}
+
+static zend_always_inline teds_mutableiterable_it *teds_mutableiterable_it_from_node(teds_intrusive_dllist_node *node)
+{
+	return (teds_mutableiterable_it*)((char*)(node) - XtOffsetOf(teds_mutableiterable_it, dllist_node));
+}
+
 #define Z_MUTABLEITERABLE_P(zv)  teds_mutableiterable_from_object(Z_OBJ_P((zv)))
 #define Z_MUTABLEITERABLE_ENTRIES_P(zv)  (&Z_MUTABLEITERABLE_P((zv))->array)
 
@@ -1138,26 +1148,46 @@ PHP_METHOD(Teds_MutableIterable, push)
 	TEDS_RETURN_VOID();
 }
 
+void teds_mutableiterable_adjust_iterators_before_remove(teds_mutableiterable_entries *array, teds_intrusive_dllist_node *node, const uint32_t removed_offset)
+{
+	const zend_object *const obj = teds_mutableiterable_to_object(array);
+	const uint32_t old_size = array->size;
+	ZEND_ASSERT(removed_offset < old_size);
+	do {
+		teds_mutableiterable_it *it = teds_mutableiterable_it_from_node(node);
+		ZEND_ASSERT(Z_OBJ(it->intern.data) == obj);
+		if (it->current >= removed_offset && it->current < old_size) {
+			it->current--;
+		}
+		ZEND_ASSERT(node != node->next);
+		node = node->next;
+	} while (node != NULL);
+}
+
 PHP_METHOD(Teds_MutableIterable, pop)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	teds_mutableiterable *intern = Z_MUTABLEITERABLE_P(ZEND_THIS);
-	const uint32_t old_size = intern->array.size;
+	teds_mutableiterable         *const intern = Z_MUTABLEITERABLE_P(ZEND_THIS);
+	teds_mutableiterable_entries *const array = &intern->array;
+	const uint32_t old_size = array->size;
 	if (old_size == 0) {
 		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot pop from empty %s", ZSTR_VAL(intern->std.ce->name));
 		RETURN_THROWS();
 	}
-	const uint32_t old_capacity = intern->array.capacity;
-	intern->array.size--;
-	zval_pair *entry = &intern->array.entries[intern->array.size];
+	const uint32_t old_capacity = array->capacity;
+	if (UNEXPECTED(array->active_iterators.first)) {
+		teds_mutableiterable_adjust_iterators_before_remove(array, array->active_iterators.first, old_size - 1);
+	}
+	array->size--;
+	zval_pair *entry = &array->entries[array->size];
 	RETVAL_ARR(zend_new_pair(&entry->key, &entry->value));
-	if (old_size * 4 < old_capacity) {
+	if (old_size < (old_capacity >> 2)) {
 		/* Shrink the storage if only a quarter of the capacity is used  */
 		const uint32_t size = old_size - 1;
 		const uint32_t capacity = size > 2 ? size * 2 : 4;
 		if (capacity < old_capacity) {
-			teds_mutableiterable_shrink_capacity(&intern->array, size, capacity, intern->array.entries);
+			teds_mutableiterable_shrink_capacity(array, size, capacity, array->entries);
 		}
 	}
 }

@@ -293,6 +293,7 @@ static void teds_lowmemoryvector_entries_init_from_traversable(teds_lowmemoryvec
 		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
+		ZVAL_DEREF(value);
 
 		teds_lowmemoryvector_entries_push(array, value, true);
 
@@ -1079,6 +1080,7 @@ static void teds_lowmemoryvector_entries_init_from_array_values(teds_lowmemoryve
 	/* TODO: Can probably precompute capacity to avoid reallocations in common case where type tag doesn't change */
 	zval *val;
 	ZEND_HASH_FOREACH_VAL(raw_data, val) {
+		ZVAL_DEREF(val);
 		teds_lowmemoryvector_entries_push(array, val, true);
 	} ZEND_HASH_FOREACH_END();
 }
@@ -1716,7 +1718,6 @@ static zend_never_inline void teds_lowmemoryvector_entries_promote_int64_to_zval
 
 static zend_always_inline void teds_lowmemoryvector_entries_update_type_tag(teds_lowmemoryvector_entries *array, const zval *val)
 {
-
 	ZEND_ASSERT(Z_TYPE_P(val) >= IS_NULL && Z_TYPE_P(val) <= IS_RESOURCE);
 	switch (array->type_tag) {
 		case LMV_TYPE_UNINITIALIZED:
@@ -1917,6 +1918,7 @@ PHP_METHOD(Teds_LowMemoryVector, pop)
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\LowMemoryVector", 0);
 		RETURN_THROWS();
 	}
+	teds_lowmemoryvector_maybe_adjust_iterators_before_remove(array, old_size - 1);
 	const size_t old_capacity = array->capacity;
 	array->size--;
 	teds_lowmemoryvector_entries_copy_offset(array, array->size, return_value, false, true);

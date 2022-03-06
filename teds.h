@@ -206,4 +206,7 @@ static zend_always_inline uint32_t teds_strict_hash_uint32_t(zval *value) {
 zend_long teds_stable_compare(const zval *v1, const zval *v2);
 int teds_stable_compare_wrap(const void *v1, const void *v2);
 
+/* Check that the zval is not undefined and not a reference/indirect */
+#define TEDS_ASSERT_ZVAL_IS_VALUE_TYPE(v) ZEND_ASSERT(Z_TYPE_P((v)) >= IS_NULL && Z_TYPE_P((v)) <= IS_RESOURCE)
+
 #endif	/* TEDS_H */
