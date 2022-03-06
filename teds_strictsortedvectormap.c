@@ -152,6 +152,7 @@ static void teds_strictsortedvectormap_entries_init_from_array(teds_strictsorted
 			ZVAL_COPY_DEREF(&entry->value, val);
 			i++;
 		} ZEND_HASH_FOREACH_END();
+		/* int/string keys are guaranteed to be unique in an array */
 		qsort(entries, size, sizeof(teds_strictsortedvectormap_entry), teds_strictsortedvectormap_entry_compare);
 	} else {
 		array->size = 0;
@@ -185,7 +186,7 @@ static void teds_strictsortedvectormap_entries_init_from_traversable(teds_strict
 	}
 
 	while (funcs->valid(iter) == SUCCESS) {
-		if (EG(exception)) {
+		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
 		zval *value = funcs->get_current_data(iter);
@@ -203,13 +204,14 @@ static void teds_strictsortedvectormap_entries_init_from_traversable(teds_strict
 			break;
 		}
 
+		/* TODO Optimize for StrictSortedVectorMap as well, would need to preserve insertion order. Probably possible by using zval.extra. */
 		teds_strictsortedvectormap_entries_insert(array, &key, value, false);
 		/* existing key was updated */
 		zval_ptr_dtor(&key);
 
 		iter->index++;
 		funcs->move_forward(iter);
-		if (EG(exception)) {
+		if (UNEXPECTED(EG(exception))) {
 			break;
 		}
 	}

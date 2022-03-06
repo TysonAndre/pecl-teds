@@ -42,8 +42,9 @@ PHP_MINIT_FUNCTION(teds_stricthashmap);
 /* Based on ZEND_HASH_MAP_FOREACH_FROM */
 #define TEDS_STRICTHASHMAP_FOREACH(_stricthashmap) do { \
 	const teds_stricthashmap_entries *const __stricthashmap = (_stricthashmap); \
-	teds_stricthashmap_entry *_p = __stricthashmap->arData; \
-	teds_stricthashmap_entry *const _end = _p + __stricthashmap->nNumUsed; \
+	teds_stricthashmap_entry *_p = __stricthashmap->arData + __stricthashmap->nFirstUsed; \
+	teds_stricthashmap_entry *const _end = __stricthashmap->arData + __stricthashmap->nNumUsed; \
+	ZEND_ASSERT(__stricthashmap->nFirstUsed <= __stricthashmap->nNumUsed); \
 	for (; _p != _end; _p++) { \
 		zval *_key = &_p->key; \
 		if (Z_TYPE_P(_key) == IS_UNDEF) { continue; }
@@ -54,7 +55,8 @@ PHP_MINIT_FUNCTION(teds_stricthashmap);
 
 #define TEDS_STRICTHASHMAP_FOREACH_CHECK_MODIFY_KEY_VAL(_stricthashmap, k, v) do { \
 	const teds_stricthashmap_entries *const __stricthashmap = (_stricthashmap); \
-	uint32_t _i = 0; \
+	uint32_t _i = __stricthashmap->nFirstUsed; \
+	ZEND_ASSERT(i <= __stricthashmap->nNumUsed); \
 	for (; _i < __stricthashmap->nNumUsed; _i++) { \
 		teds_stricthashmap_entry *_p = &(__stricthashmap->arData[_i]); \
 		zval *_key = &_p->key; \
@@ -86,11 +88,12 @@ typedef struct _teds_stricthashmap_entries {
 		teds_stricthashmap_entry *arData;
 		uint32_t *arHash;
 	};
+	teds_intrusive_dllist active_iterators;
 	uint32_t nNumOfElements; /* Number of elements. a.k.a. count().  */
 	uint32_t nTableSize; /* Power of 2 size, a.k.a. capacity(). */
 	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
 	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHMAP_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
-	teds_intrusive_dllist active_iterators;
+	uint32_t nFirstUsed; /* The offset of the first bucket used. */
 	bool should_rebuild_properties;
 } teds_stricthashmap_entries;
 

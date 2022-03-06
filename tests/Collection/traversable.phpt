@@ -9,6 +9,7 @@ function yields_values() {
     }
     $o = (object)['key' => 'value'];
     yield $o => $o;
+    yield $o => $o;
     yield 0 => 1;
     yield 0 => 2;
     echo "Done evaluating the generator\n";
@@ -81,8 +82,12 @@ Value: (object) array(
    'key' => 'value',
 )
 Key: 9
-Value: 1
+Value: (object) array(
+   'key' => 'value',
+)
 Key: 10
+Value: 1
+Key: 11
 Value: 2
 Rewind and iterate again starting from r0
 Key: 0
@@ -106,6 +111,12 @@ Key: 'r6'
 Value: 's6'
 Key: 'r7'
 Value: 's7'
+Key: (object) array(
+   'key' => 'value',
+)
+Value: (object) array(
+   'key' => 'value',
+)
 Key: (object) array(
    'key' => 'value',
 )
@@ -146,6 +157,12 @@ Key: (object) array(
 Value: (object) array(
    'key' => 'value',
 )
+Key: (object) array(
+   'key' => 'value',
+)
+Value: (object) array(
+   'key' => 'value',
+)
 Key: 0
 Value: 1
 Key: 0
@@ -178,8 +195,12 @@ Value: (object) array(
    'key' => 'value',
 )
 Key: 9
-Value: 1
+Value: (object) array(
+   'key' => 'value',
+)
 Key: 10
+Value: 1
+Key: 11
 Value: 2
 Rewind and iterate again starting from r0
 Key: 0
@@ -209,8 +230,12 @@ Value: (object) array(
    'key' => 'value',
 )
 Key: 9
-Value: 1
+Value: (object) array(
+   'key' => 'value',
+)
 Key: 10
+Value: 1
+Key: 11
 Value: 2
 Rewind and iterate again starting from r0
 Key: 0
@@ -235,6 +260,12 @@ Key: 'r6'
 Value: 's6'
 Key: 'r7'
 Value: 's7'
+Key: (object) array(
+   'key' => 'value',
+)
+Value: (object) array(
+   'key' => 'value',
+)
 Key: (object) array(
    'key' => 'value',
 )
@@ -322,6 +353,12 @@ Key: (object) array(
 Value: (object) array(
    'key' => 'value',
 )
+Key: (object) array(
+   'key' => 'value',
+)
+Value: (object) array(
+   'key' => 'value',
+)
 Key: 's7'
 Value: 's7'
 Key: 's6'
@@ -372,6 +409,12 @@ Key: (object) array(
 Value: (object) array(
    'key' => 'value',
 )
+Key: (object) array(
+   'key' => 'value',
+)
+Value: (object) array(
+   'key' => 'value',
+)
 Rewind and iterate again starting from r0
 
 Test Teds\StrictSortedVectorMap
@@ -407,6 +450,10 @@ End early
 
 Test Teds\StrictSortedVectorSet
 Done evaluating the generator
+Key: 1
+Value: 1
+Key: 2
+Value: 2
 Key: 's0'
 Value: 's0'
 Key: 's1'
@@ -429,13 +476,9 @@ Key: (object) array(
 Value: (object) array(
    'key' => 'value',
 )
+Rewind and iterate again starting from r0
 Key: 1
 Value: 1
-Key: 2
-Value: 2
-Rewind and iterate again starting from r0
-Key: 's0'
-Value: 's0'
 End early
 
 Test Teds\StrictTreeMap
@@ -525,8 +568,12 @@ Value: (object) array(
    'key' => 'value',
 )
 Key: 9
-Value: 1
+Value: (object) array(
+   'key' => 'value',
+)
 Key: 10
+Value: 1
+Key: 11
 Value: 2
 Rewind and iterate again starting from r0
 Key: 0

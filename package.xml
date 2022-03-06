@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-03-05</date>
+ <date>2022-03-06</date>
  <time>16:00:00</time>
  <version>
-  <release>1.2.1</release>
-  <api>1.2.1</api>
+  <release>1.2.2</release>
+  <api>1.2.2</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,14 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Update documentation
-* Make iteration of Teds\StrictSortedVectorSet and Teds\StrictSortedVectorMap account for removals and additions.
-* Make removal in Teds\StrictTreeSet and Teds\StrictTreeMap move iterators to the previous node if the iterator pointed to the removed node.
-  Add a state for iterators being prior to the start of the tree.
-  Use the state of being before the first value of the tree when calling InternalIterator::rewind on an empty tree or removing an iterator pointing to the first value in a tree.
-* Make repacking/removals in Teds\StrictHashSet and Teds\StrictHashMap move InternalIterator positions.
-* Change iteration behavior of Teds\Deque to be like Vector, make shift/pop behave the same way as offsetUnset with respect to iteration.
-  (If the iterator is moved to be before the start of the deque, calling next will move it to the front, and other changes to the Deque will have no effect)
+* Fix bugs in Teds\StrictHashSet/Teds\StrictHashMap iteration behavior.
+* Fix bug constructing balanced tree in Teds\StrictTreeSet/Teds\StrictTreeMap from array/unserializing, where certain sizes resulted in trees not maintaining the balancing invariant.
+* Fix bug when constructing Teds\IntVector from array when promoting type but not keeping reserved capacity.
+* Fix bugs in Teds\StrictSortedVectorSet::__construct
  </notes>
  <contents>
   <dir name="/">
@@ -172,6 +168,7 @@
     <file name="Collection/empty.phpt" role="test" />
     <file name="Collection/exceptionhandler.phpt" role="test" />
     <file name="Collection/fromArray.phpt" role="test" />
+    <file name="Collection/fromLargeArray.phpt" role="test" />
     <file name="Collection/reinit_forbidden.phpt" role="test" />
     <file name="Collection/traversable.phpt" role="test" />
     <file name="Collection/traversable_rewind_error.phpt" role="test" />
@@ -281,6 +278,7 @@
     <file name="Set/floatKey.phpt" role="test" />
     <file name="Set/gc.phpt" role="test" />
     <file name="Set/iteration.phpt" role="test" />
+    <file name="Set/iteration_gaps.phpt" role="test" />
     <file name="Set/iteration_repack.phpt" role="test" />
     <file name="Set/iteration_repack_single.phpt" role="test" />
     <file name="Set/serialization.phpt" role="test" />
@@ -403,6 +401,29 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-03-05</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.2.1</release>
+    <api>1.2.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Update documentation
+* Make iteration of Teds\StrictSortedVectorSet and Teds\StrictSortedVectorMap account for removals and additions.
+* Make removal in Teds\StrictTreeSet and Teds\StrictTreeMap move iterators to the previous node if the iterator pointed to the removed node.
+  Add a state for iterators being prior to the start of the tree.
+  Use the state of being before the first value of the tree when calling InternalIterator::rewind on an empty tree or removing an iterator pointing to the first value in a tree.
+* Make repacking/removals in Teds\StrictHashSet and Teds\StrictHashMap move InternalIterator positions.
+* Change iteration behavior of Teds\Deque to be like Vector, make shift/pop behave the same way as offsetUnset with respect to iteration.
+  (If the iterator is moved to be before the start of the deque, calling next will move it to the front, and other changes to the Deque will have no effect)
+   </notes>
+  </release>
   <release>
    <date>2022-03-04</date>
    <time>16:00:00</time>

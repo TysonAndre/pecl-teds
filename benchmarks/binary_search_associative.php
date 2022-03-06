@@ -70,16 +70,16 @@ foreach ($sizes as [$n, $iterations]) {
 Results for php 8.2.0-dev debug=0 with opcache enabled=true
 
 Testing repeatedly looking for the key of the first value <= needle in an array<int,int> sorted with uasort
-binary_search associative search n= 1048576 iterations=     100 results=[5598280400, 5598280400] binary_search=0.0001 manual search=0.5694 time=0.0002x
+binary_search associative search n= 1048576 iterations=     100 results=[5598280400, 5598280400] binary_search=0.0001 manual search=0.6653 time=0.0002x
 
-binary_search associative search n=    1000 iterations=   80000 results=[4053813000, 4053813000] binary_search=0.0139 manual search=0.4099 time=0.0338x
+binary_search associative search n=    1000 iterations=   80000 results=[4053813000, 4053813000] binary_search=0.0154 manual search=0.4989 time=0.0309x
 
-binary_search associative search n=     100 iterations=  800000 results=[3518360400, 3518360400] binary_search=0.1069 manual search=0.4321 time=0.2474x
+binary_search associative search n=     100 iterations=  800000 results=[3518360400, 3518360400] binary_search=0.1217 manual search=0.5279 time=0.2306x
 
-binary_search associative search n=       8 iterations= 5000000 results=[ 770797800,  770797800] binary_search=0.4933 manual search=0.3749 time=1.3157x
+binary_search associative search n=       8 iterations= 5000000 results=[ 770797800,  770797800] binary_search=0.5838 manual search=0.4422 time=1.3204x
 
-binary_search associative search n=       4 iterations=10000000 results=[1062882900, 1062882900] binary_search=0.9216 manual search=0.5693 time=1.6188x
+binary_search associative search n=       4 iterations=10000000 results=[1062882900, 1062882900] binary_search=1.2225 manual search=0.7117 time=1.7179x
 
-binary_search associative search n=       2 iterations=20000000 results=[1004622000, 1004622000] binary_search=1.7038 manual search=0.9195 time=1.8530x
+binary_search associative search n=       2 iterations=20000000 results=[1004622000, 1004622000] binary_search=1.9920 manual search=1.1006 time=1.8099x
 
  */

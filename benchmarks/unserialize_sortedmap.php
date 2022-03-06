@@ -119,19 +119,20 @@ Testing steps:
 3. Add keys to the collections and sort the collections again
 
 (Note that StrictTreeMap unserialization is optimized for the case where inputs are already sorted, but there is still time+memory overhead to creating and destroying the individual nodes)
-Unserializing sorted StrictTreeMap and reading single val: n=       1 iterations= 1000000 memory=     224 bytes, create+destroy time=2.110 read single time = 0.088 add+sort=0.158 total=2.356 result=1068724585000000
-Unserializing sorted array         and reading single val: n=       1 iterations= 1000000 memory=     408 bytes, create+destroy time=1.881 read single time = 0.051 add+sort=0.115 total=2.048 result=1068724585000000
+Unserializing sorted StrictTreeMap and reading single val: n=       1 iterations= 1000000 memory=     232 bytes, create+destroy time=2.246 read single time = 0.064 add+sort=0.104 total=2.414 result=1068724585000000
+Unserializing sorted array         and reading single val: n=       1 iterations= 1000000 memory=     408 bytes, create+destroy time=1.998 read single time = 0.055 add+sort=0.123 total=2.175 result=1068724585000000
 
-Unserializing sorted StrictTreeMap and reading single val: n=       4 iterations=  400000 memory=     392 bytes, create+destroy time=0.957 read single time = 0.037 add+sort=0.064 total=1.058 result=427489834000000
-Unserializing sorted array         and reading single val: n=       4 iterations=  400000 memory=     408 bytes, create+destroy time=0.809 read single time = 0.021 add+sort=0.062 total=0.891 result=427489834000000
+Unserializing sorted StrictTreeMap and reading single val: n=       4 iterations=  400000 memory=     400 bytes, create+destroy time=1.026 read single time = 0.029 add+sort=0.041 total=1.096 result=427489834000000
+Unserializing sorted array         and reading single val: n=       4 iterations=  400000 memory=     408 bytes, create+destroy time=0.867 read single time = 0.022 add+sort=0.066 total=0.955 result=427489834000000
 
-Unserializing sorted StrictTreeMap and reading single val: n=       8 iterations=  200000 memory=     616 bytes, create+destroy time=0.560 read single time = 0.019 add+sort=0.033 total=0.612 result=213744917000000
-Unserializing sorted array         and reading single val: n=       8 iterations=  200000 memory=     728 bytes, create+destroy time=0.455 read single time = 0.011 add+sort=0.052 total=0.518 result=213744917000000
+Unserializing sorted StrictTreeMap and reading single val: n=       8 iterations=  200000 memory=     624 bytes, create+destroy time=0.600 read single time = 0.015 add+sort=0.023 total=0.638 result=213744917000000
+Unserializing sorted array         and reading single val: n=       8 iterations=  200000 memory=     728 bytes, create+destroy time=0.523 read single time = 0.013 add+sort=0.058 total=0.594 result=213744917000000
 
-Unserializing sorted StrictTreeMap and reading single val: n=    1024 iterations=    1000 memory=   57512 bytes, create+destroy time=0.108 read single time = 0.000 add+sort=0.000 total=0.109 result=1068724585000
-Unserializing sorted array         and reading single val: n=    1024 iterations=    1000 memory=   82008 bytes, create+destroy time=0.055 read single time = 0.000 add+sort=0.043 total=0.099 result=1068724585000
+Unserializing sorted StrictTreeMap and reading single val: n=    1024 iterations=    1000 memory=   57520 bytes, create+destroy time=0.145 read single time = 0.000 add+sort=0.000 total=0.145 result=1068724585000
+Unserializing sorted array         and reading single val: n=    1024 iterations=    1000 memory=   82008 bytes, create+destroy time=0.072 read single time = 0.000 add+sort=0.055 total=0.127 result=1068724585000
 
-Unserializing sorted StrictTreeMap and reading single val: n=  262144 iterations=      20 memory=14679056 bytes, create+destroy time=1.375 read single time = 0.000 add+sort=0.000 total=1.375 result=21374491700
-Unserializing sorted array         and reading single val: n=  262144 iterations=      20 memory=10485872 bytes, create+destroy time=0.442 read single time = 0.000 add+sort=0.393 total=0.836 result=21374491700
+Unserializing sorted StrictTreeMap and reading single val: n=  262144 iterations=      20 memory=14679064 bytes, create+destroy time=1.456 read single time = 0.000 add+sort=0.000 total=1.456 result=21374491700
+Unserializing sorted array         and reading single val: n=  262144 iterations=      20 memory=10485872 bytes, create+destroy time=0.480 read single time = 0.000 add+sort=0.427 total=0.906 result=21374491700
+
 
  */

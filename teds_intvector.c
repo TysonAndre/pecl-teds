@@ -1799,7 +1799,7 @@ static zend_always_inline zval *teds_intvector_entries_read_offset(const teds_in
 		int_smaller *const original_entries = array->entries_smaller; \
 		const int_smaller *src = original_entries; \
 		const size_t size = array->size; \
-		const size_t capacity = size >= 2 ? size * 2 : 4; \
+		const size_t capacity = array->capacity >= 2 ? array->capacity : 4; \
 		array->capacity = capacity; \
 		int_larger *const entries_larger  = teds_intvector_emalloc_byte_array(capacity, sizeof(int_larger)); \
 		const int_larger *const end = entries_larger + size; \

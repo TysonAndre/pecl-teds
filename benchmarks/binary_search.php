@@ -87,23 +87,24 @@ foreach ($sizes as [$n, $iterations]) {
 
 /*
 Results for php 8.2.0-dev debug=0 with opcache enabled=true
+
 Testing repeated lookup of index on a sorted list of strings.
+binary_search(packed array) n= 1048576 iterations=     100 results=[  50119711,   50119711] binary_search=0.0003 array_search=0.7623 time=0.0003x
+binary_search(has gaps    ) n= 1048576 iterations=     100 results=[  50956350,   50956350] binary_search=0.0002 array_search=0.4814 time=0.0005x
 
-binary_search(packed array) n= 1048576 iterations=     100 results=[  50119711,   50119711] binary_search=0.0002 array_search=0.7231 time=0.0003x
-binary_search(has gaps    ) n= 1048576 iterations=     100 results=[  50956350,   50956350] binary_search=0.0002 array_search=0.4506 time=0.0006x
+binary_search(packed array) n=    1000 iterations=   80000 results=[  39999666,   39999666] binary_search=0.0339 array_search=0.2793 time=0.1214x
+binary_search(has gaps    ) n=    1000 iterations=   80000 results=[  39952332,   39952332] binary_search=0.0332 array_search=0.1721 time=0.1931x
 
-binary_search(packed array) n=    1000 iterations=   80000 results=[  39999666,   39999666] binary_search=0.0379 array_search=0.2793 time=0.1357x
-binary_search(has gaps    ) n=    1000 iterations=   80000 results=[  39952332,   39952332] binary_search=0.0345 array_search=0.1793 time=0.1924x
+binary_search(packed array) n=     100 iterations=  800000 results=[  39634882,   39634882] binary_search=0.2738 array_search=0.3858 time=0.7097x
+binary_search(has gaps    ) n=     100 iterations=  800000 results=[  39179664,   39179664] binary_search=0.2608 array_search=0.2875 time=0.9073x
 
-binary_search(packed array) n=     100 iterations=  800000 results=[  39634882,   39634882] binary_search=0.2894 array_search=0.3977 time=0.7278x
-binary_search(has gaps    ) n=     100 iterations=  800000 results=[  39179664,   39179664] binary_search=0.2734 array_search=0.3005 time=0.9096x
+binary_search(packed array) n=       8 iterations= 5000000 results=[  17493655,   17493655] binary_search=1.3227 array_search=1.0059 time=1.3150x
+binary_search(has gaps    ) n=       8 iterations= 5000000 results=[  14995758,   14995758] binary_search=1.2898 array_search=0.9596 time=1.3440x
 
-binary_search(packed array) n=       8 iterations= 5000000 results=[  17493655,   17493655] binary_search=1.3724 array_search=0.9636 time=1.4242x
-binary_search(has gaps    ) n=       8 iterations= 5000000 results=[  14995758,   14995758] binary_search=1.3090 array_search=0.9244 time=1.4162x
+binary_search(packed array) n=       4 iterations=10000000 results=[  14999145,   14999145] binary_search=2.4758 array_search=1.6601 time=1.4914x
+binary_search(has gaps    ) n=       4 iterations=10000000 results=[  10001454,   10001454] binary_search=2.4051 array_search=1.6115 time=1.4924x
 
-binary_search(packed array) n=       4 iterations=10000000 results=[  14999145,   14999145] binary_search=2.5844 array_search=1.7809 time=1.4512x
-binary_search(has gaps    ) n=       4 iterations=10000000 results=[  10001454,   10001454] binary_search=2.4864 array_search=1.7422 time=1.4271x
+binary_search(packed array) n=       2 iterations=20000000 results=[  10004089,   10004089] binary_search=4.7000 array_search=3.1302 time=1.5015x
+binary_search(has gaps    ) n=       2 iterations=20000000 results=[         0,          0] binary_search=4.4987 array_search=3.0574 time=1.4714x
 
-binary_search(packed array) n=       2 iterations=20000000 results=[  10004089,   10004089] binary_search=4.8934 array_search=3.3802 time=1.4477x
-binary_search(has gaps    ) n=       2 iterations=20000000 results=[         0,          0] binary_search=4.6845 array_search=3.2643 time=1.4351x
  */

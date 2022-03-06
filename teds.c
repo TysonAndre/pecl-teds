@@ -890,7 +890,7 @@ PHP_FUNCTION(array_value_last)
 
 #define SPACESHIP_OP(n1, n2) ((n1) < (n2) ? -1 : (n1) > (n2) ? 1 : 0)
 
-static zend_always_inline int teds_stable_compare_wrap(const void *v1, const void *v2) {
+int teds_stable_compare_wrap(const void *v1, const void *v2) {
 	return teds_stable_compare(v1, v2);
 }
 
