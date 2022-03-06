@@ -2243,6 +2243,7 @@ PHP_METHOD(Teds_IntVector, pop)
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\IntVector", 0);
 		RETURN_THROWS();
 	}
+	teds_intvector_maybe_adjust_iterators_before_remove(array, old_size - 1);
 	const size_t old_capacity = array->capacity;
 	array->size--;
 	teds_intvector_entries_copy_offset(array, array->size, return_value, true);

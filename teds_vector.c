@@ -1293,6 +1293,9 @@ PHP_METHOD(Teds_Vector, pop)
 		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot pop from empty %s", ZSTR_VAL(intern->std.ce->name));
 		RETURN_THROWS();
 	}
+
+	teds_vector_maybe_adjust_iterators_before_remove(array, old_size - 1);
+
 	const uint32_t old_capacity = array->capacity;
 	array->size--;
 	array->should_rebuild_properties = true;

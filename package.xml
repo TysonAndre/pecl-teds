@@ -13,8 +13,8 @@
  <date>2022-03-06</date>
  <time>16:00:00</time>
  <version>
-  <release>1.2.2</release>
-  <api>1.2.2</api>
+  <release>1.2.3</release>
+  <api>1.2.3</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,10 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Fix bugs in Teds\StrictHashSet/Teds\StrictHashMap iteration behavior.
-* Fix bug constructing balanced tree in Teds\StrictTreeSet/Teds\StrictTreeMap from array/unserializing, where certain sizes resulted in trees not maintaining the balancing invariant.
-* Fix bug when constructing Teds\IntVector from array when promoting type but not keeping reserved capacity.
-* Fix bugs in Teds\StrictSortedVectorSet::__construct
+* Make pop() on Sequences affect iterators the same way that `$o->offsetUnset(count($o) - 1)` would.
+  (Move iterators pointing to the removed entry backwards by 1)
+* Make pop() on MutableIterable move iterators pointing to that entry backwards.
+* Properly convert references to non-references in some Collection constructors/unserializers and `Teds\unique_values()`
  </notes>
  <contents>
   <dir name="/">
@@ -165,6 +165,7 @@
     <file name="CachedIterable/unserialize.phpt" role="test" />
     <file name="Collection/aggregate.phpt" role="test" />
     <file name="Collection/clear_nonempty.phpt" role="test" />
+    <file name="Collection/create_references.phpt" role="test" />
     <file name="Collection/empty.phpt" role="test" />
     <file name="Collection/exceptionhandler.phpt" role="test" />
     <file name="Collection/fromArray.phpt" role="test" />
@@ -271,10 +272,12 @@
     <file name="Sequence/insert.phpt" role="test" />
     <file name="Sequence/insert_foreach.phpt" role="test" />
     <file name="Sequence/insert_iteration.phpt" role="test" />
+    <file name="Sequence/pop_iteration.phpt" role="test" />
     <file name="Sequence/set.phpt" role="test" />
     <file name="Sequence/set_state.phpt" role="test" />
     <file name="Sequence/shift.phpt" role="test" />
     <file name="Set/contains.phpt" role="test" />
+    <file name="Set/deduplicate.phpt" role="test" />
     <file name="Set/floatKey.phpt" role="test" />
     <file name="Set/gc.phpt" role="test" />
     <file name="Set/iteration.phpt" role="test" />
@@ -367,6 +370,7 @@
     <file name="iterable/none_array.phpt" role="test" />
     <file name="iterable/none_traversable.phpt" role="test" />
     <file name="iterable/unique_values.phpt" role="test" />
+    <file name="iterable/unique_values_references.phpt" role="test" />
     <file name="iterable/unique_values_traversable.phpt" role="test" />
     <file name="misc/binary_search.phpt" role="test" />
     <file name="misc/binary_search_edge_case.phpt" role="test" />
@@ -401,6 +405,25 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-03-06</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.2.2</release>
+    <api>1.2.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Fix bugs in Teds\StrictHashSet/Teds\StrictHashMap iteration behavior.
+* Fix bug constructing balanced tree in Teds\StrictTreeSet/Teds\StrictTreeMap from array/unserializing, where certain sizes resulted in trees not maintaining the balancing invariant.
+* Fix bug when constructing Teds\IntVector from array when promoting type but not keeping reserved capacity.
+* Fix bugs in Teds\StrictSortedVectorSet::__construct
+   </notes>
+  </release>
   <release>
    <date>2022-03-05</date>
    <time>16:00:00</time>

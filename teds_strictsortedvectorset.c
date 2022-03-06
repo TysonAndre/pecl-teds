@@ -57,6 +57,7 @@ static teds_strictsortedvectorset_search_result teds_strictsortedvectorset_entri
 static teds_strictsortedvectorset_search_result teds_strictsortedvectorset_entries_sorted_search_for_key_probably_largest(const teds_strictsortedvectorset_entries *array, zval *key);
 
 static bool teds_strictsortedvectorset_entries_insert(teds_strictsortedvectorset_entries *array, zval *key, bool probably_largest) {
+	ZEND_ASSERT(Z_TYPE_P(key) >= IS_NULL && Z_TYPE_P(key) <= IS_RESOURCE);
 	teds_strictsortedvectorset_search_result result = probably_largest
 		? teds_strictsortedvectorset_entries_sorted_search_for_key_probably_largest(array, key)
 		: teds_strictsortedvectorset_entries_sorted_search_for_key(array, key);
@@ -500,6 +501,7 @@ PHP_METHOD(Teds_StrictSortedVectorSet, __unserialize)
 			RETURN_THROWS();
 		}
 
+		ZVAL_DEREF(val);
 		teds_strictsortedvectorset_entries_insert(array, val, true);
 	} ZEND_HASH_FOREACH_END();
 }

@@ -69,6 +69,7 @@ static zend_always_inline bool teds_strictheap_should_be_above(zval *a, zval *b,
 
 static zend_always_inline void teds_strictheap_entries_insert(teds_strictheap_entries *array, zval *key, const bool is_min_heap) {
 	/* Reallocate if needed and sift down. */
+	ZEND_ASSERT(Z_TYPE_P(key) >= IS_NULL && Z_TYPE_P(key) <= IS_RESOURCE);
 	uint32_t offset = array->size;
 	if (offset >= array->capacity) {
 		/* FIXME bounds check */
@@ -127,6 +128,7 @@ static void teds_strictheap_entries_init_from_array(teds_strictheap_entries *arr
 		array->entries = teds_strictheap_allocate_entries(capacity);
 		array->capacity = size;
 		ZEND_HASH_FOREACH_VAL(values, val)  {
+			ZVAL_DEREF(val);
 			teds_strictheap_entries_insert(array, val, is_min_heap);
 		} ZEND_HASH_FOREACH_END();
 	} else {
@@ -377,6 +379,7 @@ PHP_METHOD(Teds_StrictMinHeap, __unserialize)
 			RETURN_THROWS();
 		}
 
+		ZVAL_DEREF(val);
 		teds_strictheap_entries_insert(array, val, true);
 	} ZEND_HASH_FOREACH_END();
 }
@@ -421,6 +424,7 @@ PHP_METHOD(Teds_StrictMaxHeap, __unserialize)
 			RETURN_THROWS();
 		}
 
+		ZVAL_DEREF(val);
 		teds_strictheap_entries_insert(array, val, false);
 	} ZEND_HASH_FOREACH_END();
 }

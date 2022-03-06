@@ -235,11 +235,11 @@ static void teds_bitvector_entries_init_from_traversable(teds_bitvector_entries 
 				value_zv = Z_REFVAL_P(value_zv);
 				if (EXPECTED(teds_bitvector_is_bool(value_zv))) {
 					value = Z_TYPE_P(value_zv) != IS_FALSE;
-					break;
 				}
+			} else {
+				zend_type_error("Illegal Teds\\BitVector value type %s", zend_zval_type_name(value_zv));
+				break;
 			}
-			zend_type_error("Illegal Teds\\BitVector value type %s", zend_zval_type_name(value_zv));
-			break;
 		} else {
 			value = Z_TYPE_P(value_zv) != IS_FALSE;
 		}
@@ -1444,12 +1444,15 @@ PHP_METHOD(Teds_BitVector, pop)
 		zend_throw_exception(spl_ce_UnderflowException, "Cannot pop from empty Teds\\BitVector", 0);
 		RETURN_THROWS();
 	}
-	array->bit_size--;
-	teds_bitvector_entries_copy_offset(array, array->bit_size, return_value, true);
+	const size_t new_size = old_size - 1;
+	teds_bitvector_maybe_adjust_iterators_before_remove(array, new_size);
 
-	const size_t capacity = teds_bitvector_compute_next_valid_capacity(old_size);
+	array->bit_size = new_size;
+	teds_bitvector_entries_copy_offset(array, new_size, return_value, true);
+
+	const size_t capacity = teds_bitvector_compute_next_valid_capacity(new_size << 1);
 	if (UNEXPECTED(capacity < array->bit_capacity)) {
-		teds_bitvector_entries_shrink_capacity(array, old_size - 1, capacity, array->entries_bits);
+		teds_bitvector_entries_shrink_capacity(array, new_size, capacity, array->entries_bits);
 	}
 }
 

@@ -1310,7 +1310,10 @@ PHP_METHOD(Teds_Deque, pop)
 		RETURN_THROWS();
 	}
 
+	teds_deque_maybe_adjust_iterators_before_remove(array, old_size - 1);
+
 	zval *val = teds_deque_get_entry_at_offset(array, old_size - 1);
+
 	array->size--;
 	array->should_rebuild_properties = true;
 	/* This is being removed. Use a macro that doesn't change the total reference count. */
