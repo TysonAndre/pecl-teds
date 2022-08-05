@@ -18,7 +18,7 @@ call_user_func(function () {
 Warning: var_export does not handle circular references in %s on line 8
 
 Warning: var_export does not handle circular references in %s on line 8
-Teds\Deque::__set_state(array(
+%STeds\Deque::__set_state(array(
    0 => NAN,
    1 => 0.0,
    2 => NULL,

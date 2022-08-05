@@ -17,13 +17,13 @@ var_dump($it);
 var_dump((array)$it);
 
 ?>
---EXPECT--
-Teds\ImmutableSequence::__set_state(array(
+--EXPECTF--
+%STeds\ImmutableSequence::__set_state(array(
 ))
 key=0 value="A LITERAL"
 key=1 value=["first","x"]
 key=2 value=[{"key":"value"},null]
-Teds\ImmutableSequence::__set_state(array(
+%STeds\ImmutableSequence::__set_state(array(
    0 => 'A LITERAL',
    1 =>
   array (

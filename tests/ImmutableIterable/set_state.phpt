@@ -22,7 +22,7 @@ foreach ([Teds\ImmutableIterable::class, Teds\CachedIterable::class] as $class_n
 }
 
 ?>
---EXPECT--
+--EXPECTF--
 Teds\ImmutableIterable::__set_state(array(
 ))
 Caught UnexpectedValueException: Expected to find pair in array but got non-array

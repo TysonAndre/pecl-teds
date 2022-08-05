@@ -19,24 +19,24 @@ test_create([3, 1, 2, 4, 0, 0]);
 test_create([0, 1, 2, 3, 4, 5, 6, 7, 8]);
 test_create([10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
 test_create([0, 123456, 0, -61234232]);
---EXPECT--
+--EXPECTF--
 []
 Serialized: "O:23:\"Teds\\SortedIntVectorSet\":0:{}"
-Teds\SortedIntVectorSet::__set_state(array(
+%STeds\SortedIntVectorSet::__set_state(array(
 ))
 [1]
 Serialized: "O:23:\"Teds\\SortedIntVectorSet\":2:{i:0;i:1;i:1;s:1:\"\x01\";}"
-Teds\SortedIntVectorSet::__set_state(array(
+%STeds\SortedIntVectorSet::__set_state(array(
    0 => 1,
 ))
 [1]
 Serialized: "O:23:\"Teds\\SortedIntVectorSet\":2:{i:0;i:1;i:1;s:1:\"\x01\";}"
-Teds\SortedIntVectorSet::__set_state(array(
+%STeds\SortedIntVectorSet::__set_state(array(
    0 => 1,
 ))
 [0,1,2,3,4]
 Serialized: "O:23:\"Teds\\SortedIntVectorSet\":2:{i:0;i:1;i:1;s:5:\"\x00\x01\x02\x03\x04\";}"
-Teds\SortedIntVectorSet::__set_state(array(
+%STeds\SortedIntVectorSet::__set_state(array(
    0 => 0,
    1 => 1,
    2 => 2,
@@ -45,7 +45,7 @@ Teds\SortedIntVectorSet::__set_state(array(
 ))
 [0,1,2,3,4,5,6,7,8]
 Serialized: "O:23:\"Teds\\SortedIntVectorSet\":2:{i:0;i:1;i:1;s:9:\"\x00\x01\x02\x03\x04\x05\x06\x07\x08\";}"
-Teds\SortedIntVectorSet::__set_state(array(
+%STeds\SortedIntVectorSet::__set_state(array(
    0 => 0,
    1 => 1,
    2 => 2,
@@ -58,7 +58,7 @@ Teds\SortedIntVectorSet::__set_state(array(
 ))
 [0,1,2,3,4,5,6,7,8,9,10]
 Serialized: "O:23:\"Teds\\SortedIntVectorSet\":2:{i:0;i:1;i:1;s:11:\"\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\";}"
-Teds\SortedIntVectorSet::__set_state(array(
+%STeds\SortedIntVectorSet::__set_state(array(
    0 => 0,
    1 => 1,
    2 => 2,
@@ -73,7 +73,7 @@ Teds\SortedIntVectorSet::__set_state(array(
 ))
 [-61234232,0,123456]
 Serialized: "O:23:\"Teds\\SortedIntVectorSet\":2:{i:0;i:3;i:1;s:12:\"\xc8\xa3Y\xfc\x00\x00\x00\x00@\xe2\x01\x00\";}"
-Teds\SortedIntVectorSet::__set_state(array(
+%STeds\SortedIntVectorSet::__set_state(array(
    0 => -61234232,
    1 => 0,
    2 => 123456,

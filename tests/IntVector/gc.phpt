@@ -16,7 +16,7 @@ call_user_func(function () {
     var_dump($it);
 });
 ?>
---EXPECT--
+--EXPECTF--
 object(Teds\IntVector)#2 (1) {
   [0]=>
   int(123)
@@ -25,7 +25,7 @@ object(Teds\IntVector)#3 (1) {
   [0]=>
   int(456)
 }
-Teds\IntVector::__set_state(array(
+%STeds\IntVector::__set_state(array(
    0 => 123,
 ))
 object(InternalIterator)#4 (0) {

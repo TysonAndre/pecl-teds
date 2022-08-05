@@ -19,7 +19,7 @@ call_user_func(function () {
     var_dump($it->key());
 });
 ?>
---EXPECT--
+--EXPECTF--
 [true,false,true,true,true,true,false,false,true,false,true]
 object(Teds\BitVector)#2 (11) {
   [0]=>
@@ -49,7 +49,7 @@ object(Teds\BitVector)#3 (1) {
   [0]=>
   bool(true)
 }
-Teds\BitVector::__set_state(array(
+%STeds\BitVector::__set_state(array(
    0 => true,
    1 => false,
    2 => true,
