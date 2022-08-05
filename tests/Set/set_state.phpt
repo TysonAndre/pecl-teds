@@ -27,14 +27,14 @@ foreach ([
 }
 
 ?>
---EXPECT--
+--EXPECTF--
 Test Teds\StrictTreeSet
-Teds\StrictTreeSet::__set_state(array(
+%STeds\StrictTreeSet::__set_state(array(
 ))
 - null
 - "A LITERAL"
 - [{"key":"value"},null]
-Teds\StrictTreeSet::__set_state(array(
+%STeds\StrictTreeSet::__set_state(array(
    0 => NULL,
    1 => 'A LITERAL',
    2 =>
@@ -79,12 +79,12 @@ array(3) {
   }
 }
 Test Teds\StrictHashSet
-Teds\StrictHashSet::__set_state(array(
+%STeds\StrictHashSet::__set_state(array(
 ))
 - "A LITERAL"
 - null
 - [{"key":"value"},null]
-Teds\StrictHashSet::__set_state(array(
+%STeds\StrictHashSet::__set_state(array(
    0 => 'A LITERAL',
    1 => NULL,
    2 =>
@@ -129,12 +129,12 @@ array(3) {
   }
 }
 Test Teds\StrictSortedVectorSet
-Teds\StrictSortedVectorSet::__set_state(array(
+%STeds\StrictSortedVectorSet::__set_state(array(
 ))
 - null
 - "A LITERAL"
 - [{"key":"value"},null]
-Teds\StrictSortedVectorSet::__set_state(array(
+%STeds\StrictSortedVectorSet::__set_state(array(
    0 => NULL,
    1 => 'A LITERAL',
    2 =>

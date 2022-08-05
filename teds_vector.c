@@ -678,6 +678,7 @@ zend_object_iterator *teds_vector_get_iterator(zend_class_entry *ce, zval *objec
 
 	zend_object *obj = Z_OBJ_P(object);
 	ZVAL_OBJ_COPY(&iterator->intern.data, obj);
+	iterator->current = 0;
 	iterator->intern.funcs = &teds_vector_it_funcs;
 
 	teds_intrusive_dllist_prepend(&teds_vector_entries_from_object(obj)->active_iterators, &iterator->dllist_node);

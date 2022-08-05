@@ -20,13 +20,13 @@ dump_repr($it);
 var_dump($it->toPairs());
 
 ?>
---EXPECT--
-Teds\MutableIterable::__set_state(array(
+--EXPECTF--
+%STeds\MutableIterable::__set_state(array(
 ))
 Caught UnexpectedValueException: Expected to find pair in array but got non-array
 key="first" value="x"
 key={"key":"value"} value=null
-Teds\MutableIterable::__set_state(array(
+%STeds\MutableIterable::__set_state(array(
    0 =>
   array (
     0 => 'first',

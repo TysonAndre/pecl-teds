@@ -26,7 +26,7 @@ function test() {
 }
 test();
 ?>
---EXPECT--
+--EXPECTF--
 JSON: [null]
 Saw key 0
 object(Teds\LowMemoryVector)#1 (0) {
@@ -42,5 +42,5 @@ object(Teds\LowMemoryVector)#1 (0) {
 array(0) {
 }
 JSON: []
-Teds\LowMemoryVector::__set_state(array(
+%STeds\LowMemoryVector::__set_state(array(
 ))

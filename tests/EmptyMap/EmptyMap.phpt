@@ -54,7 +54,7 @@ object(stdClass)#%d (1) {
   ["k"]=>
   string(25) "example default for get()"
 }
-Teds\EmptyMap::INSTANCE
+%STeds\EmptyMap::INSTANCE
 JSON: []
 string(8) "No error"
 bool(true)

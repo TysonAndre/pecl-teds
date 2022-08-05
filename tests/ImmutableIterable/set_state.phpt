@@ -22,13 +22,13 @@ foreach ([Teds\ImmutableIterable::class, Teds\CachedIterable::class] as $class_n
 }
 
 ?>
---EXPECT--
-Teds\ImmutableIterable::__set_state(array(
+--EXPECTF--
+%STeds\ImmutableIterable::__set_state(array(
 ))
 Caught UnexpectedValueException: Expected to find pair in array but got non-array
 key="first" value="x"
 key={"key":"value"} value=null
-Teds\ImmutableIterable::__set_state(array(
+%STeds\ImmutableIterable::__set_state(array(
    0 =>
   array (
     0 => 'first',
@@ -62,12 +62,12 @@ array(2) {
     NULL
   }
 }
-Teds\CachedIterable::__set_state(array(
+%STeds\CachedIterable::__set_state(array(
 ))
 Caught UnexpectedValueException: Expected to find pair in array but got non-array
 key="first" value="x"
 key={"key":"value"} value=null
-Teds\CachedIterable::__set_state(array(
+%STeds\CachedIterable::__set_state(array(
    0 =>
   array (
     0 => 'first',

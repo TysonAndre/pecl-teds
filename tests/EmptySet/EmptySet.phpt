@@ -35,7 +35,7 @@ var_dump(json_last_error_msg());
 foreach ($s as $v) { echo "Unreachable\n"; }
 
 ?>
---EXPECT--
+--EXPECTF--
 enum(Teds\EmptySet::INSTANCE)
 bool(true)
 NULL
@@ -50,6 +50,6 @@ Caught OutOfBoundsException: Index out of range
 Caught Teds\UnsupportedOperationException: Cannot mutate an immutable empty collection
 Caught OutOfBoundsException: Index out of range
 Caught Error: Trying to clone an uncloneable object of class Teds\EmptySet
-Teds\EmptySet::INSTANCE
+%STeds\EmptySet::INSTANCE
 JSON: []
 string(8) "No error"
