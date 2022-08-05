@@ -60,9 +60,9 @@ echo "\nDone";
 --EXPECTF--
 *** Testing not enough or wrong arguments ***
 Caught ArgumentCountError: Teds\none() expects at least 1 argument, 0 given
-Caught TypeError: Teds\none(): Argument #1 ($iterable) must be of type iterable, bool given
+Caught TypeError: Teds\none(): Argument #1 ($iterable) must be of type %s, bool given
 bool(true)
-Caught TypeError: Teds\none(): Argument #1 ($iterable) must be of type iterable, bool given
+Caught TypeError: Teds\none(): Argument #1 ($iterable) must be of type %s, bool given
 Caught TypeError: Teds\none(): Argument #2 ($callback) must be a valid callback%S, no array or string given
 
 *** Testing basic functionality ***

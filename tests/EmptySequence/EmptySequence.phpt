@@ -34,7 +34,7 @@ var_dump($s->map(fn() => print("map not called\n")));
 var_dump($s->filter(fn() => print("filter not called\n")));
 
 ?>
---EXPECT--
+--EXPECTF--
 enum(Teds\EmptySequence::INSTANCE)
 bool(true)
 NULL
@@ -46,7 +46,7 @@ NULL
 Caught OutOfBoundsException: Index out of range
 Caught OutOfBoundsException: Index out of range
 Caught Error: Trying to clone an uncloneable object of class Teds\EmptySequence
-Teds\EmptySequence::INSTANCE
+%STeds\EmptySequence::INSTANCE
 JSON: []
 string(8) "No error"
 enum(Teds\EmptySequence::INSTANCE)

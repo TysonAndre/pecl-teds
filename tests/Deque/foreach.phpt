@@ -13,8 +13,8 @@ echo "Test push/unshift\n";
 $deque = new Teds\Deque(['a', 'b']);
 foreach ($deque as $key => $value) {
     if (strlen($value) === 1) {
-        $deque->push("${value}_");
-        $deque->unshift("_${value}");
+        $deque->push("{$value}_");
+        $deque->unshift("_$value");
     }
     printf("Key: %s Value: %s\n", var_export($key, true), var_export($value, true));
 }

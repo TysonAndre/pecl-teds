@@ -7,7 +7,7 @@ class A {}
 class B {}
 
 function dump_stable_compare($a, $b) {
-    printf("stable_compare(%s, %s): %d (opposite %d)\n", var_export($a, true), var_export($b, true), Teds\stable_compare($a, $b), Teds\stable_compare($b, $a));
+    printf("stable_compare(%s, %s): %d (opposite %d)\n", ltrim(var_export($a, true), '\\'), ltrim(var_export($b, true), '\\'), Teds\stable_compare($a, $b), Teds\stable_compare($b, $a));
 }
 
 $a = new A();
