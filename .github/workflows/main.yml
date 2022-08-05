@@ -31,6 +31,8 @@ jobs:
            PHP_VERSION_FULL: 8.0.22
          - PHP_VERSION: '8.1'
            PHP_VERSION_FULL: 8.1.9
+         - PHP_VERSION: '8.2.0beta2'
+           PHP_VERSION_FULL: 8.2.0beta2
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
