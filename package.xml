@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-03-06</date>
+ <date>2022-08-14</date>
  <time>16:00:00</time>
  <version>
-  <release>1.2.3</release>
-  <api>1.2.3</api>
+  <release>1.2.4</release>
+  <api>1.2.4</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,10 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Make pop() on Sequences affect iterators the same way that `$o->offsetUnset(count($o) - 1)` would.
-  (Move iterators pointing to the removed entry backwards by 1)
-* Make pop() on MutableIterable move iterators pointing to that entry backwards.
-* Properly convert references to non-references in some Collection constructors/unserializers and `Teds\unique_values()`
+* Fix test failures/deprecation notices seen in PHP 8.2.
  </notes>
  <contents>
   <dir name="/">
@@ -405,6 +402,25 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-03-06</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.2.3</release>
+    <api>1.2.3</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Make pop() on Sequences affect iterators the same way that `$o->offsetUnset(count($o) - 1)` would.
+  (Move iterators pointing to the removed entry backwards by 1)
+* Make pop() on MutableIterable move iterators pointing to that entry backwards.
+* Properly convert references to non-references in some Collection constructors/unserializers and `Teds\unique_values()`
+   </notes>
+  </release>
   <release>
    <date>2022-03-06</date>
    <time>16:00:00</time>

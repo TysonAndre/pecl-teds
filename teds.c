@@ -442,6 +442,7 @@ static inline zend_array* teds_move_zend_array_from_entries(teds_stricthashset_e
 	return result;
 }
 
+/* Check if this is the hash table of a PHP array satisfying array_is_list() where none of the top level array values are references. */
 static zend_always_inline bool teds_is_list_of_non_references(HashTable *ht) {
 	zend_long n;
 	zend_string *str;
@@ -472,6 +473,7 @@ static inline void teds_array_unique_values(HashTable *ht, zval *return_value)
 			zend_string *str_index;
 			zend_long num_index;
 			if (zend_hash_get_current_key_ex(ht, &str_index, &num_index, &start) == HASH_KEY_IS_LONG && num_index == 0) {
+				/* The input array is already a single-element list of non-references of size 1 */
 				GC_TRY_ADDREF(ht);
 				RETURN_ARR(ht);
 			}
@@ -488,6 +490,7 @@ static inline void teds_array_unique_values(HashTable *ht, zval *return_value)
 	}
 	ZEND_ASSERT(array.nNumOfElements <= ht_size);
 	if (ht_size == array.nNumOfElements && teds_is_list_of_non_references(ht)) {
+		/* Save memory by returning the original list when it's safe to do so. */
 		GC_TRY_ADDREF(ht);
 		teds_stricthashset_entries_dtor(&array);
 		RETURN_ARR(ht);

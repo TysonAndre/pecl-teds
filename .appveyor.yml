@@ -1,6 +1,6 @@
 # Based on php-ast's appveyor config.
 # See https://github.com/nikic/php-ast/blob/master/.appveyor.yml
-# This tests against the multiple minor versions of PHP 7
+# This tests against multiple minor versions of PHP 7 and 8
 # Author: Tyson Andre
 
 version: '{branch}.{build}'
@@ -36,22 +36,32 @@ environment:
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
                   ARCH: x86
                   VC: vs16
-                  PHP_VER: 8.1.1
+                  PHP_VER: 8.2.0beta2
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
                   ARCH: x64
                   VC: vs16
-                  PHP_VER: 8.1.1
+                  PHP_VER: 8.2.0beta2
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
                   ARCH: x86
                   VC: vs16
-                  PHP_VER: 8.0.14
+                  PHP_VER: 8.1.9
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
                   ARCH: x64
                   VC: vs16
-                  PHP_VER: 8.0.14
+                  PHP_VER: 8.1.9
+                  TS: 0
+                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+                  ARCH: x86
+                  VC: vs16
+                  PHP_VER: 8.0.22
+                  TS: 1
+                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+                  ARCH: x64
+                  VC: vs16
+                  PHP_VER: 8.0.22
                   TS: 0
 
 build_script:
