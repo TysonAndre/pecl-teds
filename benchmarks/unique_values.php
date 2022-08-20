@@ -117,9 +117,6 @@ foreach ($sizes as [$n, $iterations]) {
 Results for php 8.2.0-dev debug=0 with opcache enabled=true
 
 Note that Teds\sorted_set is also sorting the elements and maintaining a balanced binary search tree.
-Results for php 8.2.0-dev debug=0 with opcache enabled=true
-
-Note that Teds\sorted_set is also sorting the elements and maintaining a balanced binary search tree.
            bench_unique_values n=       1 iterations= 8000000 time=0.377 sum=0
            bench_teds_hash_set n=       1 iterations= 8000000 time=1.115 sum=0
          bench_array_flip_keys n=       1 iterations= 8000000 time=0.575 sum=0
