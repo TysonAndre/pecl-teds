@@ -230,7 +230,7 @@ This uses `Teds\stable_compare` instead of PHP's unstable default comparisons.
 Sorting logic can be customized by inserting `[$priority, $value]` instead of `$value`.
 (Or by subclassing `SplMinHeap`/`SplMaxHeap` and overriding `compare` manually).
 
-```
+```php
 php > $x = new SplMinHeap();
 php > foreach (['19', '9', '2b', '2'] as $v) { $x->insert($v); }
 php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // unpredictable order
@@ -256,7 +256,7 @@ This provides empty immutable collections for php 8.1+ based on single-case enum
 
 These provide common interfaces for accessing the lists, sorted/hash sets, sorted/hash maps, sequences, and key value sequences that are provided by `Teds\`.
 
-```
+```php
 <?php
 namespace Teds;
 
@@ -492,7 +492,7 @@ This is faster for very large sorted arrays. See [benchmarks](benchmarks/).
 This returns the key and value of the first entry `<=` $needle according to the comparer, and whether an entry comparing equal was found.
 By default, php's default comparison behavior (`<=>`) is used.
 
-```
+```php
 php > $values = [1 => 100, 3 => 200, 4 => 1000];
 php > echo json_encode(Teds\binary_search($values, 1));
 {"found":false,"key":null,"value":null}
