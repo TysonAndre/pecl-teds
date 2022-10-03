@@ -39,7 +39,7 @@ It is implemented by the following classes.
 
 And immutable versions:
 
-- `Teds\ImmutableSequence` - represents
+- `Teds\ImmutableSequence` - represents an immutable sequence.
 - `Teds\EmptySequence::INSTANCE` (PHP 8.1+, uses enum) - represents an immutable empty sequence.
 
 ### Teds\Set - a Collection of unique values
@@ -50,16 +50,19 @@ The `Teds\Set` interface is implemented by the following classes:
 - `Teds\StrictTreeSet` - a binary tree-based set of **sorted** unique values providing good worst-case time. Uses `Teds\stable_compare` for stable ordering.
 - `Teds\StrictSortedVectorSet` - provides a similar API to `Teds\StrictTreeSet` but is represented internally as a Vector. This has reduced memory usage and faster construction time and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
 
+#### Low-memory Sets
+
 Some specializations are provided for reduced memory usage:
 
 - `Teds\SortedIntVectorSet` - a mustable sorted set of integers, represented internally as a Vector. This has reduced memory usage and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
 
 `Teds` also provides immutable specializations of common data types offering faster serialization/unserialization:
 
-- `Teds\ImmutableSortedStringSet` - a sorted set of strings sorted by strcmp.
+- `Teds\ImmutableSortedStringSet` - a sorted set of strings sorted by strcmp. Note that internally, this is backed by a single string with the data that would be used for `__unserialize`/`__serialize`.
+
+  As a result, this is faster to unserialize and uses less memory than an array  ([see benchmark](https://github.com/TysonAndre/pecl-teds/blob/main/benchmarks/benchmark_string_set.php)), but when iterating over the string, temporary copies of the strings that are members of the set are returned.
 - `Teds\ImmutableSortedIntSet` - a sorted set of integers.
 - `Teds\EmptySet::INSTANCE` (PHP 8.1+, uses enum) - represents an immutable empty set.
-
 
 ### Teds\Map - a Collection mapping unique keys to values
 
