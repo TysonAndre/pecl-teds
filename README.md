@@ -54,7 +54,7 @@ The `Teds\Set` interface is implemented by the following classes:
 
 Some specializations are provided for reduced memory usage:
 
-- `Teds\SortedIntVectorSet` - a mustable sorted set of integers, represented internally as a Vector. This has reduced memory usage and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
+- `Teds\SortedIntVectorSet` - a mutable sorted set of integers, represented internally as a Vector. This has reduced memory usage and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
 
 `Teds` also provides immutable specializations of common data types offering faster serialization/unserialization:
 
