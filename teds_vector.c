@@ -1525,7 +1525,7 @@ PHP_MINIT_FUNCTION(teds_vector)
 	teds_handler_Vector.offset          = XtOffsetOf(teds_vector, std);
 	teds_handler_Vector.clone_obj       = teds_vector_clone;
 	teds_handler_Vector.count_elements  = teds_vector_count_elements;
-	/* Deliberately use default get_properties hander to create a distinct empty hash table for infinite recursion detection */
+	/* Deliberately use default get_properties handler to create a distinct empty hash table for infinite recursion detection */
 	teds_handler_Vector.get_properties_for  = teds_vector_get_properties_for;
 	teds_handler_Vector.get_gc          = teds_vector_get_gc;
 	teds_handler_Vector.free_obj        = teds_vector_free_storage;
