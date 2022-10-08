@@ -411,19 +411,28 @@ static int teds_emptymap_has_dimension(zend_object *object, zval *offset_zv, int
 	return 0;
 }
 
+static void teds_handlers_empty_enum_init_common(zend_object_handlers *handlers)
+{
+	// Based on static function zend_register_enum_ce
+	memcpy(handlers, &std_object_handlers, sizeof(zend_object_handlers));
+	handlers->clone_obj       = NULL;
+	handlers->offset          = 0;
+	handlers->compare         = zend_objects_not_comparable;
+	handlers->count_elements  = teds_emptysequence_count_elements;
+	handlers->get_properties  = teds_noop_empty_array_get_properties;
+	handlers->get_gc          = teds_noop_get_gc;
+}
+
 PHP_MINIT_FUNCTION(teds_emptycollection)
 {
 	TEDS_MINIT_IGNORE_UNUSED();
 	teds_ce_EmptySequence = register_class_Teds_EmptySequence(zend_ce_iterator, teds_ce_Sequence, php_json_serializable_ce);
 	teds_ce_EmptySequence->create_object = teds_emptysequence_new;
+#if PHP_VERSION_ID >= 80300
+	teds_ce_EmptySequence->default_object_handlers = &teds_handler_EmptySequence;
+#endif
 
-	memcpy(&teds_handler_EmptySequence, &std_object_handlers, sizeof(zend_object_handlers));
-
-	teds_handler_EmptySequence.offset          = 0;
-	teds_handler_EmptySequence.count_elements  = teds_emptysequence_count_elements;
-	teds_handler_EmptySequence.get_properties  = teds_noop_empty_array_get_properties;
-	teds_handler_EmptySequence.get_gc          = teds_noop_get_gc;
-
+	teds_handlers_empty_enum_init_common(&teds_handler_EmptySequence);
 	teds_handler_EmptySequence.read_dimension  = teds_emptysequence_read_dimension;
 	teds_handler_EmptySequence.has_dimension   = teds_emptysequence_has_dimension;
 
@@ -433,14 +442,13 @@ PHP_MINIT_FUNCTION(teds_emptycollection)
 	/* EmptyMap */
 	teds_ce_EmptyMap = register_class_Teds_EmptyMap(zend_ce_iterator, teds_ce_Map, php_json_serializable_ce);
 	teds_ce_EmptyMap->create_object = teds_emptymap_new;
+#if PHP_VERSION_ID >= 80300
+	teds_ce_EmptyMap->default_object_handlers = &teds_handler_EmptyMap;
+#endif
 
 	memcpy(&teds_handler_EmptyMap, &std_object_handlers, sizeof(zend_object_handlers));
 
-	teds_handler_EmptyMap.offset          = 0;
-	teds_handler_EmptyMap.count_elements  = teds_emptysequence_count_elements; /* Deliberately the same */
-	teds_handler_EmptyMap.get_properties  = teds_noop_empty_array_get_properties; /* Deliberately the same */
-	teds_handler_EmptyMap.get_gc          = teds_noop_get_gc; /* Deliberately the same */
-
+	teds_handlers_empty_enum_init_common(&teds_handler_EmptyMap);
 	teds_handler_EmptyMap.read_dimension  = teds_emptymap_read_dimension;
 	teds_handler_EmptyMap.has_dimension   = teds_emptymap_has_dimension;
 
@@ -450,13 +458,11 @@ PHP_MINIT_FUNCTION(teds_emptycollection)
 	/* EmptySet */
 	teds_ce_EmptySet = register_class_Teds_EmptySet(zend_ce_iterator, teds_ce_Set, php_json_serializable_ce);
 	teds_ce_EmptySet->create_object = teds_emptyset_new;
+#if PHP_VERSION_ID >= 80300
+	teds_ce_EmptySet->default_object_handlers = &teds_handler_EmptySet;
+#endif
 
-	memcpy(&teds_handler_EmptySet, &std_object_handlers, sizeof(zend_object_handlers));
-
-	teds_handler_EmptySet.offset          = 0;
-	teds_handler_EmptySet.count_elements  = teds_emptysequence_count_elements; /* Deliberately the same */
-	teds_handler_EmptySet.get_properties  = teds_noop_empty_array_get_properties; /* Deliberately the same */
-	teds_handler_EmptySet.get_gc          = teds_noop_get_gc; /* Deliberately the same */
+	teds_handlers_empty_enum_init_common(&teds_handler_EmptySet);
 
 	teds_ce_EmptySet->ce_flags |= ZEND_ACC_FINAL | ZEND_ACC_NO_DYNAMIC_PROPERTIES;
 	teds_ce_EmptySet->get_iterator = teds_emptycollection_get_iterator;
