@@ -85,7 +85,7 @@ static bool teds_strictsortedvectorset_entries_insert(teds_strictsortedvectorset
 
 	ZVAL_COPY(entry, key);
 	array->size++;
-	array->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	return true;
 }
 
@@ -201,7 +201,7 @@ static void teds_strictsortedvectorset_entries_init_from_array(teds_strictsorted
 		ZEND_ASSERT(i == size);
 		array->size = size;
 		array->capacity = size;
-		array->should_rebuild_properties = true;
+		TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 
 		if (size > 1) {
 			teds_strictsortedvectorset_entries_sort_and_deduplicate(array);
@@ -271,6 +271,7 @@ static void teds_strictsortedvectorset_entries_init_from_traversable(teds_strict
 	array->size = size;
 	array->capacity = capacity;
 	array->entries = entries;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, size > 0);
 	if (size > 1) {
 		teds_strictsortedvectorset_entries_sort_and_deduplicate(array);
 	}
@@ -313,7 +314,7 @@ static void teds_strictsortedvectorset_entries_copy_ctor(teds_strictsortedvector
 	to->entries = safe_emalloc(capacity, sizeof(zval), 0);
 	to->size = size;
 	to->capacity = capacity;
-	to->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(to, true);
 
 	zval *begin = from->entries, *end = from->entries + size;
 	teds_strictsortedvectorset_copy_range(to, 0, begin, end);
@@ -631,7 +632,7 @@ static bool teds_strictsortedvectorset_entries_remove_key(teds_strictsortedvecto
 	ZEND_ASSERT(entry <= end);
 	memmove(entry, entry + 1, (end - entry) * sizeof(zval));
 	array->size--;
-	array->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 
 	zval_ptr_dtor(&old_key);
 	return true;

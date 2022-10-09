@@ -415,12 +415,12 @@ static void teds_handlers_empty_enum_init_common(zend_object_handlers *handlers)
 {
 	// Based on static function zend_register_enum_ce
 	memcpy(handlers, &std_object_handlers, sizeof(zend_object_handlers));
-	handlers->clone_obj       = NULL;
-	handlers->offset          = 0;
-	handlers->compare         = zend_objects_not_comparable;
-	handlers->count_elements  = teds_emptysequence_count_elements;
-	handlers->get_properties  = teds_noop_empty_array_get_properties;
-	handlers->get_gc          = teds_noop_get_gc;
+	handlers->clone_obj          = NULL;
+	handlers->offset             = 0;
+	handlers->compare            = zend_objects_not_comparable;
+	handlers->count_elements     = teds_emptysequence_count_elements;
+	handlers->get_properties_for = teds_noop_empty_array_get_properties_for;
+	handlers->get_gc             = teds_noop_get_gc;
 }
 
 PHP_MINIT_FUNCTION(teds_emptycollection)

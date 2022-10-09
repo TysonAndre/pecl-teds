@@ -4,6 +4,7 @@
 #include "php.h"
 #include "Zend/zend_string.h"
 #include "Zend/zend_types.h"
+#include "Zend/zend_object_handlers.h"
 #define TEDS_NODE_RED 0
 #define TEDS_NODE_BLACK 1
 
@@ -275,7 +276,7 @@ HashTable* teds_noop_get_gc(zend_object *obj, zval **table, int *n);
  * Returns the immutable empty array in a get_properties handler.
  * This is useful to keep memory low when a datastructure is guaranteed to be free of cycles (e.g. only scalars, or empty)
  */
-HashTable* teds_noop_empty_array_get_properties(zend_object *obj);
+HashTable* teds_noop_empty_array_get_properties_for(zend_object *obj, zend_prop_purpose purpose);
 
 HashTable *teds_internaliterator_get_gc(zend_object_iterator *iter, zval **table, int *n);
 

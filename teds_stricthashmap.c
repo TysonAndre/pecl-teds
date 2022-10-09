@@ -44,6 +44,12 @@ zend_class_entry *teds_ce_StrictHashMap;
 // #define TEDS_HASH(zval) ((zval).u2.extra)
 #define TEDS_STRICTHASHMAP_IT_HASH(entry) ((entry)->value.u2.extra)
 
+#if PHP_VERSION_ID < 80300
+#define TEDS_STRICTHASHMAP_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { (array)->should_rebuild_properties = value; } while (0)
+#else
+#define TEDS_STRICTHASHMAP_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { } while (0)
+#endif
+
 static void teds_stricthashmap_entries_grow(teds_stricthashmap_entries *array);
 static void teds_stricthashmap_entries_set_capacity(teds_stricthashmap_entries *array, uint32_t new_capacity);
 
@@ -106,7 +112,7 @@ static zend_always_inline bool teds_stricthashmap_entries_insert(teds_stricthash
 			ZVAL_COPY_VALUE(&old_value, &p->value);
 			ZVAL_COPY(&p->value, value);
 			zval_ptr_dtor(&old_value);
-			array->should_rebuild_properties = true;
+			TEDS_STRICTHASHMAP_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 			return false;
 		}
 	}
@@ -117,14 +123,14 @@ static zend_always_inline bool teds_stricthashmap_entries_insert(teds_stricthash
 	}
 
 add_to_hash:
-	;
+	; /* Valid target for goto label */
 	const uint32_t idx = array->nNumUsed;
 	teds_stricthashmap_entry *const arData = array->arData;
 	p = arData + idx;
 	const uint32_t nIndex = h | array->nTableMask;
 	array->nNumUsed++;
 	array->nNumOfElements++;
-	array->should_rebuild_properties = true;
+	TEDS_STRICTHASHMAP_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	TEDS_STRICTHASHMAP_IT_HASH(p) = h;
 	TEDS_STRICTHASHMAP_IT_NEXT(p) = HT_HASH_EX(arData, nIndex);
 	HT_HASH_EX(arData, nIndex) = idx;
@@ -529,6 +535,7 @@ static HashTable* teds_stricthashmap_get_gc(zend_object *obj, zval **table, int 
 	return obj->properties;
 }
 
+#if PHP_VERSION_ID < 80300
 static HashTable* teds_stricthashmap_get_and_populate_properties(zend_object *obj)
 {
 	teds_stricthashmap_entries *const array = teds_stricthashmap_entries_from_object(obj);
@@ -583,6 +590,7 @@ static HashTable* teds_stricthashmap_get_and_populate_properties(zend_object *ob
 #endif
 	return ht;
 }
+#endif
 
 static zend_array *teds_stricthashmap_entries_to_refcounted_pairs(teds_stricthashmap_entries *array);
 
@@ -596,12 +604,16 @@ static HashTable* teds_stricthashmap_get_properties_for(zend_object *obj, zend_p
 	}
 	switch (purpose) {
 		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
-		case ZEND_PROP_PURPOSE_DEBUG: {
+		case ZEND_PROP_PURPOSE_DEBUG:
+#if PHP_VERSION_ID < 80300
+		{
 			HashTable *ht = teds_stricthashmap_get_and_populate_properties(obj);
 			GC_TRY_ADDREF(ht);
 			return ht;
 		}
+#endif
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
 			return teds_stricthashmap_entries_to_refcounted_pairs(array);
@@ -1147,7 +1159,7 @@ static bool teds_stricthashmap_entries_remove_key(teds_stricthashmap_entries *ar
 	}
 
 	array->nNumOfElements--;
-	array->should_rebuild_properties = true;
+	TEDS_STRICTHASHMAP_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	if (array->nNumUsed - 1 == idx) {
 		do {
 			array->nNumUsed--;

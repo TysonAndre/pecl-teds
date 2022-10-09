@@ -30,7 +30,7 @@ typedef struct _teds_mutableiterable {
 } teds_mutableiterable;
 
 HashTable* teds_mutableiterable_get_gc(zend_object *obj, zval **table, int *n);
-HashTable* teds_mutableiterable_get_properties(zend_object *obj);
+HashTable* teds_mutableiterable_get_properties_for(zend_object *obj, zend_prop_purpose purpose);
 int teds_mutableiterable_count_elements(zend_object *object, zend_long *count);
 void teds_mutableiterable_free_storage(zend_object *object);
 void teds_mutableiterable_clear(teds_mutableiterable *intern);

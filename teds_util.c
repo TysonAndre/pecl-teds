@@ -1,9 +1,9 @@
 #include "teds_util.h"
 
-HashTable* teds_noop_empty_array_get_properties(zend_object *obj) {
+/* Override get_properties_for and use the default implementation of get_properties. See https://github.com/php/php-src/issues/9697#issuecomment-1273613175 */
+HashTable* teds_noop_empty_array_get_properties_for(zend_object *obj, zend_prop_purpose purpose) {
 	(void)obj;
-	/* Thankfully, anything using Z_OBJPROP_P for infinite recursion detection (var_export) won't need to worry about infinite recursion, all fields are integers and there are no properties. */
-	/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
+	(void)purpose;
 	return NULL;
 }
 

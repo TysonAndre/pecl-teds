@@ -287,7 +287,7 @@ static HashTable* teds_bitvector_get_properties_for(zend_object *obj, zend_prop_
 	}
 	/* var_export uses get_properties_for for infinite recursion detection rather than get_properties(Z_OBJPROP).
 	 * or checking for recursion on the object itself (php_var_dump).
-	 * However, BitVector can only contain integers, making infinite recursion impossible, so it's safe to return new arrays. */
+	 * However, BitVector can only contain booleans, making infinite recursion impossible, so it's safe to return new arrays. */
 	return teds_bitvector_entries_to_refcounted_array(array);
 }
 
@@ -1665,7 +1665,6 @@ PHP_MINIT_FUNCTION(teds_bitvector)
 	teds_handler_BitVector.offset          = XtOffsetOf(teds_bitvector, std);
 	teds_handler_BitVector.clone_obj       = teds_bitvector_clone;
 	teds_handler_BitVector.count_elements  = teds_bitvector_count_elements;
-	teds_handler_BitVector.get_properties  = teds_noop_empty_array_get_properties;
 	teds_handler_BitVector.get_properties_for = teds_bitvector_get_properties_for;
 	teds_handler_BitVector.get_gc          = teds_noop_get_gc;
 	teds_handler_BitVector.free_obj        = teds_bitvector_free_storage;

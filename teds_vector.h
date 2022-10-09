@@ -21,7 +21,9 @@ typedef struct _teds_vector_entries {
 	uint32_t size;
 	uint32_t capacity;
 	teds_intrusive_dllist active_iterators;
+#if PHP_VERSION_ID < 80300
 	bool should_rebuild_properties;
+#endif
 } teds_vector_entries;
 
 typedef struct _teds_vector {

@@ -21,6 +21,7 @@
 #include "teds.h"
 #include "teds_mutableiterable_arginfo.h"
 #include "teds_mutableiterable.h"
+#include "teds_immutableiterable.h"
 // #include "ext/spl/spl_functions.h"
 #include "ext/spl/spl_engine.h"
 #include "ext/spl/spl_exceptions.h"
@@ -302,35 +303,27 @@ HashTable* teds_mutableiterable_get_gc(zend_object *obj, zval **table, int *n)
 	teds_mutableiterable *intern = teds_mutableiterable_from_object(obj);
 
 	*table = &intern->array.entries[0].key;
-	// Each offset has 1 key and 1 value
+	/* Each offset has 1 key and 1 value */
 	*n = (int)intern->array.size * 2;
 
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
+	/* This is mutable. In php 8.2 and older this might have properties from var_export that were removed later. */
+	return obj->properties;
 }
 
-HashTable* teds_mutableiterable_get_properties(zend_object *obj)
+#if PHP_VERSION_ID < 80300
+void teds_build_properties_for_mutable_zval_pairs(HashTable *ht, zval_pair *entries, const uint32_t len)
 {
-	/* This is mutable and the size may change. Update or delete elements as needed. */
-	teds_mutableiterable *intern = teds_mutableiterable_from_object(obj);
-	HashTable *ht = zend_std_get_properties(obj);
+	ZEND_ASSERT(len <= TEDS_MAX_ZVAL_PAIR_COUNT);
 
-	/* Re-initialize properties array */
-
-	// Note that destructors may mutate the original array,
-	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
-	uint32_t i = 0;
-	for (; i < intern->array.size; i++) {
-		/* Fetch these every time in case destructors modify the original */
-		zval_pair *entries = intern->array.entries;
+	/* Initialize properties array */
+	uint32_t i;
+	for (i = 0; i < len; i++) {
 		zval tmp;
 		Z_TRY_ADDREF_P(&entries[i].key);
 		Z_TRY_ADDREF_P(&entries[i].value);
 		ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
 		zend_hash_index_update(ht, i, &tmp);
 	}
-
 	const uint32_t properties_size = zend_hash_num_elements(ht);
 	if (UNEXPECTED(properties_size > i)) {
 		for (; i < properties_size; i++) {
@@ -344,7 +337,41 @@ HashTable* teds_mutableiterable_get_properties(zend_object *obj)
 		zend_hash_packed_to_hash(ht);
 	}
 #endif
-	return ht;
+}
+#endif
+
+HashTable* teds_mutableiterable_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
+{
+	teds_mutableiterable_entries *array = &teds_mutableiterable_from_object(obj)->array;
+
+	const uint32_t len = array->size;
+	if (!len) {
+		/* Nothing to add or remove - this is mutable. */
+		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
+		return NULL;
+	}
+	switch (purpose) {
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+			ZEND_UNREACHABLE();
+		case ZEND_PROP_PURPOSE_VAR_EXPORT:
+		case ZEND_PROP_PURPOSE_DEBUG:
+#if PHP_VERSION_ID < 80300
+		/* In php 8.3, var_export and debug_zval_dump now check for infinite recursion on the object */
+		{
+			HashTable *ht = zend_std_get_properties(obj);
+			teds_build_properties_for_mutable_zval_pairs(ht, array->entries, len);
+			/* When modifying the hash table, the reference count should be 1. Increase refcount after modifying. */
+			GC_TRY_ADDREF(ht);
+			return ht;
+		}
+#endif
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+			return teds_zval_pairs_to_refcounted_pairs(array->entries, len);
+		default:
+			ZEND_UNREACHABLE();
+			return NULL;
+	}
 }
 
 void teds_mutableiterable_free_storage(zend_object *object)
@@ -1257,7 +1284,7 @@ PHP_MINIT_FUNCTION(teds_mutableiterable)
 	teds_handler_MutableIterable.offset          = XtOffsetOf(teds_mutableiterable, std);
 	teds_handler_MutableIterable.clone_obj       = teds_mutableiterable_clone;
 	teds_handler_MutableIterable.count_elements  = teds_mutableiterable_count_elements;
-	teds_handler_MutableIterable.get_properties  = teds_mutableiterable_get_properties;
+	teds_handler_MutableIterable.get_properties_for = teds_mutableiterable_get_properties_for;
 	teds_handler_MutableIterable.get_gc          = teds_mutableiterable_get_gc;
 	teds_handler_MutableIterable.free_obj        = teds_mutableiterable_free_storage;
 

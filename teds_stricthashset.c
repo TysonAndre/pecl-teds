@@ -126,7 +126,7 @@ add_to_hash:
 	const uint32_t nIndex = h | array->nTableMask;
 	array->nNumUsed++;
 	array->nNumOfElements++;
-	array->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	p->h = h;
 	TEDS_STRICTHASHSET_IT_NEXT(p) = HT_HASH_EX(arData, nIndex);
 	HT_HASH_EX(arData, nIndex) = idx;
@@ -500,6 +500,7 @@ static HashTable* teds_stricthashset_get_gc(zend_object *obj, zval **table, int 
 	return obj->properties;
 }
 
+#if PHP_VERSION_ID < 80300
 static HashTable* teds_stricthashset_get_and_populate_properties(zend_object *obj)
 {
 	teds_stricthashset_entries *const array = teds_stricthashset_entries_from_object(obj);
@@ -550,6 +551,7 @@ static HashTable* teds_stricthashset_get_and_populate_properties(zend_object *ob
 #endif
 	return ht;
 }
+#endif
 
 static zend_array *teds_stricthashset_entries_to_refcounted_array(teds_stricthashset_entries *array);
 
@@ -563,12 +565,16 @@ static HashTable* teds_stricthashset_get_properties_for(zend_object *obj, zend_p
 	}
 	switch (purpose) {
 		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
-		case ZEND_PROP_PURPOSE_DEBUG: {
+		case ZEND_PROP_PURPOSE_DEBUG:
+#if PHP_VERSION_ID < 80300
+		{
 			HashTable *ht = teds_stricthashset_get_and_populate_properties(obj);
 			GC_TRY_ADDREF(ht);
 			return ht;
 		}
+#endif
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
 			return teds_stricthashset_entries_to_refcounted_array(array);
@@ -956,7 +962,7 @@ static bool teds_stricthashset_entries_remove_key(teds_stricthashset_entries *ar
 	}
 
 	array->nNumOfElements--;
-	array->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	if (array->nNumUsed - 1 == idx) {
 		do {
 			array->nNumUsed--;
