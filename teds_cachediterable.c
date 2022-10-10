@@ -415,7 +415,7 @@ static zend_object *teds_cachediterable_new(zend_class_entry *class_type)
 }
 
 
-int teds_size_t_count_elements(zend_object *object, zend_long *count)
+TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_size_t_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_cachediterable *intern = teds_cachediterable_from_object(object);
 	*count = intern->array.size;

@@ -10,6 +10,7 @@
 #ifndef TEDS_VECTOR_H
 #define TEDS_VECTOR_H
 
+#include "teds.h"
 #include "teds_internaliterator.h"
 
 extern zend_class_entry *teds_ce_Vector;
@@ -39,7 +40,7 @@ typedef struct _teds_vector_it {
 } teds_vector_it;
 
 void teds_vector_entries_raise_capacity(teds_vector_entries *array, const size_t new_capacity);
-int teds_vector_count_elements(zend_object *object, zend_long *count);
+TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_vector_count_elements(zend_object *object, zend_long *count);
 void teds_vector_clear(teds_vector *intern);
 HashTable* teds_vector_get_properties_for(zend_object *obj, zend_prop_purpose purpose);
 HashTable* teds_vector_get_gc(zend_object *obj, zval **table, int *n);

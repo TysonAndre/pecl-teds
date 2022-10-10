@@ -628,7 +628,7 @@ static zend_object *teds_stricthashset_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_stricthashset_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_stricthashset_count_elements(zend_object *object, zend_long *count)
 {
 	teds_stricthashset *intern;
 

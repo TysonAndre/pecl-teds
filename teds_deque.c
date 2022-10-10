@@ -466,7 +466,7 @@ static zend_object *teds_deque_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_deque_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_deque_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_deque *intern = teds_deque_from_object(object);
 	*count = intern->array.size;

@@ -23,6 +23,7 @@
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * Fix a build warning in clang for placeholders indicating that a data structure was constructed/unserialized.
+* Fix a build warning after change to expected return type of `count_elements` object handler implementation.
  </notes>
  <contents>
   <dir name="/">

@@ -334,7 +334,7 @@ static zend_object *teds_bitvector_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_bitvector_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_bitvector_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_bitvector *intern = teds_bitvector_from_object(object);
 	*count = intern->array.bit_size;

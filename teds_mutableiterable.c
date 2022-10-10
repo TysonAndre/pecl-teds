@@ -418,7 +418,7 @@ static zend_object *teds_mutableiterable_clone(zend_object *old_object)
 	return new_object;
 }
 
-int teds_mutableiterable_count_elements(zend_object *object, zend_long *count)
+TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_mutableiterable_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_mutableiterable *intern = teds_mutableiterable_from_object(object);
 	*count = intern->array.size;

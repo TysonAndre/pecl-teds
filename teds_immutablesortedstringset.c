@@ -320,7 +320,7 @@ static zend_object *teds_immutablesortedstringset_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_immutablesortedstringset_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_immutablesortedstringset_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_immutablesortedstringset *intern = teds_immutablesortedstringset_from_object(object);
 	*count = intern->array.size;

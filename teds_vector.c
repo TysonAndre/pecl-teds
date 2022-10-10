@@ -417,7 +417,7 @@ static zend_object *teds_vector_clone(zend_object *old_object)
 	return new_object;
 }
 
-int teds_vector_count_elements(zend_object *object, zend_long *count)
+TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_vector_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_vector *intern = teds_vector_from_object(object);
 	*count = intern->array.size;

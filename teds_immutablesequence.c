@@ -376,7 +376,7 @@ static zend_object *teds_immutablesequence_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_immutablesequence_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_immutablesequence_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_immutablesequence *intern = teds_immutablesequence_from_object(object);
 	*count = intern->array.size;

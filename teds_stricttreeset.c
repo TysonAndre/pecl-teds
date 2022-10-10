@@ -629,7 +629,7 @@ static zend_object *teds_stricttreeset_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_stricttreeset_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_stricttreeset_count_elements(zend_object *object, zend_long *count)
 {
 	teds_stricttreeset *intern;
 
