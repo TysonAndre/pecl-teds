@@ -94,7 +94,9 @@ typedef struct _teds_stricthashmap_entries {
 	uint32_t nNumUsed; /* Number of buckets used, including gaps left by remove. */
 	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHMAP_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
 	uint32_t nFirstUsed; /* The offset of the first bucket used. */
+#if PHP_VERSION_ID < 80300
 	bool should_rebuild_properties;
+#endif
 } teds_stricthashmap_entries;
 
 typedef struct _teds_stricthashmap {

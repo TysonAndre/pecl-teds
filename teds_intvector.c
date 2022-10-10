@@ -2431,7 +2431,6 @@ PHP_MINIT_FUNCTION(teds_intvector)
 	teds_handler_IntVector.offset          = XtOffsetOf(teds_intvector, std);
 	teds_handler_IntVector.clone_obj       = teds_intvector_clone;
 	teds_handler_IntVector.count_elements  = teds_intvector_count_elements;
-	teds_handler_IntVector.get_properties  = teds_noop_empty_array_get_properties;
 	teds_handler_IntVector.get_properties_for = teds_intvector_get_properties_for;
 	teds_handler_IntVector.get_gc          = teds_intvector_get_gc;
 	teds_handler_IntVector.free_obj        = teds_intvector_free_storage;
@@ -2451,7 +2450,6 @@ PHP_MINIT_FUNCTION(teds_intvector)
 	teds_handler_SortedIntVectorSet.offset          = XtOffsetOf(teds_intvector, std);
 	teds_handler_SortedIntVectorSet.clone_obj       = teds_sortedintvectorset_clone;
 	teds_handler_SortedIntVectorSet.count_elements  = teds_intvector_count_elements;
-	teds_handler_SortedIntVectorSet.get_properties  = teds_noop_empty_array_get_properties;
 	teds_handler_SortedIntVectorSet.get_properties_for = teds_intvector_get_properties_for;
 	teds_handler_SortedIntVectorSet.get_gc          = teds_intvector_get_gc;
 	teds_handler_SortedIntVectorSet.free_obj        = teds_intvector_free_storage;
@@ -2468,7 +2466,6 @@ PHP_MINIT_FUNCTION(teds_intvector)
 	teds_handler_ImmutableSortedIntSet.offset          = XtOffsetOf(teds_intvector, std);
 	// teds_handler_ImmutableSortedIntSet.clone_obj       = teds_immutablesortedintset_clone;
 	teds_handler_ImmutableSortedIntSet.count_elements  = teds_intvector_count_elements;
-	teds_handler_ImmutableSortedIntSet.get_properties  = teds_noop_empty_array_get_properties;
 	teds_handler_ImmutableSortedIntSet.get_properties_for = teds_intvector_get_properties_for;
 	teds_handler_ImmutableSortedIntSet.get_gc          = teds_intvector_get_gc;
 	teds_handler_ImmutableSortedIntSet.free_obj        = teds_immutablesortedintset_free_storage;

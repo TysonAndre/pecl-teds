@@ -279,6 +279,7 @@ static HashTable* teds_immutableiterable_get_gc(zend_object *obj, zval **table, 
 	return NULL;
 }
 
+#if PHP_VERSION_ID < 80300
 void teds_build_properties_for_immutable_zval_pairs(HashTable *ht, zval_pair *entries, const uint32_t len)
 {
 	ZEND_ASSERT(len <= TEDS_MAX_ZVAL_PAIR_COUNT);
@@ -298,23 +299,45 @@ void teds_build_properties_for_immutable_zval_pairs(HashTable *ht, zval_pair *en
 	}
 #endif
 }
+#endif
 
-static HashTable* teds_immutableiterable_get_properties(zend_object *obj)
+static HashTable* teds_immutableiterable_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
 {
-	teds_immutableiterable *intern = teds_immutableiterable_from_object(obj);
-	const uint32_t len = intern->array.size;
+	teds_immutableiterable_entries *array = &teds_immutableiterable_from_object(obj)->array;
+
+	const uint32_t len = array->size;
 	if (!len) {
 		/* Nothing to add or remove - this is immutable. */
 		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
 		return NULL;
 	}
-	HashTable *ht = zend_std_get_properties(obj);
-	if (zend_hash_num_elements(ht)) {
-		/* Already built. This is immutable there is no need to rebuild it. */
-		return ht;
+	switch (purpose) {
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+			ZEND_UNREACHABLE();
+		case ZEND_PROP_PURPOSE_VAR_EXPORT:
+		case ZEND_PROP_PURPOSE_DEBUG:
+#if PHP_VERSION_ID < 80300
+		/* In php 8.3, var_export and debug_zval_dump now check for infinite recursion on the object */
+		{
+			HashTable *ht = zend_std_get_properties(obj);
+			if (zend_hash_num_elements(ht)) {
+				GC_TRY_ADDREF(ht);
+				/* Already built. This is immutable there is no need to rebuild it. */
+				return ht;
+			}
+			teds_build_properties_for_immutable_zval_pairs(ht, array->entries, len);
+			/* When modifying the hash table, the reference count should be 1. Increase refcount after modifying. */
+			GC_TRY_ADDREF(ht);
+			return ht;
+		}
+#endif
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+			return teds_zval_pairs_to_refcounted_pairs(array->entries, len);
+		default:
+			ZEND_UNREACHABLE();
+			return NULL;
 	}
-	teds_build_properties_for_immutable_zval_pairs(ht, intern->array.entries, len);
-	return ht;
 }
 
 static void teds_immutableiterable_free_storage(zend_object *object)
@@ -923,6 +946,26 @@ PHP_METHOD(Teds_ImmutableIterable, contains)
 	RETURN_FALSE;
 }
 
+zend_array *teds_zval_pairs_to_refcounted_pairs(zval_pair *entries, uint32_t len)
+{
+	zend_array *values = zend_new_array(len);
+	/* Initialize return array */
+	zend_hash_real_init_packed(values);
+
+	/* Go through values and add values to the return array */
+	ZEND_HASH_FILL_PACKED(values) {
+		for (uint32_t i = 0; i < len; i++) {
+			zval tmp;
+			Z_TRY_ADDREF_P(&entries[i].key);
+			Z_TRY_ADDREF_P(&entries[i].value);
+			ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
+			ZEND_HASH_FILL_ADD(&tmp);
+		}
+	} ZEND_HASH_FILL_END();
+	return values;
+}
+
+
 static void teds_immutableiterable_return_pairs(zval *return_value, teds_immutableiterable *intern)
 {
 	const uint32_t len = intern->array.size;
@@ -990,7 +1033,7 @@ PHP_MINIT_FUNCTION(teds_immutableiterable)
 	teds_handler_ImmutableIterable.offset          = XtOffsetOf(teds_immutableiterable, std);
 	teds_handler_ImmutableIterable.clone_obj       = teds_immutableiterable_clone;
 	teds_handler_ImmutableIterable.count_elements  = teds_immutableiterable_count_elements;
-	teds_handler_ImmutableIterable.get_properties  = teds_immutableiterable_get_properties;
+	teds_handler_ImmutableIterable.get_properties_for = teds_immutableiterable_get_properties_for;
 	teds_handler_ImmutableIterable.get_gc          = teds_immutableiterable_get_gc;
 	teds_handler_ImmutableIterable.dtor_obj        = zend_objects_destroy_object;
 	teds_handler_ImmutableIterable.free_obj        = teds_immutableiterable_free_storage;

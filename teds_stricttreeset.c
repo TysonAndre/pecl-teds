@@ -191,7 +191,7 @@ static zend_always_inline bool teds_stricttreeset_tree_insert(teds_stricttreeset
 		it->left = NULL;
 		it->right = NULL;
 		tree->nNumOfElements++;
-		tree->should_rebuild_properties = true;
+		TEDS_SET_SHOULD_REBUILD_PROPERTIES(tree, true);
 		return true;
 	}
 	/* c must be declared in outer scope for goto to work. */
@@ -207,7 +207,7 @@ static zend_always_inline bool teds_stricttreeset_tree_insert(teds_stricttreeset
 				it->right = c;
 finish_insert:
 				tree->nNumOfElements++;
-				tree->should_rebuild_properties = true;
+				TEDS_SET_SHOULD_REBUILD_PROPERTIES(tree, true);
 				if (UNEXPECTED(tree->nNumOfElements >= TEDS_MAX_ZVAL_PAIR_COUNT)) {
 					/* Mainly, the reason to do that is that get_properties returns the tree of properties for get_gc, which expects a uint32_t in php-src/Zend/zend_gc.c
 					 * A less severe reason is that this is converted to an tree in var_dump/var_export for debugging, but the latter can be avoided */
@@ -336,7 +336,7 @@ void teds_stricttreeset_tree_init_from_array(teds_stricttreeset_tree *tree, zend
 	if (values->nNumOfElements == 0) {
 		return;
 	}
-	tree->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(tree, true);
 
 	/* Optimization for constructing this from a sorted tree */
 	teds_stricttreeset_node **nodes = emalloc(values->nNumOfElements * sizeof(teds_stricttreeset_node*));
@@ -444,7 +444,7 @@ static void teds_stricttreeset_tree_copy_ctor(teds_stricttreeset_tree *to, teds_
 	teds_stricttreeset_tree_set_empty_tree(to);
 	/* Copy the original tree structure. It will be balanced if the original tree is balanced. */
 	to->nNumOfElements = from->nNumOfElements;
-	to->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(to, true);
 	to->initialized = true;
 	if (!teds_stricttreeset_tree_empty_size(from)) {
 		to->root = teds_stricttreeset_node_copy_ctor_recursive(from->root, NULL, NULL, NULL);
@@ -498,6 +498,7 @@ static HashTable* teds_stricttreeset_get_gc(zend_object *obj, zval **table, int 
 	return obj->properties;
 }
 
+#if PHP_VERSION_ID < 80300
 static HashTable* teds_stricttreeset_get_and_populate_properties(zend_object *obj)
 {
 	teds_stricttreeset_tree *const tree = teds_stricttreeset_tree_from_object(obj);
@@ -552,6 +553,7 @@ static HashTable* teds_stricttreeset_get_and_populate_properties(zend_object *ob
 
 	return ht;
 }
+#endif
 
 static zend_array *teds_stricttreeset_tree_to_refcounted_array(const teds_stricttreeset_tree *tree);
 
@@ -566,11 +568,14 @@ static HashTable* teds_stricttreeset_get_properties_for(zend_object *obj, zend_p
 	switch (purpose) {
 		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
-		case ZEND_PROP_PURPOSE_DEBUG: {
+		case ZEND_PROP_PURPOSE_DEBUG:
+#if PHP_VERSION_ID < 80300
+		{
 			HashTable *ht = teds_stricttreeset_get_and_populate_properties(obj);
 			GC_TRY_ADDREF(ht);
 			return ht;
 		}
+#endif
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
 			return teds_stricttreeset_tree_to_refcounted_array(tree);
@@ -856,7 +861,7 @@ PHP_METHOD(Teds_StrictTreeSet, __unserialize)
 	if (nodes != NULL) {
 		tree->root = teds_stricttreeset_node_build_tree_from_sorted_nodes(nodes, sorted_nodes_count);
 		tree->nNumOfElements = sorted_nodes_count;
-		tree->should_rebuild_properties = true;
+		TEDS_SET_SHOULD_REBUILD_PROPERTIES(tree, true);
 		efree(nodes);
 	}
 }
@@ -1232,7 +1237,7 @@ static zend_always_inline void teds_stricttreeset_tree_remove_node(teds_stricttr
 
 	ZEND_ASSERT(tree->nNumOfElements > 0);
 	tree->nNumOfElements--;
-	tree->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(tree, true);
 	if (free_zvals) {
 		zval_ptr_dtor(&node->key);
 	}

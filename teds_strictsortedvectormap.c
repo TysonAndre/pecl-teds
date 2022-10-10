@@ -300,53 +300,6 @@ static void teds_strictsortedvectormap_entries_dtor(teds_strictsortedvectormap_e
 	}
 }
 
-static HashTable* teds_strictsortedvectormap_get_gc(zend_object *obj, zval **table, int *n)
-{
-	teds_strictsortedvectormap *intern = teds_strictsortedvectormap_from_object(obj);
-
-	*table = &intern->array.entries[0].key;
-	*n = (int)intern->array.size * 2;
-
-	// Returning the object's properties is redundant if dynamic properties are not allowed,
-	// and this can't be subclassed.
-	return NULL;
-}
-
-static HashTable* teds_strictsortedvectormap_get_properties(zend_object *obj)
-{
-	teds_strictsortedvectormap *intern = teds_strictsortedvectormap_from_object(obj);
-	uint32_t len = intern->array.size;
-	HashTable *ht = zend_std_get_properties(obj);
-	uint32_t old_length = zend_hash_num_elements(ht);
-	teds_strictsortedvectormap_entry *entries = intern->array.entries;
-	/* Initialize properties array */
-	for (uint32_t i = 0; i < len; i++) {
-		zval tmp;
-		Z_TRY_ADDREF_P(&entries[i].key);
-		Z_TRY_ADDREF_P(&entries[i].value);
-		ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
-		zend_hash_index_update(ht, i, &tmp);
-	}
-	for (uint32_t i = len; i < old_length; i++) {
-		zend_hash_index_del(ht, i);
-	}
-#if PHP_VERSION_ID >= 80200
-	if (HT_IS_PACKED(ht)) {
-		/* Engine doesn't expect packed array */
-		zend_hash_packed_to_hash(ht);
-	}
-#endif
-
-	return ht;
-}
-
-static void teds_strictsortedvectormap_free_storage(zend_object *object)
-{
-	teds_strictsortedvectormap *intern = teds_strictsortedvectormap_from_object(object);
-	teds_strictsortedvectormap_entries_dtor(&intern->array);
-	zend_object_std_dtor(&intern->std);
-}
-
 static zend_object *teds_strictsortedvectormap_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
 {
 	teds_strictsortedvectormap *intern;
@@ -382,15 +335,6 @@ static zend_object *teds_strictsortedvectormap_clone(zend_object *old_object)
 	teds_assert_object_has_empty_member_list(new_object);
 
 	return new_object;
-}
-
-static int teds_strictsortedvectormap_count_elements(zend_object *object, zend_long *count)
-{
-	teds_strictsortedvectormap *intern;
-
-	intern = teds_strictsortedvectormap_from_object(object);
-	*count = intern->array.size;
-	return SUCCESS;
 }
 
 /* Get number of entries in this StrictSortedVectorMap */
@@ -1035,6 +979,7 @@ PHP_METHOD(Teds_StrictSortedVectorMap, offsetUnset)
 	TEDS_RETURN_VOID();
 }
 
+/* TODO reuse MutableIterable functionality for this and others */
 PHP_METHOD(Teds_StrictSortedVectorMap, contains)
 {
 	zval *value;
@@ -1139,7 +1084,7 @@ static void teds_strictsortedvectormap_clear(teds_strictsortedvectormap *intern)
 
 	teds_strictsortedvectormap_entries_dtor_range(entries, 0, size);
 	efree(entries);
-	/* Could call teds_strictsortedvectormap_get_properties but properties array is typically not initialized unless var_dump or other inefficient functionality is used */
+	/* Could clear obj->properties for php 8.2 and older but properties array is typically not initialized unless var_dump or other inefficient functionality is used */
 }
 
 PHP_METHOD(Teds_StrictSortedVectorMap, clear)
@@ -1217,13 +1162,14 @@ PHP_MINIT_FUNCTION(teds_strictsortedvectormap)
 
 	memcpy(&teds_handler_StrictSortedVectorMap, &std_object_handlers, sizeof(zend_object_handlers));
 
+	/* This currently uses the same data structures as MutableIterable and can use the same handlers for some functionality as a result. */
 	teds_handler_StrictSortedVectorMap.offset          = XtOffsetOf(teds_strictsortedvectormap, std);
 	teds_handler_StrictSortedVectorMap.clone_obj       = teds_strictsortedvectormap_clone;
-	teds_handler_StrictSortedVectorMap.count_elements  = teds_strictsortedvectormap_count_elements;
-	teds_handler_StrictSortedVectorMap.get_properties  = teds_strictsortedvectormap_get_properties;
-	teds_handler_StrictSortedVectorMap.get_gc          = teds_strictsortedvectormap_get_gc;
+	teds_handler_StrictSortedVectorMap.count_elements  = teds_mutableiterable_count_elements;
+	teds_handler_StrictSortedVectorMap.get_properties_for = teds_mutableiterable_get_properties_for;
+	teds_handler_StrictSortedVectorMap.get_gc          = teds_mutableiterable_get_gc;
 	teds_handler_StrictSortedVectorMap.dtor_obj        = zend_objects_destroy_object;
-	teds_handler_StrictSortedVectorMap.free_obj        = teds_strictsortedvectormap_free_storage;
+	teds_handler_StrictSortedVectorMap.free_obj        = teds_mutableiterable_free_storage;
 	teds_handler_StrictSortedVectorMap.write_dimension = teds_strictsortedvectormap_write_dimension;
 	teds_handler_StrictSortedVectorMap.has_dimension   = teds_strictsortedvectormap_has_dimension;
 	teds_handler_StrictSortedVectorMap.read_dimension  = teds_strictsortedvectormap_read_dimension;

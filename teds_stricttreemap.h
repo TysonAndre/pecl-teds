@@ -33,7 +33,9 @@ typedef struct _teds_stricttreemap_tree {
 	struct _teds_stricttreemap_node *root;
 	teds_intrusive_dllist            active_iterators;
 	uint32_t                         nNumOfElements;
+#if PHP_VERSION_ID < 80300
 	bool                             should_rebuild_properties;
+#endif
 	bool                             initialized;
 } teds_stricttreemap_tree;
 

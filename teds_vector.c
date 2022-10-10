@@ -35,6 +35,12 @@
 zend_object_handlers teds_handler_Vector;
 zend_class_entry *teds_ce_Vector;
 
+#if PHP_VERSION_ID < 80300
+#define TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { (array)->should_rebuild_properties = value; } while (0)
+#else
+#define TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { } while (0)
+#endif
+
 /*
  * If a size this large is encountered, assume the allocation will likely fail or
  * future changes to the capacity will overflow.
@@ -202,7 +208,7 @@ static void teds_vector_entries_init_from_traversable(teds_vector_entries *array
 	}
 
 	array->size = size;
-	array->should_rebuild_properties = size > 0;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, size > 0);
 	array->capacity = size;
 	array->entries = entries;
 cleanup_iter:
@@ -240,7 +246,7 @@ static void teds_vector_entries_copy_ctor(teds_vector_entries *to, const teds_ve
 	to->capacity = 0;
 	to->entries = safe_emalloc(size, sizeof(zval), 0);
 	to->size = size;
-	to->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(to, true);
 	to->capacity = size;
 
 	zval *begin = from->entries, *end = from->entries + size;
@@ -277,9 +283,11 @@ HashTable* teds_vector_get_gc(zend_object *obj, zval **table, int *n)
 	*table = intern->array.entries;
 	*n = (int)intern->array.size;
 
+	/* This is mutable. In php 8.2 and older this might have properties from var_export that were removed later. */
 	return obj->properties;
 }
 
+#if PHP_VERSION_ID < 80300
 static HashTable* teds_vector_get_and_populate_properties(zend_object *obj)
 {
 	teds_vector_entries *const array = teds_vector_entries_from_object(obj);
@@ -331,26 +339,32 @@ static HashTable* teds_vector_get_and_populate_properties(zend_object *obj)
 
 	return ht;
 }
+#endif
 
 static zend_array *teds_vector_entries_to_refcounted_array(const teds_vector_entries *array);
 
 HashTable* teds_vector_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
 {
 	teds_vector_entries *array = &teds_vector_from_object(obj)->array;
-	if (!array->size && !obj->properties) {
+	if (!array->size && (PHP_VERSION_ID >= 80300 && !obj->properties)) {
 		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
-		/* zend_empty_array is flagged as immutable. */
+		/* zend_empty_array is flagged as immutable and cannot be returned. */
 		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
 		return NULL;
 	}
 	switch (purpose) {
 		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
-		case ZEND_PROP_PURPOSE_DEBUG: {
+		case ZEND_PROP_PURPOSE_DEBUG:
+#if PHP_VERSION_ID < 80300
+		/* In php 8.3, var_export and debug_zval_dump now check for infinite recursion on the object */
+		{
 			HashTable *ht = teds_vector_get_and_populate_properties(obj);
 			GC_TRY_ADDREF(ht);
 			return ht;
 		}
+#endif
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
 			return teds_vector_entries_to_refcounted_array(array);
@@ -501,7 +515,7 @@ PHP_METHOD(Teds_Vector, setSize)
 			teds_vector_entries_raise_capacity(array, size);
 		}
 		array->size = size;
-		array->should_rebuild_properties = true;
+		TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 		zval * const entries = array->entries;
 		if (default_zval == NULL || Z_ISNULL_P(default_zval)) {
 			for (uint32_t i = old_size, end = size; i < end; i++) {
@@ -521,7 +535,7 @@ PHP_METHOD(Teds_Vector, setSize)
 	if (entries_to_remove == 0) {
 		return;
 	}
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	zval *const old_entries = array->entries;
 	zval * old_copy;
 	if (size == 0) {
@@ -726,7 +740,7 @@ PHP_METHOD(Teds_Vector, __unserialize)
 	ZEND_ASSERT(it == entries + num_entries);
 
 	array->size = num_entries;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	array->capacity = num_entries;
 	array->entries = entries;
 }
@@ -755,7 +769,7 @@ static void teds_vector_entries_init_from_array_values(teds_vector_entries *arra
 
 	array->entries = entries;
 	array->size = actual_size;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	array->capacity = num_entries;
 }
 
@@ -774,21 +788,7 @@ PHP_METHOD(Teds_Vector, __set_state)
 
 static zend_array *teds_vector_entries_to_refcounted_array(const teds_vector_entries *array)
 {
-	zval *const entries = array->entries;
-	const uint32_t len = array->size;
-	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(values);
-
-	/* Go through values and add values to the return array */
-	ZEND_HASH_FILL_PACKED(values) {
-		for (uint32_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i];
-			Z_TRY_ADDREF_P(tmp);
-			ZEND_HASH_FILL_ADD(tmp);
-		}
-	} ZEND_HASH_FILL_END();
-	return values;
+	return teds_convert_zval_list_to_refcounted_array(array->entries, array->size);
 }
 
 PHP_METHOD(Teds_Vector, toArray)
@@ -999,7 +999,7 @@ cleanup:
 	new_array->entries = entries;
 	new_array->size = size;
 	new_array->capacity = size;
-	new_array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(new_array, true);
 	RETURN_OBJ(new_object);
 }
 
@@ -1066,7 +1066,7 @@ PHP_METHOD(Teds_Vector, map)
 	new_array->entries = entries;
 	new_array->size = size;
 	new_array->capacity = size;
-	new_array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(new_array, true);
 	RETURN_OBJ(new_object);
 }
 
@@ -1090,7 +1090,7 @@ static zend_always_inline void teds_vector_set_value_at_offset(zend_object *obje
 		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	zval tmp;
 	ZVAL_COPY_VALUE(&tmp, ptr);
 	ZVAL_COPY(ptr, value);
@@ -1137,7 +1137,7 @@ static zend_always_inline void teds_vector_entries_push(teds_vector_entries *arr
 	}
 	ZVAL_COPY(&array->entries[old_size], value);
 	array->size++;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 }
 
 /* Based on array_push */
@@ -1168,7 +1168,7 @@ PHP_METHOD(Teds_Vector, push)
 		ZVAL_COPY(&entries[old_size + i], &args[i]);
 	}
 	array->size = new_size;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	TEDS_RETURN_VOID();
 }
 
@@ -1234,7 +1234,7 @@ PHP_METHOD(Teds_Vector, unshift)
 		ZVAL_COPY(&entries[argc - i - 1], &args[i]);
 	}
 	array->size = new_size;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 
 	TEDS_RETURN_VOID();
 }
@@ -1278,7 +1278,7 @@ PHP_METHOD(Teds_Vector, insert)
 		ZVAL_COPY(&insert_start[i], &args[i]);
 	}
 	array->size = new_size;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 
 	TEDS_RETURN_VOID();
 }
@@ -1299,7 +1299,7 @@ PHP_METHOD(Teds_Vector, pop)
 
 	const uint32_t old_capacity = array->capacity;
 	array->size--;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	RETVAL_COPY_VALUE(&array->entries[array->size]);
 	if (old_size < (old_capacity >> 2)) {
 		/* Shrink the storage if only a quarter of the capacity is used  */
@@ -1355,7 +1355,7 @@ PHP_METHOD(Teds_Vector, shift)
 	zval *const entries = array->entries;
 	RETVAL_COPY_VALUE(&entries[0]);
 	array->size--;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	memmove(entries, entries + 1, sizeof(zval) * array->size);
 	/* TODO: Adjust iterator positions */
 
@@ -1431,7 +1431,7 @@ PHP_METHOD(Teds_Vector, offsetUnset)
 	teds_vector_maybe_adjust_iterators_before_remove(array, offset);
 
 	array->size--;
-	array->should_rebuild_properties = true;
+	TEDS_VECTOR_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	zval old_value;
 	ZVAL_COPY_VALUE(&old_value, &entries[offset]);
 	memmove(entries + offset, entries + offset + 1, sizeof(zval) * (old_size - offset - 1));

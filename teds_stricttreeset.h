@@ -35,7 +35,9 @@ typedef struct _teds_stricttreeset_tree {
 	teds_intrusive_dllist active_iterators;
 	uint32_t nNumOfElements;
 	bool initialized;
+#if PHP_VERSION_ID < 80300
 	bool should_rebuild_properties;
+#endif
 } teds_stricttreeset_tree;
 
 typedef struct _teds_stricttreeset {

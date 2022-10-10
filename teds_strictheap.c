@@ -89,7 +89,7 @@ static zend_always_inline void teds_strictheap_entries_insert(teds_strictheap_en
 	}
 	ZVAL_COPY(&entries[offset], key);
 	array->size++;
-	array->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	ZEND_ASSERT(offset < array->size);
 }
 
@@ -463,10 +463,9 @@ static zend_always_inline void teds_strictheap_entries_remove_top(teds_stricthea
 	zval *const entries = array->entries;
 	ZEND_ASSERT(array->size > 0);
 	const uint32_t len = --array->size;
-	array->should_rebuild_properties = true;
+	TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	zval *replacement = &entries[len];
 	uint32_t offset = 0;
-
 
 	/*    0
 	 *  1   2

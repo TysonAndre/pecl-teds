@@ -34,6 +34,12 @@
 
 #define TEDS_DEQUE_MIN_MASK (TEDS_DEQUE_MIN_CAPACITY - 1)
 
+#if PHP_VERSION_ID < 80300
+#define TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { (array)->should_rebuild_properties = value; } while (0)
+#else
+#define TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { } while (0)
+#endif
+
 zend_object_handlers teds_handler_Deque;
 zend_class_entry *teds_ce_Deque;
 
@@ -47,8 +53,10 @@ typedef struct _teds_deque_entries {
 	teds_intrusive_dllist active_iterators;
 	/* The offset of the start of the deque in the circular buffer. */
 	uint32_t offset;
+#if PHP_VERSION_ID < 80300
 	/* Whether this should rebuild properties if get_properties_for is called. Workaround for Zend engine doing the infinite recursion detection on the properties table. */
 	bool should_rebuild_properties;
+#endif
 } teds_deque_entries;
 
 /* Is this 0 or a power of 2? */
@@ -147,7 +155,7 @@ static void teds_deque_entries_init_from_array(teds_deque_entries *array, zend_a
 		array->circular_buffer = circular_buffer = safe_emalloc(capacity, sizeof(zval), 0);
 		array->size = size;
 		array->mask = capacity - 1;
-		array->should_rebuild_properties = true;
+		TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 		ZEND_HASH_FOREACH_VAL(values, val)  {
 			ZEND_ASSERT(i < size);
 			/* This circular buffer is being initialized with an array->offset of 0. */
@@ -218,7 +226,7 @@ static void teds_deque_entries_init_from_traversable(teds_deque_entries *array, 
 	array->size = size;
 	array->mask = capacity > 0 ? capacity - 1 : 0;
 	array->circular_buffer = circular_buffer;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 cleanup_iter:
 	if (iter) {
 		zend_iterator_dtor(iter);
@@ -240,7 +248,7 @@ static void teds_deque_entries_copy_ctor(teds_deque_entries *to, const teds_dequ
 	to->circular_buffer = safe_emalloc(size, sizeof(zval), 0);
 	to->size = size;
 	to->mask = capacity - 1;
-	to->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(to, true);
 	ZEND_ASSERT(to->mask <= from->mask);
 	ZEND_ASSERT(from->mask > 0);
 
@@ -325,6 +333,7 @@ static HashTable* teds_deque_get_gc(zend_object *obj, zval **table, int *n)
 	return obj->properties;
 }
 
+#if PHP_VERSION_ID < 80300
 static HashTable* teds_deque_get_and_populate_properties(zend_object *obj)
 {
 	teds_deque_entries *const array = teds_deque_entries_from_object(obj);
@@ -378,6 +387,7 @@ static HashTable* teds_deque_get_and_populate_properties(zend_object *obj)
 
 	return ht;
 }
+#endif
 
 static zend_array* teds_deque_entries_to_refcounted_array(const teds_deque_entries *array);
 
@@ -390,15 +400,22 @@ static HashTable* teds_deque_get_properties_for(zend_object *obj, zend_prop_purp
 		return NULL;
 	}
 	switch (purpose) {
-		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize(alias of toArray) is used instead. */
+			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
-		case ZEND_PROP_PURPOSE_DEBUG: {
+		case ZEND_PROP_PURPOSE_DEBUG:
+#if PHP_VERSION_ID < 80300
+		{
 			HashTable *ht = teds_deque_get_and_populate_properties(obj);
 			GC_TRY_ADDREF(ht);
 			return ht;
 		}
+#endif
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
+			if (!array->size) {
+				return NULL;
+			}
 			return teds_deque_entries_to_refcounted_array(array);
 		default:
 			ZEND_UNREACHABLE();
@@ -676,7 +693,7 @@ PHP_METHOD(Teds_Deque, __unserialize)
 	array->size = it - circular_buffer;
 	array->mask = capacity - 1;
 	array->circular_buffer = circular_buffer;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 }
 
 static void teds_deque_entries_init_from_array_values(teds_deque_entries *array, zend_array *raw_data)
@@ -703,7 +720,7 @@ static void teds_deque_entries_init_from_array_values(teds_deque_entries *array,
 	array->circular_buffer = circular_buffer;
 	array->size = actual_size;
 	array->mask = capacity - 1;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 }
 
@@ -856,7 +873,7 @@ static zend_always_inline void teds_deque_entries_set_value_at_offset(teds_deque
 		teds_throw_invalid_sequence_index_exception();
 		return;
 	}
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	zval *const ptr = teds_deque_get_entry_at_offset(array, offset);
 	zval tmp;
 	ZVAL_COPY_VALUE(&tmp, ptr);
@@ -874,7 +891,7 @@ static zend_always_inline void teds_deque_entries_push_back(teds_deque_entries *
 		teds_deque_entries_raise_capacity(array, old_capacity ? old_capacity * 2 : TEDS_DEQUE_MIN_CAPACITY);
 	}
 	array->size++;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	zval *dest = teds_deque_get_entry_at_offset(array, old_size);
 	ZVAL_COPY(dest, value);
 }
@@ -1066,7 +1083,7 @@ PHP_METHOD(Teds_Deque, push)
 		args++;
 	}
 	array->size = new_size;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	TEDS_RETURN_VOID();
 }
 
@@ -1158,7 +1175,7 @@ PHP_METHOD(Teds_Deque, unshift)
 
 	array->offset = offset;
 	array->size = new_size;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 	TEDS_RETURN_VOID();
@@ -1206,7 +1223,7 @@ static zend_always_inline void teds_deque_entries_insert_values(teds_deque_entri
 	} while (1);
 
 	array->size = new_size;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 }
@@ -1265,7 +1282,7 @@ static zend_always_inline void teds_deque_entries_remove_offset(teds_deque_entri
 
 	const uint32_t new_size = old_size - 1;
 	array->size = new_size;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	teds_deque_entries_try_shrink_capacity(array, new_size);
 	zval_ptr_dtor(&removed_val);
 
@@ -1315,7 +1332,7 @@ PHP_METHOD(Teds_Deque, pop)
 	zval *val = teds_deque_get_entry_at_offset(array, old_size - 1);
 
 	array->size--;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	/* This is being removed. Use a macro that doesn't change the total reference count. */
 	RETVAL_COPY_VALUE(val);
 
@@ -1355,7 +1372,7 @@ PHP_METHOD(Teds_Deque, shift)
 	const uint32_t old_offset = array->offset;
 	const uint32_t old_mask = array->mask;
 	array->offset = (old_offset + 1) & old_mask;
-	array->should_rebuild_properties = true;
+	TEDS_DEQUE_SET_SHOULD_REBUILD_PROPERTIES(array, true);
 	RETVAL_COPY_VALUE(&array->circular_buffer[old_offset]);
 	teds_deque_entries_try_shrink_capacity(array, old_size);
 }

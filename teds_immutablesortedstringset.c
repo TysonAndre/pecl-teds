@@ -938,7 +938,6 @@ PHP_MINIT_FUNCTION(teds_immutablesortedstringset)
 	teds_handler_ImmutableSortedStringSet.offset          = XtOffsetOf(teds_immutablesortedstringset, std);
 	teds_handler_ImmutableSortedStringSet.clone_obj       = teds_immutablesortedstringset_clone;
 	teds_handler_ImmutableSortedStringSet.count_elements  = teds_immutablesortedstringset_count_elements;
-	teds_handler_ImmutableSortedStringSet.get_properties  = teds_noop_empty_array_get_properties;
 	teds_handler_ImmutableSortedStringSet.get_properties_for = teds_immutablesortedstringset_get_properties_for;
 	teds_handler_ImmutableSortedStringSet.get_gc          = teds_noop_get_gc;
 	teds_handler_ImmutableSortedStringSet.free_obj        = teds_immutablesortedstringset_free_storage;

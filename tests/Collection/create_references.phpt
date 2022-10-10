@@ -644,10 +644,14 @@ values: array(1) {
   string(28) "v_Teds\StrictSortedVectorSet"
 }
 Testing Teds\StrictSortedVectorSet from Traversable
-object(Teds\StrictSortedVectorSet)#%d (0) {
+object(Teds\StrictSortedVectorSet)#%d (1) {
+  [0]=>
+  string(28) "v_Teds\StrictSortedVectorSet"
 }
 count=1
-object(Teds\StrictSortedVectorSet)#%d (0) {
+object(Teds\StrictSortedVectorSet)#%d (1) {
+  [0]=>
+  string(28) "v_Teds\StrictSortedVectorSet"
 }
 values: array(1) {
   [0]=>

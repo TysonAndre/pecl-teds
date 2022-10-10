@@ -396,33 +396,23 @@ static HashTable* teds_lowmemoryvector_get_gc(zend_object *obj, zval **table, in
 	return obj->properties;
 }
 
-static HashTable* teds_lowmemoryvector_get_properties(zend_object *obj)
-{
-	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(obj)->array;
-	if (!array->size) {
-		/* Similar to ext/ffi/ffi.c zend_fake_get_properties. */
-		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
-		/* This may be null if not yet initialized. */
-		return obj->properties;
-	}
-	return zend_std_get_properties(obj);
-}
-
 static HashTable* teds_lowmemoryvector_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
 {
 	teds_lowmemoryvector_entries *array = &teds_lowmemoryvector_from_object(obj)->array;
-	if (!array->size && !obj->properties) {
+	if (!array->size) {
 		/* Similar to ext/ffi/ffi.c zend_fake_get_properties */
 		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
 		return NULL;
 	}
 	switch (purpose) {
-		case ZEND_PROP_PURPOSE_ARRAY_CAST:
-		case ZEND_PROP_PURPOSE_SERIALIZE:
-			return teds_lowmemoryvector_entries_to_refcounted_array(array);
 		case ZEND_PROP_PURPOSE_JSON:
+			ZEND_UNREACHABLE(); /* jsonSerialize is called instead */
 		case ZEND_PROP_PURPOSE_DEBUG:
-		case ZEND_PROP_PURPOSE_VAR_EXPORT: {
+		case ZEND_PROP_PURPOSE_VAR_EXPORT:
+			return NULL;
+#if 0
+		/* TODO: Enable this for var_export and debug_zval_dump in php 8.3+ (requires updating tests to expect different values for php 8.3+) */
+		{
 			/* XXX Here, we deliberately don't support leaking properties to var_export. The entire point is low memory. */
 			/* Related to https://github.com/php/php-src/issues/8044 */
 			/* Returning a brand new refcounted array every time would cause problems with debug output for circular data structures in var_export/debug_zval_dump. */
@@ -430,6 +420,11 @@ static HashTable* teds_lowmemoryvector_get_properties_for(zend_object *obj, zend
 			if (ht) { GC_TRY_ADDREF(ht); }
 			return ht;
 	    }
+		/* But in php 8.3+, classes can return a brand new refcounted array and infinite recursion detection onl objects still works for var_export/debug_zval_dump */
+#endif
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+			return teds_lowmemoryvector_entries_to_refcounted_array(array);
 		default:
 			ZEND_UNREACHABLE();
 			return NULL;
@@ -2110,7 +2105,6 @@ PHP_MINIT_FUNCTION(teds_lowmemoryvector)
 	teds_handler_LowMemoryVector.offset          = XtOffsetOf(teds_lowmemoryvector, std);
 	teds_handler_LowMemoryVector.clone_obj       = teds_lowmemoryvector_clone;
 	teds_handler_LowMemoryVector.count_elements  = teds_lowmemoryvector_count_elements;
-	teds_handler_LowMemoryVector.get_properties  = teds_lowmemoryvector_get_properties;
 	teds_handler_LowMemoryVector.get_properties_for = teds_lowmemoryvector_get_properties_for;
 	teds_handler_LowMemoryVector.get_gc          = teds_lowmemoryvector_get_gc;
 	teds_handler_LowMemoryVector.free_obj        = teds_lowmemoryvector_free_storage;

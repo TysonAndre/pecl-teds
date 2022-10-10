@@ -96,7 +96,9 @@ typedef struct _teds_stricthashset_entries {
 	uint32_t nTableMask; /* -nTableSize or TEDS_STRICTHASHSET_MIN_MASK, e.g. 0xfffffff0 for an array of size 8 with 16 buckets. */
 	uint32_t nFirstUsed; /* The offset of the first bucket used. */
 	/* TODO could track uint32_t firstUsed for cases where removal of first is common, e.g. LRU caches */
+#if PHP_VERSION_ID < 80300
 	bool should_rebuild_properties;
+#endif
 } teds_stricthashset_entries;
 
 typedef struct _teds_stricthashset {

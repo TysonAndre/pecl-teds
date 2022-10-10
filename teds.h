@@ -9,12 +9,36 @@
 /* Avoid unused parameter warning with -Wunused */
 #define TEDS_RETURN_VOID() do { (void) return_value; return; } while (0)
 
+#if PHP_VERSION_ID < 80300
+/* Workaround for engine limitations in php 8.2 and below. */
+#define TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { (array)->should_rebuild_properties = value; } while (0)
+#else
+#define TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { } while (0)
+#endif
+
+static zend_always_inline HashTable* teds_convert_zval_list_to_refcounted_array(zval *entries, uint32_t len)
+{
+	zend_array *values = zend_new_array(len);
+	/* Initialize return array */
+	zend_hash_real_init_packed(values);
+
+	/* Go through values and add values to the return array */
+	ZEND_HASH_FILL_PACKED(values) {
+		for (uint32_t i = 0; i < len; i++) {
+			Z_TRY_ADDREF_P(&entries[i]);
+			ZEND_HASH_FILL_ADD(&entries[i]);
+		}
+	} ZEND_HASH_FILL_END();
+	return values;
+}
+
 static zend_always_inline void teds_convert_zval_list_to_php_array_list(zval *return_value, zval *entries, size_t len)
 {
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
 
+	/* PHP arrays currently have a 32-bit size limit and creating a larger array is a fatal error */
 	zend_array *values = zend_new_array(len);
 	/* Initialize return array */
 	zend_hash_real_init_packed(values);

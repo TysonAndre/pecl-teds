@@ -257,27 +257,39 @@ static HashTable* teds_immutablesequence_get_gc(zend_object *obj, zval **table, 
 	return NULL;
 }
 
-/* TODO get_properties_for */
-static HashTable* teds_immutablesequence_get_properties(zend_object *obj)
+static HashTable* teds_immutablesequence_entries_to_refcounted_array(teds_immutablesequence_entries *array)
 {
-	teds_immutablesequence *intern = teds_immutablesequence_from_object(obj);
-	const uint32_t len = intern->array.size;
-	if (!len) {
-		/* Nothing to add or remove - this is immutable. */
-		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
-		return NULL;
-	}
+	return teds_convert_zval_list_to_refcounted_array(array->entries, array->size);
+}
+
+#if PHP_VERSION_ID < 80300
+static HashTable* teds_immutablesequence_get_and_populate_properties(zend_object *obj)
+{
+	teds_immutablesequence_entries *const array = &teds_immutablesequence_from_object(obj)->array;
 	HashTable *ht = zend_std_get_properties(obj);
-	if (zend_hash_num_elements(ht)) {
-		/* Already built. Because this is immutable there is no need to rebuild it. */
-		return ht;
+
+	/* Re-initialize properties array */
+	/*
+	 * Usually, the reference count of the hash table is 1,
+	 * except during cyclic reference cycles.
+	 *
+	 * Maintain the DEBUG invariant that a hash table isn't modified during iteration,
+	 * and avoid unnecessary work rebuilding a hash table for unmodified properties.
+	 *
+	 * See https://github.com/php/php-src/issues/8079 and tests/Deque/var_export_recursion.phpt
+	 * Also see https://github.com/php/php-src/issues/8044 for alternate considered approaches.
+	 */
+	if (UNEXPECTED(GC_REFCOUNT(ht) > 1)) {
+		obj->properties = zend_array_dup(ht);
+		GC_DELREF(ht);
 	}
 
-	zval *entries = intern->array.entries;
-	/* Initialize the immutable properties array */
-	for (uint32_t i = 0; i < len; i++) {
-		Z_TRY_ADDREF_P(&entries[i]);
-		zend_hash_index_update(ht, i, &entries[i]);
+	// Note that destructors may mutate the original array,
+	// so we fetch the size and circular buffer each time to avoid invalid memory accesses.
+	for (uint32_t i = 0; i < array->size; i++) {
+		zval *elem = &array->entries[i];
+		Z_TRY_ADDREF_P(elem);
+		zend_hash_index_update(ht, i, elem);
 	}
 #if PHP_VERSION_ID >= 80200
 	if (HT_IS_PACKED(ht)) {
@@ -287,6 +299,38 @@ static HashTable* teds_immutablesequence_get_properties(zend_object *obj)
 #endif
 
 	return ht;
+}
+#endif
+
+static HashTable* teds_immutablesequence_get_properties_for(zend_object *obj, zend_prop_purpose purpose)
+{
+	teds_immutablesequence *intern = teds_immutablesequence_from_object(obj);
+	const uint32_t len = intern->array.size;
+	if (!len) {
+		/* Nothing to add or remove - this is immutable. */
+		/* debug_zval_dump DEBUG purpose requires null or a refcounted array. */
+		return NULL;
+	}
+	switch (purpose) {
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
+			ZEND_UNREACHABLE();
+		case ZEND_PROP_PURPOSE_VAR_EXPORT:
+		case ZEND_PROP_PURPOSE_DEBUG:
+#if PHP_VERSION_ID < 80300
+		/* In php 8.3, var_export and debug_zval_dump now check for infinite recursion on the object */
+		{
+			HashTable *ht = teds_immutablesequence_get_and_populate_properties(obj);
+			GC_TRY_ADDREF(ht);
+			return ht;
+		}
+#endif
+		case ZEND_PROP_PURPOSE_ARRAY_CAST:
+		case ZEND_PROP_PURPOSE_SERIALIZE:
+			return teds_immutablesequence_entries_to_refcounted_array(&intern->array);
+		default:
+			ZEND_UNREACHABLE();
+			return NULL;
+	}
 }
 
 static void teds_immutablesequence_free_storage(zend_object *object)
@@ -590,20 +634,7 @@ PHP_METHOD(Teds_ImmutableSequence, toArray)
 	if (!len) {
 		RETURN_EMPTY_ARRAY();
 	}
-	zval *entries = intern->array.entries;
-	zend_array *values = zend_new_array(len);
-	/* Initialize return array */
-	zend_hash_real_init_packed(values);
-
-	/* Go through values and add values to the return array */
-	ZEND_HASH_FILL_PACKED(values) {
-		for (uint32_t i = 0; i < len; i++) {
-			zval *tmp = &entries[i];
-			Z_TRY_ADDREF_P(tmp);
-			ZEND_HASH_FILL_ADD(tmp);
-		}
-	} ZEND_HASH_FILL_END();
-	RETURN_ARR(values);
+	RETURN_ARR(teds_immutablesequence_entries_to_refcounted_array(&intern->array));
 }
 
 static zend_always_inline void teds_immutablesequence_get_value_at_offset(zval *return_value, const zval *zval_this, zend_long offset)
@@ -1044,7 +1075,7 @@ PHP_MINIT_FUNCTION(teds_immutablesequence)
 	teds_handler_ImmutableSequence.offset          = XtOffsetOf(teds_immutablesequence, std);
 	teds_handler_ImmutableSequence.clone_obj       = teds_immutablesequence_clone;
 	teds_handler_ImmutableSequence.count_elements  = teds_immutablesequence_count_elements;
-	teds_handler_ImmutableSequence.get_properties  = teds_immutablesequence_get_properties;
+	teds_handler_ImmutableSequence.get_properties_for = teds_immutablesequence_get_properties_for;
 	teds_handler_ImmutableSequence.get_gc          = teds_immutablesequence_get_gc;
 	teds_handler_ImmutableSequence.free_obj        = teds_immutablesequence_free_storage;
 
