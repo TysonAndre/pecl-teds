@@ -344,6 +344,7 @@
     <file name="Vector/filter.phpt" role="test" />
     <file name="Vector/isset.phpt" role="test" />
     <file name="Vector/map.phpt" role="test" />
+    <file name="Vector/noProps.phpt" role="test" />
     <file name="Vector/offsetGet.phpt" role="test" />
     <file name="Vector/push_pop.phpt" role="test" />
     <file name="Vector/reserve.phpt" role="test" />
