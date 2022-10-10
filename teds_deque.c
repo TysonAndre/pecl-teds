@@ -400,8 +400,6 @@ static HashTable* teds_deque_get_properties_for(zend_object *obj, zend_prop_purp
 		return NULL;
 	}
 	switch (purpose) {
-		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize(alias of toArray) is used instead. */
-			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
 		case ZEND_PROP_PURPOSE_DEBUG:
 #if PHP_VERSION_ID < 80300
@@ -417,6 +415,7 @@ static HashTable* teds_deque_get_properties_for(zend_object *obj, zend_prop_purp
 				return NULL;
 			}
 			return teds_deque_entries_to_refcounted_array(array);
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize(alias of toArray) is used instead. */
 		default:
 			ZEND_UNREACHABLE();
 			return NULL;

@@ -158,7 +158,6 @@ static void teds_strictsortedvectorset_entries_sort_and_deduplicate(teds_stricts
 			ZEND_ASSERT(result == 0);
 			zval_ptr_dtor(&entries[i]);
 			uint32_t new_size = i;
-			zval *last = &entries[i - 1];
 			i++;
 			for (; i < size; i++) {
 				result = teds_stable_compare(&entries[new_size - 1], &entries[i]);
@@ -185,13 +184,11 @@ static void teds_strictsortedvectorset_entries_init_from_array(teds_strictsorted
 	if (size > 0) {
 		zval *val;
 		zval *entries;
-		size_t capacity = size;
 
 		array->size = 0; /* reset size in case emalloc() fails */
 		array->capacity = 0;
 		array->entries = entries = teds_strictsortedvectorset_allocate_entries(size);
 		uint32_t i = 0;
-		zval *dst = entries;
 		array->capacity = size;
 		ZEND_HASH_FOREACH_VAL(values, val) {
 			ZVAL_COPY_DEREF(&entries[i], val);

@@ -289,17 +289,6 @@ static void teds_strictsortedvectormap_entries_dtor_range(teds_strictsortedvecto
 	}
 }
 
-/* Destructs and frees contents and the array itself.
- * If you want to re-use the array then you need to re-initialize it.
- */
-static void teds_strictsortedvectormap_entries_dtor(teds_strictsortedvectormap_entries *array)
-{
-	if (!teds_strictsortedvectormap_entries_empty_capacity(array)) {
-		teds_strictsortedvectormap_entries_dtor_range(array->entries, 0, array->size);
-		efree(array->entries);
-	}
-}
-
 static zend_object *teds_strictsortedvectormap_new_ex(zend_class_entry *class_type, zend_object *orig, bool clone_orig)
 {
 	teds_strictsortedvectormap *intern;
