@@ -12,7 +12,7 @@ ADD *.sh *.c *.h *.php *.md config.m4 config.w32 package.xml COPYING ./
 #
 # Use extremely strict CFLAGS for checking correctness of code before merging it.
 # Clang uses -Wnull-pointer-arithmetic because the result of arithmetic operations of pointers on null is undefined.
-RUN export CFLAGS='-fno-common -Wnull-pointer-arithmetic -Wformat-truncation -Wlogical-op -Wduplicated-cond -Wall -Wextra -Wno-unused-parameter -O2 -g -Wimplicit-fallthrough=1'; phpize && ./configure && make -j$(nproc) && make install
+RUN export CFLAGS='-fno-common -Wformat-truncation -Wlogical-op -Wduplicated-cond -Wall -Wextra -Wno-unused-parameter -O2 -g -Wimplicit-fallthrough=1'; phpize && ./configure && make -j$(nproc) && make install
 RUN docker-php-ext-enable teds
 ADD tests ./tests
 ADD ci ./ci
