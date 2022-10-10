@@ -29,7 +29,8 @@
 #define TEDS_MAX_ZVAL_COLLECTION_SIZE HT_MAX_SIZE
 #define TEDS_MAX_ZVAL_PAIR_COUNT (TEDS_MAX_ZVAL_COLLECTION_SIZE / 2)
 
-#define empty_entry_list ((const void*) (((uint8_t*)NULL) + 16))
+extern const zval teds_empty_entry_list[1];
+#define empty_entry_list ((const void*)(teds_empty_entry_list))
 static zend_always_inline bool teds_is_nan(const double v) {
 	return v != v;
 }

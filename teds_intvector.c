@@ -518,7 +518,7 @@ static zend_object *teds_sortedintvectorset_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_intvector_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_intvector_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_intvector *intern = teds_intvector_from_object(object);
 	*count = intern->array.size;

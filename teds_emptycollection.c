@@ -122,7 +122,7 @@ static zend_object *teds_emptyset_new(zend_class_entry *class_type)
 	return std;
 }
 
-static int teds_emptysequence_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_emptysequence_count_elements(zend_object *object, zend_long *count)
 {
 	(void)object;
 	*count = 0;

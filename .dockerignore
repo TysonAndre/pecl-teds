@@ -5,6 +5,7 @@
 *.dep
 .deps
 .libs
+.git
 Dockerfile*
 Makefile
 Makefile.fragments

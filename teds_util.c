@@ -23,3 +23,4 @@ HashTable *teds_internaliterator_get_gc(zend_object_iterator *iter, zval **table
 	return NULL;
 }
 
+const zval teds_empty_entry_list[1];

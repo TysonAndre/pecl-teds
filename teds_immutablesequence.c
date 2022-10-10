@@ -312,8 +312,6 @@ static HashTable* teds_immutablesequence_get_properties_for(zend_object *obj, ze
 		return NULL;
 	}
 	switch (purpose) {
-		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
-			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
 		case ZEND_PROP_PURPOSE_DEBUG:
 #if PHP_VERSION_ID < 80300
@@ -327,6 +325,7 @@ static HashTable* teds_immutablesequence_get_properties_for(zend_object *obj, ze
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
 			return teds_immutablesequence_entries_to_refcounted_array(&intern->array);
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
 		default:
 			ZEND_UNREACHABLE();
 			return NULL;
@@ -376,7 +375,7 @@ static zend_object *teds_immutablesequence_clone(zend_object *old_object)
 	return new_object;
 }
 
-static int teds_immutablesequence_count_elements(zend_object *object, zend_long *count)
+static TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_immutablesequence_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_immutablesequence *intern = teds_immutablesequence_from_object(object);
 	*count = intern->array.size;

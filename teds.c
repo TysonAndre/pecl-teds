@@ -471,7 +471,7 @@ static inline void teds_array_unique_values(HashTable *ht, zval *return_value)
 			ZVAL_DEREF(value);
 		} else {
 			zend_string *str_index;
-			zend_long num_index;
+			zend_ulong num_index;
 			if (zend_hash_get_current_key_ex(ht, &str_index, &num_index, &start) == HASH_KEY_IS_LONG && num_index == 0) {
 				/* The input array is already a single-element list of non-references of size 1 */
 				GC_TRY_ADDREF(ht);

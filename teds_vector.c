@@ -353,8 +353,6 @@ HashTable* teds_vector_get_properties_for(zend_object *obj, zend_prop_purpose pu
 		return NULL;
 	}
 	switch (purpose) {
-		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
-			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
 		case ZEND_PROP_PURPOSE_DEBUG:
 #if PHP_VERSION_ID < 80300
@@ -368,6 +366,7 @@ HashTable* teds_vector_get_properties_for(zend_object *obj, zend_prop_purpose pu
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
 			return teds_vector_entries_to_refcounted_array(array);
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
 		default:
 			ZEND_UNREACHABLE();
 			return NULL;
@@ -417,7 +416,7 @@ static zend_object *teds_vector_clone(zend_object *old_object)
 	return new_object;
 }
 
-int teds_vector_count_elements(zend_object *object, zend_long *count)
+TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_vector_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_vector *intern = teds_vector_from_object(object);
 	*count = intern->array.size;

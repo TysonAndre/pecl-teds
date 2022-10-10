@@ -362,8 +362,6 @@ static HashTable* teds_cachediterable_get_properties_for(zend_object *obj, zend_
 		return NULL;
 	}
 	switch (purpose) {
-		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
-			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
 		case ZEND_PROP_PURPOSE_DEBUG:
 #if PHP_VERSION_ID < 80300
@@ -384,6 +382,7 @@ static HashTable* teds_cachediterable_get_properties_for(zend_object *obj, zend_
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
 			return teds_zval_pairs_to_refcounted_pairs(array->entries, len);
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
 		default:
 			ZEND_UNREACHABLE();
 			return NULL;
@@ -415,7 +414,7 @@ static zend_object *teds_cachediterable_new(zend_class_entry *class_type)
 }
 
 
-int teds_size_t_count_elements(zend_object *object, zend_long *count)
+TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_size_t_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_cachediterable *intern = teds_cachediterable_from_object(object);
 	*count = intern->array.size;

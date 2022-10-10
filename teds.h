@@ -16,6 +16,12 @@
 #define TEDS_SET_SHOULD_REBUILD_PROPERTIES(array, value) do { } while (0)
 #endif
 
+#if PHP_VERSION_ID < 80200
+#define TEDS_COUNT_ELEMENTS_RETURN_TYPE int
+#else
+#define TEDS_COUNT_ELEMENTS_RETURN_TYPE zend_result
+#endif
+
 static zend_always_inline HashTable* teds_convert_zval_list_to_refcounted_array(zval *entries, uint32_t len)
 {
 	zend_array *values = zend_new_array(len);

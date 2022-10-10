@@ -351,8 +351,6 @@ HashTable* teds_mutableiterable_get_properties_for(zend_object *obj, zend_prop_p
 		return NULL;
 	}
 	switch (purpose) {
-		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
-			ZEND_UNREACHABLE();
 		case ZEND_PROP_PURPOSE_VAR_EXPORT:
 		case ZEND_PROP_PURPOSE_DEBUG:
 #if PHP_VERSION_ID < 80300
@@ -368,6 +366,7 @@ HashTable* teds_mutableiterable_get_properties_for(zend_object *obj, zend_prop_p
 		case ZEND_PROP_PURPOSE_ARRAY_CAST:
 		case ZEND_PROP_PURPOSE_SERIALIZE:
 			return teds_zval_pairs_to_refcounted_pairs(array->entries, len);
+		case ZEND_PROP_PURPOSE_JSON: /* jsonSerialize and get_properties() is used instead. */
 		default:
 			ZEND_UNREACHABLE();
 			return NULL;
@@ -418,7 +417,7 @@ static zend_object *teds_mutableiterable_clone(zend_object *old_object)
 	return new_object;
 }
 
-int teds_mutableiterable_count_elements(zend_object *object, zend_long *count)
+TEDS_COUNT_ELEMENTS_RETURN_TYPE teds_mutableiterable_count_elements(zend_object *object, zend_long *count)
 {
 	const teds_mutableiterable *intern = teds_mutableiterable_from_object(object);
 	*count = intern->array.size;

@@ -13,8 +13,8 @@
  <date>2022-10-10</date>
  <time>16:00:00</time>
  <version>
-  <release>1.2.5</release>
-  <api>1.2.5</api>
+  <release>1.2.6</release>
+  <api>1.2.6</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,9 +22,8 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Reduce memory usage by refactoring the way properties/fields of data structures are returned, for var_export/var_dump/debug_zval_dump/array type casts/serialize.
-  In php 8.3+, this should reduce the impact of calling var_export/var_dump/debug_zval_dump on memory usage, and avoid the side effect of keeping around references to fields after those calls..
-  In all php versions, consistently return temporary arrays for remaining data structures in serialize() and array type casts that will be freed after being used.
+* Fix a build warning in clang for placeholders indicating that a data structure was constructed/unserialized.
+* Fix a build warning after change to expected return type of `count_elements` object handler implementation.
  </notes>
  <contents>
   <dir name="/">
@@ -405,6 +404,24 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-10-10</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.2.5</release>
+    <api>1.2.5</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Reduce memory usage by refactoring the way properties/fields of data structures are returned, for var_export/var_dump/debug_zval_dump/array type casts/serialize.
+  In php 8.3+, this should reduce the impact of calling var_export/var_dump/debug_zval_dump on memory usage, and avoid the side effect of keeping around references to fields after those calls..
+  In all php versions, consistently return temporary arrays for remaining data structures in serialize() and array type casts that will be freed after being used.
+   </notes>
+  </release>
   <release>
    <date>2022-08-14</date>
    <time>16:00:00</time>
