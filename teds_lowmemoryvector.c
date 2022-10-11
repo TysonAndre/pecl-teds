@@ -1107,7 +1107,7 @@ static zend_array *teds_lowmemoryvector_entries_to_refcounted_array(const teds_l
 			case LMV_TYPE_BOOL_OR_NULL: {
 				const uint8_t *const entries = array->entries_uint8;
 				for (uint32_t i = 0; i < len; i++) {
-					teds_lowmemoryvector_entries_set_type(TEDS_FILL_VAL, entries[i]);
+					teds_lowmemoryvector_entries_set_type(__teds_fill_val, entries[i]);
 					ZEND_HASH_FILL_NEXT();
 				}
 				break;

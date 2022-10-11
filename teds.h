@@ -22,6 +22,17 @@
 #define TEDS_COUNT_ELEMENTS_RETURN_TYPE zend_result
 #endif
 
+#if PHP_VERSION_ID < 80200
+#define __teds_fill_val (&__fill_bkt->val)
+#else
+#define __teds_fill_val (__fill_val)
+#endif
+
+#define TEDS_HASH_FILL_ADD_ARR(arr) { \
+		ZVAL_ARR(__teds_fill_val, (arr)); \
+		ZEND_HASH_FILL_NEXT(); \
+	}
+
 static zend_always_inline HashTable* teds_convert_zval_list_to_refcounted_array(zval *entries, uint32_t len)
 {
 	zend_array *values = zend_new_array(len);
