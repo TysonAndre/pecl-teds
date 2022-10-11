@@ -463,7 +463,7 @@ static void teds_stricthashmap_entries_grow(teds_stricthashmap_entries *array)
 		it++;
 		i++;
 	} TEDS_STRICTHASHMAP_FOREACH_END();
-	ZEND_ASSERT(it - new_entries == array->nNumOfElements);
+	ZEND_ASSERT((size_t)(it - new_entries) == array->nNumOfElements);
 	teds_stricthashmap_free_entries(orig_entries, array->nTableSize);
 
 	array->arData = new_entries;
@@ -1325,11 +1325,9 @@ static zend_array *teds_stricthashmap_entries_to_refcounted_pairs(teds_stricthas
 	ZEND_HASH_FILL_PACKED(values) {
 		zval *key, *val;
 		TEDS_STRICTHASHMAP_FOREACH_KEY_VAL(array, key, val) {
-			zval tmp;
 			Z_TRY_ADDREF_P(key);
 			Z_TRY_ADDREF_P(val);
-			ZVAL_ARR(&tmp, zend_new_pair(key, val));
-			ZEND_HASH_FILL_ADD(&tmp);
+			TEDS_HASH_FILL_ADD_ARR(zend_new_pair(key, val));
 		} TEDS_STRICTHASHMAP_FOREACH_END();
 	} ZEND_HASH_FILL_END();
 	return values;

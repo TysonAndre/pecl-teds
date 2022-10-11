@@ -100,7 +100,7 @@ static zend_always_inline void teds_immutableiterable_entries_set_empty_list(ted
 
 static void teds_immutableiterable_entries_init_from_array(teds_immutableiterable_entries *array, zend_array *values)
 {
-	zend_long size = zend_hash_num_elements(values);
+	const size_t size = zend_hash_num_elements(values);
 	if (size > 0) {
 		zend_long nkey;
 		zend_string *skey;
@@ -954,11 +954,9 @@ zend_array *teds_zval_pairs_to_refcounted_pairs(zval_pair *entries, uint32_t len
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
 		for (uint32_t i = 0; i < len; i++) {
-			zval tmp;
 			Z_TRY_ADDREF_P(&entries[i].key);
 			Z_TRY_ADDREF_P(&entries[i].value);
-			ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
-			ZEND_HASH_FILL_ADD(&tmp);
+			TEDS_HASH_FILL_ADD_ARR(zend_new_pair(&entries[i].key, &entries[i].value));
 		}
 	} ZEND_HASH_FILL_END();
 	return values;
@@ -980,11 +978,9 @@ static void teds_immutableiterable_return_pairs(zval *return_value, teds_immutab
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
 		for (uint32_t i = 0; i < len; i++) {
-			zval tmp;
 			Z_TRY_ADDREF_P(&entries[i].key);
 			Z_TRY_ADDREF_P(&entries[i].value);
-			ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
-			ZEND_HASH_FILL_ADD(&tmp);
+			TEDS_HASH_FILL_ADD_ARR(zend_new_pair(&entries[i].key, &entries[i].value));
 		}
 	} ZEND_HASH_FILL_END();
 	RETURN_ARR(values);

@@ -106,7 +106,7 @@ static zend_always_inline void teds_cachediterable_entries_set_empty_list(teds_c
 
 static void teds_cachediterable_entries_init_from_array(teds_cachediterable_entries *array, zend_array *values)
 {
-	zend_long size = zend_hash_num_elements(values);
+	const uint32_t size = zend_hash_num_elements(values);
 	if (size > 0) {
 		zend_long nkey;
 		zend_string *skey;

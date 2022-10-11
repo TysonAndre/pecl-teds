@@ -429,7 +429,7 @@ static void teds_stricthashset_entries_grow(teds_stricthashset_entries *array)
 		it++;
 		i++;
 	} TEDS_STRICTHASHSET_FOREACH_END();
-	ZEND_ASSERT(it - new_entries == array->nNumOfElements);
+	ZEND_ASSERT((size_t)(it - new_entries) == array->nNumOfElements);
 	teds_stricthashset_free_entries(orig_entries, array->nTableSize);
 
 	array->arData = new_entries;

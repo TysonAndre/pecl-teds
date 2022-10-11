@@ -1,5 +1,6 @@
+ARG PHP_IMAGE
 ARG PHP_VERSION
-FROM php:$PHP_VERSION
+FROM $PHP_IMAGE:$PHP_VERSION
 WORKDIR /code
 # Used for running tests in Docker
 # RUN apt-get update && apt-get install -y valgrind && apt-get clean

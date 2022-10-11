@@ -497,12 +497,13 @@ static void teds_immutablesortedstringset_entries_unserialize_from_zend_string(t
 	const uint8_t *const raw_bytes = (uint8_t *)ZSTR_VAL(str);
 	const uint8_t *it = raw_bytes;
 	const uint8_t *const end = raw_bytes + ZSTR_LEN(str);
+	ZEND_ASSERT(end >= it);
 
 	const uint32_t num_strings = teds_serialize_read_uint32_t(it);
 	it += 4;
 	teds_immutablesortedstringset_substring_info *substring_infos = NULL;
 
-	if (UNEXPECTED(num_strings > (end - it))) {
+	if (UNEXPECTED(num_strings > (size_t)(end - it))) {
 		// fprintf(stderr, "num_strings=%d end-it=%d\n", num_strings, (int)(end-it));
 not_enough_data:
 		if (substring_infos) {
@@ -523,7 +524,7 @@ not_enough_data:
 			return;
 		}
 		// fprintf(stderr, "substr_len=%d end=%p it=%p end-it=%d\n", substr_len, end, it, (int)(end-it));
-		if (UNEXPECTED(substr_len > end - it)) {
+		if (UNEXPECTED(substr_len > (size_t)(end - it))) {
 			goto not_enough_data;
 		}
 		substring_infos[i].offset = it - raw_bytes;
@@ -771,9 +772,8 @@ static zend_array *teds_immutablesortedstringset_entries_to_refcounted_array(con
 	ZEND_HASH_FILL_PACKED(values) {
 		for (uint32_t i = 0; i < len; i++) {
 			const teds_immutablesortedstringset_substring_info *substring_info = &substring_infos[i];
-			zval tmp;
-			ZVAL_STRINGL(&tmp, raw_bytes + substring_info->offset, substring_info->length);
-			ZEND_HASH_FILL_ADD(&tmp);
+			ZEND_HASH_FILL_SET_STR(zend_string_init(raw_bytes + substring_info->offset, substring_info->length, 0));
+			ZEND_HASH_FILL_NEXT();
 		}
 	} ZEND_HASH_FILL_END();
 	return values;

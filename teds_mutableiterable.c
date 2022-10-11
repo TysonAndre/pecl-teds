@@ -507,7 +507,7 @@ PHP_METHOD(Teds_MutableIterable, setSize)
 		}
 		intern->array.size = size;
 		zval_pair * const entries = intern->array.entries;
-		for (uint32_t i = old_size; i < size; i++) {
+		for (uint32_t i = old_size; i < (zend_ulong)size; i++) {
 			ZVAL_NULL(&entries[i].key);
 			ZVAL_NULL(&entries[i].value);
 		}
@@ -1255,11 +1255,9 @@ static void teds_mutableiterable_return_pairs(zval *return_value, teds_mutableit
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
 		for (uint32_t i = 0; i < len; i++) {
-			zval tmp;
 			Z_TRY_ADDREF_P(&entries[i].key);
 			Z_TRY_ADDREF_P(&entries[i].value);
-			ZVAL_ARR(&tmp, zend_new_pair(&entries[i].key, &entries[i].value));
-			ZEND_HASH_FILL_ADD(&tmp);
+			TEDS_HASH_FILL_ADD_ARR(zend_new_pair(&entries[i].key, &entries[i].value));
 		}
 	} ZEND_HASH_FILL_END();
 	RETURN_ARR(values);

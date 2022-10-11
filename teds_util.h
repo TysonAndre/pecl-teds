@@ -8,12 +8,6 @@
 #define TEDS_NODE_RED 0
 #define TEDS_NODE_BLACK 1
 
-#if PHP_VERSION_ID < 80200
-#define TEDS_FILL_VAL (&__fill_bkt->val)
-#else
-#define TEDS_FILL_VAL (__fill_val)
-#endif
-
 /*
  * Copied from php's value of HT_MAX_SIZE.
  *

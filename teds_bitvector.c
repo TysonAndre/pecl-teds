@@ -233,10 +233,12 @@ static void teds_bitvector_entries_init_from_traversable(teds_bitvector_entries 
 		if (UNEXPECTED(!teds_bitvector_is_bool(value_zv))) {
 			if (EXPECTED(Z_TYPE_P(value_zv) == IS_REFERENCE)) {
 				value_zv = Z_REFVAL_P(value_zv);
-				if (EXPECTED(teds_bitvector_is_bool(value_zv))) {
-					value = Z_TYPE_P(value_zv) != IS_FALSE;
+				if (UNEXPECTED(!teds_bitvector_is_bool(value_zv))) {
+					goto not_a_bool;
 				}
+				value = Z_TYPE_P(value_zv) != IS_FALSE;
 			} else {
+not_a_bool:
 				zend_type_error("Illegal Teds\\BitVector value type %s", zend_zval_type_name(value_zv));
 				break;
 			}
@@ -875,7 +877,7 @@ PHP_METHOD(Teds_BitVector, __set_state)
 }
 
 static zend_array *teds_bitvector_entries_to_refcounted_array(const teds_bitvector_entries *array) {
-	size_t len = array->bit_size;
+	const size_t len = array->bit_size;
 	const uint8_t *const bit_values = array->entries_bits;
 	zend_array *const values = teds_new_array_check_overflow(len);
 	/* Initialize return array */
@@ -884,7 +886,7 @@ static zend_array *teds_bitvector_entries_to_refcounted_array(const teds_bitvect
 	/* Go through values and add values to the return array */
 	ZEND_HASH_FILL_PACKED(values) {
 		for (size_t i = 0; i < len; i++) {
-			ZVAL_BOOL(TEDS_FILL_VAL, ((bit_values[i >> 3] >> (i & 7)) & 1));
+			ZVAL_BOOL(__teds_fill_val, ((bit_values[i >> 3] >> (i & 7)) & 1));
 			ZEND_HASH_FILL_NEXT();
 		}
 	} ZEND_HASH_FILL_END();
