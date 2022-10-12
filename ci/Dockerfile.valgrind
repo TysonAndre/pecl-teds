@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y valgrind && apt-get clean
 
 ADD ci/install_php_custom.sh ci/generate_php_install_dir.sh ci/
 ARG PHP_VERSION_FULL
-ARG PHP_CONFIGURE_ARGS="--disable-all --enable-zts --enable-debug --enable-cgi --enable-session --enable-json"
+ARG PHP_CONFIGURE_ARGS="--disable-all --disable-fiber-asm --enable-zts --enable-debug --enable-json"
 ARG CFLAGS="-DZEND_RC_DEBUG=1"
 ENV PHP_CONFIGURE_ARGS=$PHP_CONFIGURE_ARGS PHP_CUSTOM_VERSION=$PHP_VERSION_FULL CFLAGS=$CFLAGS
 RUN ci/install_php_custom.sh
