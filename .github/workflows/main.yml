@@ -29,11 +29,11 @@ jobs:
          # and the docker image `php:8` is the latest minor version of php 8.x
          - PHP_VERSION: '8.0'
            PHP_VERSION_FULL: 8.0.24
-         - PHP_VERSION: '8.0'
-           PHP_VERSION_FULL: 8.0.24-zts
+         - PHP_VERSION: '8.0-zts'
+           PHP_VERSION_FULL: 8.0.24
          - PHP_VERSION: '8.0'
            PHP_VERSION_FULL: 8.0.24
-           DOCKER_ARCHITECTURE: i386
+           BUILD_OPTIONS: "--architecture i386"
          - PHP_VERSION: '8.1'
            PHP_VERSION_FULL: 8.1.11
          - PHP_VERSION: '8.2.0RC4'
@@ -46,7 +46,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Build and test in docker
-        run: bash ci/test_dockerized.sh ${{ matrix.PHP_VERSION }} ${{ matrix.DOCKER_ARCHITECTURE }}
+        run: bash ci/test_dockerized.sh --docker-image-tag ${{ matrix.PHP_VERSION }} ${{ matrix.BUILD_OPTIONS }}
 
       # We reuse the php base image because
       # 1. It has any necessary dependencies installed for php 8.0+
@@ -55,6 +55,6 @@ jobs:
       # We need to install valgrind then rebuild php from source with the configure option '--with-valgrind' to avoid valgrind false positives
       # because php-src has inline assembly that causes false positives in valgrind when that option isn't used.
       - name: Build and test in docker again with valgrind
-        run: bash ci/test_dockerized_valgrind.sh ${{ matrix.PHP_VERSION }} ${{ matrix.PHP_VERSION_FULL }}
+        run: bash ci/test_dockerized.sh --docker-image-tag ${{ matrix.PHP_VERSION }} ${{ matrix.BUILD_OPTIONS }} --valgrind ${{ matrix.PHP_VERSION_FULL }}
       # NOTE: tests report false positives for zend_string_equals in php 7.3+
       # due to the use of inline assembly in php-src. (not related to teds)

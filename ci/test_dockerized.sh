@@ -38,7 +38,7 @@ print_usage_and_exit() {
 
 set -xeu
 
-while [[ "$#" -gt 1 ]]; do
+while [[ "$#" -gt 0 ]]; do
 	# TODO support --longname=value
 
 	case "$1" in
@@ -48,7 +48,7 @@ while [[ "$#" -gt 1 ]]; do
 				print_usage_and_exit
 			fi
 			PHP_TEST_ARCHITECTURE="$2"
-			shift
+			shift 2
 			;;
 		--docker-image-tag)
 			if [[ "$#" -lt 2 ]]; then
@@ -56,8 +56,7 @@ while [[ "$#" -gt 1 ]]; do
 				print_usage_and_exit
 			fi
 			PHP_TEST_DOCKER_IMAGE_TAG="$2"
-			shift
-			shift
+			shift 2
 			;;
 		--valgrind)
 			PHP_TEST_COMMAND=ci/test_inner_valgrind.sh
@@ -67,10 +66,12 @@ while [[ "$#" -gt 1 ]]; do
 				print_usage_and_exit
 			fi
 			PHP_TEST_PHP_VERSION_FULL="$2"
-			shift
-			shift
+			shift 2
 			;;
-		-h|--help|help) print_usage; exit 0 ;;
+		-h|--help|help)
+			print_usage;
+			exit 0
+			;;
 		*)
 			echo "$0: Unrecognized option '$1'" 1>&2
 			print_usage_and_exit
@@ -78,7 +79,8 @@ while [[ "$#" -gt 1 ]]; do
 	esac
 done
 
-
+# Variable names were chosen to avoid conflicting with anything
+# that might be set for other purposes.
 PHP_TEST_ARCHITECTURE=${PHP_TEST_ARCHITECTURE:-}
 if [[ -z "${PHP_TEST_DOCKER_IMAGE_TAG:-}" ]]; then
 	echo "--docker-image-tag DOCKER_IMAGE_TAG is required" 1>&2
@@ -92,6 +94,9 @@ else
 fi
 PHP_TEST_COMMAND=${PHP_TEST_COMMAND:-ci/test_inner.sh}
 PHP_TEST_PHP_VERSION_FULL=${PHP_TEST_PHP_VERSION_FULL:-}
+
+# configure options for --valgrind
+PHP_TEST_CONFIGURE_ARGS=${PHP_TEST_CONFIGURE_ARGS:---disable-all --disable-fiber-asm --enable-zts --enable-debug --enable-json}
 PHP_TEST_DOCKERFILE=${PHP_TEST_DOCKERFILE:-ci/Dockerfile}
 
 PHP_TEST_BUILT_DOCKER_IMAGE="$(echo "teds-test-runner:$PHP_TEST_DOCKER_BASE_IMAGE" | tr 'A-Z/' 'a-z_')"
@@ -99,7 +104,8 @@ PHP_TEST_BUILT_DOCKER_IMAGE="$(echo "teds-test-runner:$PHP_TEST_DOCKER_BASE_IMAG
 docker build \
 	--build-arg="PHP_VERSION_TAG=$PHP_TEST_DOCKER_IMAGE_TAG" \
 	--build-arg="PHP_IMAGE=$PHP_TEST_DOCKER_BASE_IMAGE" \
-	--build-arg="PHP_IMAGE=$PHP_TEST_DOCKER_BASE_IMAGE" \
+	--build-arg="PHP_VERSION_FULL=$PHP_TEST_PHP_VERSION_FULL" \
+	--build-arg="PHP_CONFIGURE_ARGS=$PHP_TEST_CONFIGURE_ARGS" \
 	--tag="$PHP_TEST_BUILT_DOCKER_IMAGE" \
 	-f "$PHP_TEST_DOCKERFILE" .
 
