@@ -1051,42 +1051,79 @@ PHP_FUNCTION(stable_compare)
 }
 /* }}} */
 
-zend_long teds_strict_hash_array(HashTable *ht, teds_strict_hash_node *node) {
+ZEND_COLD zend_never_inline uint64_t teds_strict_hash_cyclic_reference_fallback(zval *value) {
+	ZVAL_DEINDIRECT(value);
+	ZVAL_DEREF(value);
+	ZEND_ASSERT(Z_TYPE_P(value) == IS_ARRAY);
+
+	HashTable *ht = Z_ARR_P(value);
+	uint64_t result = 1;
+	zend_long num_key;
+	zend_string *str_key;
+	zval *field_value;
+	ZEND_HASH_FOREACH_KEY_VAL(ht, num_key, str_key, field_value) {
+		/* str_key is in a hash table, meaning that the hash was already computed. */
+		result += str_key ? ZSTR_H(str_key) : (zend_ulong) num_key;
+
+		ZVAL_DEINDIRECT(field_value);
+		ZVAL_DEREF(field_value);
+
+		if (Z_TYPE_P(field_value) == IS_ARRAY) {
+			/* Don't recurse into arrays */
+			continue;
+		}
+		ZEND_ASSERT(!Z_ISREF_P(field_value) && Z_TYPE_P(field_value) != IS_INDIRECT);
+
+		zend_long field_hash = teds_strict_hash_inner(field_value, NULL, NULL);
+
+		result += (field_hash + (result << 7));
+		result = teds_inline_hash_of_uint64(result);
+	} ZEND_HASH_FOREACH_END();
+	return result;
+}
+
+zend_long teds_strict_hash_array(HashTable *const ht, const teds_strict_hash_node *const node, bool *const out_has_cyclic_reference) {
+	ZEND_ASSERT(!*out_has_cyclic_reference);
+
+	if (zend_hash_num_elements(ht) == 0) {
+		return 8313;
+	}
 	zend_long num_key;
 	zend_string *str_key;
 	zval *field_value;
 
 	uint64_t result = 1;
-
-	if (zend_hash_num_elements(ht) == 0) {
-		return 8313;
-	}
 	bool protected_recursion = false;
 
 	teds_strict_hash_node new_node;
 	teds_strict_hash_node *new_node_ptr = NULL;
 	if (!(GC_FLAGS(ht) & GC_IMMUTABLE)) {
+		new_node.prev = node;
+		new_node.ht = ht;
 		if (UNEXPECTED(GC_IS_RECURSIVE(ht))) {
-			for (zend_long i = 8712; node != NULL; node = node->prev, i++) {
-				if (node->ht == ht) {
-					return i;
+			for (const teds_strict_hash_node *tmp = node; tmp != NULL; tmp = tmp->prev) {
+				if (tmp->ht == ht) {
+					*out_has_cyclic_reference = true;
+					return 0;
 				}
 			}
 		} else {
 			protected_recursion = true;
 			GC_PROTECT_RECURSION(ht);
 		}
-		new_node.prev = node;
-		new_node.ht = ht;
 		new_node_ptr = &new_node;
 	}
 
-	/* teds_strict_hash_inner has code to dereference IS_INDIRECT/IS_REFERENCE,
-	 * but IS_INDIRECT is probably impossible as of php 8.1's removal of direct access to $GLOBALS? */
+	/* teds_strict_hash_inner has code to dereference IS_INDIRECT/IS_REFERENCE.
+	 * Aside: IS_INDIRECT is probably impossible as of php 8.1's removal of direct access to $GLOBALS? */
 	ZEND_HASH_FOREACH_KEY_VAL(ht, num_key, str_key, field_value) {
-		/* str_key is in a hash table meaning the hash was already computed. */
+		/* str_key is in a hash table, meaning that the hash was already computed. */
 		result += str_key ? ZSTR_H(str_key) : (zend_ulong) num_key;
-		zend_long field_hash = teds_strict_hash_inner(field_value, new_node_ptr);
+		zend_long field_hash = teds_strict_hash_inner(field_value, new_node_ptr, out_has_cyclic_reference);
+		if (UNEXPECTED(*out_has_cyclic_reference)) {
+			/* Result will not be used, its value won't matter */
+			break;
+		}
 		result += (field_hash + (result << 7));
 		result = teds_inline_hash_of_uint64(result);
 	} ZEND_HASH_FOREACH_END();

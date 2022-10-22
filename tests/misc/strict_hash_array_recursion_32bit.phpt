@@ -33,14 +33,14 @@ array(1) {
   [0]=>
   *RECURSION*
 }
-int(1357152471)
-int(944359473)
+int(-665309858)
+int(-351226279)
 array(1) {
   [0]=>
   *RECURSION*
 }
-int(1357152471)
-int(944359473)
+int(-665309858)
+int(-351226279)
 Recursive arrays hashed in a predictable way
 array(2) {
   [0]=>
@@ -58,7 +58,7 @@ array(2) {
     int(123)
   }
 }
-int(-2005905482)
-int(-2005905482)
+int(-1313776964)
+int(-1313776964)
 Test deeper recursion level
-int(-2086164413)
+int(-1313776964)

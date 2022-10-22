@@ -139,11 +139,11 @@ static zend_always_inline zend_long teds_get_offset(const zval *offset) {
 } while(0)
 
 typedef struct _teds_strict_hash_node {
-	zend_array *ht;
-	struct _teds_strict_hash_node *prev;
+	const zend_array *ht;
+	const struct _teds_strict_hash_node *prev;
 } teds_strict_hash_node;
 
-zend_long teds_strict_hash_array(HashTable *ht, teds_strict_hash_node *node);
+zend_long teds_strict_hash_array(HashTable *const ht, const teds_strict_hash_node *const node, bool *const out_has_cyclic_reference);
 
 inline static uint64_t teds_convert_double_to_uint64_t(double *value) {
 	double tmp = *value;
@@ -190,8 +190,9 @@ inline static uint64_t teds_convert_double_to_uint64_t(double *value) {
 #endif
 }
 
-static zend_always_inline zend_long teds_strict_hash_inner(zval *value, teds_strict_hash_node *node) {
+static zend_always_inline zend_long teds_strict_hash_inner(zval *value, teds_strict_hash_node *node, bool *const out_has_cyclic_reference) {
 again:
+	ZEND_ASSERT(out_has_cyclic_reference == NULL || !*out_has_cyclic_reference);
 	switch (Z_TYPE_P(value)) {
 		case IS_NULL:
 			return 8310;
@@ -207,7 +208,7 @@ again:
 			/* Compute the hash if needed, return it */
 			return ZSTR_HASH(Z_STR_P(value));
 		case IS_ARRAY:
-			return teds_strict_hash_array(Z_ARR_P(value), node);
+			return teds_strict_hash_array(Z_ARR_P(value), node, out_has_cyclic_reference);
 		case IS_OBJECT:
 		    /* Avoid hash collisions between objects and small numbers. */
 			return Z_OBJ_HANDLE_P(value) + 31415926;
@@ -233,9 +234,16 @@ static zend_always_inline uint64_t teds_inline_hash_of_uint64(uint64_t orig) {
 	return bswap_64(data);
 }
 
+/* Generate a hash of top level array keys and top level non-array values of an array containing reference cycles somewhere */
+ZEND_COLD zend_never_inline uint64_t teds_strict_hash_cyclic_reference_fallback(zval *value);
+
 /* {{{ Generate a hash */
 static zend_always_inline zend_long teds_strict_hash(zval *value) {
-	uint64_t raw_data = teds_strict_hash_inner(value, NULL);
+	bool out_has_cyclic_reference = false;
+	uint64_t raw_data = teds_strict_hash_inner(value, NULL, &out_has_cyclic_reference);
+	if (UNEXPECTED(out_has_cyclic_reference)) {
+		raw_data = teds_strict_hash_cyclic_reference_fallback(value);
+	}
 	return teds_inline_hash_of_uint64(raw_data);
 }
 /* }}} */
