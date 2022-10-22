@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-10-10</date>
+ <date>2022-10-22</date>
  <time>16:00:00</time>
  <version>
-  <release>1.2.6</release>
-  <api>1.2.6</api>
+  <release>1.2.7</release>
+  <api>1.2.7</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,8 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Fix a build warning in clang for placeholders indicating that a data structure was constructed/unserialized.
-* Fix a build warning after change to expected return type of `count_elements` object handler implementation.
+* Fix an edge case in Teds\strict_hash for different arrays with reference cycles
+  where php's strict equality operator would return true: '==='.
+  (and for Teds\unique_values, Teds\StrictHashSet, and Teds\StrictHashMap)
+  '$x === $y' should now always imply that 'Teds\strict_hash($x) === Teds\strict_hash($y)'
  </notes>
  <contents>
   <dir name="/">
@@ -383,6 +385,7 @@
     <file name="misc/strict_hash_array_recursion_32bit.phpt" role="test" />
     <file name="misc/strict_hash_array_references.phpt" role="test" />
     <file name="misc/strict_hash_array_references_32bit.phpt" role="test" />
+    <file name="misc/strict_hash_cyclic_recursion_fallback.phpt" role="test" />
     <file name="misc/strict_hash_recursion.phpt" role="test" />
     <file name="misc/strict_hash_recursion_32bit.phpt" role="test" />
     <file name="misc/strict_hash_typed_property.phpt" role="test" />
@@ -404,6 +407,23 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-10-10</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.2.6</release>
+    <api>1.2.6</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Fix a build warning in clang for placeholders indicating that a data structure was constructed/unserialized.
+* Fix a build warning after change to expected return type of `count_elements` object handler implementation.
+   </notes>
+  </release>
   <release>
    <date>2022-10-10</date>
    <time>16:00:00</time>
