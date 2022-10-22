@@ -386,6 +386,7 @@
     <file name="misc/strict_hash_array_references.phpt" role="test" />
     <file name="misc/strict_hash_array_references_32bit.phpt" role="test" />
     <file name="misc/strict_hash_cyclic_recursion_fallback.phpt" role="test" />
+    <file name="misc/strict_hash_cyclic_recursion_fallback_32bit.phpt" role="test" />
     <file name="misc/strict_hash_recursion.phpt" role="test" />
     <file name="misc/strict_hash_recursion_32bit.phpt" role="test" />
     <file name="misc/strict_hash_typed_property.phpt" role="test" />
