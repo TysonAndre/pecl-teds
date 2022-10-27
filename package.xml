@@ -13,8 +13,8 @@
  <date>2022-10-22</date>
  <time>16:00:00</time>
  <version>
-  <release>1.2.7</release>
-  <api>1.2.7</api>
+  <release>1.2.8</release>
+  <api>1.2.8</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,10 +22,8 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Fix an edge case in Teds\strict_hash for different arrays with reference cycles
-  where php's strict equality operator would return true: '==='.
-  (and for Teds\unique_values, Teds\StrictHashSet, and Teds\StrictHashMap)
-  '$x === $y' should now always imply that 'Teds\strict_hash($x) === Teds\strict_hash($y)'
+* Same as 1.2.7 other than the version and tests folder.
+* Update expected test output of the unit test tests/misc/strict_hash_array_recursion_32bit.phpt
  </notes>
  <contents>
   <dir name="/">
@@ -408,6 +406,25 @@
  <providesextension>teds</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-10-22</date>
+   <time>16:00:00</time>
+   <version>
+    <release>1.2.7</release>
+    <api>1.2.7</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Fix an edge case in Teds\strict_hash for different arrays with reference cycles
+  where php's strict equality operator would return true: '==='.
+  (and for Teds\unique_values, Teds\StrictHashSet, and Teds\StrictHashMap)
+  '$x === $y' should now always imply that 'Teds\strict_hash($x) === Teds\strict_hash($y)'
+   </notes>
+  </release>
   <release>
    <date>2022-10-10</date>
    <time>16:00:00</time>
