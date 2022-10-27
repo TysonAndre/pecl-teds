@@ -236,13 +236,13 @@ Sorting logic can be customized by inserting `[$priority, $value]` instead of `$
 ```php
 php > $x = new SplMinHeap();
 php > foreach (['19', '9', '2b', '2'] as $v) { $x->insert($v); }
-php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // unpredictable order
-2,19,2b,9,
+php > foreach ($x as $value) { echo json_encode($value).","; } echo "\n"; // unpredictable order
+"2","19","2b","9",
 
 php > $x = new Teds\StrictMinHeap();
-php > foreach (['19', '9', '2b', '2'] as $v) { $x->insert($v); }
-php > foreach ($x as $value) { echo "$value,"; } echo "\n"; // lexicographically sorted
-19,2,2b,9,
+php > foreach (['19', '9', '2b', '2'] as $v) { $x->add($v); }
+php > foreach ($x as $value) { echo json_encode($value).","; } echo "\n"; // lexicographically sorted
+"19","2","2b","9",
 ```
 
 ### Teds\EmptySequence and Teds\EmptySet and Teds\EmptyMap
