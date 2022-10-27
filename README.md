@@ -227,7 +227,7 @@ Removing an entry from a hash map/set will move iterators pointing to that entry
 
 ### Teds\StrictMinHeap and Teds\StrictMaxHeap
 
-[`Teds\Stable*Heap` API](./teds_strictheap.stub.php)
+[`Teds\Strict*Heap` API](./teds_strictheap.stub.php)
 
 This uses `Teds\stable_compare` instead of PHP's unstable default comparisons.
 Sorting logic can be customized by inserting `[$priority, $value]` instead of `$value`.
