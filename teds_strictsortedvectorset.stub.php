@@ -1,6 +1,9 @@
 <?php
 
-/** @generate-class-entries */
+/**
+ * @generate-class-entries
+ * @generate-legacy-arginfo 80000
+ */
 // Stub generation requires build/gen_stub.php from php 8.1 or newer.
 
 namespace Teds;

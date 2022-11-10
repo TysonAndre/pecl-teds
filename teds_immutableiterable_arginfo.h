@@ -1,8 +1,8 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: b99c5b20cb6f949354376325c4bfba6667fe8480 */
+ * Stub hash: 97f56531c62d26f73e695f21e99dc3c29e6a3148 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableIterable___construct, 0, 0, 1)
-	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
+	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, NULL)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableIterable_getIterator, 0, 0, InternalIterator, 0)
@@ -15,7 +15,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableIterable_isE
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableIterable_fromPairs, 0, 1, Teds\\ImmutableIterable, 0)
-	ZEND_ARG_TYPE_INFO(0, pairs, IS_ITERABLE, 0)
+	ZEND_ARG_OBJ_TYPE_MASK(0, pairs, Traversable, MAY_BE_ARRAY, NULL)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_ImmutableIterable_toPairs, 0, 0, IS_ARRAY, 0)

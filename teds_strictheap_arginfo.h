@@ -1,8 +1,8 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 900417fcee104b28d6f6bf0de7f7c7d4ade5e03f */
+ * Stub hash: feadac93e5ed629e353af2806fc1d1030dd87699 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictMinHeap___construct, 0, 0, 0)
-	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, values, IS_ITERABLE, 0, "[]")
+	ZEND_ARG_OBJ_TYPE_MASK(0, values, Traversable, MAY_BE_ARRAY, "[]")
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictMinHeap_add, 0, 1, IS_VOID, 0)

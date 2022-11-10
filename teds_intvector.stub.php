@@ -1,6 +1,9 @@
 <?php
 
-/** @generate-class-entries */
+/**
+ * @generate-class-entries
+ * @generate-legacy-arginfo 80000
+ */
 
 namespace Teds;
 

@@ -101,5 +101,6 @@ Teds\includes_value
 Teds\is_same_array_handle
 Teds\none
 Teds\stable_compare
+Teds\strict_equals
 Teds\strict_hash
 Teds\unique_values

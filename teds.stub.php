@@ -1,5 +1,8 @@
 <?php
-/** @generate-class-entries */
+/**
+ * @generate-class-entries
+ * @generate-legacy-arginfo 80000
+ */
 // Stub generation requires build/gen_stub.php from php 8.1 or newer.
 
 // NOTE: Due to a limitation of gen_stub.php (at)param is used instead
@@ -118,10 +121,27 @@ function stable_compare(mixed $v1, mixed $v2): int { }
  *
  * Future releases of Teds may change the hashing algorithm to improve performance/collision resistance.
  *
- * NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero) have the same hashes and are treated as the same entries, because `0.0 === -0.0` in php.
-NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`, despite having `NAN !== $x` in php for any $x, including NAN. This is done to avoid duplicate or unremovable entries.
+ * NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero)
+ * have the same hashes and are treated as the same entries, because `0.0 === -0.0` in php.
+ *
+ * NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_hash` and  `StrictHashSet`/`StrictHashMap`,
+ * despite having `NAN !== $x` in php for any $x, including NAN.
+ * This is done to avoid duplicate or unremovable entries.
  */
 function strict_hash(mixed $value): int { }
+
+/**
+ * Check if $v1 is equivalent to $v2 the same way that unique_values and StrictHashSet/StrictHashMap would.
+ * Apart from the handling of NAN at any array level, this behaves like PHP's `===`.
+ *
+ * NOTE: The floats `0.0` and [`-0.0` (negative zero)](https://en.wikipedia.org/wiki/Signed_zero)
+ * have the same hashes and are treated as the same entries, because `0.0 === -0.0` in php.
+ *
+ * NOTE: The float `NAN` (Not a Number) is deliberately treated as equivalent to itself by `Teds\strict_equals`,
+ * despite having `NAN !== $x` in php for any $x, including NAN.
+ * This is done to avoid duplicate or unremovable entries in unique_values, hash sets/maps, etc.
+ */
+function strict_equals(mixed $v1, mixed $v2): bool { }
 
 /**
  * Allows performing binary search on arrays with arbitrary keys.
