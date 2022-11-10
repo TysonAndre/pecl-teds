@@ -1,200 +1,367 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 4bf165d6bf04621c2aff13d8055f2ed4a93c1e31 */
+ * Stub hash: 1d29400df10620e28be9d1bf888c5101f0eee0c1 */
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_count, 0, 0, IS_LONG, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_isEmpty, 0, 0, _IS_BOOL, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_toArray, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_values arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_get, 0, 1, IS_NEVER, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_set, 0, 2, IS_NEVER, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_insert, 0, 1, IS_NEVER, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_push, 0, 0, IS_NEVER, 0)
 	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_pop, 0, 0, IS_NEVER, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_unshift arginfo_class_Teds_EmptySequence_push
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_shift arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_first arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_last arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_clear, 0, 0, IS_VOID, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_offsetGet, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_offsetExists, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_containsKey arginfo_class_Teds_EmptySequence_offsetExists
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_offsetSet, 0, 2, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_offsetUnset, 0, 1, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_indexOf, 0, 1, IS_LONG, 1)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_contains, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_EmptySequence_map, 0, 1, Teds\\EmptySequence, 0)
 	ZEND_ARG_TYPE_INFO(0, callback, IS_CALLABLE, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_EmptySequence_filter, 0, 0, Teds\\EmptySequence, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, callback, IS_CALLABLE, 1, "null")
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_jsonSerialize arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_valid arginfo_class_Teds_EmptySequence_isEmpty
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_current arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_key arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_next arginfo_class_Teds_EmptySequence_clear
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySequence_rewind arginfo_class_Teds_EmptySequence_clear
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_count arginfo_class_Teds_EmptySequence_count
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_isEmpty arginfo_class_Teds_EmptySequence_isEmpty
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_clear arginfo_class_Teds_EmptySequence_clear
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_toArray arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_values arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_keys arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetGet, 0, 1, IS_NEVER, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetExists, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetSet, 0, 2, IS_NEVER, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_offsetUnset, 0, 1, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_contains arginfo_class_Teds_EmptySequence_contains
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_containsKey arginfo_class_Teds_EmptyMap_offsetExists
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptyMap_get, 0, 1, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_MIXED, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, default, IS_MIXED, 0, "null")
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_jsonSerialize arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_valid arginfo_class_Teds_EmptySequence_isEmpty
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_current arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_key arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_next arginfo_class_Teds_EmptySequence_clear
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptyMap_rewind arginfo_class_Teds_EmptySequence_clear
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_count arginfo_class_Teds_EmptySequence_count
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_isEmpty arginfo_class_Teds_EmptySequence_isEmpty
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_clear arginfo_class_Teds_EmptySequence_clear
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_toArray arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_values arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_contains arginfo_class_Teds_EmptySequence_contains
+#endif
 
+#if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySet_add, 0, 1, IS_NEVER, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_remove arginfo_class_Teds_EmptySequence_contains
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_jsonSerialize arginfo_class_Teds_EmptySequence_toArray
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_valid arginfo_class_Teds_EmptySequence_isEmpty
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_current arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_key arginfo_class_Teds_EmptySequence_pop
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_next arginfo_class_Teds_EmptySequence_clear
+#endif
 
+#if PHP_VERSION_ID >= 80100
 #define arginfo_class_Teds_EmptySet_rewind arginfo_class_Teds_EmptySequence_clear
+#endif
 
 
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, count);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, isEmpty);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, toArray);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, get);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, set);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, insert);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, push);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, pop);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, first);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_StrictMinHeap, rewind);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, offsetGet);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, offsetExists);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, offsetSet);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, offsetUnset);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, indexOf);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, map);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, filter);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, valid);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptyMap, offsetGet);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptySequence, contains);
+#endif
+#if PHP_VERSION_ID >= 80100
 ZEND_METHOD(Teds_EmptyMap, get);
+#endif
 
 
+#if PHP_VERSION_ID >= 80100
 static const zend_function_entry class_Teds_EmptySequence_methods[] = {
 	ZEND_ME(Teds_EmptySequence, count, arginfo_class_Teds_EmptySequence_count, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptySequence, isEmpty, arginfo_class_Teds_EmptySequence_isEmpty, ZEND_ACC_PUBLIC)
@@ -227,8 +394,10 @@ static const zend_function_entry class_Teds_EmptySequence_methods[] = {
 	ZEND_MALIAS(Teds_StrictMinHeap, rewind, rewind, arginfo_class_Teds_EmptySequence_rewind, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
+#endif
 
 
+#if PHP_VERSION_ID >= 80100
 static const zend_function_entry class_Teds_EmptyMap_methods[] = {
 	ZEND_MALIAS(Teds_EmptySequence, count, count, arginfo_class_Teds_EmptyMap_count, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, isEmpty, isEmpty, arginfo_class_Teds_EmptyMap_isEmpty, ZEND_ACC_PUBLIC)
@@ -251,8 +420,10 @@ static const zend_function_entry class_Teds_EmptyMap_methods[] = {
 	ZEND_MALIAS(Teds_StrictMinHeap, rewind, rewind, arginfo_class_Teds_EmptyMap_rewind, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
+#endif
 
 
+#if PHP_VERSION_ID >= 80100
 static const zend_function_entry class_Teds_EmptySet_methods[] = {
 	ZEND_MALIAS(Teds_EmptySequence, count, count, arginfo_class_Teds_EmptySet_count, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, isEmpty, isEmpty, arginfo_class_Teds_EmptySet_isEmpty, ZEND_ACC_PUBLIC)
@@ -270,7 +441,10 @@ static const zend_function_entry class_Teds_EmptySet_methods[] = {
 	ZEND_MALIAS(Teds_StrictMinHeap, rewind, rewind, arginfo_class_Teds_EmptySet_rewind, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
+#endif
 
+#if (PHP_VERSION_ID >= 80100)
+#if PHP_VERSION_ID >= 80100
 static zend_class_entry *register_class_Teds_EmptySequence(zend_class_entry *class_entry_Iterator, zend_class_entry *class_entry_Teds_Sequence, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry *class_entry = zend_register_internal_enum("Teds\\EmptySequence", IS_UNDEF, class_Teds_EmptySequence_methods);
@@ -280,7 +454,11 @@ static zend_class_entry *register_class_Teds_EmptySequence(zend_class_entry *cla
 
 	return class_entry;
 }
+#endif
+#endif
 
+#if (PHP_VERSION_ID >= 80100)
+#if PHP_VERSION_ID >= 80100
 static zend_class_entry *register_class_Teds_EmptyMap(zend_class_entry *class_entry_Iterator, zend_class_entry *class_entry_Teds_Map, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry *class_entry = zend_register_internal_enum("Teds\\EmptyMap", IS_UNDEF, class_Teds_EmptyMap_methods);
@@ -290,7 +468,11 @@ static zend_class_entry *register_class_Teds_EmptyMap(zend_class_entry *class_en
 
 	return class_entry;
 }
+#endif
+#endif
 
+#if (PHP_VERSION_ID >= 80100)
+#if PHP_VERSION_ID >= 80100
 static zend_class_entry *register_class_Teds_EmptySet(zend_class_entry *class_entry_Iterator, zend_class_entry *class_entry_Teds_Set, zend_class_entry *class_entry_JsonSerializable)
 {
 	zend_class_entry *class_entry = zend_register_internal_enum("Teds\\EmptySet", IS_UNDEF, class_Teds_EmptySet_methods);
@@ -300,3 +482,5 @@ static zend_class_entry *register_class_Teds_EmptySet(zend_class_entry *class_en
 
 	return class_entry;
 }
+#endif
+#endif

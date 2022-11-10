@@ -1,8 +1,8 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: d1bef3adc48598684a70bee5613088b1feea1c6b */
+ * Stub hash: a63005f2026895e1c0b170a70d1f57987dd785ad */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictTreeMap___construct, 0, 0, 0)
-	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
+	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_StrictTreeMap_getIterator, 0, 0, InternalIterator, 0)
@@ -23,7 +23,7 @@ ZEND_END_ARG_INFO()
 #define arginfo_class_Teds_StrictTreeMap_toArray arginfo_class_Teds_StrictTreeMap_toPairs
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_StrictTreeMap_fromPairs, 0, 1, Teds\\StrictTreeMap, 0)
-	ZEND_ARG_TYPE_INFO(0, pairs, IS_ITERABLE, 0)
+	ZEND_ARG_OBJ_TYPE_MASK(0, pairs, Traversable, MAY_BE_ARRAY, NULL)
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictTreeMap___serialize arginfo_class_Teds_StrictTreeMap_toPairs

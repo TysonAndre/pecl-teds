@@ -1,8 +1,8 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 5324838f41d765ad3b32b288c78d0e872d45353f */
+ * Stub hash: 121558f30006a840e719a715fce1b48b61c5eb2f */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap___construct, 0, 0, 0)
-	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
+	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap_getIterator, 0, 0, InternalIterator, 0)
@@ -21,7 +21,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap_fromPairs, 0, 1, Teds\\StrictSortedVectorMap, 0)
-	ZEND_ARG_TYPE_INFO(0, pairs, IS_ITERABLE, 0)
+	ZEND_ARG_OBJ_TYPE_MASK(0, pairs, Traversable, MAY_BE_ARRAY, NULL)
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictSortedVectorMap___serialize arginfo_class_Teds_StrictSortedVectorMap_toPairs

@@ -1,8 +1,8 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: df5e0f1b1f2ea4847c77eef7d0f9aa795e70daf1 */
+ * Stub hash: e58358497f83db0ef8b9d5c905cb3b5d73e08e98 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_CachedIterable___construct, 0, 0, 1)
-	ZEND_ARG_TYPE_INFO(0, iterator, IS_ITERABLE, 0)
+	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, NULL)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_CachedIterable_getIterator, 0, 0, InternalIterator, 0)

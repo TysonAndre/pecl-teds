@@ -327,28 +327,28 @@ static inline void teds_iterable_until(INTERNAL_FUNCTION_PARAMETERS, int stop_va
 }
 
 /* Determines whether the predicate holds for all elements in the array */
-PHP_FUNCTION(all)
+PHP_FUNCTION(Teds_all)
 {
 	teds_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, 0);
 }
 /* }}} */
 
 /* {{{ Determines whether the predicate holds for at least one element in the array */
-PHP_FUNCTION(any)
+PHP_FUNCTION(Teds_any)
 {
 	teds_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1, 0);
 }
 /* }}} */
 
 /* {{{ Determines whether the predicate holds for no elements of the array */
-PHP_FUNCTION(none)
+PHP_FUNCTION(Teds_none)
 {
 	teds_iterable_until(INTERNAL_FUNCTION_PARAM_PASSTHRU, 1, 1);
 }
 /* }}} */
 
 /* Determines whether the predicate holds for all elements in the array */
-PHP_FUNCTION(includes_value)
+PHP_FUNCTION(Teds_includes_value)
 {
 	zval *input;
 	zval *value;
@@ -389,7 +389,7 @@ PHP_FUNCTION(includes_value)
 /* }}} */
 
 /* {{{ folds values */
-PHP_FUNCTION(fold)
+PHP_FUNCTION(Teds_fold)
 {
 	zval *input;
 	zend_fcall_info fci;
@@ -512,7 +512,7 @@ static inline void teds_traversable_unique_values(zend_object *obj, zval *return
 }
 
 /* {{{ extracts unique values from an iterable with a hash table */
-PHP_FUNCTION(unique_values)
+PHP_FUNCTION(Teds_unique_values)
 {
 	zval *iterable;
 
@@ -707,7 +707,7 @@ bucket_search_start:
 }
 
 /* Perform a binary search on a sorted array (Assumed to be sorted by value and/or key, depending on $flags) */
-PHP_FUNCTION(binary_search)
+PHP_FUNCTION(Teds_binary_search)
 {
 	HashTable *ht;
 	zend_fcall_info fci = empty_fcall_info;
@@ -859,7 +859,7 @@ static zend_always_inline void teds_traversable_find(zval *obj, zend_fcall_info 
 /* }}} */
 
 /* {{{ Finds the first value or returns the default */
-PHP_FUNCTION(find)
+PHP_FUNCTION(Teds_find)
 {
 	zval *input;
 	zend_fcall_info fci;
@@ -887,7 +887,7 @@ PHP_FUNCTION(find)
 /* }}} */
 
 /* {{{ Get the value of the first element of the array */
-PHP_FUNCTION(array_value_first)
+PHP_FUNCTION(Teds_array_value_first)
 {
 	HashTable *target_hash;
 
@@ -905,7 +905,7 @@ PHP_FUNCTION(array_value_first)
 /* }}} */
 
 /* {{{ Get the value of the last element of the array */
-PHP_FUNCTION(array_value_last)
+PHP_FUNCTION(Teds_array_value_last)
 {
 	HashTable *target_hash;
 	HashPosition pos;
@@ -1037,7 +1037,7 @@ zend_long teds_stable_compare(const zval *v1, const zval *v2) {
 }
 
 /* {{{ Compare two elements in a stable order. */
-PHP_FUNCTION(stable_compare)
+PHP_FUNCTION(Teds_stable_compare)
 {
 	zval *v1;
 	zval *v2;
@@ -1146,7 +1146,7 @@ int teds_hash_zval_identical_or_both_nan_function(zval *op1, zval *op2) {
 }
 
 /* {{{ Compute a strict hash that is the same number if $a === $b */
-PHP_FUNCTION(strict_hash)
+PHP_FUNCTION(Teds_strict_hash)
 {
 	zval *value;
 
@@ -1158,8 +1158,23 @@ PHP_FUNCTION(strict_hash)
 }
 /* }}} */
 
+/* {{{ Compute a strict hash that is the same number if $a === $b */
+PHP_FUNCTION(Teds_strict_equals)
+{
+	zval *v1;
+	zval *v2;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ZVAL(v1)
+		Z_PARAM_ZVAL(v2)
+	ZEND_PARSE_PARAMETERS_END();
+
+	RETURN_BOOL(teds_hash_zval_identical_or_both_nan_function(v1, v2) == 0);
+}
+/* }}} */
+
 /* {{{ Check if two arrays have the same array handle (pointer) */
-PHP_FUNCTION(is_same_array_handle)
+PHP_FUNCTION(Teds_is_same_array_handle)
 {
 	HashTable *array1, *array2;
 

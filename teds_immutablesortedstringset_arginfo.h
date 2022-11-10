@@ -1,8 +1,8 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: d8840a8fff92b44ddd7480325e6517a113a26ed8 */
+ * Stub hash: 42ed930a6d9d3f66a77a798d80bdbcbe95c81767 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSortedStringSet___construct, 0, 0, 0)
-	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, iterator, IS_ITERABLE, 0, "[]")
+	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_Teds_ImmutableSortedStringSet_getIterator, 0, 0, InternalIterator, 0)
