@@ -13,8 +13,8 @@
  <date>2022-11-10</date>
  <time>16:00:00</time>
  <version>
-  <release>1.3.0dev</release>
-  <api>1.3.0dev</api>
+  <release>1.3.0</release>
+  <api>1.3.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,8 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/teds/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Regenerate function arginfo with namespaced C symbols from stub.php files.
+* Optimize Teds\Deque insert() and offsetUnset() calls with offsets when they're closer
+  to the front of the deque than the end of the Deque.
 * Add Teds\strict_equals($v1, $v2): bool with stricter NAN handling than `===`.
+* Regenerate function arginfo with namespaced C symbols from stub.php files.
  </notes>
  <contents>
   <dir name="/">
@@ -174,6 +176,8 @@
     <file name="Deque/Deque.phpt" role="test" />
     <file name="Deque/clone.phpt" role="test" />
     <file name="Deque/foreach.phpt" role="test" />
+    <file name="Deque/insert.phpt" role="test" />
+    <file name="Deque/insert_remove_front.phpt" role="test" />
     <file name="Deque/iterator.phpt" role="test" />
     <file name="Deque/offsetGet.phpt" role="test" />
     <file name="Deque/offsetGetShifted.phpt" role="test" />
