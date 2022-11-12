@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a63005f2026895e1c0b170a70d1f57987dd785ad */
+ * Stub hash: 72a77972f633e0e26ea3e122698768b014d81776 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictTreeMap___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -59,6 +59,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictTreeMap_pop arginfo_class_Teds_StrictTreeMap_toPairs
 
+#define arginfo_class_Teds_StrictTreeMap_popFront arginfo_class_Teds_StrictTreeMap_first
+
 #define arginfo_class_Teds_StrictTreeMap_shift arginfo_class_Teds_StrictTreeMap_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictTreeMap_offsetGet, 0, 1, IS_MIXED, 0)
@@ -116,7 +118,7 @@ ZEND_METHOD(Teds_StrictTreeMap, firstKey);
 ZEND_METHOD(Teds_StrictTreeMap, last);
 ZEND_METHOD(Teds_StrictTreeMap, lastKey);
 ZEND_METHOD(Teds_StrictTreeMap, pop);
-ZEND_METHOD(Teds_StrictTreeMap, shift);
+ZEND_METHOD(Teds_StrictTreeMap, popFront);
 ZEND_METHOD(Teds_StrictTreeMap, offsetGet);
 ZEND_METHOD(Teds_StrictTreeMap, offsetExists);
 ZEND_METHOD(Teds_StrictTreeMap, offsetSet);
@@ -151,7 +153,8 @@ static const zend_function_entry class_Teds_StrictTreeMap_methods[] = {
 	ZEND_ME(Teds_StrictTreeMap, lastKey, arginfo_class_Teds_StrictTreeMap_lastKey, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StrictTreeMap, topKey, lastKey, arginfo_class_Teds_StrictTreeMap_topKey, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeMap, pop, arginfo_class_Teds_StrictTreeMap_pop, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictTreeMap, shift, arginfo_class_Teds_StrictTreeMap_shift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictTreeMap, popFront, arginfo_class_Teds_StrictTreeMap_popFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictTreeMap, shift, popFront, arginfo_class_Teds_StrictTreeMap_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeMap, offsetGet, arginfo_class_Teds_StrictTreeMap_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeMap, offsetExists, arginfo_class_Teds_StrictTreeMap_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeMap, offsetSet, arginfo_class_Teds_StrictTreeMap_offsetSet, ZEND_ACC_PUBLIC)

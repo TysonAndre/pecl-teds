@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: ebc6c55cb287019d4e788153a26ea9f558146223 */
+ * Stub hash: 2b90db5e902aa7d263a85d72cce08e1756ed01b2 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictSortedVectorSet___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -43,6 +43,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictSortedVectorSet_pop arginfo_class_Teds_StrictSortedVectorSet_first
 
+#define arginfo_class_Teds_StrictSortedVectorSet_popFront arginfo_class_Teds_StrictSortedVectorSet_first
+
 #define arginfo_class_Teds_StrictSortedVectorSet_shift arginfo_class_Teds_StrictSortedVectorSet_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorSet_contains, 0, 1, _IS_BOOL, 0)
@@ -68,7 +70,7 @@ ZEND_METHOD(Teds_StrictSortedVectorSet, toArray);
 ZEND_METHOD(Teds_Vector, first);
 ZEND_METHOD(Teds_Vector, last);
 ZEND_METHOD(Teds_Vector, pop);
-ZEND_METHOD(Teds_Vector, shift);
+ZEND_METHOD(Teds_Vector, popFront);
 ZEND_METHOD(Teds_StrictSortedVectorSet, contains);
 ZEND_METHOD(Teds_StrictSortedVectorSet, add);
 ZEND_METHOD(Teds_StrictSortedVectorSet, remove);
@@ -90,7 +92,8 @@ static const zend_function_entry class_Teds_StrictSortedVectorSet_methods[] = {
 	ZEND_MALIAS(Teds_Vector, last, last, arginfo_class_Teds_StrictSortedVectorSet_last, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, top, last, arginfo_class_Teds_StrictSortedVectorSet_top, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Vector, pop, pop, arginfo_class_Teds_StrictSortedVectorSet_pop, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_Vector, shift, shift, arginfo_class_Teds_StrictSortedVectorSet_shift, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, popFront, popFront, arginfo_class_Teds_StrictSortedVectorSet_popFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, shift, popFront, arginfo_class_Teds_StrictSortedVectorSet_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorSet, contains, arginfo_class_Teds_StrictSortedVectorSet_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorSet, add, arginfo_class_Teds_StrictSortedVectorSet_add, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorSet, remove, arginfo_class_Teds_StrictSortedVectorSet_remove, ZEND_ACC_PUBLIC)

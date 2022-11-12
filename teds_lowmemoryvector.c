@@ -1826,7 +1826,7 @@ PHP_METHOD(Teds_LowMemoryVector, push)
 	TEDS_RETURN_VOID();
 }
 
-PHP_METHOD(Teds_LowMemoryVector, unshift)
+PHP_METHOD(Teds_LowMemoryVector, pushFront)
 {
 	const zval *args;
 	uint32_t argc;
@@ -1953,14 +1953,14 @@ PHP_METHOD(Teds_LowMemoryVector, last)
 	teds_lowmemoryvector_entries_copy_offset(array, array->size - 1, return_value, true, false);
 }
 
-PHP_METHOD(Teds_LowMemoryVector, shift)
+PHP_METHOD(Teds_LowMemoryVector, popFront)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
 	teds_lowmemoryvector_entries *array = Z_LOWMEMORYVECTOR_ENTRIES_P(ZEND_THIS);
 	const size_t old_size = array->size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty Teds\\LowMemoryVector", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot popFront from empty Teds\\LowMemoryVector", 0);
 		RETURN_THROWS();
 	}
 	const size_t old_capacity = array->capacity;

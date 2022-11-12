@@ -70,6 +70,18 @@ final class ImmutableSequence implements \IteratorAggregate, Sequence, \JsonSeri
      * @implementation-alias Teds\ImmutableSequence::pop
      */
     public function shift(): mixed {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @return never
+     * @implementation-alias Teds\ImmutableSequence::push
+     */
+    public function pushFront(mixed ...$values): void {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @return never
+     * @implementation-alias Teds\ImmutableSequence::pop
+     */
+    public function popFront(): mixed {}
 
     /**
      * Returns the first value

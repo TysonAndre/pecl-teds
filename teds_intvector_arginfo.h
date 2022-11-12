@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: ed3bb1c3bb007c2a234cdface597485a32281424 */
+ * Stub hash: 2a4293ac607ff32bddac6c9564f497ffc23b1d0f */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_IntVector___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -51,14 +51,18 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_IntVector_clear, 0, 0, IS_VOID, 0)
 ZEND_END_ARG_INFO()
 
+#define arginfo_class_Teds_IntVector_pushFront arginfo_class_Teds_IntVector_push
+
+#define arginfo_class_Teds_IntVector_popFront arginfo_class_Teds_IntVector_count
+
 #define arginfo_class_Teds_IntVector_unshift arginfo_class_Teds_IntVector_push
+
+#define arginfo_class_Teds_IntVector_shift arginfo_class_Teds_IntVector_count
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_IntVector_insert, 0, 1, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
-
-#define arginfo_class_Teds_IntVector_shift arginfo_class_Teds_IntVector_count
 
 #define arginfo_class_Teds_IntVector_toArray arginfo_class_Teds_IntVector___serialize
 
@@ -131,8 +135,6 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_SortedIntVectorSet_clear arginfo_class_Teds_IntVector_clear
 
-#define arginfo_class_Teds_SortedIntVectorSet_shift arginfo_class_Teds_IntVector_count
-
 #define arginfo_class_Teds_SortedIntVectorSet_first arginfo_class_Teds_IntVector_count
 
 #define arginfo_class_Teds_SortedIntVectorSet_last arginfo_class_Teds_IntVector_count
@@ -204,9 +206,9 @@ ZEND_METHOD(Teds_IntVector, pop);
 ZEND_METHOD(Teds_IntVector, first);
 ZEND_METHOD(Teds_IntVector, last);
 ZEND_METHOD(Teds_IntVector, clear);
-ZEND_METHOD(Teds_IntVector, unshift);
+ZEND_METHOD(Teds_IntVector, pushFront);
+ZEND_METHOD(Teds_IntVector, popFront);
 ZEND_METHOD(Teds_IntVector, insert);
-ZEND_METHOD(Teds_IntVector, shift);
 ZEND_METHOD(Teds_IntVector, toArray);
 ZEND_METHOD(Teds_IntVector, get);
 ZEND_METHOD(Teds_IntVector, set);
@@ -249,9 +251,11 @@ static const zend_function_entry class_Teds_IntVector_methods[] = {
 	ZEND_ME(Teds_IntVector, first, arginfo_class_Teds_IntVector_first, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, last, arginfo_class_Teds_IntVector_last, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, clear, arginfo_class_Teds_IntVector_clear, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_IntVector, unshift, arginfo_class_Teds_IntVector_unshift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_IntVector, pushFront, arginfo_class_Teds_IntVector_pushFront, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_IntVector, popFront, arginfo_class_Teds_IntVector_popFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, unshift, pushFront, arginfo_class_Teds_IntVector_unshift, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_IntVector, shift, popFront, arginfo_class_Teds_IntVector_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, insert, arginfo_class_Teds_IntVector_insert, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_IntVector, shift, arginfo_class_Teds_IntVector_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, toArray, arginfo_class_Teds_IntVector_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, values, toArray, arginfo_class_Teds_IntVector_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_IntVector, get, arginfo_class_Teds_IntVector_get, ZEND_ACC_PUBLIC)
@@ -282,7 +286,6 @@ static const zend_function_entry class_Teds_SortedIntVectorSet_methods[] = {
 	ZEND_ME(Teds_SortedIntVectorSet, add, arginfo_class_Teds_SortedIntVectorSet_add, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_SortedIntVectorSet, remove, arginfo_class_Teds_SortedIntVectorSet_remove, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, clear, clear, arginfo_class_Teds_SortedIntVectorSet_clear, ZEND_ACC_PUBLIC)
-	ZEND_MALIAS(Teds_IntVector, shift, shift, arginfo_class_Teds_SortedIntVectorSet_shift, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, first, first, arginfo_class_Teds_SortedIntVectorSet_first, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, last, last, arginfo_class_Teds_SortedIntVectorSet_last, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_IntVector, toArray, toArray, arginfo_class_Teds_SortedIntVectorSet_toArray, ZEND_ACC_PUBLIC)

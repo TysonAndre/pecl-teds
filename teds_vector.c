@@ -1203,7 +1203,7 @@ void teds_vector_adjust_iterators_before_insert(teds_vector_entries *const array
 	} while (node != NULL);
 }
 
-PHP_METHOD(Teds_Vector, unshift)
+PHP_METHOD(Teds_Vector, pushFront)
 {
 	const zval *args;
 	uint32_t argc;
@@ -1337,7 +1337,7 @@ PHP_METHOD(Teds_Vector, last)
 	RETVAL_COPY(&array->entries[array->size - 1]);
 }
 
-PHP_METHOD(Teds_Vector, shift)
+PHP_METHOD(Teds_Vector, popFront)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
@@ -1345,7 +1345,7 @@ PHP_METHOD(Teds_Vector, shift)
 	teds_vector_entries *array = &intern->array;
 	const uint32_t old_size = array->size;
 	if (old_size == 0) {
-		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot shift from empty %s", ZSTR_VAL(intern->std.ce->name));
+		zend_throw_exception_ex(spl_ce_UnderflowException, 0, "Cannot popFront from empty %s", ZSTR_VAL(intern->std.ce->name));
 		RETURN_THROWS();
 	}
 	teds_vector_maybe_adjust_iterators_before_remove(array, 0);

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 2313b06f0da996785ea6d93252c86500d90d8a26 */
+ * Stub hash: 98148da8fbe3c189b29ff4a41d3543af3e300f29 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictTreeSet___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -43,6 +43,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictTreeSet_pop arginfo_class_Teds_StrictTreeSet_first
 
+#define arginfo_class_Teds_StrictTreeSet_popFront arginfo_class_Teds_StrictTreeSet_first
+
 #define arginfo_class_Teds_StrictTreeSet_shift arginfo_class_Teds_StrictTreeSet_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictTreeSet_contains, 0, 1, _IS_BOOL, 0)
@@ -72,7 +74,7 @@ ZEND_METHOD(Teds_StrictTreeSet, toArray);
 ZEND_METHOD(Teds_StrictTreeSet, first);
 ZEND_METHOD(Teds_StrictTreeSet, last);
 ZEND_METHOD(Teds_StrictTreeSet, pop);
-ZEND_METHOD(Teds_StrictTreeSet, shift);
+ZEND_METHOD(Teds_StrictTreeSet, popFront);
 ZEND_METHOD(Teds_StrictTreeSet, contains);
 ZEND_METHOD(Teds_StrictTreeSet, add);
 ZEND_METHOD(Teds_StrictTreeSet, remove);
@@ -96,7 +98,8 @@ static const zend_function_entry class_Teds_StrictTreeSet_methods[] = {
 	ZEND_ME(Teds_StrictTreeSet, last, arginfo_class_Teds_StrictTreeSet_last, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StrictTreeSet, top, last, arginfo_class_Teds_StrictTreeSet_top, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeSet, pop, arginfo_class_Teds_StrictTreeSet_pop, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictTreeSet, shift, arginfo_class_Teds_StrictTreeSet_shift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictTreeSet, popFront, arginfo_class_Teds_StrictTreeSet_popFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictTreeSet, shift, popFront, arginfo_class_Teds_StrictTreeSet_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeSet, contains, arginfo_class_Teds_StrictTreeSet_contains, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeSet, add, arginfo_class_Teds_StrictTreeSet_add, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictTreeSet, remove, arginfo_class_Teds_StrictTreeSet_remove, ZEND_ACC_PUBLIC)

@@ -93,9 +93,15 @@ final class StrictSortedVectorSet implements \IteratorAggregate, Set, \JsonSeria
      */
     public function pop(): mixed {}
     /**
-     * Shifts a value from the front of the StrictSortedVectorSet
+     * Removes and returns a value from the front of the StrictSortedVectorSet
      * @throws \UnderflowException if the StrictSortedVectorSet is empty
-     * @implementation-alias Teds\Vector::shift
+     * @implementation-alias Teds\Vector::popFront
+     */
+    public function popFront(): mixed {}
+    /**
+     * Removes and returns a value from the front of the StrictSortedVectorSet
+     * @throws \UnderflowException if the StrictSortedVectorSet is empty
+     * @implementation-alias Teds\Vector::popFront
      */
     public function shift(): mixed {}
     /**

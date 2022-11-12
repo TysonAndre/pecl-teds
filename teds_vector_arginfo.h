@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 34cbebeaab2ca048d72077ab941af4bf79fca900 */
+ * Stub hash: efd6c098ccd09aa8725acaaa37c0d8deb653caee */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Vector___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -47,6 +47,10 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Vector_pop, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_Vector_pushFront arginfo_class_Teds_Vector_push
+
+#define arginfo_class_Teds_Vector_popFront arginfo_class_Teds_Vector_pop
 
 #define arginfo_class_Teds_Vector_unshift arginfo_class_Teds_Vector_push
 
@@ -126,8 +130,8 @@ ZEND_METHOD(Teds_Vector, __unserialize);
 ZEND_METHOD(Teds_Vector, __set_state);
 ZEND_METHOD(Teds_Vector, push);
 ZEND_METHOD(Teds_Vector, pop);
-ZEND_METHOD(Teds_Vector, unshift);
-ZEND_METHOD(Teds_Vector, shift);
+ZEND_METHOD(Teds_Vector, pushFront);
+ZEND_METHOD(Teds_Vector, popFront);
 ZEND_METHOD(Teds_Vector, first);
 ZEND_METHOD(Teds_Vector, last);
 ZEND_METHOD(Teds_Vector, get);
@@ -159,8 +163,10 @@ static const zend_function_entry class_Teds_Vector_methods[] = {
 	ZEND_ME(Teds_Vector, __set_state, arginfo_class_Teds_Vector___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_Vector, push, arginfo_class_Teds_Vector_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, pop, arginfo_class_Teds_Vector_pop, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Vector, unshift, arginfo_class_Teds_Vector_unshift, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Vector, shift, arginfo_class_Teds_Vector_shift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, pushFront, arginfo_class_Teds_Vector_pushFront, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Vector, popFront, arginfo_class_Teds_Vector_popFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, unshift, pushFront, arginfo_class_Teds_Vector_unshift, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Vector, shift, popFront, arginfo_class_Teds_Vector_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, first, arginfo_class_Teds_Vector_first, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, last, arginfo_class_Teds_Vector_last, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Vector, toArray, arginfo_class_Teds_Vector_toArray, ZEND_ACC_PUBLIC)

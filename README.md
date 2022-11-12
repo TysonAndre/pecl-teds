@@ -29,7 +29,7 @@ On Windows, see https://wiki.php.net/internals/windows/stepbystepbuild_sdk_2 ins
 It is implemented by the following classes.
 
 - `Teds\Vector` - a memory-efficient representation of a list of values that can easily grow/shrink.
-- `Teds\Deque` - a memory-efficient representation of a list of values with amortized constant time push/pop/unshift/shift.
+- `Teds\Deque` - a memory-efficient representation of a list of values with amortized constant time push/pop/pushFront/popFront.
 
 `Teds` also includes several specializations of `Teds\Sequence` for memory-efficiency:
 
@@ -48,7 +48,7 @@ The `Teds\Set` interface is implemented by the following classes:
 
 - `Teds\StrictHashSet` - a hash table based set of unique values providing efficient average-time lookup/insertion/removal. Uses `Teds\strict_hash`.
 - `Teds\StrictTreeSet` - a binary tree-based set of **sorted** unique values providing good worst-case time. Uses `Teds\stable_compare` for stable ordering.
-- `Teds\StrictSortedVectorSet` - provides a similar API to `Teds\StrictTreeSet` but is represented internally as a Vector. This has reduced memory usage and faster construction time and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
+- `Teds\StrictSortedVectorSet` - provides a similar API to `Teds\StrictTreeSet` but is represented internally as a Vector. This has reduced memory usage and faster construction time, and can be useful in cases where modification is infrequent (e.g. more common to unserialize without modifying)
 
 #### Low-memory Sets
 

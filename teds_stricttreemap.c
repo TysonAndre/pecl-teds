@@ -1097,7 +1097,7 @@ PHP_METHOD(Teds_StrictTreeMap, methodName) \
 }
 
 IMPLEMENT_REMOVE_POSITION_PHP_METHOD(pop, last)
-IMPLEMENT_REMOVE_POSITION_PHP_METHOD(shift, first)
+IMPLEMENT_REMOVE_POSITION_PHP_METHOD(popFront, first)
 
 PHP_METHOD(Teds_StrictTreeMap, keys)
 {

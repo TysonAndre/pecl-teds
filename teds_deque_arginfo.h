@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: fdc75b6e37e010d169c8291ed5c8b4bc077d10fa */
+ * Stub hash: 5bc070aba6e837a3c93e1aa18bb67526060370c3 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_Deque___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -32,10 +32,14 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_push, 0, 0, IS_
 	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
+#define arginfo_class_Teds_Deque_pushFront arginfo_class_Teds_Deque_push
+
 #define arginfo_class_Teds_Deque_unshift arginfo_class_Teds_Deque_push
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Deque_pop, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
+
+#define arginfo_class_Teds_Deque_popFront arginfo_class_Teds_Deque_pop
 
 #define arginfo_class_Teds_Deque_shift arginfo_class_Teds_Deque_pop
 
@@ -106,9 +110,9 @@ ZEND_METHOD(Teds_Deque, toArray);
 ZEND_METHOD(Teds_Deque, __unserialize);
 ZEND_METHOD(Teds_Deque, __set_state);
 ZEND_METHOD(Teds_Deque, push);
-ZEND_METHOD(Teds_Deque, unshift);
+ZEND_METHOD(Teds_Deque, pushFront);
 ZEND_METHOD(Teds_Deque, pop);
-ZEND_METHOD(Teds_Deque, shift);
+ZEND_METHOD(Teds_Deque, popFront);
 ZEND_METHOD(Teds_Deque, first);
 ZEND_METHOD(Teds_Deque, last);
 ZEND_METHOD(Teds_Deque, get);
@@ -134,9 +138,11 @@ static const zend_function_entry class_Teds_Deque_methods[] = {
 	ZEND_ME(Teds_Deque, __unserialize, arginfo_class_Teds_Deque___unserialize, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, __set_state, arginfo_class_Teds_Deque___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_Deque, push, arginfo_class_Teds_Deque_push, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Deque, unshift, arginfo_class_Teds_Deque_unshift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Deque, pushFront, arginfo_class_Teds_Deque_pushFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Deque, unshift, pushFront, arginfo_class_Teds_Deque_unshift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, pop, arginfo_class_Teds_Deque_pop, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_Deque, shift, arginfo_class_Teds_Deque_shift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_Deque, popFront, arginfo_class_Teds_Deque_popFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_Deque, shift, popFront, arginfo_class_Teds_Deque_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, first, arginfo_class_Teds_Deque_first, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_Deque, bottom, first, arginfo_class_Teds_Deque_bottom, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_Deque, last, arginfo_class_Teds_Deque_last, ZEND_ACC_PUBLIC)

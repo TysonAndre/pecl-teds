@@ -71,10 +71,13 @@ final class StrictTreeSet implements \IteratorAggregate, Set, \JsonSerializable
      */
     public function pop(): mixed {}
     /**
-     * Shifts a value from the front of the StrictTreeSet
+     * Removes and returns a value from the front of the StrictTreeSet
      * @throws \UnderflowException if the StrictTreeSet is empty
      */
+    public function popFront(): mixed {}
+    /** @implementation-alias Teds\StrictTreeSet::popFront */
     public function shift(): mixed {}
+
     /**
      * Returns true if $value exists in this StrictTreeSet, false otherwise.
      */

@@ -721,12 +721,12 @@ static void teds_strictsortedvectormap_remove_entry(teds_strictsortedvectormap_e
 	memmove(entry, entry + 1, (end - entry) * sizeof(teds_strictsortedvectormap_entry));
 }
 
-PHP_METHOD(Teds_StrictSortedVectorMap, shift) {
+PHP_METHOD(Teds_StrictSortedVectorMap, popFront) {
 	ZEND_PARSE_PARAMETERS_NONE();
 	teds_strictsortedvectormap_entries *array = Z_STRICTSORTEDVECTORMAP_ENTRIES_P(ZEND_THIS);
 	const uint32_t len = array->size;
 	if (len == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty Teds\\StrictSortedVectorMap", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot popFront from empty Teds\\StrictSortedVectorMap", 0);
 		RETURN_THROWS();
 	}
 	teds_strictsortedvectormap_entry *entry = &array->entries[0];

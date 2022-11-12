@@ -70,7 +70,11 @@ final class Vector implements \IteratorAggregate, Sequence, \JsonSerializable
 
     public function push(mixed ...$values): void {}
     public function pop(): mixed {}
+    public function pushFront(mixed ...$values): void {}
+    public function popFront(): mixed {}
+    /** @implementation-alias Teds\Vector::pushFront */
     public function unshift(mixed ...$values): void {}
+    /** @implementation-alias Teds\Vector::popFront */
     public function shift(): mixed {}
 
     /** Read the first value or throws \UnderflowException */

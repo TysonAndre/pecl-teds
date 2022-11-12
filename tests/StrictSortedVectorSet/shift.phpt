@@ -47,7 +47,7 @@ v3
 v2
 Empty
 pop: Caught: Cannot pop from empty Teds\StrictSortedVectorSet
-shift: Caught: Cannot shift from empty Teds\StrictSortedVectorSet
+shift: Caught: Cannot popFront from empty Teds\StrictSortedVectorSet
 first: Caught: Cannot read first value of empty Teds\StrictSortedVectorSet
 last: Caught: Cannot read last value of empty Teds\StrictSortedVectorSet
 object(Teds\StrictSortedVectorSet)#1 (0) {

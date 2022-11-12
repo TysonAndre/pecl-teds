@@ -78,9 +78,11 @@ final class StrictTreeMap implements \IteratorAggregate, Map, \JsonSerializable
      */
     public function pop(): array {}
     /**
-     * Shifts the [key, value] entry from the front of the StrictTreeMap
+     * Removes and returns the [key, value] entry from the front of the StrictTreeMap
      * @throws \UnderflowException if the StrictTreeMap is empty
      */
+    public function popFront(): mixed {}
+    /** @implementation-alias Teds\StrictTreeMap::popFront */
     public function shift(): mixed {}
     /**
      * Returns the value for the given key.

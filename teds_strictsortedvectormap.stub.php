@@ -111,9 +111,11 @@ final class StrictSortedVectorMap implements \IteratorAggregate, Map, \JsonSeria
      */
     public function pop(): array {}
     /**
-     * Shifts the [key, value] entry from the front of the StrictSortedVectorMap
+     * Removes and returns the [key, value] entry from the front of the StrictSortedVectorMap
      * @throws \UnderflowException if the StrictSortedVectorMap is empty
      */
+    public function popFront(): mixed {}
+    /** @implementation-alias Teds\StrictSortedVectorMap::popFront */
     public function shift(): mixed {}
     /**
      * Returns the value for the given key.

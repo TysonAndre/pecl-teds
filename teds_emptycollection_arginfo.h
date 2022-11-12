@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 1d29400df10620e28be9d1bf888c5101f0eee0c1 */
+ * Stub hash: 5f15d481b4e91cfc2590a84139279e5d4d4f0ecd */
 
 #if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_count, 0, 0, IS_LONG, 0)
@@ -49,6 +49,14 @@ ZEND_END_ARG_INFO()
 #if PHP_VERSION_ID >= 80100
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_EmptySequence_pop, 0, 0, IS_NEVER, 0)
 ZEND_END_ARG_INFO()
+#endif
+
+#if PHP_VERSION_ID >= 80100
+#define arginfo_class_Teds_EmptySequence_pushFront arginfo_class_Teds_EmptySequence_push
+#endif
+
+#if PHP_VERSION_ID >= 80100
+#define arginfo_class_Teds_EmptySequence_popFront arginfo_class_Teds_EmptySequence_pop
 #endif
 
 #if PHP_VERSION_ID >= 80100
@@ -372,6 +380,8 @@ static const zend_function_entry class_Teds_EmptySequence_methods[] = {
 	ZEND_ME(Teds_EmptySequence, insert, arginfo_class_Teds_EmptySequence_insert, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptySequence, push, arginfo_class_Teds_EmptySequence_push, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptySequence, pop, arginfo_class_Teds_EmptySequence_pop, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_EmptySequence, pushFront, push, arginfo_class_Teds_EmptySequence_pushFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_EmptySequence, popFront, pop, arginfo_class_Teds_EmptySequence_popFront, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, unshift, push, arginfo_class_Teds_EmptySequence_unshift, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_EmptySequence, shift, pop, arginfo_class_Teds_EmptySequence_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_EmptySequence, first, arginfo_class_Teds_EmptySequence_first, ZEND_ACC_PUBLIC)
