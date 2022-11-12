@@ -36,8 +36,8 @@ jobs:
            BUILD_OPTIONS: "--architecture i386"
          - PHP_VERSION: '8.1'
            PHP_VERSION_FULL: 8.1.11
-         - PHP_VERSION: '8.2.0RC4'
-           PHP_VERSION_FULL: 8.2.0RC4
+         - PHP_VERSION: '8.2.0RC6'
+           PHP_VERSION_FULL: 8.2.0RC6
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
