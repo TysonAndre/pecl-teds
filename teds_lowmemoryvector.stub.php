@@ -77,8 +77,12 @@ final class LowMemoryVector implements \IteratorAggregate, Sequence, \JsonSerial
 
     public function push(mixed ...$values): void {}
     public function pop(): mixed {}
-    public function unshift(mixed ...$values): void {}
     public function insert(int $offset, mixed ...$values): void {}
+    public function pushFront(mixed ...$values): void {}
+    public function popFront(): mixed {}
+    /** @implementation-alias Teds\LowMemoryVector::pushFront */
+    public function unshift(mixed ...$values): void {}
+    /** @implementation-alias Teds\LowMemoryVector::popFront */
     public function shift(): mixed {}
     public function clear(): void {}
 

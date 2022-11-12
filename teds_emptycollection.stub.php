@@ -53,6 +53,16 @@ enum EmptySequence implements \Iterator, Sequence, \JsonSerializable
      * @throws \Teds\UnsupportedOperationException unconditionally
      * @implementation-alias Teds\EmptySequence::push
      */
+    public function pushFront(mixed ...$values): never {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @implementation-alias Teds\EmptySequence::pop
+     */
+    public function popFront(): never {}
+    /**
+     * @throws \Teds\UnsupportedOperationException unconditionally
+     * @implementation-alias Teds\EmptySequence::push
+     */
     public function unshift(mixed ...$values): never {}
     /**
      * @throws \Teds\UnsupportedOperationException unconditionally

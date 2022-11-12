@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 121558f30006a840e719a715fce1b48b61c5eb2f */
+ * Stub hash: b86828c8e692e5c6cdbea2e8d590e41a12a6ade9 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -59,6 +59,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_Teds_StrictSortedVectorMap_pop arginfo_class_Teds_StrictSortedVectorMap_toPairs
 
+#define arginfo_class_Teds_StrictSortedVectorMap_popFront arginfo_class_Teds_StrictSortedVectorMap_first
+
 #define arginfo_class_Teds_StrictSortedVectorMap_shift arginfo_class_Teds_StrictSortedVectorMap_first
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_StrictSortedVectorMap_offsetGet, 0, 1, IS_MIXED, 0)
@@ -112,7 +114,7 @@ ZEND_METHOD(Teds_StrictSortedVectorMap, firstKey);
 ZEND_METHOD(Teds_StrictSortedVectorMap, last);
 ZEND_METHOD(Teds_StrictSortedVectorMap, lastKey);
 ZEND_METHOD(Teds_MutableIterable, pop);
-ZEND_METHOD(Teds_StrictSortedVectorMap, shift);
+ZEND_METHOD(Teds_StrictSortedVectorMap, popFront);
 ZEND_METHOD(Teds_StrictSortedVectorMap, offsetGet);
 ZEND_METHOD(Teds_StrictSortedVectorMap, offsetExists);
 ZEND_METHOD(Teds_StrictSortedVectorMap, offsetSet);
@@ -145,7 +147,8 @@ static const zend_function_entry class_Teds_StrictSortedVectorMap_methods[] = {
 	ZEND_ME(Teds_StrictSortedVectorMap, lastKey, arginfo_class_Teds_StrictSortedVectorMap_lastKey, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_StrictSortedVectorMap, topKey, lastKey, arginfo_class_Teds_StrictSortedVectorMap_topKey, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_MutableIterable, pop, pop, arginfo_class_Teds_StrictSortedVectorMap_pop, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_StrictSortedVectorMap, shift, arginfo_class_Teds_StrictSortedVectorMap_shift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_StrictSortedVectorMap, popFront, arginfo_class_Teds_StrictSortedVectorMap_popFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_StrictSortedVectorMap, shift, popFront, arginfo_class_Teds_StrictSortedVectorMap_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, offsetGet, arginfo_class_Teds_StrictSortedVectorMap_offsetGet, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, offsetExists, arginfo_class_Teds_StrictSortedVectorMap_offsetExists, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_StrictSortedVectorMap, offsetSet, arginfo_class_Teds_StrictSortedVectorMap_offsetSet, ZEND_ACC_PUBLIC)

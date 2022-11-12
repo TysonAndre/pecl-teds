@@ -911,7 +911,7 @@ PHP_METHOD(Teds_StrictTreeSet, methodName) \
 }
 
 IMPLEMENT_REMOVE_POSITION_PHP_METHOD(pop, last)
-IMPLEMENT_REMOVE_POSITION_PHP_METHOD(shift, first)
+IMPLEMENT_REMOVE_POSITION_PHP_METHOD(popFront, first)
 
 static zend_array *teds_stricttreeset_tree_to_refcounted_array(const teds_stricttreeset_tree *tree)
 {

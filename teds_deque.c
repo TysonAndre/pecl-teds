@@ -1134,7 +1134,7 @@ static zend_always_inline void teds_deque_maybe_adjust_iterators_before_insert(t
 	}
 }
 
-PHP_METHOD(Teds_Deque, unshift)
+PHP_METHOD(Teds_Deque, pushFront)
 {
 	const zval *args;
 	uint32_t argc;
@@ -1392,7 +1392,7 @@ PHP_METHOD(Teds_Deque, last)
 	RETVAL_COPY(teds_deque_get_entry_at_offset(&intern->array, old_size - 1));
 }
 
-PHP_METHOD(Teds_Deque, shift)
+PHP_METHOD(Teds_Deque, popFront)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 
@@ -1400,7 +1400,7 @@ PHP_METHOD(Teds_Deque, shift)
 	DEBUG_ASSERT_CONSISTENT_DEQUE(array);
 	const uint32_t old_size = array->size;
 	if (old_size == 0) {
-		zend_throw_exception(spl_ce_UnderflowException, "Cannot shift from empty deque", 0);
+		zend_throw_exception(spl_ce_UnderflowException, "Cannot popFront from empty deque", 0);
 		RETURN_THROWS();
 	}
 	teds_deque_maybe_adjust_iterators_before_remove(array, 0);

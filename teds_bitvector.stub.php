@@ -75,10 +75,6 @@ final class BitVector implements \IteratorAggregate, Sequence, \JsonSerializable
 
     public function push(mixed ...$values): void {}
     /**
-     * TODO: optimize unshift(), this is currently inefficient for varargs.
-     */
-    public function unshift(mixed ...$values): void {}
-    /**
      * TODO: optimize insert(), this is currently inefficient for varargs.
      */
     public function insert(int $offset, mixed ...$values): void {}
@@ -99,6 +95,18 @@ final class BitVector implements \IteratorAggregate, Sequence, \JsonSerializable
      * @throws \UnderflowException if there are no more elements
      */
     public function pop(): bool {}
+    /**
+     * TODO: optimize unshift(), this is currently inefficient for varargs.
+     */
+    public function pushFront(mixed ...$values): void {}
+    public function popFront(): bool {}
+    /**
+     * @implementation-alias Teds\BitVector::pushFront
+     */
+    public function unshift(mixed ...$values): void {}
+    /**
+     * @implementation-alias Teds\BitVector::popFront
+     */
     public function shift(): bool {}
 
     /** @psalm-return list<int> */

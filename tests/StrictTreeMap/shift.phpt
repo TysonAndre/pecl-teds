@@ -1,5 +1,5 @@
 --TEST--
-Teds\StrictTreeMap shift/pop
+Teds\StrictTreeMap popFront/pop
 --FILE--
 <?php
 
@@ -12,10 +12,10 @@ for ($i = 0; $i < 7; $i++) {
         return;
     }
 }
-echo "shift\n";
+echo "popFront\n";
 echo json_encode($it->shift()), "\n";
 echo json_encode($it->first()), "\n";
-echo json_encode($it->shift()), "\n";
+echo json_encode($it->popFront()), "\n";
 echo "pop\n";
 echo json_encode($it->pop()), "\n";
 echo json_encode($it->last()), "\n";
@@ -25,7 +25,7 @@ echo json_encode($it->pop()), "\n";
 echo json_encode($it->pop()), "\n";
 echo json_encode($it->pop()), "\n";
 echo "Empty\n";
-foreach (['shift', 'pop', 'first', 'last'] as $method) {
+foreach (['popFront', 'pop', 'first', 'last'] as $method) {
     try {
         echo "$method: ";
         var_dump($it->{$method}());
@@ -37,7 +37,7 @@ var_dump($it);
 
 ?>
 --EXPECT--
-shift
+popFront
 ["k0","v0"]
 "v1"
 ["k1","v1"]
@@ -50,7 +50,7 @@ v2,v3,v4
 ["k3","v3"]
 ["k2","v2"]
 Empty
-shift: Caught: Cannot shift from empty StrictTreeMap
+popFront: Caught: Cannot popFront from empty StrictTreeMap
 pop: Caught: Cannot pop from empty StrictTreeMap
 first: Caught: Cannot read first of empty StrictTreeMap
 last: Caught: Cannot read last of empty StrictTreeMap

@@ -1331,7 +1331,7 @@ static zend_always_inline void teds_bitvector_entries_insert_single(teds_bitvect
 	entries_bits[n] = (old & insert_mask) | ((value ? 1 : 0) << bitpos) | ((old & ~insert_mask) << 1);
 }
 
-PHP_METHOD(Teds_BitVector, unshift)
+PHP_METHOD(Teds_BitVector, pushFront)
 {
 	const zval *args;
 	uint32_t argc;
@@ -1540,7 +1540,7 @@ static zend_always_inline void teds_bitvector_entries_unset_offset(teds_bitvecto
 	entries_bits[it_byte_offset] = entries_bits[it_byte_offset] >> 1;
 }
 
-PHP_METHOD(Teds_BitVector, shift)
+PHP_METHOD(Teds_BitVector, popFront)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
 

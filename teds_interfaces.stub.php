@@ -91,12 +91,12 @@ interface Sequence extends Collection, \ArrayAccess {
     /**
      * Prepend 0 or more values to the start of the sequence.
      */
-    public function unshift(mixed ...$values): void {}
+    public function pushFront(mixed ...$values): void {}
     /**
      * Removes the first value and returns its value.
      * @throws \UnderflowException if there are no more elements.
      */
-    public function shift(): mixed {}
+    public function popFront(): mixed {}
     /**
      * Returns the first value (at offset 0)
      * @throws \UnderflowException if there are no elements.

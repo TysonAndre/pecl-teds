@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 5b54601586b4c56aeb4376325c512912ca81d291 */
+ * Stub hash: aebcd29643425846e97e9334fb20fb58ff308a76 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Collection_values, 0, 0, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
@@ -37,9 +37,9 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_Sequence_pop, 0, 0, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_Sequence_unshift arginfo_class_Teds_Sequence_push
+#define arginfo_class_Teds_Sequence_pushFront arginfo_class_Teds_Sequence_push
 
-#define arginfo_class_Teds_Sequence_shift arginfo_class_Teds_Sequence_pop
+#define arginfo_class_Teds_Sequence_popFront arginfo_class_Teds_Sequence_pop
 
 #define arginfo_class_Teds_Sequence_first arginfo_class_Teds_Sequence_pop
 
@@ -70,8 +70,8 @@ static const zend_function_entry class_Teds_Sequence_methods[] = {
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, insert, arginfo_class_Teds_Sequence_insert, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, push, arginfo_class_Teds_Sequence_push, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, pop, arginfo_class_Teds_Sequence_pop, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
-	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, unshift, arginfo_class_Teds_Sequence_unshift, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
-	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, shift, arginfo_class_Teds_Sequence_shift, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
+	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, pushFront, arginfo_class_Teds_Sequence_pushFront, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
+	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, popFront, arginfo_class_Teds_Sequence_popFront, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, first, arginfo_class_Teds_Sequence_first, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_ABSTRACT_ME_WITH_FLAGS(Teds_Sequence, last, arginfo_class_Teds_Sequence_last, ZEND_ACC_PUBLIC|ZEND_ACC_ABSTRACT)
 	ZEND_FE_END

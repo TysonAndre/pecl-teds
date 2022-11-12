@@ -36,7 +36,7 @@ dump_it($it);
 ?>
 --EXPECT--
 Caught UnderflowException: Cannot pop from empty deque
-Caught UnderflowException: Cannot shift from empty deque
+Caught UnderflowException: Cannot popFront from empty deque
 count=1 capacity=4 ["hello"]
 count=2 capacity=4 ["hello","world"]
 0: "hello"

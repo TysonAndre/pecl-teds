@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 2867fca8cf5f28bc2095c30dc55142834f14176f */
+ * Stub hash: 71666821ce70fa5ecdf5d30c9986128b5f9ebace */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_ImmutableSequence___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -53,6 +53,10 @@ ZEND_END_ARG_INFO()
 #define arginfo_class_Teds_ImmutableSequence_unshift arginfo_class_Teds_ImmutableSequence_push
 
 #define arginfo_class_Teds_ImmutableSequence_shift arginfo_class_Teds_ImmutableSequence_pop
+
+#define arginfo_class_Teds_ImmutableSequence_pushFront arginfo_class_Teds_ImmutableSequence_push
+
+#define arginfo_class_Teds_ImmutableSequence_popFront arginfo_class_Teds_ImmutableSequence_pop
 
 #define arginfo_class_Teds_ImmutableSequence_first arginfo_class_Teds_ImmutableSequence_pop
 
@@ -142,6 +146,8 @@ static const zend_function_entry class_Teds_ImmutableSequence_methods[] = {
 	ZEND_ME(Teds_ImmutableSequence, pop, arginfo_class_Teds_ImmutableSequence_pop, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_ImmutableSequence, unshift, push, arginfo_class_Teds_ImmutableSequence_unshift, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_ImmutableSequence, shift, pop, arginfo_class_Teds_ImmutableSequence_shift, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_ImmutableSequence, pushFront, push, arginfo_class_Teds_ImmutableSequence_pushFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_ImmutableSequence, popFront, pop, arginfo_class_Teds_ImmutableSequence_popFront, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, first, arginfo_class_Teds_ImmutableSequence_first, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, last, arginfo_class_Teds_ImmutableSequence_last, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_ImmutableSequence, clear, arginfo_class_Teds_ImmutableSequence_clear, ZEND_ACC_PUBLIC)

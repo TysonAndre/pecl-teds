@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: d8e380e507be165e3908eef5d247a0a211315a24 */
+ * Stub hash: 90cfaa629216c9a22c59f51fcb1d9c5abdfb20b1 */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_Teds_BitVector___construct, 0, 0, 0)
 	ZEND_ARG_OBJ_TYPE_MASK(0, iterator, Traversable, MAY_BE_ARRAY, "[]")
@@ -42,8 +42,6 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitVector_push, 0, 0,
 	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_Teds_BitVector_unshift arginfo_class_Teds_BitVector_push
-
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_Teds_BitVector_insert, 0, 1, IS_VOID, 0)
 	ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 	ZEND_ARG_VARIADIC_TYPE_INFO(0, values, IS_MIXED, 0)
@@ -58,6 +56,12 @@ ZEND_END_ARG_INFO()
 #define arginfo_class_Teds_BitVector_last arginfo_class_Teds_BitVector_isEmpty
 
 #define arginfo_class_Teds_BitVector_pop arginfo_class_Teds_BitVector_isEmpty
+
+#define arginfo_class_Teds_BitVector_pushFront arginfo_class_Teds_BitVector_push
+
+#define arginfo_class_Teds_BitVector_popFront arginfo_class_Teds_BitVector_isEmpty
+
+#define arginfo_class_Teds_BitVector_unshift arginfo_class_Teds_BitVector_push
 
 #define arginfo_class_Teds_BitVector_shift arginfo_class_Teds_BitVector_isEmpty
 
@@ -157,13 +161,13 @@ ZEND_METHOD(Teds_BitVector, toBinaryString);
 ZEND_METHOD(Teds_BitVector, fromBinaryString);
 ZEND_METHOD(Teds_BitVector, __set_state);
 ZEND_METHOD(Teds_BitVector, push);
-ZEND_METHOD(Teds_BitVector, unshift);
 ZEND_METHOD(Teds_BitVector, insert);
 ZEND_METHOD(Teds_BitVector, pushBits);
 ZEND_METHOD(Teds_BitVector, first);
 ZEND_METHOD(Teds_BitVector, last);
 ZEND_METHOD(Teds_BitVector, pop);
-ZEND_METHOD(Teds_BitVector, shift);
+ZEND_METHOD(Teds_BitVector, pushFront);
+ZEND_METHOD(Teds_BitVector, popFront);
 ZEND_METHOD(Teds_BitVector, toArray);
 ZEND_METHOD(Teds_BitVector, clear);
 ZEND_METHOD(Teds_BitVector, get);
@@ -204,13 +208,15 @@ static const zend_function_entry class_Teds_BitVector_methods[] = {
 	ZEND_ME(Teds_BitVector, fromBinaryString, arginfo_class_Teds_BitVector_fromBinaryString, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_BitVector, __set_state, arginfo_class_Teds_BitVector___set_state, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Teds_BitVector, push, arginfo_class_Teds_BitVector_push, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_BitVector, unshift, arginfo_class_Teds_BitVector_unshift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitVector, insert, arginfo_class_Teds_BitVector_insert, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitVector, pushBits, arginfo_class_Teds_BitVector_pushBits, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitVector, first, arginfo_class_Teds_BitVector_first, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitVector, last, arginfo_class_Teds_BitVector_last, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitVector, pop, arginfo_class_Teds_BitVector_pop, ZEND_ACC_PUBLIC)
-	ZEND_ME(Teds_BitVector, shift, arginfo_class_Teds_BitVector_shift, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitVector, pushFront, arginfo_class_Teds_BitVector_pushFront, ZEND_ACC_PUBLIC)
+	ZEND_ME(Teds_BitVector, popFront, arginfo_class_Teds_BitVector_popFront, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_BitVector, unshift, pushFront, arginfo_class_Teds_BitVector_unshift, ZEND_ACC_PUBLIC)
+	ZEND_MALIAS(Teds_BitVector, shift, popFront, arginfo_class_Teds_BitVector_shift, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitVector, toArray, arginfo_class_Teds_BitVector_toArray, ZEND_ACC_PUBLIC)
 	ZEND_MALIAS(Teds_BitVector, values, toArray, arginfo_class_Teds_BitVector_values, ZEND_ACC_PUBLIC)
 	ZEND_ME(Teds_BitVector, clear, arginfo_class_Teds_BitVector_clear, ZEND_ACC_PUBLIC)

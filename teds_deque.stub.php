@@ -55,6 +55,8 @@ final class Deque implements \IteratorAggregate, Sequence, \JsonSerializable
     /** Appends value(s) to the end of the Deque, like array_push. */
     public function push(mixed ...$values): void {}
     /** Prepends value(s) to the start of the Deque, like array_unshift. */
+    public function pushFront(mixed ...$values): void {}
+    /** @implementation-alias Teds\Deque::pushFront */
     public function unshift(mixed ...$values): void {}
     /**
      * Pops a value from the end of the Deque.
@@ -65,6 +67,8 @@ final class Deque implements \IteratorAggregate, Sequence, \JsonSerializable
      * Shifts a value from the start of the Deque.
      * @throws \UnderflowException if the Deque is empty
      */
+    public function popFront(): mixed {}
+    /** @implementation-alias Teds\Deque::popFront */
     public function shift(): mixed {}
 
     /**

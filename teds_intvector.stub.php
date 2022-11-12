@@ -76,12 +76,19 @@ final class IntVector implements \IteratorAggregate, Sequence, \JsonSerializable
     public function last(): int {}
 
     public function clear(): void {}
-    public function unshift(mixed ...$values): void {}
-    public function insert(int $offset, mixed ...$values): void {}
+    public function pushFront(mixed ...$values): void {}
     /**
      * @throws \UnderflowException if there are no more elements
      */
+    public function popFront(): int {}
+    /** @implementation-alias Teds\IntVector::pushFront */
+    public function unshift(mixed ...$values): void {}
+    /**
+     * @throws \UnderflowException if there are no more elements
+     * @implementation-alias Teds\IntVector::popFront
+     */
     public function shift(): int {}
+    public function insert(int $offset, mixed ...$values): void {}
 
     /** @psalm-return list<int> */
     public function toArray(): array {}
@@ -212,11 +219,6 @@ final class SortedIntVectorSet implements \IteratorAggregate, Set, \JsonSerializ
      * @implementation-alias Teds\IntVector::clear
      */
     public function clear(): void {}
-    /**
-     * @throws \UnderflowException if there are no more elements
-     * @implementation-alias Teds\IntVector::shift
-     */
-    public function shift(): int {}
 
     /**
      * @throws \UnderflowException if there are no more elements
