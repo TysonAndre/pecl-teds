@@ -26,7 +26,7 @@ foreach ([
     test_to_array($class);
 }
 ?>
---EXPECT--
+--EXPECTF--
 Test Teds\StrictSortedVectorMap
 array(2) {
   ["def"]=>
@@ -35,7 +35,7 @@ array(2) {
   ["v_abc"]=>
   string(3) "v_x"
 }
-Caught: Illegal offset type
+Caught: %s offset %s
 Test Teds\StrictTreeMap
 array(2) {
   ["def"]=>
@@ -44,7 +44,7 @@ array(2) {
   ["v_abc"]=>
   string(3) "v_x"
 }
-Caught: Illegal offset type
+Caught: %s offset %s
 Test Teds\StrictHashMap
 array(2) {
   ["v_abc"]=>
@@ -53,4 +53,4 @@ array(2) {
   object(stdClass)#2 (0) {
   }
 }
-Caught: Illegal offset type
+Caught: %s offset %s
